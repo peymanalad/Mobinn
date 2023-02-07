@@ -202,7 +202,7 @@ namespace Chamran.Deed.ViewModels
             {
                 return;
             }
-
+            
             using (var photo = await CrossMedia.Current.PickPhotoAsync())
             {
                 await picturePicked(photo);

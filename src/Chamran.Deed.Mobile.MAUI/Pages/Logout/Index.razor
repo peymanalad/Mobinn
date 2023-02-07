@@ -1,0 +1,24 @@
+﻿@using Chamran.Deed.ApiClient;
+@using Chamran.Deed.Core.Dependency;
+@using Chamran.Deed.Mobile.MAUI.Pages.MySettings
+@using Chamran.Deed.Services.Account;
+@using Chamran.Deed.Services.Navigation
+@inherits DeedComponentBase
+@attribute [Route("/" + NavigationUrlConsts.Logout)]
+
+
+@code {
+    protected IAccountService AccountService { get; set; }
+    protected INavigationService navigationService { get; set; }
+    public Index()
+    {
+        AccountService = DependencyResolver.Resolve<IAccountService>();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AccountService.LogoutAsync();
+        navigationService.NavigateTo(NavigationUrlConsts.Login);
+        //return base.OnInitializedAsync();
+    }
+}
