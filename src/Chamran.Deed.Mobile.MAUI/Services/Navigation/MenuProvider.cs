@@ -35,6 +35,12 @@ namespace Chamran.Deed.Services.Navigation
                     Title = L.Localize("MySettings"),
                     Icon = "fa-solid fa-cog",
                     NavigationUrl  = NavigationUrlConsts.Settings
+                },
+                new NavigationMenuItem
+                {
+                    Title = L.Localize("Logout"),
+                    Icon = "fa-solid fa-sign-out",
+                    NavigationUrl  = NavigationUrlConsts.Logout
                 }
 
                 /*This is a sample menu item to guide how to add a new item.

@@ -38,7 +38,7 @@
             <Color x:Key="ButtonBackgroundColor">#27A4B0</Color>
             <Color x:Key="LabelColor">#6D6D72</Color>
             <Color x:Key="DarkButtonTextColor">#364150</Color>
-            <Color x:Key="LoginBackgroundColor">#364150</Color>
+            <Color x:Key="LoginBackgroundColor">#ffffff</Color>
             <Color x:Key="DangerBackgroundColor">#ff5252</Color>
             <Color x:Key="WarnBackgroundColor">#EED46E</Color>
             <Color x:Key="WarnForegroundColor">#8C7412</Color>

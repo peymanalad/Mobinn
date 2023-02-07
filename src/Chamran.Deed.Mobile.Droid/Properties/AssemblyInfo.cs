@@ -30,7 +30,11 @@ using Android.App;
 
 //Permission, these can be removed if not needed
 [assembly: UsesPermission(Android.Manifest.Permission.Internet)]
+// Needed for Picking photo/video
+[assembly: UsesPermission(Android.Manifest.Permission.ReadExternalStorage)]
+// Needed for Taking photo/video
 [assembly: UsesPermission(Android.Manifest.Permission.WriteExternalStorage)]
+[assembly: UsesPermission(Android.Manifest.Permission.Camera)]
 
 //Features
 [assembly: UsesFeature("android.hardware.camera", Required = false)]
