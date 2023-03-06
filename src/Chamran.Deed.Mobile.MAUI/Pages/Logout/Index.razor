@@ -13,6 +13,7 @@
     public Index()
     {
         AccountService = DependencyResolver.Resolve<IAccountService>();
+        navigationService = DependencyResolver.Resolve<INavigationService>();
     }
 
     protected override async Task OnInitializedAsync()

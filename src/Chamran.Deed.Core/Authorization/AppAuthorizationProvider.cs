@@ -29,9 +29,40 @@ namespace Chamran.Deed.Authorization
             //COMMON PERMISSIONS (FOR BOTH OF TENANTS AND HOST)
 
             var pages = context.GetPermissionOrNull(AppPermissions.Pages) ?? context.CreatePermission(AppPermissions.Pages, L("Pages"));
+
+            var postGroups = pages.CreateChildPermission(AppPermissions.Pages_PostGroups, L("PostGroups"));
+            postGroups.CreateChildPermission(AppPermissions.Pages_PostGroups_Create, L("CreateNewPostGroup"));
+            postGroups.CreateChildPermission(AppPermissions.Pages_PostGroups_Edit, L("EditPostGroup"));
+            postGroups.CreateChildPermission(AppPermissions.Pages_PostGroups_Delete, L("DeletePostGroup"));
+
+            var posts = pages.CreateChildPermission(AppPermissions.Pages_Posts, L("Posts"));
+            posts.CreateChildPermission(AppPermissions.Pages_Posts_Create, L("CreateNewPost"));
+            posts.CreateChildPermission(AppPermissions.Pages_Posts_Edit, L("EditPost"));
+            posts.CreateChildPermission(AppPermissions.Pages_Posts_Delete, L("DeletePost"));
+
+            var groupMembers = pages.CreateChildPermission(AppPermissions.Pages_GroupMembers, L("GroupMembers"));
+            groupMembers.CreateChildPermission(AppPermissions.Pages_GroupMembers_Create, L("CreateNewGroupMember"));
+            groupMembers.CreateChildPermission(AppPermissions.Pages_GroupMembers_Edit, L("EditGroupMember"));
+            groupMembers.CreateChildPermission(AppPermissions.Pages_GroupMembers_Delete, L("DeleteGroupMember"));
+
+            var organizationGroups = pages.CreateChildPermission(AppPermissions.Pages_OrganizationGroups, L("OrganizationGroups"));
+            organizationGroups.CreateChildPermission(AppPermissions.Pages_OrganizationGroups_Create, L("CreateNewOrganizationGroup"));
+            organizationGroups.CreateChildPermission(AppPermissions.Pages_OrganizationGroups_Edit, L("EditOrganizationGroup"));
+            organizationGroups.CreateChildPermission(AppPermissions.Pages_OrganizationGroups_Delete, L("DeleteOrganizationGroup"));
+
+            var organizations = pages.CreateChildPermission(AppPermissions.Pages_Organizations, L("Organizations"));
+            organizations.CreateChildPermission(AppPermissions.Pages_Organizations_Create, L("CreateNewOrganization"));
+            organizations.CreateChildPermission(AppPermissions.Pages_Organizations_Edit, L("EditOrganization"));
+            organizations.CreateChildPermission(AppPermissions.Pages_Organizations_Delete, L("DeleteOrganization"));
+
             pages.CreateChildPermission(AppPermissions.Pages_DemoUiComponents, L("DemoUiComponents"));
 
             var administration = pages.CreateChildPermission(AppPermissions.Pages_Administration, L("Administration"));
+
+            var hashtags = administration.CreateChildPermission(AppPermissions.Pages_Administration_Hashtags, L("Hashtags"));
+            hashtags.CreateChildPermission(AppPermissions.Pages_Administration_Hashtags_Create, L("CreateNewHashtag"));
+            hashtags.CreateChildPermission(AppPermissions.Pages_Administration_Hashtags_Edit, L("EditHashtag"));
+            hashtags.CreateChildPermission(AppPermissions.Pages_Administration_Hashtags_Delete, L("DeleteHashtag"));
 
             var roles = administration.CreateChildPermission(AppPermissions.Pages_Administration_Roles, L("Roles"));
             roles.CreateChildPermission(AppPermissions.Pages_Administration_Roles_Create, L("CreatingNewRole"));
@@ -53,7 +84,7 @@ namespace Chamran.Deed.Authorization
             languages.CreateChildPermission(AppPermissions.Pages_Administration_Languages_Delete, L("DeletingLanguages"), multiTenancySides: _isMultiTenancyEnabled ? MultiTenancySides.Host : MultiTenancySides.Tenant);
             languages.CreateChildPermission(AppPermissions.Pages_Administration_Languages_ChangeTexts, L("ChangingTexts"));
             languages.CreateChildPermission(AppPermissions.Pages_Administration_Languages_ChangeDefaultLanguage, L("ChangeDefaultLanguage"));
-            
+
             administration.CreateChildPermission(AppPermissions.Pages_Administration_AuditLogs, L("AuditLogs"));
 
             var organizationUnits = administration.CreateChildPermission(AppPermissions.Pages_Administration_OrganizationUnits, L("OrganizationUnits"));
@@ -93,7 +124,7 @@ namespace Chamran.Deed.Authorization
 
             var massNotification = administration.CreateChildPermission(AppPermissions.Pages_Administration_MassNotification, L("MassNotifications"));
             massNotification.CreateChildPermission(AppPermissions.Pages_Administration_MassNotification_Create, L("MassNotificationCreate"));
-            
+
             //TENANT-SPECIFIC PERMISSIONS
 
             pages.CreateChildPermission(AppPermissions.Pages_Tenant_Dashboard, L("Dashboard"), multiTenancySides: MultiTenancySides.Tenant);
@@ -117,10 +148,10 @@ namespace Chamran.Deed.Authorization
             tenants.CreateChildPermission(AppPermissions.Pages_Tenants_Impersonation, L("LoginForTenants"), multiTenancySides: MultiTenancySides.Host);
 
             administration.CreateChildPermission(AppPermissions.Pages_Administration_Host_Settings, L("Settings"), multiTenancySides: MultiTenancySides.Host);
-            
+
             var maintenance = administration.CreateChildPermission(AppPermissions.Pages_Administration_Host_Maintenance, L("Maintenance"), multiTenancySides: _isMultiTenancyEnabled ? MultiTenancySides.Host : MultiTenancySides.Tenant);
             maintenance.CreateChildPermission(AppPermissions.Pages_Administration_NewVersion_Create, L("SendNewVersionNotification"));
-            
+
             administration.CreateChildPermission(AppPermissions.Pages_Administration_HangfireDashboard, L("HangfireDashboard"), multiTenancySides: _isMultiTenancyEnabled ? MultiTenancySides.Host : MultiTenancySides.Tenant);
             administration.CreateChildPermission(AppPermissions.Pages_Administration_Host_Dashboard, L("Dashboard"), multiTenancySides: MultiTenancySides.Host);
         }

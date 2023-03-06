@@ -6,32 +6,98 @@ using Chamran.Deed.Core.Threading;
 using Chamran.Deed.Mobile.MAUI.Services.UI;
 using Chamran.Deed.Mobile.MAUI.Shared;
 using Chamran.Deed.Services.Account;
+using Chamran.Deed.Services.Navigation;
+using Microsoft.JSInterop;
+using Syncfusion.Blazor.Notifications;
 
 namespace Chamran.Deed.Mobile.MAUI.Pages.Login
 {
     public partial class Index : DeedComponentBase
     {
-        public string UserName
+        public bool SmsIsSent { get; set; }
+        public string Otp { get; set; }
+
+        //public string UserName
+        //{
+        //    get => _accountService.AbpAuthenticateModel.UserNameOrEmailAddress;
+        //    set
+        //    {
+        //        _accountService.AbpAuthenticateModel.UserNameOrEmailAddress = value;
+        //    }
+        //}
+
+        //public string Password
+        //{
+        //    get => _accountService.AbpAuthenticateModel.Password;
+        //    set
+        //    {
+        //        _accountService.AbpAuthenticateModel.Password = value;
+        //    }
+        //}
+
+        public string PhoneNumber
         {
-            get => _accountService.AbpAuthenticateModel.UserNameOrEmailAddress;
+            get => _accountService.AbpAuthenticateModel.PhoneNumber;
             set
             {
-                _accountService.AbpAuthenticateModel.UserNameOrEmailAddress = value;
+                _accountService.AbpAuthenticateModel.PhoneNumber = value;
             }
         }
 
-        public string Password
+        
+        public string Otp1
         {
-            get => _accountService.AbpAuthenticateModel.Password;
+            get => _accountService.AbpAuthenticateModel.Otp1;
             set
             {
-                _accountService.AbpAuthenticateModel.Password = value;
+                _accountService.AbpAuthenticateModel.Otp1 = value;
+            }
+        }
+         public string Otp2
+        {
+            get => _accountService.AbpAuthenticateModel.Otp2;
+            set
+            {
+                _accountService.AbpAuthenticateModel.Otp2 = value;
+            }
+        }
+         public string Otp3
+        {
+            get => _accountService.AbpAuthenticateModel.Otp3;
+            set
+            {
+                _accountService.AbpAuthenticateModel.Otp3 = value;
+            }
+        }
+         public string Otp4
+        {
+            get => _accountService.AbpAuthenticateModel.Otp4;
+            set
+            {
+                _accountService.AbpAuthenticateModel.Otp4 = value;
+            }
+        }
+         public string Otp5
+        {
+            get => _accountService.AbpAuthenticateModel.Otp5;
+            set
+            {
+                _accountService.AbpAuthenticateModel.Otp5 = value;
+            }
+        }
+         public string Otp6
+        {
+            get => _accountService.AbpAuthenticateModel.Otp6;
+            set
+            {
+                _accountService.AbpAuthenticateModel.Otp6 = value;
             }
         }
 
         private IAccountService _accountService;
         private IAccountAppService _accountAppService;
         private IApplicationContext _applicationContext;
+        private INavigationService _navigationService;
 
         SwitchTenantModal switchTenantModal;
         EmailActivationModal emailActivationModal;
@@ -47,6 +113,7 @@ namespace Chamran.Deed.Mobile.MAUI.Pages.Login
             _accountService = DependencyResolver.Resolve<IAccountService>();
             _accountAppService = DependencyResolver.Resolve<IAccountAppService>();
             _applicationContext = DependencyResolver.Resolve<IApplicationContext>();
+            _navigationService = DependencyResolver.Resolve<INavigationService>();
         }
 
         protected override async Task OnInitializedAsync()
@@ -55,9 +122,22 @@ namespace Chamran.Deed.Mobile.MAUI.Pages.Login
             _accountService.AbpAuthenticateModel.TwoFactorVerificationCode = "";
         }
 
-        private async Task LoginUser()
+        private async Task LoginUser(string btnId, string phoneInputId)
         {
-            await _accountService.LoginUserAsync();
+            //await _accountService.LoginUserAsync();
+            if (!SmsIsSent)
+            {
+                await JS.InvokeVoidAsync("SetButtonTitle", btnId, "تأیید");
+                await JS.InvokeVoidAsync("MakeInputReadOnly", phoneInputId);
+                SmsIsSent = true;
+                StateHasChanged();
+                await ShowOnClick();
+            }
+            else
+            {
+                _navigationService.NavigateTo(NavigationUrlConsts.Explore);
+            }
+
         }
 
         private async Task SwitchTenantButton()
@@ -138,5 +218,29 @@ namespace Chamran.Deed.Mobile.MAUI.Pages.Login
         {
             StateHasChanged();
         }
+
+        private ToastEffect ShowAnimation = ToastEffect.FadeIn;
+        private ToastEffect HideAnimation = ToastEffect.FadeOut;
+        SfToast ToastObj;
+        private string ToastContent = "رمز عبور به صورت پیامک برای شما ارسال گردید";
+        private async Task ShowOnClick()
+        {
+            await this.ToastObj.ShowAsync();
+        }
+        private async Task HideOnClick()
+        {
+            await this.ToastObj.HideAsync("All");
+        }
+        //private void ShowAnimationChange(Syncfusion.Blazor.DropDowns.ChangeEventArgs<string> args)
+        //{
+        //    this.ShowAnimation = (ToastEffect)System.Enum.Parse(typeof(ToastEffect), args.Value);
+        //    StateHasChanged();
+        //}
+
+        //private void HideAnimationChange(Syncfusion.Blazor.DropDowns.ChangeEventArgs<string> args)
+        //{
+        //    this.HideAnimation = (ToastEffect)System.Enum.Parse(typeof(ToastEffect), args.Value);
+        //    StateHasChanged();
+        //}
     }
 }

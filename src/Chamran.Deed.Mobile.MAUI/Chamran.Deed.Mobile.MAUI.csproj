@@ -1,70 +1,122 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
-    <PropertyGroup>
-        <TargetFrameworks>net7.0-android;net7.0-ios;</TargetFrameworks>
-        <OutputType>Exe</OutputType>
-        <RootNamespace>Chamran.Deed.Mobile.MAUI</RootNamespace>
-        <UseMaui>true</UseMaui>
-        <SingleProject>true</SingleProject>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <EnableDefaultCssItems>false</EnableDefaultCssItems>
-		<AssemblyName>Chamran.Deed.Mobile.MAUI</AssemblyName>
+  <PropertyGroup>
+    <TargetFrameworks>net7.0-android;net7.0-ios</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Chamran.Deed.Mobile.MAUI</RootNamespace>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCssItems>false</EnableDefaultCssItems>
+    <AssemblyName>Chamran.Deed.Mobile.MAUI</AssemblyName>
 
-        <!-- Display name -->
-        <ApplicationTitle>Chamran.Deed.Mobile.MAUI</ApplicationTitle>
+    <!-- Display name -->
+    <ApplicationTitle>iDeed</ApplicationTitle>
 
-        <!-- App Identifier -->
-        <ApplicationId>com.companyname.Chamran.Deed.mobile.maui</ApplicationId>
-        <ApplicationIdGuid>5664ADE0-0A6B-4CFF-A3FD-975486AE90CA</ApplicationIdGuid>
+    <!-- App Identifier -->
+    <ApplicationId>com.chamran.deed</ApplicationId>
+    <ApplicationIdGuid>5664ADE0-0A6B-4CFF-A3FD-975486AE90CA</ApplicationIdGuid>
 
-        <!-- Versions -->
-        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-        <ApplicationVersion>1</ApplicationVersion>
+    <!-- Versions -->
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
 
-        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
-        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
-    </PropertyGroup>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">10.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">7.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">7.0</TargetPlatformMinVersion>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <!-- App Icon -->
-        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#FFFFFF" />
+  <PropertyGroup Condition="$(TargetFramework.Contains('-ios')) And $(Configuration.Contains('Release')) ">
+    <UseInterpreter>true</UseInterpreter>
+    <MtouchExtraArgs>--linkskip=Syncfusion.Blazor.Themes --linkskip=Syncfusion.Blazor.Inputs</MtouchExtraArgs>
+  </PropertyGroup>
 
-        <!-- Splash Screen -->
-        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#FFFFFF" BaseSize="128,128" />
+  <PropertyGroup Condition="'$(TargetFramework)'=='net7.0-ios'">
+    <CodesignKey>Apple Development: Created via API (D2943PA3JC)</CodesignKey>
+    <CodesignProvision>VS: WildCard Development</CodesignProvision>
+  </PropertyGroup>
 
-        <!-- Images -->
-        <MauiImage Include="Resources\Images\*" />
-        <MauiImage Update="Resources\Images\dotnet_bot.svg" BaseSize="168,208" />
+  <PropertyGroup>
+    <ApplicationIcon>favicon.ico</ApplicationIcon>
+  </PropertyGroup>
 
-        <!-- Custom Fonts -->
-        <MauiFont Include="Resources\Fonts\*" />
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-android|AnyCPU'">
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <Optimize>False</Optimize>
+    <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
+  </PropertyGroup>
 
-        <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
-        <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
-    </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-ios|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <None Remove="Resources\Fonts\IRANSans.ttf" />
-    </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-windows10.0.22621.0|AnyCPU'">
+    <Optimize>False</Optimize>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <PackageReference Include="Abp" Version="8.0.0" />
-      <PackageReference Include="Abp.AutoMapper" Version="8.0.0" />
-      <PackageReference Include="Abp.Web.Common" Version="8.0.0" />
-      <PackageReference Include="Abp.Zero.Common" Version="8.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.2" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
-      <PackageReference Include="Xam.Plugin.Connectivity" Version="4.0.0.190-beta" />
-      <PackageReference Include="Xam.Plugins.Settings" Version="4.1.0-beta" />
-    </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-android|AnyCPU'">
+    <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
+  </PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Chamran.Deed.Application.Client\Chamran.Deed.Application.Client.csproj" />
-      <ProjectReference Include="..\Chamran.Deed.Application.Shared\Chamran.Deed.Application.Shared.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <!-- App Icon -->
+    <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#ec3237" />
 
-    <ItemGroup>
-      <Folder Include="wwwroot\media\misc\" />
-    </ItemGroup>
+    <!-- Splash Screen -->
+
+    <!-- Images -->
+    <MauiImage Include="Resources\Images\*" />
+    <MauiImage Update="Resources\Images\dotnet_bot.svg" BaseSize="168,208" />
+
+    <!-- Custom Fonts -->
+    <MauiFont Include="Resources\Fonts\*" />
+
+    <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
+    <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\Fonts\IRANSans.ttf" />
+    <None Remove="Resources\Splash\splash.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="favicon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Abp" Version="8.0.0" />
+    <PackageReference Include="Abp.AutoMapper" Version="8.0.0" />
+    <PackageReference Include="Abp.Web.Common" Version="8.0.0" />
+    <PackageReference Include="Abp.Zero.Common" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="7.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
+    <PackageReference Include="Syncfusion.Blazor.Core" Version="20.4.0.49" />
+    <PackageReference Include="Syncfusion.Blazor.Navigations" Version="20.4.0.49" />
+    <PackageReference Include="Syncfusion.Blazor.Notifications" Version="20.4.0.49" />
+    <PackageReference Include="Syncfusion.Blazor.Themes" Version="20.4.0.49" />
+    <PackageReference Include="Xam.Plugin.Connectivity" Version="4.0.0.190-beta" />
+    <PackageReference Include="Xam.Plugins.Settings" Version="4.1.0-beta" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Chamran.Deed.Application.Client\Chamran.Deed.Application.Client.csproj" />
+    <ProjectReference Include="..\Chamran.Deed.Application.Shared\Chamran.Deed.Application.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\media\misc\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#ec3237" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\css\mif\metro.svg" />
+  </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties XamarinHotReloadWrongLinkerErrorInfoBarChamranDeedMobileMAUIHideInfoBar="True" /></VisualStudio></ProjectExtensions>
 
 </Project>

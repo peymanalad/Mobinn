@@ -1,4 +1,6 @@
-﻿using Abp.IdentityServer4vNext;
+﻿using Chamran.Deed.Info;
+using Chamran.Deed.People;
+using Abp.IdentityServer4vNext;
 using Abp.Zero.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Chamran.Deed.Authorization.Delegation;
@@ -16,6 +18,18 @@ namespace Chamran.Deed.EntityFrameworkCore
 {
     public class DeedDbContext : AbpZeroDbContext<Tenant, Role, User, DeedDbContext>, IAbpPersistedGrantDbContext
     {
+        public virtual DbSet<Hashtag> Hashtags { get; set; }
+
+        public virtual DbSet<PostGroup> PostGroups { get; set; }
+
+        public virtual DbSet<Post> Posts { get; set; }
+
+        public virtual DbSet<GroupMember> GroupMembers { get; set; }
+
+        public virtual DbSet<OrganizationGroup> OrganizationGroups { get; set; }
+
+        public virtual DbSet<Organization> Organizations { get; set; }
+
         /* Define an IDbSet for each entity of the application */
 
         public virtual DbSet<BinaryObject> BinaryObjects { get; set; }
@@ -35,7 +49,7 @@ namespace Chamran.Deed.EntityFrameworkCore
         public virtual DbSet<SubscriptionPaymentExtensionData> SubscriptionPaymentExtensionDatas { get; set; }
 
         public virtual DbSet<UserDelegation> UserDelegations { get; set; }
-        
+
         public virtual DbSet<RecentPassword> RecentPasswords { get; set; }
 
         public DeedDbContext(DbContextOptions<DeedDbContext> options)

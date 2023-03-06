@@ -80,8 +80,9 @@ namespace Chamran.Deed.Mobile.MAUI.Shared.Layout
               If you are using a real Android device, set it as your computer's local IP and 
                  make sure your Android device and your computer is connecting to the internet via your local Wi-Fi.
            */
-            DebugServerIpAddresses.Current = "10.0.2.2";
-
+            //DebugServerIpAddresses.Current = "10.0.2.2:8080";
+            //DebugServerIpAddresses.Current = "api.ideed.ir";
+            DebugServerIpAddresses.Current = "192.168.1.89:8089";
             ConfigureFlurlHttp();
             App.LoadPersistedSession();
 

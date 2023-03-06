@@ -41,10 +41,29 @@ namespace Chamran.Deed.Localization
             var appContext = ApplicationBootstrapper.AbpBootstrapper.IocManager.IocContainer.Resolve<IApplicationContext>();
             if (appContext.Configuration == null)
             {
-                throw new Exception("Set configuration before using remote localization!");
+                return TranslateUsingSwitch(text);
+                //throw new Exception("Set configuration before using remote localization!");
             }
 
             return appContext.Configuration.Localization.Localize(text);
+        }
+
+        private static string TranslateUsingSwitch(string text)
+        {
+            switch (text)
+            {
+                case "Yes":
+                    return "آری";
+                case "No":
+                    return "خیر";
+                case "DoYouWantToTryAgain":
+                    return "آیا می خواهید دوباره امتحان کنید؟";
+                case "UnhandledWebRequestException":
+                    return "خطا در دسترسی به سرویس ها";
+
+                default:
+                    return text;
+            }
         }
     }
 }
