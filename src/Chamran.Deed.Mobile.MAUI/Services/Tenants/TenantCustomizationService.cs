@@ -27,30 +27,37 @@ namespace Chamran.Deed.Mobile.MAUI.Services.Tenants
 
         public async Task<string> GetTenantLogo()
         {
-            if (!HasTenant)
+            try
             {
+                if (!HasTenant)
+                {
+                    return DefaultLogo;
+                }
+
+                if (HasCachedLogo(_applicationContext.CurrentTenant.TenantId))
+                {
+                    return _lastRequestedLogo;
+                }
+                else
+                {
+                    _lastRequestedLogo = null;
+                    _lastRequestedLogoTenantId = -1;
+                }
+
+                var getLogoOutput = await _proxyTenantCustomizationControllerService.GetTenantLogoOrNull(_applicationContext.CurrentTenant.TenantId);
+                if (getLogoOutput.HasLogo)
+                {
+                    _lastRequestedLogoTenantId = _applicationContext.CurrentTenant.TenantId;
+                    _lastRequestedLogo = "data:" + getLogoOutput.LogoFileType + ";base64, " + getLogoOutput.Logo;
+                    return _lastRequestedLogo;
+                }
+
                 return DefaultLogo;
             }
-
-            if (HasCachedLogo(_applicationContext.CurrentTenant.TenantId))
+            catch (Exception)
             {
-                return _lastRequestedLogo;
+                return "";
             }
-            else
-            {
-                _lastRequestedLogo = null;
-                _lastRequestedLogoTenantId = -1;
-            }
-
-            var getLogoOutput = await _proxyTenantCustomizationControllerService.GetTenantLogoOrNull(_applicationContext.CurrentTenant.TenantId);
-            if (getLogoOutput.HasLogo)
-            {
-                _lastRequestedLogoTenantId = _applicationContext.CurrentTenant.TenantId;
-                _lastRequestedLogo = "data:" + getLogoOutput.LogoFileType + ";base64, " + getLogoOutput.Logo;
-                return _lastRequestedLogo;
-            }
-
-            return DefaultLogo;
         }
     }
 }

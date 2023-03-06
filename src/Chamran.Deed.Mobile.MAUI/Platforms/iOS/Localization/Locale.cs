@@ -19,14 +19,14 @@ namespace Chamran.Deed.Localization
 
         public CultureInfo GetCurrentCultureInfo()
         {
-            var netLanguage = "en";
+            var netLanguage = "fa";
 
-            if (NSLocale.PreferredLanguages.Length > 0)
-            {
-                var pref = NSLocale.PreferredLanguages[0];
+            //if (NSLocale.PreferredLanguages.Length > 0)
+            //{
+            //    var pref = NSLocale.PreferredLanguages[0];
 
-                netLanguage = IosToDotnetLanguage(pref);
-            }
+            //    netLanguage = IosToDotnetLanguage(pref);
+            //}
 
             // this gets called a lot - try/catch can be expensive so consider caching or something
             System.Globalization.CultureInfo ci = null;

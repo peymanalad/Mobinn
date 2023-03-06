@@ -15,9 +15,9 @@ namespace Chamran.Deed.Localization
 
         public CultureInfo GetCurrentCultureInfo()
         {
-            var netLanguage = "en";
-            var androidLocale = Java.Util.Locale.Default;
-            netLanguage = AndroidToDotnetLanguage(androidLocale.ToString().Replace("_", "-"));
+            var netLanguage = "fa";
+            //var androidLocale = Java.Util.Locale.Default;
+            //netLanguage = AndroidToDotnetLanguage(androidLocale.ToString().Replace("_", "-"));
 
             // this gets called a lot - try/catch can be expensive so consider caching or something
             CultureInfo ci = null;

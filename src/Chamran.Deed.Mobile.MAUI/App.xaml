@@ -11,12 +11,12 @@
 
             <Style TargetType="Label">
                 <Setter Property="TextColor" Value="{DynamicResource PrimaryTextColor}" />
-                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="FontFamily" Value="IRANSans" />
             </Style>
 
             <Style TargetType="Button">
                 <Setter Property="TextColor" Value="{DynamicResource PrimaryTextColor}" />
-                <Setter Property="FontFamily" Value="OpenSansRegular" />
+                <Setter Property="FontFamily" Value="IRANSans" />
                 <Setter Property="BackgroundColor" Value="White" />
                 <Setter Property="Padding" Value="14,10" />
             </Style>

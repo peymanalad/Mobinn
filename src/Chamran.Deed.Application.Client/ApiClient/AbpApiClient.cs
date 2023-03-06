@@ -9,6 +9,8 @@ using Abp.Web.Models;
 using Flurl.Http;
 using Flurl.Http.Content;
 using Chamran.Deed.Extensions;
+using System.Net;
+using Flurl.Http.Configuration;
 
 namespace Chamran.Deed.ApiClient
 {
@@ -327,9 +329,15 @@ namespace Chamran.Deed.ApiClient
             return _client;
         }
 
+
         private static void CreateClient()
         {
-            _client = new FlurlClient(ApiUrlConfig.BaseUrl);
+            HttpClientHandler httpClientHandler = new HttpClientHandler();
+            httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain,
+              errors) => true;
+            HttpClient httpClient = new HttpClient(httpClientHandler);
+            httpClient.BaseAddress = new Uri(ApiUrlConfig.BaseUrl);
+            _client = new FlurlClient(httpClient);
 
             if (TimeoutSeconds.HasValue)
             {
@@ -349,7 +357,7 @@ namespace Chamran.Deed.ApiClient
 
             if (_applicationContext.CurrentLanguage != null)
             {
-                _client.WithHeader(".AspNetCore.Culture", "c=" + _applicationContext.CurrentLanguage.Name + "|uic=" + _applicationContext.CurrentLanguage.Name);
+                _client.WithHeader("-AspNetCore-Culture", "c=" + _applicationContext.CurrentLanguage.Name + "|uic=" + _applicationContext.CurrentLanguage.Name);
             }
 
             if (_applicationContext.CurrentTenant != null)
@@ -405,4 +413,5 @@ namespace Chamran.Deed.ApiClient
             _client?.Dispose();
         }
     }
+
 }

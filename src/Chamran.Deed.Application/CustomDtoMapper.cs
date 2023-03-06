@@ -1,4 +1,8 @@
-﻿using Abp.Application.Editions;
+﻿using Chamran.Deed.Info.Dtos;
+using Chamran.Deed.Info;
+using Chamran.Deed.People.Dtos;
+using Chamran.Deed.People;
+using Abp.Application.Editions;
 using Abp.Application.Features;
 using Abp.Auditing;
 using Abp.Authorization;
@@ -48,6 +52,18 @@ namespace Chamran.Deed
     {
         public static void CreateMappings(IMapperConfigurationExpression configuration)
         {
+            configuration.CreateMap<CreateOrEditHashtagDto, Hashtag>().ReverseMap();
+            configuration.CreateMap<HashtagDto, Hashtag>().ReverseMap();
+            configuration.CreateMap<CreateOrEditPostGroupDto, PostGroup>().ReverseMap();
+            configuration.CreateMap<PostGroupDto, PostGroup>().ReverseMap();
+            configuration.CreateMap<CreateOrEditPostDto, Post>().ReverseMap();
+            configuration.CreateMap<PostDto, Post>().ReverseMap();
+            configuration.CreateMap<CreateOrEditGroupMemberDto, GroupMember>().ReverseMap();
+            configuration.CreateMap<GroupMemberDto, GroupMember>().ReverseMap();
+            configuration.CreateMap<CreateOrEditOrganizationGroupDto, OrganizationGroup>().ReverseMap();
+            configuration.CreateMap<OrganizationGroupDto, OrganizationGroup>().ReverseMap();
+            configuration.CreateMap<CreateOrEditOrganizationDto, Organization>().ReverseMap();
+            configuration.CreateMap<OrganizationDto, Organization>().ReverseMap();
             //Inputs
             configuration.CreateMap<CheckboxInputType, FeatureInputTypeDto>();
             configuration.CreateMap<SingleLineStringInputType, FeatureInputTypeDto>();
@@ -76,8 +92,6 @@ namespace Chamran.Deed
             configuration.CreateMap<Role, RoleListDto>();
             configuration.CreateMap<UserRole, UserListRoleDto>();
 
-            
-
             //Edition
             configuration.CreateMap<EditionEditDto, SubscribableEdition>().ReverseMap();
             configuration.CreateMap<EditionCreateDto, SubscribableEdition>();
@@ -90,7 +104,6 @@ namespace Chamran.Deed
             configuration.CreateMap<Edition, EditionEditDto>();
             configuration.CreateMap<Edition, SubscribableEdition>();
             configuration.CreateMap<Edition, EditionSelectDto>();
-
 
             //Payment
             configuration.CreateMap<SubscriptionPaymentDto, SubscriptionPayment>().ReverseMap();
@@ -159,7 +172,7 @@ namespace Chamran.Deed
             configuration.CreateMap<DynamicEntityPropertyDto, DynamicEntityProperty>();
 
             configuration.CreateMap<DynamicEntityPropertyValue, DynamicEntityPropertyValueDto>().ReverseMap();
-            
+
             //User Delegations
             configuration.CreateMap<CreateUserDelegationDto, UserDelegation>();
 

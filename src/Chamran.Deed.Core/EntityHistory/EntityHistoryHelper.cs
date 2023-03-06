@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Chamran.Deed.Info;
+using Chamran.Deed.People;
+using System;
 using System.Linq;
 using Abp.Organizations;
 using Chamran.Deed.Authorization.Roles;

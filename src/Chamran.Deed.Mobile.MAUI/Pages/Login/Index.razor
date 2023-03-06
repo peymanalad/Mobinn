@@ -1,54 +1,144 @@
 ﻿@using Chamran.Deed.Mobile.MAUI.Pages.MySettings
 @using Chamran.Deed.Services.Navigation
+@using Syncfusion.Blazor.Notifications
 @layout LoginLayout
 @inherits DeedComponentBase
 @attribute [Route("/" + NavigationUrlConsts.Login)]
 
-<div class="d-flex justify-content-between flex-column-fluid flex-column w-100 mw-450px">
-    <div class="d-flex flex-stack py-2">
-        <div class="me-2"></div>
-        <div class="m-0">
-            <a href="javascript:;" @onclick="SwitchTenantButton" class="link-primary fw-bold fs-5 float-end" data-kt-translate="sign-in-head-link">@L("ChangeTenant")</a>
-        </div>
+
+
+<div class="fixed-top mt-15 d-flex flex-column-fluid flex-column w-100 mw-450px">
+
+
+    @*    <div class="d-flex flex-stack py-2">
+    <div class="me-2"></div>
+    <div class="m-0">
+    <a href="javascript:;" @onclick="SwitchTenantButton" class="link-primary fw-bold fs-5 float-end" data-kt-translate="sign-in-head-link">@L("ChangeTenant")</a>
     </div>
+    </div>
+    *@
     <div class="py-20">
         <div class="card-body">
-            <div class="text-start mb-10">
-                <h1 class="text-dark mb-3 fs-3x" data-kt-translate="sign-in-title">@L("LogIn")</h1>
-                <div class="text-gray-400 fw-semibold fs-6" data-kt-translate="general-desc">
-                    @L("CurrentTenant"):
-                    <span class="text-dark">
-                        @CurrentTenancyNameOrDefault
-                    </span>
+
+            <div class="text mb-10">
+                @*<h1 class="text-center mb-3 fs-3x" data-kt-translate="sign-in-title">@L("LogIn")</h1>*@
+                @*<div class="text-gray-400 fw-semibold fs-6" data-kt-translate="general-desc">
+                @L("CurrentTenant"):
+                <span class="text-dark">
+                @CurrentTenancyNameOrDefault
+                </span>
+                </div>*@
+            </div>
+            <div class="border rounded">
+                <p class="text-center">
+                    @if (!SmsIsSent)
+                    {
+                        <span class="mif-mobile mif-5x border rounded fg-red"></span>
+                    }
+                    else
+                    {
+                        <span class="mif-document-file-key mif-5x border rounded fg-red"></span>
+                    }
+                </p>
+                <p class="text-center">
+                    @if (!SmsIsSent)
+                    {
+                        <h5 id="headerTitle" class="text-center">
+                            لطفا شماره همراهتان را وارد نمایید
+                        </h5>
+                    }
+                    else
+                    {
+                        <h5 id="headerTitle" class="text-center">
+                            کد ارسال شده از طریق پیامک را وارد نمایید
+                        </h5>
+                    }
+
+                </p>
+            </div>
+            <br />
+
+            @if (!SmsIsSent)
+            {
+                <div class="fv-row mb-8">
+                    @*<input type="text" @bind-value="UserName" placeholder="@L("UserNameOrEmail")" name="username" autocomplete="off" class="form-control form-control-solid text-center" />*@
+                    <input type="number" id="txtUserName" @bind-value="PhoneNumber" placeholder="@L("PhoneNumber")" name="username" autocomplete="off" class="form-control form-control-solid text-center border rounded " />
                 </div>
-            </div>
-            <div class="fv-row mb-8">
-                <input type="text" @bind-value="UserName" placeholder="@L("UserNameOrEmail")" name="username" autocomplete="off" class="form-control form-control-solid" />
-            </div>
-            <div class="fv-row mb-7">
-                <input type="password" @bind-value="Password" placeholder="@L("Password")" name="password" autocomplete="off" data-kt-translate="sign-in-input-password" class="form-control form-control-solid" />
+            }
+            else
+            {
+                <div class="fv-row mb-7">
+                    @*<input type="password" @bind-value="Password" placeholder="@L("Password")" name="password" autocomplete="off" data-kt-translate="sign-in-input-password" class="form-control form-control-solid text-center" />*@
+                    @* <input class="otp-box" type="number" @bind-value="Otp1" onkeypress="return isNumberKey(event)" maxlength="1" oninput="moveToNext(this)">
+                <input class="otp-box" type="number" @bind-value="Otp2" onkeypress="return isNumberKey(event)" maxlength="1" oninput="moveToNext(this)">
+                <input class="otp-box" type="number" @bind-value="Otp3" onkeypress="return isNumberKey(event)" maxlength="1" oninput="moveToNext(this)">
+                <input class="otp-box" type="number" @bind-value="Otp4" onkeypress="return isNumberKey(event)" maxlength="1" oninput="moveToNext(this)">
+                <input class="otp-box" type="number" @bind-value="Otp5" onkeypress="return isNumberKey(event)" maxlength="1" oninput="moveToNext(this)">
+                <input class="otp-box" type="number" @bind-value="Otp6" onkeypress="return isNumberKey(event)" maxlength="1" oninput="moveToNext(this)">*@
+                    <div class="userInput" dir="ltr">
+                        <input class="inputBox" type="number" @bind-value="Otp1" id='ist' maxlength="1" onkeyup="clickEvent(this,'sec')">
+                        <input class="inputBox" type="number" @bind-value="Otp2" id="sec" maxlength="1" onkeyup="clickEvent(this,'third')">
+                        <input class="inputBox" type="number" @bind-value="Otp3" id="third" maxlength="1" onkeyup="clickEvent(this,'fourth')">
+                        <input class="inputBox" type="number" @bind-value="Otp4" id="fourth" maxlength="1" onkeyup="clickEvent(this,'fifth')">
+                        <input class="inputBox" type="number" @bind-value="Otp5" id="fifth" maxlength="1" onkeyup="clickEvent(this,'sixth')">
+                        <input class="inputBox" type="number" @bind-value="Otp6" id="sixth" maxlength="1">
+                    </div>
+
+                </div>
+            }
+            @* <div class="d-flex flex-stack flex-wrap gap-3 fs-base fw-semibold mb-10">
+            <div></div>
+            <a href="javascript:;" @onclick="ForgotPasswordButton" class="link-primary" data-kt-translate="sign-in-forgot-password">@L("ForgotPassword")</a>
             </div>
             <div class="d-flex flex-stack flex-wrap gap-3 fs-base fw-semibold mb-10">
-                <div></div>
-                <a href="javascript:;" @onclick="ForgotPasswordButton" class="link-primary" data-kt-translate="sign-in-forgot-password">@L("ForgotPassword")</a>
-            </div>
-            <div class="d-flex flex-stack flex-wrap gap-3 fs-base fw-semibold mb-10">
-                <div></div>
-                <a href="javascript:;" @onclick="EmailActivationButton" class="link-primary" data-kt-translate="sign-in-forgot-password">@L("EmailActivation")</a>
-            </div>
+            <div></div>
+            <a href="javascript:;" @onclick="EmailActivationButton" class="link-primary" data-kt-translate="sign-in-forgot-password">@L("EmailActivation")</a>
+            </div>*@
             <div class="d-flex flex-stack">
-                <button id="kt_sign_in_submit" class="btn btn-primary me-2 flex-shrink-0" @onclick="LoginUser">
-                    <span class="indicator-label" data-kt-translate="sign-in-submit">@L("LogIn")</span>
+                <button id="kt_sign_in_submit" class="btn btn-primary me-2 flex-shrink-0" @onclick="@(e => LoginUser("kt_sign_in_submit_span","txtUserName"))">
+                    <span id="kt_sign_in_submit_span" class="indicator-label" data-kt-translate="sign-in-submit">@L("LogIn")</span>
                 </button>
             </div>
         </div>
     </div>
-    <div class="m-0">
-        <div class="col-5">
-            <LanguageSwitch OnSave="OnLanguageSwitchAsync"></LanguageSwitch>
-        </div>
+    @*<div class="m-0">
+    <div class="col-5">
+    <LanguageSwitch OnSave="OnLanguageSwitchAsync"></LanguageSwitch>
     </div>
+    </div>*@
 </div>
+<SfToast ID="toast_default" @ref="ToastObj" Title="توجه" Content="@ToastContent" Timeout="5000" Icon="e-meeting">
+    <ToastPosition X="Right" Y="Bottom"></ToastPosition>
+    <ToastAnimationSettings>
+        <ToastShowAnimationSettings Effect="@ShowAnimation"></ToastShowAnimationSettings>
+        <ToastHideAnimationSettings Effect="@HideAnimation"></ToastHideAnimationSettings>
+    </ToastAnimationSettings>
+</SfToast>
+<style>
+    /*.otp-box {
+            width: 40px;
+            height: 40px;
+            border: 1px solid black;
+            display: inline-block;
+            text-align: center;
+            font-size: 20px;
+        }*/
+    .userInput {
+        display: flex;
+        justify-content: center;
+    }
+    .inputBox{
+        margin: 10px;
+        height: 35px;
+        width: 65px;
+        border: none;
+        border-radius: 5px;
+        text-align: center;
+        font-family: IRANSans;
+        font-size: 1.2rem;
+        background: #eef2f3;
+    }
+</style>
 
 <SwitchTenantModal OnSave="OnSwitchTenantSave" @ref="switchTenantModal"></SwitchTenantModal>
 <EmailActivationModal OnSave="OnEmailActivation" @ref="emailActivationModal"></EmailActivationModal>

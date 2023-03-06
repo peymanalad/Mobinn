@@ -6,6 +6,36 @@
     /// </summary>
     public static class AppPermissions
     {
+        public const string Pages_Administration_Hashtags = "Pages.Administration.Hashtags";
+        public const string Pages_Administration_Hashtags_Create = "Pages.Administration.Hashtags.Create";
+        public const string Pages_Administration_Hashtags_Edit = "Pages.Administration.Hashtags.Edit";
+        public const string Pages_Administration_Hashtags_Delete = "Pages.Administration.Hashtags.Delete";
+
+        public const string Pages_PostGroups = "Pages.PostGroups";
+        public const string Pages_PostGroups_Create = "Pages.PostGroups.Create";
+        public const string Pages_PostGroups_Edit = "Pages.PostGroups.Edit";
+        public const string Pages_PostGroups_Delete = "Pages.PostGroups.Delete";
+
+        public const string Pages_Posts = "Pages.Posts";
+        public const string Pages_Posts_Create = "Pages.Posts.Create";
+        public const string Pages_Posts_Edit = "Pages.Posts.Edit";
+        public const string Pages_Posts_Delete = "Pages.Posts.Delete";
+
+        public const string Pages_GroupMembers = "Pages.GroupMembers";
+        public const string Pages_GroupMembers_Create = "Pages.GroupMembers.Create";
+        public const string Pages_GroupMembers_Edit = "Pages.GroupMembers.Edit";
+        public const string Pages_GroupMembers_Delete = "Pages.GroupMembers.Delete";
+
+        public const string Pages_OrganizationGroups = "Pages.OrganizationGroups";
+        public const string Pages_OrganizationGroups_Create = "Pages.OrganizationGroups.Create";
+        public const string Pages_OrganizationGroups_Edit = "Pages.OrganizationGroups.Edit";
+        public const string Pages_OrganizationGroups_Delete = "Pages.OrganizationGroups.Delete";
+
+        public const string Pages_Organizations = "Pages.Organizations";
+        public const string Pages_Organizations_Create = "Pages.Organizations.Create";
+        public const string Pages_Organizations_Edit = "Pages.Organizations.Edit";
+        public const string Pages_Organizations_Delete = "Pages.Organizations.Delete";
+
         //COMMON PERMISSIONS (FOR BOTH OF TENANTS AND HOST)
 
         public const string Pages = "Pages";
@@ -72,12 +102,12 @@
         public const string Pages_Administration_DynamicEntityPropertyValue_Create = "Pages.Administration.DynamicEntityPropertyValue.Create";
         public const string Pages_Administration_DynamicEntityPropertyValue_Edit = "Pages.Administration.DynamicEntityPropertyValue.Edit";
         public const string Pages_Administration_DynamicEntityPropertyValue_Delete = "Pages.Administration.DynamicEntityPropertyValue.Delete";
-        
+
         public const string Pages_Administration_MassNotification = "Pages.Administration.MassNotification";
         public const string Pages_Administration_MassNotification_Create = "Pages.Administration.MassNotification.Create";
-        
+
         public const string Pages_Administration_NewVersion_Create = "Pages_Administration_NewVersion_Create";
-        
+
         //TENANT-SPECIFIC PERMISSIONS
 
         public const string Pages_Tenant_Dashboard = "Pages.Tenant.Dashboard";
