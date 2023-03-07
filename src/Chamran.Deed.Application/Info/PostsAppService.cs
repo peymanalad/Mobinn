@@ -18,6 +18,9 @@ using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Chamran.Deed.Storage;
+using Abp.EntityFrameworkCore;
+using Chamran.Deed.EntityFrameworkCore;
+using Org.BouncyCastle.Utilities;
 
 namespace Chamran.Deed.Info
 {
@@ -32,16 +35,20 @@ namespace Chamran.Deed.Info
         private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IBinaryObjectManager _binaryObjectManager;
 
-        public PostsAppService(IRepository<Post> postRepository, IPostsExcelExporter postsExcelExporter, IRepository<GroupMember, int> lookup_groupMemberRepository, IRepository<PostGroup, int> lookup_postGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager)
+        private readonly IRepository<PostCategory> _postCategoryRepository;
+        //private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
+
+
+        public PostsAppService(IRepository<Post> postRepository, IPostsExcelExporter postsExcelExporter, IRepository<GroupMember, int> lookup_groupMemberRepository, IRepository<PostGroup, int> lookup_postGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager, IRepository<PostCategory> postCategoryRepository)
         {
             _postRepository = postRepository;
             _postsExcelExporter = postsExcelExporter;
             _lookup_groupMemberRepository = lookup_groupMemberRepository;
             _lookup_postGroupRepository = lookup_postGroupRepository;
-
             _tempFileCacheManager = tempFileCacheManager;
             _binaryObjectManager = binaryObjectManager;
-
+            _postCategoryRepository = postCategoryRepository;
+            //_dbContextProvider= dbContextProvider;
         }
 
         public async Task<PagedResultDto<GetPostForViewDto>> GetAll(GetAllPostsInput input)
@@ -352,5 +359,27 @@ namespace Chamran.Deed.Info
             post.PostFile = null;
         }
 
+        public Task<PagedResultDto<GetPostCategoriesForViewDto>> GetPostCategoriesForView()
+        {
+            try
+            {
+                var res = new List<GetPostCategoriesForViewDto>();
+                foreach (var postCategory in _postCategoryRepository.GetAll())
+                {
+                    res.Add(new GetPostCategoriesForViewDto()
+                    {
+                        //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
+                        Base64Image = postCategory.FileId,
+                        Id = postCategory.Id,
+                        PostGroupDescription = postCategory.PostGroupDescription
+                    });
+                }
+                return Task.FromResult(new PagedResultDto<GetPostCategoriesForViewDto>(res.Count, res));
+            }
+            catch (Exception ex)
+            {
+                throw new UserFriendlyException(ex.Message);
+            }
+        }
     }
 }

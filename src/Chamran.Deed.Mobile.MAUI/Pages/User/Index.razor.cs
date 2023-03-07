@@ -13,7 +13,7 @@ namespace Chamran.Deed.Mobile.MAUI.Pages.User
     {
         protected IUserAppService UserAppService { get; set; }
         protected IUserProfileService UserProfileService { get; set; }
-
+        
         private CreateOrEditUserModal createOrEditUserModal { get; set; }
 
         private ItemsProviderResult<UserListModel> users;

@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Net;
+using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Abp.Configuration.Startup;
 using Abp.Dependency;
@@ -144,10 +148,34 @@ namespace Chamran.Deed.ApiClient
 
         private static IFlurlClient CreateApiClient()
         {
-            IFlurlClient client = new FlurlClient(ApiUrlConfig.BaseUrl);
+            var httpClientHandler = new HttpClientHandler();
+            httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain,
+                errors) => true;
+            if (httpClientHandler.SupportsAutomaticDecompression)
+            {
+                httpClientHandler.AutomaticDecompression = DecompressionMethods.GZip |
+                                                           DecompressionMethods.Deflate;
+            }
+            httpClientHandler.ServerCertificateCustomValidationCallback = NewValidateServerCertficate;
+            var httpClient = new HttpClient(httpClientHandler);
+            httpClient.BaseAddress = new Uri(ApiUrlConfig.BaseUrl);
+
+            //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+            //ServicePointManager.ServerCertificateValidationCallback = ValidateServerCertficate;
+
+
+            //IFlurlClient client = new FlurlClient(ApiUrlConfig.BaseUrl);
+            IFlurlClient client = new FlurlClient(httpClient);
+
             client.WithHeader("Accept", new MediaTypeWithQualityHeaderValue("application/json"));
             client.WithHeader("User-Agent", DeedConsts.AbpApiClientUserAgent);
             return client;
+        }
+
+        private static bool NewValidateServerCertficate(HttpRequestMessage arg1, X509Certificate2 arg2, X509Chain arg3, SslPolicyErrors arg4)
+        {
+            return true;
+
         }
     }
 }

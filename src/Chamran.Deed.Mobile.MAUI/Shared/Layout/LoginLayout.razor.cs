@@ -29,7 +29,7 @@ namespace Chamran.Deed.Mobile.MAUI.Shared.Layout
 
         private async Task SetLogoUrl()
         {
-            _logoURL = await DependencyResolver.Resolve<TenantCustomizationService>().GetTenantLogo();
+            //_logoURL = await DependencyResolver.Resolve<TenantCustomizationService>().GetTenantLogo();
         }
 
         private async Task SetLayout()

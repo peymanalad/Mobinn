@@ -41,7 +41,7 @@ namespace Chamran.Deed.Mobile.MAUI.Shared.Layout
             var navigationService = DependencyResolver.Resolve<INavigationService>();
             navigationService.Initialize(NavigationManager);
 
-            _logoURL = await DependencyResolver.Resolve<TenantCustomizationService>().GetTenantLogo();
+            //_logoURL = await DependencyResolver.Resolve<TenantCustomizationService>().GetTenantLogo();
 
             await SetLayout();
         }

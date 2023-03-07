@@ -1,9 +1,12 @@
 ﻿using Abp.AutoMapper;
 using Abp.Configuration.Startup;
+using Abp.Dependency;
 using Abp.Modules;
 using Abp.Reflection.Extensions;
 using Chamran.Deed.ApiClient;
+using Chamran.Deed.Info;
 using Chamran.Deed.Mobile.MAUI.Core.ApiClient;
+using System.ComponentModel;
 
 namespace Chamran.Deed
 {
@@ -21,7 +24,16 @@ namespace Chamran.Deed
 
         public override void Initialize()
         {
-            IocManager.RegisterAssemblyByConvention(typeof(DeedMobileMAUIModule).GetAssembly());
+            try
+            {
+
+                IocManager.RegisterAssemblyByConvention(typeof(DeedMobileMAUIModule).GetAssembly());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 }
