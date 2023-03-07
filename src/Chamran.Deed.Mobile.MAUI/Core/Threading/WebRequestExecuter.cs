@@ -17,15 +17,9 @@ namespace Chamran.Deed.Core.Threading
             Func<Exception, Task> failCallback = null,
             Action finallyCallback = null)
         {
-            if (successCallback == null)
-            {
-                successCallback = _ => Task.CompletedTask;
-            }
+            successCallback ??= _ => Task.CompletedTask;
 
-            if (failCallback == null)
-            {
-                failCallback = _ => Task.CompletedTask;
-            }
+            failCallback ??= _ => Task.CompletedTask;
 
             try
             {
@@ -65,15 +59,9 @@ namespace Chamran.Deed.Core.Threading
             Func<System.Exception, Task> failCallback = null,
             Action finallyCallback = null)
         {
-            if (successCallback == null)
-            {
-                successCallback = () => Task.CompletedTask;
-            }
+            successCallback ??= () => Task.CompletedTask;
 
-            if (failCallback == null)
-            {
-                failCallback = _ => Task.CompletedTask;
-            }
+            failCallback ??= _ => Task.CompletedTask;
 
             try
             {

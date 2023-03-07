@@ -8,6 +8,10 @@ using Abp.MimeTypes;
 using Microsoft.AspNetCore.Mvc;
 using Chamran.Deed.Dto;
 using Chamran.Deed.Storage;
+using Microsoft.AspNetCore.OutputCaching;
+using Twilio.TwiML.Voice;
+using Abp.AspNetZeroCore.Net;
+using Abp.Web.Models;
 
 namespace Chamran.Deed.Web.Controllers
 {
@@ -46,7 +50,7 @@ namespace Chamran.Deed.Web.Controllers
             var fileObject = await _binaryObjectManager.GetOrNullAsync(id);
             if (fileObject == null)
             {
-                return StatusCode((int) HttpStatusCode.NotFound);
+                return StatusCode((int)HttpStatusCode.NotFound);
             }
 
             if (fileName.IsNullOrEmpty())
@@ -58,7 +62,7 @@ namespace Chamran.Deed.Web.Controllers
                 }
                 else
                 {
-                    return StatusCode((int) HttpStatusCode.BadRequest);
+                    return StatusCode((int)HttpStatusCode.BadRequest);
                 }
             }
 
@@ -70,11 +74,101 @@ namespace Chamran.Deed.Web.Controllers
                 }
                 else
                 {
-                    return StatusCode((int) HttpStatusCode.BadRequest);
+                    return StatusCode((int)HttpStatusCode.BadRequest);
                 }
             }
 
             return File(fileObject.Bytes, contentType, fileName);
         }
+
+        [DisableAuditing]
+        [OutputCache(Duration = 0,NoStore = true)]
+        [ResponseCache(Duration = 0,NoStore = true)]
+        public async Task<FileResult> GetContent(Guid id, string contentType, string fileName)
+        {
+            var fileObject = await _binaryObjectManager.GetOrNullAsync(id);
+            if (fileObject == null)
+            {
+                return null; //StatusCode((int)HttpStatusCode.NotFound);
+            }
+
+            if (fileName.IsNullOrEmpty())
+            {
+                if (!fileObject.Description.IsNullOrEmpty() &&
+                    !Path.GetExtension(fileObject.Description).IsNullOrEmpty())
+                {
+                    fileName = fileObject.Description;
+                }
+                else
+                {
+                    return null; //StatusCode((int)HttpStatusCode.BadRequest);
+                }
+            }
+
+            if (contentType.IsNullOrEmpty())
+            {
+                if (!Path.GetExtension(fileName).IsNullOrEmpty())
+                {
+                    contentType = _mimeTypeMap.GetMimeType(fileName);
+                }
+                else
+                {
+                    return null; //StatusCode((int)HttpStatusCode.BadRequest);
+                }
+            }
+
+            //var data = Convert.ToBase64String(fileObject.Bytes);
+            //return File(Convert.FromBase64String(data), MimeTypeNames.ImageJpeg);
+            return File(fileObject.Bytes, MimeTypeNames.ImageJpeg);
+            //http://192.168.1.89:8089/File/GetContent?id=6FBAE131-2182-87FC-B93A-3A09C55AD962
+
+
+        }
+
+        [DisableAuditing]
+        [OutputCache(Duration = 0, NoStore = true)]
+        [ResponseCache(Duration = 0, NoStore = true)]
+        [DontWrapResult]
+        public async Task<string> GetBase64ImageSource(Guid id, string contentType, string fileName)
+        {
+            var fileObject = await _binaryObjectManager.GetOrNullAsync(id);
+            if (fileObject == null)
+            {
+                return null; //StatusCode((int)HttpStatusCode.NotFound);
+            }
+
+            if (fileName.IsNullOrEmpty())
+            {
+                if (!fileObject.Description.IsNullOrEmpty() &&
+                    !Path.GetExtension(fileObject.Description).IsNullOrEmpty())
+                {
+                    fileName = fileObject.Description;
+                }
+                else
+                {
+                    return null; //StatusCode((int)HttpStatusCode.BadRequest);
+                }
+            }
+
+            if (contentType.IsNullOrEmpty())
+            {
+                if (!Path.GetExtension(fileName).IsNullOrEmpty())
+                {
+                    contentType = _mimeTypeMap.GetMimeType(fileName);
+                }
+                else
+                {
+                    return null; //StatusCode((int)HttpStatusCode.BadRequest);
+                }
+            }
+
+            var data = Convert.ToBase64String(fileObject.Bytes);
+            //return File(Convert.FromBase64String(data), MimeTypeNames.ImageJpeg);
+            return "data:image/png;base64," + data;
+            //http://192.168.1.89:8089/File/GetBase64ImageSource?id=6FBAE131-2182-87FC-B93A-3A09C55AD962
+
+
+        }
+
     }
 }

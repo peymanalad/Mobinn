@@ -10,7 +10,8 @@ using Flurl.Http;
 using Flurl.Http.Content;
 using Chamran.Deed.Extensions;
 using System.Net;
-using Flurl.Http.Configuration;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Chamran.Deed.ApiClient
 {
@@ -147,6 +148,12 @@ namespace Chamran.Deed.ApiClient
             return await GetAsync<T>(endpoint, null);
         }
 
+        public async Task<string> GetNoWrapAsync<T>(string endpoint)
+        {
+            return await GetNoWrapAsync(endpoint, null);
+        }
+
+
         /// <summary>
         /// Makes GET request without authentication token.
         /// </summary>
@@ -168,6 +175,11 @@ namespace Chamran.Deed.ApiClient
             return await GetAsync<T>(endpoint, queryParameters, _accessTokenManager.GetAccessToken(), true);
         }
 
+        public async Task<string> GetNoWrapAsync(string endpoint, object queryParameters)
+        {
+            return await GetNoWrapAsync(endpoint, queryParameters, _accessTokenManager.GetAccessToken(), true);
+        }
+
         public async Task<T> GetAsync<T>(string endpoint, object queryParameters, string accessToken, bool stripAjaxResponseWrapper)
         {
             var httpResponse = GetClient(accessToken)
@@ -176,6 +188,16 @@ namespace Chamran.Deed.ApiClient
                 .GetAsync();
 
             return await ValidateAbpResponse<T>(httpResponse, stripAjaxResponseWrapper);
+        }
+
+        public async Task<string> GetNoWrapAsync(string endpoint, object queryParameters, string accessToken, bool stripAjaxResponseWrapper)
+        {
+            var httpResponse = GetClient(accessToken)
+                .Request(endpoint)
+                .SetQueryParams(queryParameters)
+                .GetAsync();
+
+            return await httpResponse.Result.GetStringAsync();
         }
 
         #endregion
@@ -332,11 +354,21 @@ namespace Chamran.Deed.ApiClient
 
         private static void CreateClient()
         {
-            HttpClientHandler httpClientHandler = new HttpClientHandler();
+            var httpClientHandler = new HttpClientHandler();
             httpClientHandler.ServerCertificateCustomValidationCallback = (message, cert, chain,
               errors) => true;
-            HttpClient httpClient = new HttpClient(httpClientHandler);
+            if (httpClientHandler.SupportsAutomaticDecompression)
+            {
+                httpClientHandler.AutomaticDecompression = DecompressionMethods.GZip |
+                                                           DecompressionMethods.Deflate;
+            }
+            httpClientHandler.ServerCertificateCustomValidationCallback = NewValidateServerCertficate;
+            var httpClient = new HttpClient(httpClientHandler);
             httpClient.BaseAddress = new Uri(ApiUrlConfig.BaseUrl);
+
+            //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+            //ServicePointManager.ServerCertificateValidationCallback = ValidateServerCertficate;
+            
             _client = new FlurlClient(httpClient);
 
             if (TimeoutSeconds.HasValue)
@@ -345,6 +377,15 @@ namespace Chamran.Deed.ApiClient
             }
         }
 
+        private static bool NewValidateServerCertficate(HttpRequestMessage arg1, X509Certificate2 arg2, X509Chain arg3, SslPolicyErrors arg4)
+        {
+            return true;
+        }
+
+        //static bool ValidateServerCertficate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        //{
+        //    return true;
+        //}
         private void AddHeaders(string accessToken)
         {
             _client.HttpClient.DefaultRequestHeaders.Clear();

@@ -8,7 +8,15 @@ namespace Chamran.Deed.Core.Dependency
 
         public static T Resolve<T>()
         {
-            return ApplicationBootstrapper.AbpBootstrapper.IocManager.Resolve<T>();
+            try
+            {
+                return ApplicationBootstrapper.AbpBootstrapper.IocManager.Resolve<T>();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
         public static object Resolve(Type type)

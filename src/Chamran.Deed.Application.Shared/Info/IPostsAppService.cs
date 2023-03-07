@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp.Application.Services;
 using Abp.Application.Services.Dto;
@@ -26,6 +27,8 @@ namespace Chamran.Deed.Info
         Task<PagedResultDto<PostPostGroupLookupTableDto>> GetAllPostGroupForLookupTable(GetAllForLookupTableInput input);
 
         Task RemovePostFileFile(EntityDto input);
+
+        Task<PagedResultDto<GetPostCategoriesForViewDto>> GetPostCategoriesForView();
 
     }
 }

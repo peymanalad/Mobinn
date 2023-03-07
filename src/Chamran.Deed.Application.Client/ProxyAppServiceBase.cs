@@ -1,4 +1,5 @@
-﻿using Abp.Application.Services;
+﻿using System.IO;
+using Abp.Application.Services;
 using Abp.Extensions;
 using Chamran.Deed.ApiClient;
 
@@ -21,6 +22,12 @@ namespace Chamran.Deed
         {
             return ApiBaseUrl + _serviceUrlSegment + "/" + methodName;
         }
+
+        protected string GetDirectEndpoint(string directPath)
+        {
+            return ApiBaseUrl + directPath;
+        }
+
 
         private string GetServiceUrlSegmentByConvention()
         {

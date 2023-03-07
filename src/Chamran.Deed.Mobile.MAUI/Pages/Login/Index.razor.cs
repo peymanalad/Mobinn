@@ -38,60 +38,39 @@ namespace Chamran.Deed.Mobile.MAUI.Pages.Login
         public string PhoneNumber
         {
             get => _accountService.AbpAuthenticateModel.PhoneNumber;
-            set
-            {
-                _accountService.AbpAuthenticateModel.PhoneNumber = value;
-            }
+            set => _accountService.AbpAuthenticateModel.PhoneNumber = value;
         }
 
-        
+
         public string Otp1
         {
             get => _accountService.AbpAuthenticateModel.Otp1;
-            set
-            {
-                _accountService.AbpAuthenticateModel.Otp1 = value;
-            }
+            set => _accountService.AbpAuthenticateModel.Otp1 = value;
         }
-         public string Otp2
+        public string Otp2
         {
             get => _accountService.AbpAuthenticateModel.Otp2;
-            set
-            {
-                _accountService.AbpAuthenticateModel.Otp2 = value;
-            }
+            set => _accountService.AbpAuthenticateModel.Otp2 = value;
         }
-         public string Otp3
+        public string Otp3
         {
             get => _accountService.AbpAuthenticateModel.Otp3;
-            set
-            {
-                _accountService.AbpAuthenticateModel.Otp3 = value;
-            }
+            set => _accountService.AbpAuthenticateModel.Otp3 = value;
         }
-         public string Otp4
+        public string Otp4
         {
             get => _accountService.AbpAuthenticateModel.Otp4;
-            set
-            {
-                _accountService.AbpAuthenticateModel.Otp4 = value;
-            }
+            set => _accountService.AbpAuthenticateModel.Otp4 = value;
         }
-         public string Otp5
+        public string Otp5
         {
             get => _accountService.AbpAuthenticateModel.Otp5;
-            set
-            {
-                _accountService.AbpAuthenticateModel.Otp5 = value;
-            }
+            set => _accountService.AbpAuthenticateModel.Otp5 = value;
         }
-         public string Otp6
+        public string Otp6
         {
             get => _accountService.AbpAuthenticateModel.Otp6;
-            set
-            {
-                _accountService.AbpAuthenticateModel.Otp6 = value;
-            }
+            set => _accountService.AbpAuthenticateModel.Otp6 = value;
         }
 
         private IAccountService _accountService;
@@ -135,6 +114,14 @@ namespace Chamran.Deed.Mobile.MAUI.Pages.Login
             }
             else
             {
+                _accountService.AbpAuthenticateModel.UserNameOrEmailAddress = "admin";
+                _accountService.AbpAuthenticateModel.Password = "123qwe";
+                await SetBusyAsync(async () =>
+                {
+                    await WebRequestExecuter.Execute(
+                        async () => await _accountService.LoginUserAsync()
+                    );
+                });
                 _navigationService.NavigateTo(NavigationUrlConsts.Explore);
             }
 

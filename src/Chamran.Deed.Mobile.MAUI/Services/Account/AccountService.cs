@@ -74,7 +74,7 @@ namespace Chamran.Deed.Services.Account
             AbpAuthenticateModel.Password = null;
             await SetCurrentUserInfoAsync();
             await UserConfigurationManager.GetAsync();
-            _navigationService.NavigateTo(NavigationUrlConsts.Tenants);
+            //_navigationService.NavigateTo(NavigationUrlConsts.Tenants);
         }
 
         private async Task SetCurrentUserInfoAsync()
