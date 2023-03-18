@@ -125,6 +125,7 @@
 
             public static class Host
             {
+                public const string Sms = "ExternalLoginProvider.Sms";
                 public const string Facebook = "ExternalLoginProvider.Facebook";
                 public const string Google = "ExternalLoginProvider.Google";
                 public const string Twitter = "ExternalLoginProvider.Twitter";
@@ -135,6 +136,8 @@
 
             public static class Tenant
             {
+                public const string Sms = "ExternalLoginProvider.Sms.Tenant";
+                public const string Sms_IsDeactivated = "ExternalLoginProvider.Sms.IsDeactivated";
                 public const string Facebook = "ExternalLoginProvider.Facebook.Tenant";
                 public const string Facebook_IsDeactivated = "ExternalLoginProvider.Facebook.IsDeactivated";
                 public const string Google = "ExternalLoginProvider.Google.Tenant";

@@ -45,6 +45,7 @@ using Chamran.Deed.Friendships.Cache;
 using Chamran.Deed.Localization;
 using Chamran.Deed.MultiTenancy;
 using Chamran.Deed.Net.Emailing;
+using Chamran.Deed.Net.Sms;
 using Chamran.Deed.Notifications;
 using Chamran.Deed.WebHooks;
 using Newtonsoft.Json;
@@ -97,6 +98,9 @@ namespace Chamran.Deed
 
             //Twilio - Enable this line to activate Twilio SMS integration
             //Configuration.ReplaceService<ISmsSender,TwilioSmsSender>();
+
+            //DeedSmsSender- Enable this line to activate Twilio SMS integration
+            Configuration.ReplaceService<ISmsSender,DeedSmsSender>();
 
             //Adding DynamicEntityParameters definition providers
             Configuration.DynamicEntityProperties.Providers.Add<AppDynamicEntityPropertyDefinitionProvider>();

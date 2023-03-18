@@ -10,4 +10,4 @@
   WORKDIR /App
   EXPOSE 80
   EXPOSE 443
-  ENTRYPOINT ["dotnet", "YasnaSystem.Deed.Web.Host.dll"]
+  ENTRYPOINT ["dotnet", "Chamran.Deed.Web.Host.dll"]

@@ -23,5 +23,14 @@ namespace Chamran.Deed.Net.Sms
 
             return Task.FromResult(0);
         }
+
+        public Task<bool> SendAsyncResult(string number, string message)
+        {
+            Logger.Warn("Sending SMS is not implemented! Message content:");
+            Logger.Warn("Number  : " + number);
+            Logger.Warn("Message : " + message);
+
+            return Task.FromResult(false);
+        }
     }
 }

@@ -70,6 +70,7 @@ namespace Chamran.Deed.Web.Startup
                     options.RequireHttpsMetadata = false;
                 });
             }
+
         }
 
         /* This method is needed to authorize SignalR javascript client.
