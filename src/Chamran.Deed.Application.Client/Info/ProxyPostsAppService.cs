@@ -61,5 +61,11 @@ namespace Chamran.Deed.Info
             return await ApiClient.GetAsync<PagedResultDto<GetPostCategoriesForViewDto>>(GetEndpoint(nameof(GetPostCategoriesForView)));
 
         }
+
+        public async Task<PagedResultDto<GetPostsForViewDto>> GetPostsForView(int postGroupId)
+        {
+            return await ApiClient.GetAsync<PagedResultDto<GetPostsForViewDto>>(GetEndpoint(nameof(GetPostsForView)), new { postGroupId = postGroupId });
+
+        }
     }
 }

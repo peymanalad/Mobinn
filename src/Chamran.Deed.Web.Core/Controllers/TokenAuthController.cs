@@ -142,6 +142,115 @@ namespace Chamran.Deed.Web.Controllers
 
 
         [HttpPost]
+        public async Task<bool> SendOtp([FromBody] AuthenticateModel model)
+        {
+            return await _smsSender.SendAsyncResult("09122800039", "رمز یکبار مصرف شما:123456");
+
+        }
+
+
+        [HttpPost]
+        public async Task<AuthenticateResultModel> OtpAuthenticate([FromBody] AuthenticateModel model)
+        {
+            
+            if (UseCaptchaOnLogin())
+            {
+                await ValidateReCaptcha(model.CaptchaResponse);
+            }
+
+            var loginResult = await GetLoginResultAsync(
+                model.UserNameOrEmailAddress,
+                model.Password,
+                GetTenancyNameOrNull()
+            );
+
+            var returnUrl = model.ReturnUrl;
+
+            if (model.SingleSignIn.HasValue && model.SingleSignIn.Value &&
+                loginResult.Result == AbpLoginResultType.Success)
+            {
+                loginResult.User.SetSignInToken();
+                returnUrl = AddSingleSignInParametersToReturnUrl(model.ReturnUrl, loginResult.User.SignInToken,
+                    loginResult.User.Id, loginResult.User.TenantId);
+            }
+
+            //Password reset
+            if (loginResult.User.ShouldChangePasswordOnNextLogin)
+            {
+                loginResult.User.SetNewPasswordResetCode();
+                return new AuthenticateResultModel
+                {
+                    ShouldResetPassword = true,
+                    ReturnUrl = returnUrl,
+                    c = await EncryptQueryParameters(loginResult.User.Id, loginResult.User.PasswordResetCode)
+                };
+            }
+
+            //Two factor auth
+            await _userManager.InitializeOptionsAsync(loginResult.Tenant?.Id);
+
+            string twoFactorRememberClientToken = null;
+            if (await IsTwoFactorAuthRequiredAsync(loginResult, model))
+            {
+                if (model.TwoFactorVerificationCode.IsNullOrEmpty())
+                {
+                    //Add a cache item which will be checked in SendTwoFactorAuthCode to prevent sending unwanted two factor code to users.
+                    await _cacheManager
+                        .GetTwoFactorCodeCache()
+                        .SetAsync(
+                            loginResult.User.ToUserIdentifier().ToString(),
+                            new TwoFactorCodeCacheItem()
+                        );
+
+                    return new AuthenticateResultModel
+                    {
+                        RequiresTwoFactorVerification = true,
+                        UserId = loginResult.User.Id,
+                        TwoFactorAuthProviders = await _userManager.GetValidTwoFactorProvidersAsync(loginResult.User),
+                        ReturnUrl = returnUrl
+                    };
+                }
+
+                twoFactorRememberClientToken = await TwoFactorAuthenticateAsync(loginResult, model);
+            }
+
+            // One Concurrent Login 
+            if (AllowOneConcurrentLoginPerUser())
+            {
+                await ResetSecurityStampForLoginResult(loginResult);
+            }
+
+            var refreshToken = CreateRefreshToken(
+                await CreateJwtClaims(
+                    loginResult.Identity,
+                    loginResult.User,
+                    tokenType: TokenType.RefreshToken
+                )
+            );
+
+            var accessToken = CreateAccessToken(
+                await CreateJwtClaims(
+                    loginResult.Identity,
+                    loginResult.User,
+                    refreshTokenKey: refreshToken.key
+                )
+            );
+
+            return new AuthenticateResultModel
+            {
+                AccessToken = accessToken,
+                ExpireInSeconds = (int)_configuration.AccessTokenExpiration.TotalSeconds,
+                RefreshToken = refreshToken.token,
+                RefreshTokenExpireInSeconds = (int)_configuration.RefreshTokenExpiration.TotalSeconds,
+                EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
+                TwoFactorRememberClientToken = twoFactorRememberClientToken,
+                UserId = loginResult.User.Id,
+                ReturnUrl = returnUrl
+            };
+        }
+
+
+        [HttpPost]
         public async Task<AuthenticateResultModel> Authenticate([FromBody] AuthenticateModel model)
         {
             if (UseCaptchaOnLogin())
@@ -830,6 +939,28 @@ namespace Chamran.Deed.Web.Controllers
                     );
             }
         }
+
+        private async Task<AbpLoginResult<Tenant, User>> GetOtpLoginResultAsync(string phoneNumber,
+            string otp, string tenancyName)
+        {
+            var shouldLockout = await SettingManager.GetSettingValueAsync<bool>(
+                AbpZeroSettingNames.UserManagement.UserLockOut.IsEnabled
+            );
+            var loginResult = await _logInManager.OtpLoginAsync(phoneNumber, otp, tenancyName, shouldLockout);
+
+            switch (loginResult.Result)
+            {
+                case AbpLoginResultType.Success:
+                    return loginResult;
+                default:
+                    throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
+                        loginResult.Result,
+                        phoneNumber,
+                        tenancyName
+                    );
+            }
+        }
+
 
         private string CreateAccessToken(IEnumerable<Claim> claims, TimeSpan? expiration = null)
         {

@@ -381,5 +381,42 @@ namespace Chamran.Deed.Info
                 throw new UserFriendlyException(ex.Message);
             }
         }
+
+        public Task<PagedResultDto<GetPostsForViewDto>> GetPostsForView(int postGroupId)
+        {
+            try
+            {
+                var res = new List<GetPostsForViewDto>();
+                var filteredPosts = _postRepository.GetAll()
+                    .Include(e => e.GroupMemberFk)
+                    .Include(e => e.PostGroupFk)
+                    .Include(e => e.GroupMemberFk.UserFk)
+                    //.WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
+                    .WhereIf(postGroupId > 0, e => e.PostGroupId == postGroupId);
+
+                foreach (var post in filteredPosts)
+                {
+                    res.Add(new GetPostsForViewDto()
+                    {
+                        //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
+                        Id = post.Id,
+                        GroupMemberId = post.GroupMemberId??0,
+                        IsSpecial = post.IsSpecial,
+                        MemberFullName = post.GroupMemberFk.UserFk.FullName,
+                        MemberPosition = post.GroupMemberFk.MemberPosition,
+                        MemberUserName = post.GroupMemberFk.UserFk.UserName,
+                        PostCaption = post.PostCaption,
+                        PostCreation = post.CreationTime,
+                        PostFile = post.PostFile,
+                        PostTitle = post.PostTitle
+                    });
+                }
+                return Task.FromResult(new PagedResultDto<GetPostsForViewDto>(res.Count, res));
+            }
+            catch (Exception ex)
+            {
+                throw new UserFriendlyException(ex.Message);
+            }
+        }
     }
 }

@@ -25,7 +25,7 @@ namespace Chamran.Deed.Identity
                 .AddAbpEditionManager<EditionManager>()
                 .AddAbpUserStore<UserStore>()
                 .AddAbpRoleStore<RoleStore>()
-                .AddAbpSignInManager<SignInManager>()
+                .AddAbpSignInManager<DeedSignInManager>()
                 .AddAbpUserClaimsPrincipalFactory<UserClaimsPrincipalFactory>()
                 .AddAbpSecurityStampValidator<SecurityStampValidator>()
                 .AddPermissionChecker<PermissionChecker>()
