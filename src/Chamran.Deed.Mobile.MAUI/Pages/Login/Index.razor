@@ -94,8 +94,8 @@
             <div></div>
             <a href="javascript:;" @onclick="EmailActivationButton" class="link-primary" data-kt-translate="sign-in-forgot-password">@L("EmailActivation")</a>
             </div>*@
-            <div class="d-flex flex-stack">
-                <button id="kt_sign_in_submit" class="btn btn-primary me-2 flex-shrink-0" @onclick="@(e => LoginUser("kt_sign_in_submit_span","txtUserName"))">
+            <div class="d-flex flex-stack  justify-content-center">
+                <button id="kt_sign_in_submit" class="btn btn-primary me-2 flex-shrink-0 " @onclick="@(e => LoginUser("kt_sign_in_submit_span", "txtUserName"))">
                     <span id="kt_sign_in_submit_span" class="indicator-label" data-kt-translate="sign-in-submit">@L("LogIn")</span>
                 </button>
             </div>
