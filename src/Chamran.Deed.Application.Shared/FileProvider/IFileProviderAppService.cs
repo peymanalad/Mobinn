@@ -9,6 +9,8 @@ namespace Chamran.Deed.FileProvider
     public interface IFileProviderAppService : IApplicationService
     {
         Task<string> GetImageSourceBase64(string fileId);
+        Task<string> GetLocalImageSourceBase64(string path);
 
+        
     }
 }

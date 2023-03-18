@@ -60,7 +60,6 @@ namespace Chamran.Deed.Localization
                     return "آیا می خواهید دوباره امتحان کنید؟";
                 case "UnhandledWebRequestException":
                     return "خطا در دسترسی به سرویس ها";
-
                 default:
                     return text;
             }
