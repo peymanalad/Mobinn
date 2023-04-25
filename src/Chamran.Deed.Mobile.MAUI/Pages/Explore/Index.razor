@@ -9,7 +9,7 @@
 @inherits DeedMainLayoutPageComponentBase
 @attribute [Route("/" + NavigationUrlConsts.Explore)]
 @inject GetExploreDataService ExploreDataService
-
+@inject GetPostsDataService PostsDataService
 <!-- Our Header section Starts from here -->
 <header>
     <div class="control-container">
@@ -26,42 +26,212 @@
 </header>
 
 <main>
-    <div class="tiles-grid tiles-group size-2">
 
-        @* <Virtualize @ref="PostCategoriesContainer" Context="post" ItemsProvider="@LoadPostCategories">
+<div class="tiles-grid tiles-group size-3">
 
-        @if (!post.Base64Image.HasValue)
+
+@if (posts.Any())
+{
+    @for (var i = 0; i < posts.Count; i++)
+    {
+        var index = (i + 1) % 16;
+        switch (index)
         {
-        <a href="javascript:;" @onclick="(()=>NavigateTo(post))">
-        <div data-role="tile" class="bg-indigo">
-        <span class="branding-bar">@post.PostGroupDescription</span>
-        <span class="badge inside">30</span></div>
+                    @*  default:
+        {
+
+        <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+        data-role="tile" data-size="small" class="bg-indigo " data-cover=@GetImageSource(@posts[i].ImageFileId)>
+        <span class="branding-bar">@posts[i].PostGroupDescription</span>
         </a>
         }
-        else
-        {
-        <a href="javascript:;" @onclick="(()=>NavigateTo(post))">
-        <div data-role="tile" class="bg-indigo" data-cover="@(ApiUrlConfig.BaseUrl+"/File/DownloadBinaryFile?id="+@post.Base64Image)">
-        <span class="branding-bar">@post.PostGroupDescription</span>
-        <span class="badge inside">30</span></div>
-        </a>
-        }
-
-        </Virtualize>*@
-        @if (posts.Any())
-        {
-            @foreach (var p in posts)
+        break;*@
+            case 1:
             {
-                <a href="/AllPosts/@p.Id/@p.PostGroupDescription"
-                   data-role="tile" class="bg-indigo" data-cover=@GetImageSource(p.ImageFileId)>
-                    <span class="branding-bar">@p.PostGroupDescription</span>
-                    @*<span class="badge inside">30</span>*@
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="small" class="bg-indigo col-1 row-1" data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
                 </a>
             }
+                break;
+            case 2:
+            {
 
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="wide" class="bg-indigo col-2 row-1" data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
+            case 3:
+
+
+            {
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="small" class="bg-indigo col-1 row-2 " data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
+            case 4:
+
+
+            {
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="small" class="bg-indigo col-1 row-3 " data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
+            case 5:
+
+
+            {
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="small" class="bg-indigo col-2 row-3 " data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
+            case 6:
+
+
+            {
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="small" class="bg-indigo col-3 row-3 " data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
+            case 7:
+
+
+            {
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="small" class="bg-indigo col-4 row-3 " data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
+            case 8:
+
+
+            {
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="small" class="bg-indigo col-5 row-3 " data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
+            case 9:
+
+            {
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="wide" class="bg-indigo col-1 row-4" data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
+
+
+            case 10:
+
+            {
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="small" class="bg-indigo col-5 row-4 " data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
+            case 11:
+
+            {
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="small" class="bg-indigo col-5 row-5 " data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
+
+            case 12:
+
+
+            {
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="small" class="bg-indigo col-1 row-6 " data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
+            case 13:
+
+
+            {
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="small" class="bg-indigo col-2 row-6 " data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
+            case 14:
+
+
+            {
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="small" class="bg-indigo col-3 row-6 " data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
+            case 15:
+
+
+            {
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="small" class="bg-indigo col-4 row-6 " data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
+            case 0:
+
+
+            {
+
+                <a href="/AllPosts/@posts[i].Id/@posts[i].PostGroupDescription"
+                   data-role="tile" data-size="small" class="bg-indigo col-5 row-6 " data-cover=@GetImageSource(@posts[i].ImageFileId)>
+                    <span class="branding-bar">@posts[i].PostGroupDescription</span>
+                </a>
+            }
+                break;
         }
+    }
+            @*   @foreach (var p in posts)
+        {
+        <a href="/AllPosts/@p.Id/@p.PostGroupDescription"
+        data-role="tile" class="bg-indigo" data-cover=@GetImageSource(p.ImageFileId)>
+        <span class="branding-bar">@p.PostGroupDescription</span>
+        </a>
 
-        @*<div data-role="tile" class="bg-cyan" data-cover="images/2.jpg">
+        }*@
+
+}
+
+@*<div data-role="tile" class="bg-cyan" data-cover="images/2.jpg">
         <span class="branding-bar">Email</span>
         <span class="badge inside">10</span>
         </div>
@@ -82,7 +252,7 @@
         <div data-role="tile" class="bg-orange" data-size="wide" data-cover="">
         <span class="branding-bar">Chrome</span>
         </div>*@
-    </div>
+</div>
 
 </main>
 
@@ -552,8 +722,8 @@
     }
 
     /*
-                                                                        Masnavi Changes:
-                                                                    */
+                                                                                        Masnavi Changes:
+                                                                                    */
 
     .navbar {
         padding: 0;
@@ -605,11 +775,29 @@
 
                     posts = result;
 
+
+                }
+    );
+            await WebRequestExecuter.Execute(
+                async () => await PostsDataService.GetPostsDataAsync(0),
+                async (result) =>
+                {
+
+                    foreach (var exploreDataModel in result)
+                    {
+                        posts.Add(new ExploreDataModel()
+                            {
+                                PostGroupDescription = "",
+                                ImageFileId = exploreDataModel.PostFile,
+                                Id = exploreDataModel.CategoryId
+                            });
+                    }
+
                     await UserDialogsService.UnBlock();
                     StateHasChanged(); // not always necessary... see link below
 
                 }
-    );
+                );
 
             return posts;
         }
@@ -618,6 +806,8 @@
             System.Console.WriteLine(e);
         }
         await UserDialogsService.UnBlock();
+        StateHasChanged(); // not always necessary... see link below
+
         return posts;
 
     }

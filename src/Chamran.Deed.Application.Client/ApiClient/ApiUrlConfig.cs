@@ -5,15 +5,15 @@ namespace Chamran.Deed.ApiClient
 {
     public static class ApiUrlConfig
     {
-#if DEBUG
+#if !DEBUG
         private const string DefaultHostUrl = "http://192.168.1.89:8089";
         //"https://api.ideed.ir/";
         //"https://10.0.2.2:44301";
         //"https://api.ideed.ir/";
         //"https://localhost:44301/";
 #endif
-#if !DEBUG
-        private const string DefaultHostUrl = "https://api.ideed.ir/"; 
+#if DEBUG
+        private const string DefaultHostUrl = "https://api.ideed.ir"; 
 #endif
 
 

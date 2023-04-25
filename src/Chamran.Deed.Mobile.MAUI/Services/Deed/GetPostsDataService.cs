@@ -37,7 +37,8 @@ namespace Chamran.Deed.Mobile.MAUI.Services.Deed
         public async Task<List<PostsDataModel>> GetPostsDataAsync(int id)
         {
             await InitAsync();
-            return await conn.Table<PostsDataModel>().Where(x=>x.CategoryId==id).ToListAsync();
+            if(id > 0) { return await conn.Table<PostsDataModel>().Where(x => x.CategoryId == id).ToListAsync(); }
+            return await conn.Table<PostsDataModel>().ToListAsync();
         }
         public async Task<PostsDataModel> CreateOrUpdatePostsDataAsync(
             PostsDataModel paramPostsDataModel)

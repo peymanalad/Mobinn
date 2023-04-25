@@ -25,9 +25,9 @@ namespace Chamran.Deed.ApiClient
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
             };
 
-#if DEBUG
+//#if DEBUG
             TrustLocalDeveloperCert(httpClientHandler);
-#endif
+//#endif
 
             return new AuthenticationHttpHandler(httpClientHandler)
             {
