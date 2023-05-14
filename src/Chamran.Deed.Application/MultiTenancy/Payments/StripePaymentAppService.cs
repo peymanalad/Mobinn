@@ -168,16 +168,16 @@ namespace Chamran.Deed.MultiTenancy.Payments
             {
                 var plan = await _stripeGatewayManager.GetOrCreatePlanForPayment(input.PaymentId);
 
-                sessionCreateOptions.SubscriptionData = new SessionSubscriptionDataOptions
-                {
-                    Items = new List<SessionSubscriptionDataItemOptions>
-                    {
-                        new SessionSubscriptionDataItemOptions
-                        {
-                            Plan = plan.Id,
-                        }
-                    }
-                };
+                sessionCreateOptions.SubscriptionData = new SessionSubscriptionDataOptions();
+                //{
+                //    Items = new List<SessionSubscriptionDataItemOptions>
+                //    {
+                //        new SessionSubscriptionDataItemOptions
+                //        {
+                //            Plan = plan.Id,
+                //        }
+                //    }
+                //};
             }
             else
             {
@@ -185,10 +185,10 @@ namespace Chamran.Deed.MultiTenancy.Payments
                 {
                     new SessionLineItemOptions
                     {
-                        Amount = (long) _stripeGatewayManager.ConvertToStripePrice(payment.Amount),
-                        Name = StripeGatewayManager.ProductName,
-                        Currency = DeedConsts.Currency,
-                        Description = payment.Description,
+                        //Amount = (long) _stripeGatewayManager.ConvertToStripePrice(payment.Amount),
+                        //Name = StripeGatewayManager.ProductName,
+                        //Currency = DeedConsts.Currency,
+                        //Description = payment.Description,
                         Quantity = 1
                     }
                 };
