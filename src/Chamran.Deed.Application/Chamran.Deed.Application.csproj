@@ -18,7 +18,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Abp.EntityFrameworkCore.EFPlus" Version="8.0.0" />
+    <PackageReference Include="Abp.EntityFrameworkCore.EFPlus" Version="8.2.0" />
     <PackageReference Include="NPOI" Version="2.6.0" />
   </ItemGroup>
 

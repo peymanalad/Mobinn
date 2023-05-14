@@ -17,8 +17,7 @@ namespace Chamran.Deed.Authorization.Users
     /// </summary>
     public class UserStore : AbpUserStore<Role, User>, IUserTwoFactorRecoveryCodeStore<User>
     {
-        public UserStore(
-            IRepository<User, long> userRepository,
+        public UserStore(IRepository<User, long> userRepository,
             IRepository<UserLogin, long> userLoginRepository,
             IRepository<UserRole, long> userRoleRepository,
             IRepository<Role> roleRepository,
@@ -26,7 +25,8 @@ namespace Chamran.Deed.Authorization.Users
             IRepository<UserClaim, long> userClaimRepository,
             IRepository<UserPermissionSetting, long> userPermissionSettingRepository,
             IRepository<UserOrganizationUnit, long> userOrganizationUnitRepository,
-            IRepository<OrganizationUnitRole, long> organizationUnitRoleRepository)
+            IRepository<OrganizationUnitRole, long> organizationUnitRoleRepository,
+            IRepository<UserToken, long> userTokenRepository)
             : base(
                 unitOfWorkManager,
                 userRepository,
@@ -36,7 +36,8 @@ namespace Chamran.Deed.Authorization.Users
                 userClaimRepository,
                 userPermissionSettingRepository,
                 userOrganizationUnitRepository,
-                organizationUnitRoleRepository)
+                organizationUnitRoleRepository,
+                userTokenRepository)
         {
         }
 
