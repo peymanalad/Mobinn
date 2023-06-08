@@ -14,6 +14,7 @@ using Abp.Authorization;
 using Abp.Authorization.Users;
 using Abp.MultiTenancy;
 using Abp.Configuration;
+using Abp.Domain.Repositories;
 using Abp.Extensions;
 using Abp.Net.Mail;
 using Abp.Notifications;
@@ -47,11 +48,13 @@ using Chamran.Deed.Security.Recaptcha;
 using Chamran.Deed.Web.Authentication.External;
 using Chamran.Deed.Web.Common;
 using Chamran.Deed.Authorization.Delegation;
+using Chamran.Deed.Authorization.Users.Profile.Cache;
 
 namespace Chamran.Deed.Web.Controllers
 {
     [Route("api/[controller]/[action]")]
     public class TokenAuthController : DeedControllerBase
+
     {
         private readonly LogInManager _logInManager;
         private readonly ITenantCache _tenantCache;
@@ -76,7 +79,8 @@ namespace Chamran.Deed.Web.Controllers
         private readonly AbpUserClaimsPrincipalFactory<User, Role> _claimsPrincipalFactory;
         public IRecaptchaValidator RecaptchaValidator { get; set; }
         private readonly IUserDelegationManager _userDelegationManager;
-
+        private readonly IRepository<User, long> _userRepository;
+        private readonly UserClaimsPrincipalFactory _principalFactory;
         public TokenAuthController(
             LogInManager logInManager,
             ITenantCache tenantCache,
@@ -99,7 +103,9 @@ namespace Chamran.Deed.Web.Controllers
             ISettingManager settingManager,
             IJwtSecurityStampHandler securityStampHandler,
             AbpUserClaimsPrincipalFactory<User, Role> claimsPrincipalFactory,
-            IUserDelegationManager userDelegationManager)
+            IUserDelegationManager userDelegationManager,
+            IRepository<User, long> userRepository,
+            UserClaimsPrincipalFactory principalFactory)
         {
             _logInManager = logInManager;
             _tenantCache = tenantCache;
@@ -124,6 +130,9 @@ namespace Chamran.Deed.Web.Controllers
             _claimsPrincipalFactory = claimsPrincipalFactory;
             RecaptchaValidator = NullRecaptchaValidator.Instance;
             _userDelegationManager = userDelegationManager;
+            _userRepository = userRepository;
+            _principalFactory = principalFactory;
+
         }
 
         private async Task<string> EncryptQueryParameters(long userId, string passwordResetCode)
@@ -144,7 +153,22 @@ namespace Chamran.Deed.Web.Controllers
         [HttpPost]
         public async Task<bool> SendOtp([FromBody] AuthenticateModel model)
         {
-            return await _smsSender.SendAsyncResult("09122800039", "رمز یکبار مصرف شما:123456");
+            //return await _smsSender.SendAsyncResult("09122800039", "رمز یکبار مصرف شما:123456");
+            var code = RandomHelper.GetRandom(100000, 999999).ToString();
+            //var cacheKey = AbpSession.ToUserIdentifier().ToString();
+            var cacheItem = new SmsVerificationCodeCacheItem
+            {
+                Code = code
+            };
+
+            await _cacheManager.GetSmsVerificationCodeCache().SetAsync(
+                model.UserNameOrEmailAddress,
+                cacheItem
+            );
+
+            return await _smsSender.SendAsyncResult(model.UserNameOrEmailAddress,
+                //$"رمز یکبار مصرف شما:{code}\r\nسامانه دید");
+                code);
 
         }
 
@@ -152,7 +176,130 @@ namespace Chamran.Deed.Web.Controllers
         [HttpPost]
         public async Task<AuthenticateResultModel> OtpAuthenticate([FromBody] AuthenticateModel model)
         {
-            
+
+            if (UseCaptchaOnLogin())
+            {
+                await ValidateReCaptcha(model.CaptchaResponse);
+            }
+            try
+            {
+
+                var correctKey = await _cacheManager.GetSmsVerificationCodeCache().GetOrDefaultAsync(model.UserNameOrEmailAddress);
+                if (!model.Password.Equals(correctKey.Code))
+                {
+                    throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(AbpLoginResultType.InvalidPassword, model.UserNameOrEmailAddress, GetTenancyNameOrNull());
+                }
+            }
+            catch (Exception)
+            {
+
+                throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(AbpLoginResultType.InvalidPassword, model.UserNameOrEmailAddress, GetTenancyNameOrNull());
+            }
+
+
+            //var loginResult = await GetLoginResultAsync(
+            //    model.UserNameOrEmailAddress,
+            //    model.Password,
+            //    GetTenancyNameOrNull()
+            //);
+
+            var returnUrl = model.ReturnUrl;
+
+            //if (model.SingleSignIn.HasValue && model.SingleSignIn.Value &&
+            //    loginResult.Result == AbpLoginResultType.Success)
+            //{
+            //    loginResult.User.SetSignInToken();
+            //    returnUrl = AddSingleSignInParametersToReturnUrl(model.ReturnUrl, loginResult.User.SignInToken,
+            //        loginResult.User.Id, loginResult.User.TenantId);
+            //}
+
+            //Password reset
+            //if (loginResult.User.ShouldChangePasswordOnNextLogin)
+            //{
+            //    loginResult.User.SetNewPasswordResetCode();
+            //    return new AuthenticateResultModel
+            //    {
+            //        ShouldResetPassword = true,
+            //        ReturnUrl = returnUrl,
+            //        c = await EncryptQueryParameters(loginResult.User.Id, loginResult.User.PasswordResetCode)
+            //    };
+            //}
+
+            //Two factor auth
+            //await _userManager.InitializeOptionsAsync(loginResult.Tenant?.Id);
+
+            //string twoFactorRememberClientToken = null;
+            //if (await IsTwoFactorAuthRequiredAsync(loginResult, model))
+            //{
+            //    if (model.TwoFactorVerificationCode.IsNullOrEmpty())
+            //    {
+            //        //Add a cache item which will be checked in SendTwoFactorAuthCode to prevent sending unwanted two factor code to users.
+            //        await _cacheManager
+            //            .GetTwoFactorCodeCache()
+            //            .SetAsync(
+            //                loginResult.User.ToUserIdentifier().ToString(),
+            //                new TwoFactorCodeCacheItem()
+            //            );
+
+            //        return new AuthenticateResultModel
+            //        {
+            //            RequiresTwoFactorVerification = true,
+            //            UserId = loginResult.User.Id,
+            //            TwoFactorAuthProviders = await _userManager.GetValidTwoFactorProvidersAsync(loginResult.User),
+            //            ReturnUrl = returnUrl
+            //        };
+            //    }
+
+            //    twoFactorRememberClientToken = await TwoFactorAuthenticateAsync(loginResult, model);
+            //}
+
+            // One Concurrent Login 
+            //if (AllowOneConcurrentLoginPerUser())
+            //{
+            //    await ResetSecurityStampForLoginResult(loginResult);
+            //}
+            var loginResult = await _userRepository.FirstOrDefaultAsync(
+                user => (user.PhoneNumber == model.UserNameOrEmailAddress) && user.TenantId == AbpSession.TenantId
+            );
+            if (loginResult == null)
+            {
+                throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(AbpLoginResultType.UserPhoneNumberIsNotConfirmed, model.UserNameOrEmailAddress, GetTenancyNameOrNull());
+            }
+            var identity = (ClaimsIdentity)(await _principalFactory.CreateAsync(loginResult)).Identity;
+           
+            var refreshToken = CreateRefreshToken(
+                await CreateJwtClaims(
+                    identity,
+                    loginResult,
+                    tokenType: TokenType.RefreshToken
+                )
+            );
+
+            var accessToken = CreateAccessToken(
+                await CreateJwtClaims(
+                    identity,
+                    loginResult,
+                    refreshTokenKey: refreshToken.key
+                )
+            );
+
+            return new AuthenticateResultModel
+            {
+                AccessToken = accessToken,
+                ExpireInSeconds = (int)_configuration.AccessTokenExpiration.TotalSeconds,
+                RefreshToken = refreshToken.token,
+                RefreshTokenExpireInSeconds = (int)_configuration.RefreshTokenExpiration.TotalSeconds,
+                EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
+                TwoFactorRememberClientToken = null,//twoFactorRememberClientToken,
+                UserId = loginResult.Id,
+                ReturnUrl = returnUrl
+            };
+        }
+
+
+        [HttpPost]
+        public async Task<AuthenticateResultModel> Authenticate([FromBody] AuthenticateModel model)
+        {
             if (UseCaptchaOnLogin())
             {
                 await ValidateReCaptcha(model.CaptchaResponse);
@@ -249,106 +396,6 @@ namespace Chamran.Deed.Web.Controllers
             };
         }
 
-
-        [HttpPost]
-        public async Task<AuthenticateResultModel> Authenticate([FromBody] AuthenticateModel model)
-        {
-            if (UseCaptchaOnLogin())
-            {
-                await ValidateReCaptcha(model.CaptchaResponse);
-            }
-
-            var loginResult = await GetLoginResultAsync(
-                model.UserNameOrEmailAddress,
-                model.Password,
-                GetTenancyNameOrNull()
-            );
-
-            var returnUrl = model.ReturnUrl;
-
-            if (model.SingleSignIn.HasValue && model.SingleSignIn.Value &&
-                loginResult.Result == AbpLoginResultType.Success)
-            {
-                loginResult.User.SetSignInToken();
-                returnUrl = AddSingleSignInParametersToReturnUrl(model.ReturnUrl, loginResult.User.SignInToken,
-                    loginResult.User.Id, loginResult.User.TenantId);
-            }
-
-            //Password reset
-            if (loginResult.User.ShouldChangePasswordOnNextLogin)
-            {
-                loginResult.User.SetNewPasswordResetCode();
-                return new AuthenticateResultModel
-                {
-                    ShouldResetPassword = true,
-                    ReturnUrl = returnUrl,
-                    c = await EncryptQueryParameters(loginResult.User.Id, loginResult.User.PasswordResetCode)
-                };
-            }
-
-            //Two factor auth
-            await _userManager.InitializeOptionsAsync(loginResult.Tenant?.Id);
-
-            string twoFactorRememberClientToken = null;
-            if (await IsTwoFactorAuthRequiredAsync(loginResult, model))
-            {
-                if (model.TwoFactorVerificationCode.IsNullOrEmpty())
-                {
-                    //Add a cache item which will be checked in SendTwoFactorAuthCode to prevent sending unwanted two factor code to users.
-                    await _cacheManager
-                        .GetTwoFactorCodeCache()
-                        .SetAsync(
-                            loginResult.User.ToUserIdentifier().ToString(),
-                            new TwoFactorCodeCacheItem()
-                        );
-
-                    return new AuthenticateResultModel
-                    {
-                        RequiresTwoFactorVerification = true,
-                        UserId = loginResult.User.Id,
-                        TwoFactorAuthProviders = await _userManager.GetValidTwoFactorProvidersAsync(loginResult.User),
-                        ReturnUrl = returnUrl
-                    };
-                }
-
-                twoFactorRememberClientToken = await TwoFactorAuthenticateAsync(loginResult, model);
-            }
-
-            // One Concurrent Login 
-            if (AllowOneConcurrentLoginPerUser())
-            {
-                await ResetSecurityStampForLoginResult(loginResult);
-            }
-
-            var refreshToken = CreateRefreshToken(
-                await CreateJwtClaims(
-                    loginResult.Identity,
-                    loginResult.User,
-                    tokenType: TokenType.RefreshToken
-                )
-            );
-
-            var accessToken = CreateAccessToken(
-                await CreateJwtClaims(
-                    loginResult.Identity,
-                    loginResult.User,
-                    refreshTokenKey: refreshToken.key
-                )
-            );
-
-            return new AuthenticateResultModel
-            {
-                AccessToken = accessToken,
-                ExpireInSeconds = (int) _configuration.AccessTokenExpiration.TotalSeconds,
-                RefreshToken = refreshToken.token,
-                RefreshTokenExpireInSeconds = (int) _configuration.RefreshTokenExpiration.TotalSeconds,
-                EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
-                TwoFactorRememberClientToken = twoFactorRememberClientToken,
-                UserId = loginResult.User.Id,
-                ReturnUrl = returnUrl
-            };
-        }
-
         [HttpPost]
         public async Task<RefreshTokenResult> RefreshToken(string refreshToken)
         {
@@ -389,7 +436,7 @@ namespace Chamran.Deed.Web.Controllers
                 return await Task.FromResult(new RefreshTokenResult(
                     accessToken,
                     GetEncryptedAccessToken(accessToken),
-                    (int) _configuration.AccessTokenExpiration.TotalSeconds)
+                    (int)_configuration.AccessTokenExpiration.TotalSeconds)
                 );
             }
             catch (UserFriendlyException)
@@ -497,7 +544,7 @@ namespace Chamran.Deed.Web.Controllers
             {
                 AccessToken = accessToken,
                 EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
-                ExpireInSeconds = (int) _configuration.AccessTokenExpiration.TotalSeconds
+                ExpireInSeconds = (int)_configuration.AccessTokenExpiration.TotalSeconds
             };
         }
 
@@ -521,7 +568,7 @@ namespace Chamran.Deed.Web.Controllers
             {
                 AccessToken = accessToken,
                 EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
-                ExpireInSeconds = (int) expiration.TotalSeconds
+                ExpireInSeconds = (int)expiration.TotalSeconds
             };
         }
 
@@ -535,7 +582,7 @@ namespace Chamran.Deed.Web.Controllers
             {
                 AccessToken = accessToken,
                 EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
-                ExpireInSeconds = (int) _configuration.AccessTokenExpiration.TotalSeconds
+                ExpireInSeconds = (int)_configuration.AccessTokenExpiration.TotalSeconds
             };
         }
 
@@ -594,71 +641,96 @@ namespace Chamran.Deed.Web.Controllers
             switch (loginResult.Result)
             {
                 case AbpLoginResultType.Success:
-                {
-                    // One Concurrent Login 
-                    if (AllowOneConcurrentLoginPerUser())
                     {
-                        await ResetSecurityStampForLoginResult(loginResult);
-                    }
+                        // One Concurrent Login 
+                        if (AllowOneConcurrentLoginPerUser())
+                        {
+                            await ResetSecurityStampForLoginResult(loginResult);
+                        }
 
-                    var refreshToken = CreateRefreshToken(
-                        await CreateJwtClaims(
-                            loginResult.Identity,
-                            loginResult.User,
-                            tokenType: TokenType.RefreshToken
-                        )
-                    );
-
-                    var accessToken = CreateAccessToken(
-                        await CreateJwtClaims(
-                            loginResult.Identity,
-                            loginResult.User,
-                            refreshTokenKey: refreshToken.key
-                        )
-                    );
-
-                    var returnUrl = model.ReturnUrl;
-
-                    if (model.SingleSignIn.HasValue && model.SingleSignIn.Value &&
-                        loginResult.Result == AbpLoginResultType.Success)
-                    {
-                        loginResult.User.SetSignInToken();
-                        returnUrl = AddSingleSignInParametersToReturnUrl(
-                            model.ReturnUrl,
-                            loginResult.User.SignInToken,
-                            loginResult.User.Id,
-                            loginResult.User.TenantId
+                        var refreshToken = CreateRefreshToken(
+                            await CreateJwtClaims(
+                                loginResult.Identity,
+                                loginResult.User,
+                                tokenType: TokenType.RefreshToken
+                            )
                         );
-                    }
 
-                    return new ExternalAuthenticateResultModel
-                    {
-                        AccessToken = accessToken,
-                        EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
-                        ExpireInSeconds = (int) _configuration.AccessTokenExpiration.TotalSeconds,
-                        ReturnUrl = returnUrl,
-                        RefreshToken = refreshToken.token,
-                        RefreshTokenExpireInSeconds = (int) _configuration.RefreshTokenExpiration.TotalSeconds
-                    };
-                }
-                case AbpLoginResultType.UnknownExternalLogin:
-                {
-                    var newUser = await RegisterExternalUserAsync(externalUser);
-                    if (!newUser.IsActive)
-                    {
+                        var accessToken = CreateAccessToken(
+                            await CreateJwtClaims(
+                                loginResult.Identity,
+                                loginResult.User,
+                                refreshTokenKey: refreshToken.key
+                            )
+                        );
+
+                        var returnUrl = model.ReturnUrl;
+
+                        if (model.SingleSignIn.HasValue && model.SingleSignIn.Value &&
+                            loginResult.Result == AbpLoginResultType.Success)
+                        {
+                            loginResult.User.SetSignInToken();
+                            returnUrl = AddSingleSignInParametersToReturnUrl(
+                                model.ReturnUrl,
+                                loginResult.User.SignInToken,
+                                loginResult.User.Id,
+                                loginResult.User.TenantId
+                            );
+                        }
+
                         return new ExternalAuthenticateResultModel
                         {
-                            WaitingForActivation = true
+                            AccessToken = accessToken,
+                            EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
+                            ExpireInSeconds = (int)_configuration.AccessTokenExpiration.TotalSeconds,
+                            ReturnUrl = returnUrl,
+                            RefreshToken = refreshToken.token,
+                            RefreshTokenExpireInSeconds = (int)_configuration.RefreshTokenExpiration.TotalSeconds
                         };
                     }
+                case AbpLoginResultType.UnknownExternalLogin:
+                    {
+                        var newUser = await RegisterExternalUserAsync(externalUser);
+                        if (!newUser.IsActive)
+                        {
+                            return new ExternalAuthenticateResultModel
+                            {
+                                WaitingForActivation = true
+                            };
+                        }
 
-                    //Try to login again with newly registered user!
-                    loginResult = await _logInManager.LoginAsync(
-                        new UserLoginInfo(model.AuthProvider, model.ProviderKey, model.AuthProvider),
-                        GetTenancyNameOrNull()
-                    );
+                        //Try to login again with newly registered user!
+                        loginResult = await _logInManager.LoginAsync(
+                            new UserLoginInfo(model.AuthProvider, model.ProviderKey, model.AuthProvider),
+                            GetTenancyNameOrNull()
+                        );
 
-                    if (loginResult.Result != AbpLoginResultType.Success)
+                        if (loginResult.Result != AbpLoginResultType.Success)
+                        {
+                            throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
+                                loginResult.Result,
+                                externalUser.EmailAddress,
+                                GetTenancyNameOrNull()
+                            );
+                        }
+
+                        var refreshToken = CreateRefreshToken(await CreateJwtClaims(loginResult.Identity,
+                            loginResult.User, tokenType: TokenType.RefreshToken)
+                        );
+
+                        var accessToken = CreateAccessToken(await CreateJwtClaims(loginResult.Identity,
+                            loginResult.User, refreshTokenKey: refreshToken.key));
+
+                        return new ExternalAuthenticateResultModel
+                        {
+                            AccessToken = accessToken,
+                            EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
+                            ExpireInSeconds = (int)_configuration.AccessTokenExpiration.TotalSeconds,
+                            RefreshToken = refreshToken.token,
+                            RefreshTokenExpireInSeconds = (int)_configuration.RefreshTokenExpiration.TotalSeconds
+                        };
+                    }
+                default:
                     {
                         throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
                             loginResult.Result,
@@ -666,31 +738,6 @@ namespace Chamran.Deed.Web.Controllers
                             GetTenancyNameOrNull()
                         );
                     }
-
-                    var refreshToken = CreateRefreshToken(await CreateJwtClaims(loginResult.Identity,
-                        loginResult.User, tokenType: TokenType.RefreshToken)
-                    );
-
-                    var accessToken = CreateAccessToken(await CreateJwtClaims(loginResult.Identity,
-                        loginResult.User, refreshTokenKey: refreshToken.key));
-
-                    return new ExternalAuthenticateResultModel
-                    {
-                        AccessToken = accessToken,
-                        EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
-                        ExpireInSeconds = (int) _configuration.AccessTokenExpiration.TotalSeconds,
-                        RefreshToken = refreshToken.token,
-                        RefreshTokenExpireInSeconds = (int) _configuration.RefreshTokenExpiration.TotalSeconds
-                    };
-                }
-                default:
-                {
-                    throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
-                        loginResult.Result,
-                        externalUser.EmailAddress,
-                        GetTenancyNameOrNull()
-                    );
-                }
             }
         }
 
@@ -984,7 +1031,7 @@ namespace Chamran.Deed.Web.Controllers
                 claims: claims,
                 notBefore: now,
                 signingCredentials: _configuration.SigningCredentials,
-                expires: expiration == null ? (DateTime?) null : now.Add(expiration.Value)
+                expires: expiration == null ? (DateTime?)null : now.Add(expiration.Value)
             );
 
             return new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
