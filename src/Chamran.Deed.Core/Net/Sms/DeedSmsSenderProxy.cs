@@ -4,6 +4,9 @@
 // </auto-generated>
 //----------------------
 
+using System.Linq;
+using System.Threading.Tasks;
+
 #pragma warning disable 108 // Disable "CS0108 '{derivedDto}.ToJson()' hides inherited member '{dtoBase}.ToJson()'. Use the new keyword if hiding was intended."
 #pragma warning disable 114 // Disable "CS0114 '{derivedDto}.RaisePropertyChanged(String)' hides inherited member 'dtoBase.RaisePropertyChanged(String)'. To make the current member override that implementation, add the override keyword. Otherwise add the new keyword."
 #pragma warning disable 472 // Disable "CS0472 The result of the expression is always 'false' since a value of type 'Int32' is never equal to 'null' of type 'Int32?'
@@ -47,9 +50,8 @@ namespace SmsBehestan
 
         partial void UpdateJsonSerializerSettings(Newtonsoft.Json.JsonSerializerSettings settings);
 
-        partial void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request,
-            string url);
-        partial void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, System.Text.StringBuilder urlBuilder);
+        //partial void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, string url);
+        //partial void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, System.Text.StringBuilder urlBuilder);
         partial void ProcessResponse(System.Net.Http.HttpClient client, System.Net.Http.HttpResponseMessage response);
 
         /// <summary>
@@ -82,12 +84,12 @@ namespace SmsBehestan
                     request_.Method = new System.Net.Http.HttpMethod("GET");
                     request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("*/*"));
 
-                    PrepareRequest(client_, request_, urlBuilder_);
+                    //PrepareRequest(client_, request_, urlBuilder_);
 
                     var url_ = urlBuilder_.ToString();
                     request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
 
-                    PrepareRequest(client_, request_, url_);
+                    await PrepareRequest(client_, request_, url_);
 
                     var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
                     var disposeResponse_ = true;
@@ -174,7 +176,9 @@ namespace SmsBehestan
                 throw new System.ArgumentNullException("enqueueDTO");
 
             var urlBuilder_ = new System.Text.StringBuilder();
-            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/api/v1/sms/enqueue");
+            //urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/api/v1/sms/enqueue");
+            //urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/services/dashboard/enqueue");
+            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/send");
 
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -182,18 +186,25 @@ namespace SmsBehestan
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
-                    var content_ = new System.Net.Http.StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(enqueueDTO, _settings.Value));
+                    var dto = new IsikatoTunnelDto();
+                    var msg = enqueueDTO.Messages.FirstOrDefault();
+                    if (msg == null) throw new System.Exception("Null Message To be sent for isikato");
+
+                    dto.token = msg.Text;
+                    dto.phone_number = msg.Recipient;
+
+                    var content_ = new System.Net.Http.StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(dto, _settings.Value));
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
                     request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("*/*"));
 
-                    PrepareRequest(client_, request_, urlBuilder_);
+                    //PrepareRequest(client_, request_, urlBuilder_);
 
                     var url_ = urlBuilder_.ToString();
                     request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
 
-                    PrepareRequest(client_, request_, url_);
+                    await PrepareRequest(client_, request_, url_);
 
                     var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
                     var disposeResponse_ = true;
@@ -300,12 +311,12 @@ namespace SmsBehestan
                     request_.Method = new System.Net.Http.HttpMethod("POST");
                     request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("*/*"));
 
-                    PrepareRequest(client_, request_, urlBuilder_);
+                    //PrepareRequest(client_, request_, urlBuilder_);
 
                     var url_ = urlBuilder_.ToString();
                     request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
 
-                    PrepareRequest(client_, request_, url_);
+                    await PrepareRequest(client_, request_, url_);
 
                     var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
                     var disposeResponse_ = true;
