@@ -274,19 +274,22 @@ namespace Chamran.Deed.Web.Controllers
                     tokenType: TokenType.RefreshToken
                 )
             );
-
+            if (model.ExpireDays <= 0)
+            {
+                model.ExpireDays = 93;
+            }
             var accessToken = CreateAccessToken(
                 await CreateJwtClaims(
                     identity,
                     loginResult,
                     refreshTokenKey: refreshToken.key
-                )
+                ), TimeSpan.FromDays(model.ExpireDays)
             );
 
             return new AuthenticateResultModel
             {
                 AccessToken = accessToken,
-                ExpireInSeconds = (int)_configuration.AccessTokenExpiration.TotalSeconds,
+                ExpireInSeconds = Convert.ToInt32(TimeSpan.FromDays(model.ExpireDays).TotalSeconds),
                 RefreshToken = refreshToken.token,
                 RefreshTokenExpireInSeconds = (int)_configuration.RefreshTokenExpiration.TotalSeconds,
                 EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
@@ -294,6 +297,7 @@ namespace Chamran.Deed.Web.Controllers
                 UserId = loginResult.Id,
                 ReturnUrl = returnUrl
             };
+            //(int)_configuration.AccessTokenExpiration.TotalSeconds,
         }
 
 
@@ -375,18 +379,24 @@ namespace Chamran.Deed.Web.Controllers
                 )
             );
 
+            
+            if (model.ExpireDays <= 0)
+            {
+                model.ExpireDays = 93;
+            }
             var accessToken = CreateAccessToken(
                 await CreateJwtClaims(
                     loginResult.Identity,
                     loginResult.User,
                     refreshTokenKey: refreshToken.key
-                )
+                ), TimeSpan.FromDays(model.ExpireDays)
             );
+
 
             return new AuthenticateResultModel
             {
                 AccessToken = accessToken,
-                ExpireInSeconds = (int)_configuration.AccessTokenExpiration.TotalSeconds,
+                ExpireInSeconds = Convert.ToInt32(TimeSpan.FromDays(model.ExpireDays).TotalSeconds),//(int)_configuration.AccessTokenExpiration.TotalSeconds,
                 RefreshToken = refreshToken.token,
                 RefreshTokenExpireInSeconds = (int)_configuration.RefreshTokenExpiration.TotalSeconds,
                 EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
@@ -461,27 +471,47 @@ namespace Chamran.Deed.Web.Controllers
         {
             if (AbpSession.UserId != null)
             {
-                var tokenValidityKeyInClaims = User.Claims.First(c => c.Type == AppConsts.TokenValidityKey);
-                await RemoveTokenAsync(tokenValidityKeyInClaims.Value);
+                //var tokenValidityKeyInClaims = User.Claims.First(c => c.Type == AppConsts.TokenValidityKey);
+                //await RemoveTokenAsync(tokenValidityKeyInClaims.Value);
 
-                var refreshTokenValidityKeyInClaims =
-                    User.Claims.FirstOrDefault(c => c.Type == AppConsts.RefreshTokenValidityKey);
-                if (refreshTokenValidityKeyInClaims != null)
-                {
-                    await RemoveTokenAsync(refreshTokenValidityKeyInClaims.Value);
-                }
+                //var refreshTokenValidityKeyInClaims =
+                //    User.Claims.FirstOrDefault(c => c.Type == AppConsts.RefreshTokenValidityKey);
+                //if (refreshTokenValidityKeyInClaims != null)
+                //{
+                //    await RemoveTokenAsync(refreshTokenValidityKeyInClaims.Value);
+                //}
 
-                if (AllowOneConcurrentLoginPerUser())
-                {
-                    await _securityStampHandler.RemoveSecurityStampCacheItem(
+                //if (AllowOneConcurrentLoginPerUser())
+                //{
+                //    await _securityStampHandler.RemoveSecurityStampCacheItem(
+                //        AbpSession.TenantId,
+                //        AbpSession.GetUserId()
+                //    );
+                //}
+                await RemoveTokensAsync(AbpSession.TenantId,
+                    AbpSession.GetUserId());
+                await _securityStampHandler.RemoveSecurityStampCacheItem(
                         AbpSession.TenantId,
                         AbpSession.GetUserId()
                     );
-                }
             }
         }
 
+        private async Task RemoveTokensAsync(int? tenantId, long userId)
+        {
+            await _userManager.RemoveTokens(tenantId, userId);
+        }
+
         private async Task RemoveTokenAsync(string tokenKey)
+        {
+            await _userManager.RemoveTokenValidityKeyAsync(
+                await _userManager.GetUserAsync(AbpSession.ToUserIdentifier()), tokenKey
+            );
+
+            await _cacheManager.GetCache(AppConsts.TokenValidityKey).RemoveAsync(tokenKey);
+        }
+
+        private async Task RemoveTokensAsync(string tokenKey)
         {
             await _userManager.RemoveTokenValidityKeyAsync(
                 await _userManager.GetUserAsync(AbpSession.ToUserIdentifier()), tokenKey

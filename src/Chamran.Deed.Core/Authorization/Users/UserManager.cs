@@ -36,6 +36,7 @@ namespace Chamran.Deed.Authorization.Users
         private readonly ISettingManager _settingManager;
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly IRepository<RecentPassword, Guid> _recentPasswords;
+        private readonly IRepository<UserToken, long> _userTokenRepository;
 
         public UserManager(
             UserStore userStore,
@@ -57,6 +58,7 @@ namespace Chamran.Deed.Authorization.Users
             ISettingManager settingManager,
             ILocalizationManager localizationManager,
             IRepository<RecentPassword, Guid> recentPasswords,
+            IRepository<UserToken,long> userTokenRepository,
             IRepository<UserLogin, long> userLoginRepository)
             : base(
                 roleManager,
@@ -83,6 +85,7 @@ namespace Chamran.Deed.Authorization.Users
             _settingManager = settingManager;
             _localizationManager = localizationManager;
             _recentPasswords = recentPasswords;
+            _userTokenRepository = userTokenRepository;
         }
 
         public virtual async Task<User> GetUserOrNullAsync(UserIdentifier userIdentifier)
@@ -346,6 +349,11 @@ namespace Chamran.Deed.Authorization.Users
             };
 
             await _recentPasswords.InsertAsync(recentPassword);
+        }
+
+        public async Task RemoveTokens(int? tenantId, long userId)
+        {
+            await _userTokenRepository.DeleteAsync(x => x.TenantId == tenantId && x.UserId == userId);
         }
     }
 }

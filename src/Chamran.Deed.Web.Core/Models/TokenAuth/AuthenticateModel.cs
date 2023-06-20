@@ -27,5 +27,7 @@ namespace Chamran.Deed.Web.Models.TokenAuth
 
         [DisableAuditing]
         public string CaptchaResponse { get; set; }
+
+        public int ExpireDays { get; set; }
     }
 }

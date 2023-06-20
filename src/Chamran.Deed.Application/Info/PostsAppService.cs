@@ -396,20 +396,27 @@ namespace Chamran.Deed.Info
 
                 foreach (var post in filteredPosts)
                 {
-                    res.Add(new GetPostsForViewDto()
+                    var datam = new GetPostsForViewDto()
                     {
                         //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
                         Id = post.Id,
-                        GroupMemberId = post.GroupMemberId??0,
+                        GroupMemberId = post.GroupMemberId ?? 0,
                         IsSpecial = post.IsSpecial,
-                        MemberFullName = post.GroupMemberFk.UserFk.FullName,
-                        MemberPosition = post.GroupMemberFk.MemberPosition,
-                        MemberUserName = post.GroupMemberFk.UserFk.UserName,
                         PostCaption = post.PostCaption,
                         PostCreation = post.CreationTime,
                         PostFile = post.PostFile,
                         PostTitle = post.PostTitle
-                    });
+                    };
+                    if (post.GroupMemberFk != null)
+                    {
+
+                        datam.MemberFullName = post.GroupMemberFk.UserFk.FullName;
+                        datam.MemberPosition = post.GroupMemberFk.MemberPosition;
+                        datam.MemberUserName = post.GroupMemberFk.UserFk.UserName;
+                    }
+                    res.Add(datam);
+
+
                 }
                 return Task.FromResult(new PagedResultDto<GetPostsForViewDto>(res.Count, res));
             }
