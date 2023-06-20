@@ -125,6 +125,27 @@ namespace Chamran.Deed.Authorization.Users
             );
         }
 
+        [HttpGet]
+        public async Task<PagedResultDto<UserListDto>> GetListOfUsers(GetUsersInput input)
+        {
+            var query = GetUsersFilteredQuery(input);
+
+            var userCount = await query.CountAsync();
+
+            var users = await query
+                .OrderBy(input.Sorting)
+                .PageBy(input)
+                .ToListAsync();
+
+            var userListDtos = ObjectMapper.Map<List<UserListDto>>(users);
+            await FillRoleNames(userListDtos);
+
+            return new PagedResultDto<UserListDto>(
+                userCount,
+                userListDtos
+            );
+        }
+
         public async Task<FileDto> GetUsersToExcel(GetUsersToExcelInput input)
         {
             var query = GetUsersFilteredQuery(input);

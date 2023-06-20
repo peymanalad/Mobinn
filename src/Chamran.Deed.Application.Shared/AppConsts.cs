@@ -48,7 +48,7 @@ namespace Chamran.Deed
         public const string Theme12 = "theme12";
         public const string Theme13 = "theme13";
 
-        public static TimeSpan AccessTokenExpiration = TimeSpan.FromDays(1);
+        public static TimeSpan AccessTokenExpiration = TimeSpan.FromDays(93);
         public static TimeSpan RefreshTokenExpiration = TimeSpan.FromDays(365);
     }
 }
