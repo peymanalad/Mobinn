@@ -31,5 +31,6 @@ namespace Chamran.Deed.Info
         Task<PagedResultDto<GetPostCategoriesForViewDto>> GetPostCategoriesForView();
 
         Task<PagedResultDto<GetPostsForViewDto>> GetPostsForView(int postGroupId);
+        Task<PagedResultDto<GetPostsForViewDto>> GetPostsByGroupIdForView(GetPostsByGroupIdInput input);
     }
 }

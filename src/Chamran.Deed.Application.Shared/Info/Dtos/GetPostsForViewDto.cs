@@ -14,6 +14,11 @@ namespace Chamran.Deed.Info.Dtos
         public string MemberFullName { get; set; }
         public bool IsSpecial { get; set; }
         public string PostTitle { get; set; }
+        public string Attachment1 { get; set; }
+        public Guid? PostFile2 { get; set; }
+        public string Attachment2 { get; set; }
+        public Guid? PostFile3 { get; set; }
+        public string Attachment3 { get; set; }
 
     }
 }
