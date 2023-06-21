@@ -24,6 +24,7 @@ namespace Chamran.Deed.Web.Startup
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .ConfigureLogging((context, logging) =>
                 {
+                    //logging.AddFilter("Microsoft.EntityFrameworkCore.Database", LogLevel.Debug);
                     logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
                 })
                 .UseIIS()
