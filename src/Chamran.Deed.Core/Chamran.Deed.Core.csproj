@@ -37,6 +37,7 @@
     <PackageReference Include="TimeZoneConverter" Version="6.1.0" />
     <!--<PackageReference Include="Abp.AspNetZeroCore" Version="4.1.0" />-->
     <PackageReference Include="SkiaSharp" Version="2.88.3" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.3" />
   </ItemGroup>
 
   <ItemGroup>
