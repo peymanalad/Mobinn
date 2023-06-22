@@ -9,9 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Abp" Version="8.0.0" />
-    <PackageReference Include="Abp.Web.Common" Version="8.0.0" />
-    <PackageReference Include="Abp.Zero.Common" Version="8.0.0" />
+    <PackageReference Include="Abp" Version="8.2.0" />
+    <PackageReference Include="Abp.Web.Common" Version="8.2.0" />
+    <PackageReference Include="Abp.Zero.Common" Version="8.2.0" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties Reactor_Commands="" Reactor_Configuration="Release" Reactor_Deploy="0" Reactor_Enabled="1" Reactor_Output="&lt;AssemblyLocation&gt;\&lt;AssemblyFileName&gt;" Reactor_Project="" /></VisualStudio></ProjectExtensions>
