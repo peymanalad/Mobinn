@@ -371,7 +371,8 @@ namespace Chamran.Deed.Authorization.Users.Profile
             }
 
             var storedFile = new BinaryObject(userIdentifier.TenantId, byteArray,
-                $"Profile picture of user {userIdentifier.UserId}. {DateTime.UtcNow}");
+                //$"Profile picture of user {userIdentifier.UserId}. {DateTime.UtcNow}");
+                $"{userIdentifier.UserId}.png");
             await _binaryObjectManager.SaveAsync(storedFile);
 
             user.ProfilePictureId = storedFile.Id;

@@ -1,4 +1,6 @@
-﻿namespace Chamran.Deed.Info.Dtos
+﻿using System;
+
+namespace Chamran.Deed.Info.Dtos
 {
     public class GetPostForViewDto
     {
@@ -8,5 +10,6 @@
 
         public string PostGroupPostGroupDescription { get; set; }
 
+        public Guid? GroupFile { get; set; }
     }
 }

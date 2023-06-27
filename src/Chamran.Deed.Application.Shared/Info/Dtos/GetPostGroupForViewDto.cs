@@ -1,4 +1,6 @@
-﻿namespace Chamran.Deed.Info.Dtos
+﻿using System;
+
+namespace Chamran.Deed.Info.Dtos
 {
     public class GetPostGroupForViewDto
     {

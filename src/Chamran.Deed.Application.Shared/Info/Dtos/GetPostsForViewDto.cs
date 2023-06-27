@@ -19,6 +19,8 @@ namespace Chamran.Deed.Info.Dtos
         public string Attachment2 { get; set; }
         public Guid? PostFile3 { get; set; }
         public string Attachment3 { get; set; }
-
+        public int? PostGroupId { get; set; }
+        public Guid? GroupFile { get; set; }
+        public string GroupDescription { get; set; }
     }
 }
