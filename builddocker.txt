@@ -26,6 +26,7 @@ docker push yasnadocker.yasnasystem.ir/ideedfront:1.1
 
 
 
+sudo apt-get update && sudo apt-get install jq
 
 
 #!/bin/bash
@@ -36,9 +37,57 @@ tags=$(curl -s https://yasnadocker.yasnasystem.ir/v2/ideed/tags/list | jq -r '.t
 # Loop through each tag and delete the image if it's not the latest one
 for tag in $tags
 do
-    if [[ "$tag" != "latest" ]]
+    if [[ "$tag" != "2.5" ]]
     then
         echo "Deleting ideed:$tag..."
         curl -X DELETE https://yasnadocker.yasnasystem.ir/v2/ideed/manifests/$tag
     fi
 done
+
+
+
+
+
+#!/bin/bash
+
+# Get list of all tags for ideed repository
+tags=$(curl -s https://yasnadocker.yasnasystem.ir/v2/ideed/tags/list | jq -r '.tags[]')
+
+# Loop through each tag and delete the image if it's not the latest one or the "2.5" tag
+for tag in $tags
+do
+    if [[ "$tag" != "latest" ]] && [[ "$tag" != "2.5" ]]
+    then
+        echo "Deleting ideed:$tag..."
+        curl -X DELETE https://yasnadocker.yasnasystem.ir/v2/ideed/manifests/$tag
+    fi
+done
+
+
+
+
+
+
+
+
+
+#!/bin/bash
+
+# Get list of all tags for ideed repository
+tags=$(curl -s https://yasnadocker.yasnasystem.ir/v2/ideed/tags/list | jq -r '.tags[]')
+
+# Loop through each tag and delete the image if it's not the latest one or the "2.5" tag
+for tag in $tags
+do
+    if [[ "$tag" != "latest" ]] && [[ "$tag" != "2.5" ]]
+    then
+        echo "Deleting ideed:$tag..."
+
+        # Get the digest for the image
+        digest=$(curl -sI -H "Accept: application/vnd.docker.distribution.manifest.v2+json" https://yasnadocker.yasnasystem.ir/v2/ideed/manifests/$tag | grep Docker-Content-Digest | awk '{print $2}')
+
+        # Delete the image based on the digest
+        curl -X DELETE https://yasnadocker.yasnasystem.ir/v2/ideed/manifests/$digest
+    fi
+done
+
