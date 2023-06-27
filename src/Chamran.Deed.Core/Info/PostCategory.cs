@@ -15,7 +15,7 @@ namespace Chamran.Deed.Info
     {
 
         public string PostGroupDescription { get; set; }
-        public Guid FileId { get; set; }
+        public Guid? FileId { get; set; }
 
     }
 }
