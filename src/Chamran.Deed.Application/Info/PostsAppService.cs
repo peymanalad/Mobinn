@@ -79,15 +79,16 @@ namespace Chamran.Deed.Info
 
                         select new
                         {
-
                             o.PostFile,
                             o.PostCaption,
                             o.PostTime,
                             o.IsSpecial,
                             o.PostTitle,
-                            Id = o.Id,
+                            s2.GroupFile,
+                            o.Id,
                             GroupMemberMemberPosition = s1 == null || s1.MemberPosition == null ? "" : s1.MemberPosition.ToString(),
                             PostGroupPostGroupDescription = s2 == null || s2.PostGroupDescription == null ? "" : s2.PostGroupDescription.ToString()
+                            
                         };
 
             var totalCount = await filteredPosts.CountAsync();
@@ -101,7 +102,6 @@ namespace Chamran.Deed.Info
                 {
                     Post = new PostDto
                     {
-
                         PostFile = o.PostFile,
                         PostCaption = o.PostCaption,
                         PostTime = o.PostTime,
@@ -110,7 +110,8 @@ namespace Chamran.Deed.Info
                         Id = o.Id,
                     },
                     GroupMemberMemberPosition = o.GroupMemberMemberPosition,
-                    PostGroupPostGroupDescription = o.PostGroupPostGroupDescription
+                    PostGroupPostGroupDescription = o.PostGroupPostGroupDescription,
+                    GroupFile=o.GroupFile
                 };
                 res.Post.PostFileFileName = await GetBinaryFileName(o.PostFile);
 
@@ -190,6 +191,8 @@ namespace Chamran.Deed.Info
 
             await _postRepository.InsertAsync(post);
             post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken);
+            post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2);
+            post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3);
 
         }
 
@@ -199,6 +202,8 @@ namespace Chamran.Deed.Info
             var post = await _postRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, post);
             post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken);
+            post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2);
+            post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3);
 
         }
 
@@ -441,7 +446,7 @@ namespace Chamran.Deed.Info
                     //.WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
                     .WhereIf(input.PostGroupId > 0, e => e.PostGroupId == input.PostGroupId);
                 var pagedAndFilteredPosts = filteredPosts
-                    .OrderBy(input.Sorting ?? "id asc")
+                    .OrderBy(input.Sorting ?? "id desc")
                     .PageBy(input);
                 foreach (var post in pagedAndFilteredPosts)
                 {
@@ -457,12 +462,21 @@ namespace Chamran.Deed.Info
                         PostFile2 = post.PostFile2,
                         PostFile3 = post.PostFile3,
                         PostTitle = post.PostTitle,
+                        PostGroupId = post.PostGroupId,
+                      
                     };
                     if (post.GroupMemberFk != null)
                     {
                         datam.MemberFullName = post.GroupMemberFk.UserFk.FullName;
                         datam.MemberPosition = post.GroupMemberFk.MemberPosition;
                         datam.MemberUserName = post.GroupMemberFk.UserFk.UserName;
+                    }
+
+                    if (post.PostGroupFk != null)
+                    {
+                        datam.GroupFile = post.PostGroupFk.GroupFile;
+                        datam.GroupDescription = post.PostGroupFk.PostGroupDescription;
+
                     }
 
                     if (post.AppBinaryObjectFk != null)
