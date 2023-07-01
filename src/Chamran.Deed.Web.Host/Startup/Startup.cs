@@ -46,6 +46,7 @@ using HealthChecksUISettings = HealthChecks.UI.Configuration.Settings;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Chamran.Deed.Web.MultiTenancy;
 using Abp.AspNetCore.Localization;
+using Chamran.Deed.Web.Helpers;
 using Microsoft.AspNetCore.HttpOverrides;
 
 namespace Chamran.Deed.Web.Startup
@@ -65,6 +66,9 @@ namespace Chamran.Deed.Web.Startup
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
+
+            LicenseHelper.StimulsoftRegister();
+
             //MVC
             services.AddControllersWithViews(options =>
             {

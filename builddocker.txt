@@ -1,5 +1,8 @@
 docker build -t ideed:2.6 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 
+docker build -t ideedreact:1.0 C:\ZProjects\ideed\react
+
+
 docker login yasnadocker.yasnasystem.ir
 yasnasystem
 Y@snaSystem75424
@@ -8,6 +11,11 @@ docker images
 docker tag a247635c53a9 yasnadocker.yasnasystem.ir/ideed:2.6
 docker push yasnadocker.yasnasystem.ir/ideed:2.6
 
+
+
+docker images
+docker tag 04f8cc640591 yasnadocker.yasnasystem.ir/ideedreact:1.0
+docker push yasnadocker.yasnasystem.ir/ideedreact:1.0
 
 docker-compose down -v
 nano docker-compose.yml
