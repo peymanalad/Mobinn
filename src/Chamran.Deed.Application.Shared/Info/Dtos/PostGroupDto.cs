@@ -9,5 +9,8 @@ namespace Chamran.Deed.Info.Dtos
 
         public int? OrganizationGroupId { get; set; }
 
+        public Guid? GroupFile { get; set; }
+
+
     }
 }

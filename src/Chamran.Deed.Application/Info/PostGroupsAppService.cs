@@ -25,14 +25,17 @@ namespace Chamran.Deed.Info
     {
         private readonly IRepository<PostGroup> _postGroupRepository;
         private readonly IPostGroupsExcelExporter _postGroupsExcelExporter;
+        private readonly ITempFileCacheManager _tempFileCacheManager;
+        private readonly IBinaryObjectManager _binaryObjectManager;
         private readonly IRepository<OrganizationGroup, int> _lookup_organizationGroupRepository;
 
-        public PostGroupsAppService(IRepository<PostGroup> postGroupRepository, IPostGroupsExcelExporter postGroupsExcelExporter, IRepository<OrganizationGroup, int> lookup_organizationGroupRepository)
+        public PostGroupsAppService(IRepository<PostGroup> postGroupRepository, IPostGroupsExcelExporter postGroupsExcelExporter, IRepository<OrganizationGroup, int> lookup_organizationGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager)
         {
             _postGroupRepository = postGroupRepository;
             _postGroupsExcelExporter = postGroupsExcelExporter;
             _lookup_organizationGroupRepository = lookup_organizationGroupRepository;
-
+            _tempFileCacheManager = tempFileCacheManager;
+            _binaryObjectManager = binaryObjectManager;
         }
 
         public async Task<PagedResultDto<GetPostGroupForViewDto>> GetAll(GetAllPostGroupsInput input)
@@ -54,7 +57,7 @@ namespace Chamran.Deed.Info
 
                              select new
                              {
-
+                                 o.GroupFile,
                                  o.PostGroupDescription,
                                  Id = o.Id,
                                  OrganizationGroupGroupName = s1 == null || s1.GroupName == null ? "" : s1.GroupName.ToString()
@@ -71,7 +74,7 @@ namespace Chamran.Deed.Info
                 {
                     PostGroup = new PostGroupDto
                     {
-
+                        GroupFile = o.GroupFile,
                         PostGroupDescription = o.PostGroupDescription,
                         Id = o.Id,
                     },
@@ -137,15 +140,36 @@ namespace Chamran.Deed.Info
             var postGroup = ObjectMapper.Map<PostGroup>(input);
 
             await _postGroupRepository.InsertAsync(postGroup);
-
+            postGroup.GroupFile = await GetBinaryObjectFromCache(input.GroupFileToken);
         }
+
+        private async Task<Guid?> GetBinaryObjectFromCache(string fileToken)
+        {
+            if (fileToken.IsNullOrWhiteSpace())
+            {
+                return null;
+            }
+
+            var fileCache = _tempFileCacheManager.GetFileInfo(fileToken);
+
+            if (fileCache == null)
+            {
+                throw new UserFriendlyException("There is no such file with the token: " + fileToken);
+            }
+
+            var storedFile = new BinaryObject(AbpSession.TenantId, fileCache.File, fileCache.FileName);
+            await _binaryObjectManager.SaveAsync(storedFile);
+
+            return storedFile.Id;
+        }
+
 
         [AbpAuthorize(AppPermissions.Pages_PostGroups_Edit)]
         protected virtual async Task Update(CreateOrEditPostGroupDto input)
         {
             var postGroup = await _postGroupRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, postGroup);
-
+            postGroup.GroupFile = await GetBinaryObjectFromCache(input.GroupFileToken);
         }
 
         [AbpAuthorize(AppPermissions.Pages_PostGroups_Delete)]
