@@ -6,6 +6,16 @@
     /// </summary>
     public static class AppPermissions
     {
+        public const string Pages_Comments = "Pages.Comments";
+        public const string Pages_Comments_Create = "Pages.Comments.Create";
+        public const string Pages_Comments_Edit = "Pages.Comments.Edit";
+        public const string Pages_Comments_Delete = "Pages.Comments.Delete";
+
+        public const string Pages_Seens = "Pages.Seens";
+        public const string Pages_Seens_Create = "Pages.Seens.Create";
+        public const string Pages_Seens_Edit = "Pages.Seens.Edit";
+        public const string Pages_Seens_Delete = "Pages.Seens.Delete";
+
         public const string Pages_Administration_Hashtags = "Pages.Administration.Hashtags";
         public const string Pages_Administration_Hashtags_Create = "Pages.Administration.Hashtags.Create";
         public const string Pages_Administration_Hashtags_Edit = "Pages.Administration.Hashtags.Edit";

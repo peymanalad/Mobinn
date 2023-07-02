@@ -30,6 +30,16 @@ namespace Chamran.Deed.Authorization
 
             var pages = context.GetPermissionOrNull(AppPermissions.Pages) ?? context.CreatePermission(AppPermissions.Pages, L("Pages"));
 
+            var comments = pages.CreateChildPermission(AppPermissions.Pages_Comments, L("Comments"));
+            comments.CreateChildPermission(AppPermissions.Pages_Comments_Create, L("CreateNewComment"));
+            comments.CreateChildPermission(AppPermissions.Pages_Comments_Edit, L("EditComment"));
+            comments.CreateChildPermission(AppPermissions.Pages_Comments_Delete, L("DeleteComment"));
+
+            var seens = pages.CreateChildPermission(AppPermissions.Pages_Seens, L("Seens"));
+            seens.CreateChildPermission(AppPermissions.Pages_Seens_Create, L("CreateNewSeen"));
+            seens.CreateChildPermission(AppPermissions.Pages_Seens_Edit, L("EditSeen"));
+            seens.CreateChildPermission(AppPermissions.Pages_Seens_Delete, L("DeleteSeen"));
+
             var postGroups = pages.CreateChildPermission(AppPermissions.Pages_PostGroups, L("PostGroups"));
             postGroups.CreateChildPermission(AppPermissions.Pages_PostGroups_Create, L("CreateNewPostGroup"));
             postGroups.CreateChildPermission(AppPermissions.Pages_PostGroups_Edit, L("EditPostGroup"));

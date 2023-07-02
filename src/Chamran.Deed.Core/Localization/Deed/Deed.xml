@@ -1,6 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="en">
-  <texts>
+  <texts>    <text name="Comment">Comment</text>
+    <text name="CreateNewComment">Create new comment</text>
+    <text name="EditComment">Edit comment</text>
+    <text name="DeleteComment">Delete comment</text>
+
+    <text name="Seen">Seen</text>
+    <text name="CreateNewSeen">Create new seen</text>
+    <text name="EditSeen">Edit seen</text>
+    <text name="DeleteSeen">Delete seen</text>
+
     <text name="IsSpecial">Is special</text>
     <text name="NotIsSpecial">Not is special</text>
     <text name="PostTitle">Post title</text>

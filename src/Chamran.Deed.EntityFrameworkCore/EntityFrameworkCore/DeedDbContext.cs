@@ -18,6 +18,10 @@ namespace Chamran.Deed.EntityFrameworkCore
 {
     public class DeedDbContext : AbpZeroDbContext<Tenant, Role, User, DeedDbContext>, IAbpPersistedGrantDbContext
     {
+        public virtual DbSet<Comment> Comments { get; set; }
+
+        public virtual DbSet<Seen> Seens { get; set; }
+
         public virtual DbSet<PostCategory> PostCategories { get; set; }
 
         public virtual DbSet<Hashtag> Hashtags { get; set; }
@@ -114,7 +118,7 @@ namespace Chamran.Deed.EntityFrameworkCore
             modelBuilder
                 .Entity<PostCategory>()
                 .ToView("vwPostCategories");
-                //.HasKey(t => t.Id);
+            //.HasKey(t => t.Id);
 
             modelBuilder.ConfigurePersistedGrantEntity();
         }
