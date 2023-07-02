@@ -22,5 +22,6 @@ namespace Chamran.Deed.Info.Dtos
 
         public int? PostGroupId { get; set; }
 
+        public string PostRefLink { get; set; }
     }
 }

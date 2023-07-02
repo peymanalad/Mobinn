@@ -31,5 +31,7 @@ namespace Chamran.Deed.Info.Dtos
 
         public string PostFileToken3 { get; set; }
 
+        public string PostRefLink { get; set; }
+
     }
 }

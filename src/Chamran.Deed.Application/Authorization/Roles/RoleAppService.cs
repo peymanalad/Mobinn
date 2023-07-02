@@ -30,6 +30,35 @@ namespace Chamran.Deed.Authorization.Roles
             _roleManagementConfig = roleManagementConfig;
         }
 
+        [HttpGet]
+        public async Task<ListResultDto<RoleListDto>> GetListOfRoles(GetRolesInput input)
+        {
+            var query = _roleManager.Roles;
+
+            if (input.Permissions != null && input.Permissions.Any(p => !string.IsNullOrEmpty(p)))
+            {
+                input.Permissions = input.Permissions.Where(p => !string.IsNullOrEmpty(p)).ToList();
+
+                var staticRoleNames = _roleManagementConfig.StaticRoles.Where(
+                    r => r.GrantAllPermissionsByDefault &&
+                         r.Side == AbpSession.MultiTenancySide
+                ).Select(r => r.RoleName).ToList();
+
+                foreach (var permission in input.Permissions)
+                {
+                    query = query.Where(r =>
+                        r.Permissions.Any(rp => rp.Name == permission)
+                            ? r.Permissions.Any(rp => rp.Name == permission && rp.IsGranted)
+                            : staticRoleNames.Contains(r.Name)
+                    );
+                }
+            }
+
+            var roles = await query.ToListAsync();
+
+            return new ListResultDto<RoleListDto>(ObjectMapper.Map<List<RoleListDto>>(roles));
+        }
+
         [HttpPost]
         public async Task<ListResultDto<RoleListDto>> GetRoles(GetRolesInput input)
         {

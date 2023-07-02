@@ -266,7 +266,7 @@ namespace Chamran.Deed.Web.Controllers
                 throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(AbpLoginResultType.UserPhoneNumberIsNotConfirmed, model.UserNameOrEmailAddress, GetTenancyNameOrNull());
             }
             var identity = (ClaimsIdentity)(await _principalFactory.CreateAsync(loginResult)).Identity;
-           
+
             var refreshToken = CreateRefreshToken(
                 await CreateJwtClaims(
                     identity,
@@ -379,7 +379,7 @@ namespace Chamran.Deed.Web.Controllers
                 )
             );
 
-            
+
             if (model.ExpireDays <= 0)
             {
                 model.ExpireDays = 93;
@@ -464,6 +464,26 @@ namespace Chamran.Deed.Web.Controllers
             return SettingManager.GetSettingValue<bool>(AppSettings.UserManagement.UseCaptchaOnLogin);
         }
 
+        [HttpGet]
+        [AbpMvcAuthorize]
+        public async Task<string> GetLatestOtp(string phoneNumber)
+        {
+            try
+            {
+
+                var result = await _cacheManager.GetSmsVerificationCodeCache().GetOrDefaultAsync(phoneNumber);
+                if (result == null)
+                {
+                    return await Task.FromResult(@"");}
+                return result.Code;
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug(ex.ToString(), ex);
+            }
+
+            return await Task.FromResult(@"");
+        }
 
         [HttpGet]
         [AbpMvcAuthorize]

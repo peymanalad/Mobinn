@@ -62,7 +62,7 @@ namespace Chamran.Deed.People
 
                                select new
                                {
-
+                                   o.MemberPos,
                                    o.MemberPosition,
                                    Id = o.Id,
                                    UserName = s1 == null || s1.Name == null ? "" : s1.Name.ToString(),
@@ -80,7 +80,7 @@ namespace Chamran.Deed.People
                 {
                     GroupMember = new GroupMemberDto
                     {
-
+                        MemberPos = o.MemberPos,
                         MemberPosition = o.MemberPosition,
                         Id = o.Id,
                     },

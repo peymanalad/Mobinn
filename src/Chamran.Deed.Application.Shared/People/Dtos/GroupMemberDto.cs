@@ -7,6 +7,8 @@ namespace Chamran.Deed.People.Dtos
     {
         public string MemberPosition { get; set; }
 
+        public int MemberPos { get; set; }
+
         public long? UserId { get; set; }
 
         public int? OrganizationGroupId { get; set; }

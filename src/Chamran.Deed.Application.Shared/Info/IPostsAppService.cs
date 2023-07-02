@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp.Application.Services;
 using Abp.Application.Services.Dto;
+using Chamran.Deed.AttributeHelper;
 using Chamran.Deed.Info.Dtos;
 using Chamran.Deed.Dto;
 
@@ -31,6 +32,7 @@ namespace Chamran.Deed.Info
         Task<PagedResultDto<GetPostCategoriesForViewDto>> GetPostCategoriesForView();
 
         Task<PagedResultDto<GetPostsForViewDto>> GetPostsForView(int postGroupId);
+       
         Task<PagedResultDto<GetPostsForViewDto>> GetPostsByGroupIdForView(GetPostsByGroupIdInput input);
     }
 }
