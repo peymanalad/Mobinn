@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="fa-AF">
   <texts>
+    <text name="Seen">Seen</text>
+    <text name="CreateNewSeen">Create new seen</text>
+    <text name="EditSeen">Edit seen</text>
+    <text name="DeleteSeen">Delete seen</text>
     <text name="IsSpecial">خبر برگزیده</text>
     <text name="NotIsSpecial">خبر عادی</text>
     <text name="PostTitle">عنوان خبر</text>
