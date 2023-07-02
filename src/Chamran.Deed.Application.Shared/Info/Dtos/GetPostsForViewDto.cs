@@ -7,7 +7,7 @@ namespace Chamran.Deed.Info.Dtos
         public int Id { get; set; }
         public Guid? PostFile { get; set; }
         public string PostCaption { get; set; }
-        public DateTime PostCreation { get; set; }
+        public DateTime PostTime { get; set; }
         public int GroupMemberId { get; set; }
         public string MemberPosition { get; set; }
         public string MemberUserName { get; set; }
@@ -22,5 +22,7 @@ namespace Chamran.Deed.Info.Dtos
         public int? PostGroupId { get; set; }
         public Guid? GroupFile { get; set; }
         public string GroupDescription { get; set; }
+        public string PostRefLink { get; set; }
+
     }
 }

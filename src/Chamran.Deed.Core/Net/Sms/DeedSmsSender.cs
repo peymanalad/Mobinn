@@ -56,6 +56,9 @@ namespace Chamran.Deed.Net.Sms
                 {
                     Messages = msg,
                 });
+                Logger.Log(LogSeverity.Info,
+                    $"Sms Result for Number: {number} :" + res);
+
                 return true;
             }
             catch (Exception ex)
@@ -69,5 +72,5 @@ namespace Chamran.Deed.Net.Sms
         }
     }
 
-   
+
 }

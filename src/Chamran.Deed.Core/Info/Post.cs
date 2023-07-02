@@ -47,7 +47,7 @@ namespace Chamran.Deed.Info
         [ForeignKey("PostFile3")]
         public BinaryObject AppBinaryObjectFk3 { get; set; }
 
-      
+        public virtual string PostRefLink { get; set; }
 
 
     }

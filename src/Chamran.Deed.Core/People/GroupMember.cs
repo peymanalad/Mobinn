@@ -17,6 +17,8 @@ namespace Chamran.Deed.People
         [StringLength(GroupMemberConsts.MaxMemberPositionLength, MinimumLength = GroupMemberConsts.MinMemberPositionLength)]
         public virtual string MemberPosition { get; set; }
 
+        public virtual int MemberPos { get; set; }
+
         public virtual long? UserId { get; set; }
 
         [ForeignKey("UserId")]
