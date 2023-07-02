@@ -16,7 +16,7 @@ namespace Chamran.Deed.Info
         Task<PagedResultDto<GetSeenForViewDto>> GetAll(GetAllSeensInput input);
         Task<PagedResultDto<GetSeenOfPostDto>> GetSeensOfPost(GetSeensOfPostInput input);
         Task<PagedResultDto<GetSeenOfPostDto>> GetSeensOfPostFiltered(GetSeensOfPostFilteredInput input);
-
+        Task<int> GetSeenCountOfPost(int  postId);
 
         Task<GetSeenForViewDto> GetSeenForView(int id);
 

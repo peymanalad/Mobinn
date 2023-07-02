@@ -219,6 +219,12 @@ namespace Chamran.Deed.Info
             );
         }
 
+        public async Task<int> GetSeenCountOfPost(int postId)
+        {
+            return await _seenRepository.GetAll().WhereIf(postId > 0, e => e.PostId == postId).CountAsync();
+
+        }
+
         public async Task<GetSeenForViewDto> GetSeenForView(int id)
         {
             var seen = await _seenRepository.GetAsync(id);
