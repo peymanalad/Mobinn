@@ -11,11 +11,13 @@ namespace Chamran.Deed.Info.Dtos
         [StringLength(CommentConsts.MaxCommentCaptionLength, MinimumLength = CommentConsts.MinCommentCaptionLength)]
         public string CommentCaption { get; set; }
 
-        public DateTime CommentDate { get; set; }
+        public DateTime InsertDate { get; set; }
 
         public int PostId { get; set; }
 
         public long UserId { get; set; }
+
+        public int? CommentId { get; set; }
 
     }
 }

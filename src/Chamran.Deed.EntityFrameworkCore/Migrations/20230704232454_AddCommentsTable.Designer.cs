@@ -4,6 +4,7 @@ using Chamran.Deed.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Chamran.Deed.Migrations
 {
     [DbContext(typeof(DeedDbContext))]
-    partial class DeedDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230704232454_AddCommentsTable")]
+    partial class AddCommentsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1882,9 +1885,6 @@ namespace Chamran.Deed.Migrations
                         .HasMaxLength(1024)
                         .HasColumnType("nvarchar(1024)");
 
-                    b.Property<int?>("CommentId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("datetime2");
 
@@ -1916,8 +1916,6 @@ namespace Chamran.Deed.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CommentId");
 
                     b.HasIndex("PostId");
 
@@ -2743,10 +2741,6 @@ namespace Chamran.Deed.Migrations
 
             modelBuilder.Entity("Chamran.Deed.Info.Comment", b =>
                 {
-                    b.HasOne("Chamran.Deed.Info.Comment", "CommentFk")
-                        .WithMany()
-                        .HasForeignKey("CommentId");
-
                     b.HasOne("Chamran.Deed.Info.Post", "PostFk")
                         .WithMany()
                         .HasForeignKey("PostId")
@@ -2758,8 +2752,6 @@ namespace Chamran.Deed.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("CommentFk");
 
                     b.Navigation("PostFk");
 

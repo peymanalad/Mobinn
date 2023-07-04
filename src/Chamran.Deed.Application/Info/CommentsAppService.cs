@@ -1,5 +1,6 @@
 ﻿using Chamran.Deed.Info;
 using Chamran.Deed.Authorization.Users;
+using Chamran.Deed.Info;
 
 using System;
 using System.Linq;
@@ -8,6 +9,7 @@ using Abp.Linq.Extensions;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
+using Chamran.Deed.Info.Exporting;
 using Chamran.Deed.Info.Dtos;
 using Chamran.Deed.Dto;
 using Abp.Application.Services.Dto;
@@ -24,14 +26,18 @@ namespace Chamran.Deed.Info
     public class CommentsAppService : DeedAppServiceBase, ICommentsAppService
     {
         private readonly IRepository<Comment> _commentRepository;
+        private readonly ICommentsExcelExporter _commentsExcelExporter;
         private readonly IRepository<Post, int> _lookup_postRepository;
         private readonly IRepository<User, long> _lookup_userRepository;
+        private readonly IRepository<Comment, int> _lookup_commentRepository;
 
-        public CommentsAppService(IRepository<Comment> commentRepository, IRepository<Post, int> lookup_postRepository, IRepository<User, long> lookup_userRepository)
+        public CommentsAppService(IRepository<Comment> commentRepository, ICommentsExcelExporter commentsExcelExporter, IRepository<Post, int> lookup_postRepository, IRepository<User, long> lookup_userRepository, IRepository<Comment, int> lookup_commentRepository)
         {
             _commentRepository = commentRepository;
+            _commentsExcelExporter = commentsExcelExporter;
             _lookup_postRepository = lookup_postRepository;
             _lookup_userRepository = lookup_userRepository;
+            _lookup_commentRepository = lookup_commentRepository;
 
         }
 
@@ -41,12 +47,14 @@ namespace Chamran.Deed.Info
             var filteredComments = _commentRepository.GetAll()
                         .Include(e => e.PostFk)
                         .Include(e => e.UserFk)
+                        .Include(e => e.CommentFk)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.CommentCaption.Contains(input.Filter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.CommentCaptionFilter), e => e.CommentCaption.Contains(input.CommentCaptionFilter))
-                        .WhereIf(input.MinCommentDateFilter != null, e => e.CommentDate >= input.MinCommentDateFilter)
-                        .WhereIf(input.MaxCommentDateFilter != null, e => e.CommentDate <= input.MaxCommentDateFilter)
+                        .WhereIf(input.MinInsertDateFilter != null, e => e.InsertDate >= input.MinInsertDateFilter)
+                        .WhereIf(input.MaxInsertDateFilter != null, e => e.InsertDate <= input.MaxInsertDateFilter)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.PostPostTitleFilter), e => e.PostFk != null && e.PostFk.PostTitle == input.PostPostTitleFilter)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter), e => e.UserFk != null && e.UserFk.Name == input.UserNameFilter);
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter), e => e.UserFk != null && e.UserFk.Name == input.UserNameFilter)
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.CommentCommentCaptionFilter), e => e.CommentFk != null && e.CommentFk.CommentCaption == input.CommentCommentCaptionFilter);
 
             var pagedAndFilteredComments = filteredComments
                 .OrderBy(input.Sorting ?? "id asc")
@@ -59,14 +67,18 @@ namespace Chamran.Deed.Info
                            join o2 in _lookup_userRepository.GetAll() on o.UserId equals o2.Id into j2
                            from s2 in j2.DefaultIfEmpty()
 
+                           join o3 in _lookup_commentRepository.GetAll() on o.CommentId equals o3.Id into j3
+                           from s3 in j3.DefaultIfEmpty()
+
                            select new
                            {
 
                                o.CommentCaption,
-                               o.CommentDate,
+                               o.InsertDate,
                                Id = o.Id,
                                PostPostTitle = s1 == null || s1.PostTitle == null ? "" : s1.PostTitle.ToString(),
-                               UserName = s2 == null || s2.Name == null ? "" : s2.Name.ToString()
+                               UserName = s2 == null || s2.Name == null ? "" : s2.Name.ToString(),
+                               CommentCommentCaption = s3 == null || s3.CommentCaption == null ? "" : s3.CommentCaption.ToString()
                            };
 
             var totalCount = await filteredComments.CountAsync();
@@ -82,11 +94,12 @@ namespace Chamran.Deed.Info
                     {
 
                         CommentCaption = o.CommentCaption,
-                        CommentDate = o.CommentDate,
+                        InsertDate = o.InsertDate,
                         Id = o.Id,
                     },
                     PostPostTitle = o.PostPostTitle,
-                    UserName = o.UserName
+                    UserName = o.UserName,
+                    CommentCommentCaption = o.CommentCommentCaption
                 };
 
                 results.Add(res);
@@ -117,6 +130,12 @@ namespace Chamran.Deed.Info
                 output.UserName = _lookupUser?.Name?.ToString();
             }
 
+            if (output.Comment.CommentId != null)
+            {
+                var _lookupComment = await _lookup_commentRepository.FirstOrDefaultAsync((int)output.Comment.CommentId);
+                output.CommentCommentCaption = _lookupComment?.CommentCaption?.ToString();
+            }
+
             return output;
         }
 
@@ -137,6 +156,12 @@ namespace Chamran.Deed.Info
             {
                 var _lookupUser = await _lookup_userRepository.FirstOrDefaultAsync((long)output.Comment.UserId);
                 output.UserName = _lookupUser?.Name?.ToString();
+            }
+
+            if (output.Comment.CommentId != null)
+            {
+                var _lookupComment = await _lookup_commentRepository.FirstOrDefaultAsync((int)output.Comment.CommentId);
+                output.CommentCommentCaption = _lookupComment?.CommentCaption?.ToString();
             }
 
             return output;
@@ -175,6 +200,49 @@ namespace Chamran.Deed.Info
         public async Task Delete(EntityDto input)
         {
             await _commentRepository.DeleteAsync(input.Id);
+        }
+
+        public async Task<FileDto> GetCommentsToExcel(GetAllCommentsForExcelInput input)
+        {
+
+            var filteredComments = _commentRepository.GetAll()
+                        .Include(e => e.PostFk)
+                        .Include(e => e.UserFk)
+                        .Include(e => e.CommentFk)
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.CommentCaption.Contains(input.Filter))
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.CommentCaptionFilter), e => e.CommentCaption.Contains(input.CommentCaptionFilter))
+                        .WhereIf(input.MinInsertDateFilter != null, e => e.InsertDate >= input.MinInsertDateFilter)
+                        .WhereIf(input.MaxInsertDateFilter != null, e => e.InsertDate <= input.MaxInsertDateFilter)
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.PostPostTitleFilter), e => e.PostFk != null && e.PostFk.PostTitle == input.PostPostTitleFilter)
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter), e => e.UserFk != null && e.UserFk.Name == input.UserNameFilter)
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.CommentCommentCaptionFilter), e => e.CommentFk != null && e.CommentFk.CommentCaption == input.CommentCommentCaptionFilter);
+
+            var query = (from o in filteredComments
+                         join o1 in _lookup_postRepository.GetAll() on o.PostId equals o1.Id into j1
+                         from s1 in j1.DefaultIfEmpty()
+
+                         join o2 in _lookup_userRepository.GetAll() on o.UserId equals o2.Id into j2
+                         from s2 in j2.DefaultIfEmpty()
+
+                         join o3 in _lookup_commentRepository.GetAll() on o.CommentId equals o3.Id into j3
+                         from s3 in j3.DefaultIfEmpty()
+
+                         select new GetCommentForViewDto()
+                         {
+                             Comment = new CommentDto
+                             {
+                                 CommentCaption = o.CommentCaption,
+                                 InsertDate = o.InsertDate,
+                                 Id = o.Id
+                             },
+                             PostPostTitle = s1 == null || s1.PostTitle == null ? "" : s1.PostTitle.ToString(),
+                             UserName = s2 == null || s2.Name == null ? "" : s2.Name.ToString(),
+                             CommentCommentCaption = s3 == null || s3.CommentCaption == null ? "" : s3.CommentCaption.ToString()
+                         });
+
+            var commentListDtos = await query.ToListAsync();
+
+            return _commentsExcelExporter.ExportToFile(commentListDtos);
         }
 
         [AbpAuthorize(AppPermissions.Pages_Comments)]
@@ -232,6 +300,36 @@ namespace Chamran.Deed.Info
             }
 
             return new PagedResultDto<CommentUserLookupTableDto>(
+                totalCount,
+                lookupTableDtoList
+            );
+        }
+
+        [AbpAuthorize(AppPermissions.Pages_Comments)]
+        public async Task<PagedResultDto<CommentCommentLookupTableDto>> GetAllCommentForLookupTable(GetAllForLookupTableInput input)
+        {
+            var query = _lookup_commentRepository.GetAll().WhereIf(
+                   !string.IsNullOrWhiteSpace(input.Filter),
+                  e => e.CommentCaption != null && e.CommentCaption.Contains(input.Filter)
+               );
+
+            var totalCount = await query.CountAsync();
+
+            var commentList = await query
+                .PageBy(input)
+                .ToListAsync();
+
+            var lookupTableDtoList = new List<CommentCommentLookupTableDto>();
+            foreach (var comment in commentList)
+            {
+                lookupTableDtoList.Add(new CommentCommentLookupTableDto
+                {
+                    Id = comment.Id,
+                    DisplayName = comment.CommentCaption?.ToString()
+                });
+            }
+
+            return new PagedResultDto<CommentCommentLookupTableDto>(
                 totalCount,
                 lookupTableDtoList
             );
