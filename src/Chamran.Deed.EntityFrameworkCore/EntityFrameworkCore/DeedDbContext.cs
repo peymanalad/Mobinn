@@ -120,6 +120,11 @@ namespace Chamran.Deed.EntityFrameworkCore
                 .ToView("vwPostCategories");
             //.HasKey(t => t.Id);
 
+            modelBuilder.Entity<Seen>()
+                .HasIndex(s => new { s.PostId, s.UserId })
+                .IsUnique();
+
+
             modelBuilder.ConfigurePersistedGrantEntity();
         }
     }
