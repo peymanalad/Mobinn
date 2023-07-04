@@ -177,7 +177,7 @@ namespace Chamran.Deed.Info
             var filteredSeens = _seenRepository.GetAll()
                 .Include(e => e.UserFk)
                 .WhereIf(input.PostId > 0, e => e.PostId == input.PostId)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => e.UserFk.FullName.Contains(input.Filter));
+                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => e.UserFk.Surname.Contains(input.Filter)|| e.UserFk.Name.Contains(input.Filter));
 
 
             var pagedAndFilteredSeens = filteredSeens
@@ -193,7 +193,7 @@ namespace Chamran.Deed.Info
                 select new
                 {
                     s2.ProfilePictureId,
-                    s2.FullName
+                    FullName=s2.Name+" "+s2.Surname
 
                 };
 
