@@ -54,6 +54,10 @@ namespace Chamran.Deed
     {
         public static void CreateMappings(IMapperConfigurationExpression configuration)
         {
+            configuration.CreateMap<CreateOrEditCommentLikeDto, CommentLike>().ReverseMap();
+            configuration.CreateMap<CommentLikeDto, CommentLike>().ReverseMap();
+            configuration.CreateMap<CreateOrEditPostLikeDto, PostLike>().ReverseMap();
+            configuration.CreateMap<PostLikeDto, PostLike>().ReverseMap();
             configuration.CreateMap<CreateOrEditSoftwareUpdateDto, SoftwareUpdate>().ReverseMap();
             configuration.CreateMap<SoftwareUpdateDto, SoftwareUpdate>().ReverseMap();
             configuration.CreateMap<CreateOrEditCommentDto, Comment>().ReverseMap();

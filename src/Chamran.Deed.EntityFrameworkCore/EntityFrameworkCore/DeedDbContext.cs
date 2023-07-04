@@ -19,6 +19,10 @@ namespace Chamran.Deed.EntityFrameworkCore
 {
     public class DeedDbContext : AbpZeroDbContext<Tenant, Role, User, DeedDbContext>, IAbpPersistedGrantDbContext
     {
+        public virtual DbSet<CommentLike> CommentLikes { get; set; }
+
+        public virtual DbSet<PostLike> PostLikes { get; set; }
+
         public virtual DbSet<SoftwareUpdate> SoftwareUpdates { get; set; }
 
         public virtual DbSet<Comment> Comments { get; set; }
