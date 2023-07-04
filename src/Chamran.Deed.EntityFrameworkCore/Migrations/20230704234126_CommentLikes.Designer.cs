@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Chamran.Deed.Migrations
 {
     [DbContext(typeof(DeedDbContext))]
-    [Migration("20230704233141_Added_CommentLike")]
-    partial class Added_CommentLike
+    [Migration("20230704234126_CommentLikes")]
+    partial class CommentLikes
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1940,6 +1940,9 @@ namespace Chamran.Deed.Migrations
                     b.Property<int>("CommentId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("CommentId1")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("LikeTime")
                         .HasColumnType("datetime2");
 
@@ -1948,9 +1951,12 @@ namespace Chamran.Deed.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CommentId");
+                    b.HasIndex("CommentId1");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("CommentId", "UserId")
+                        .IsUnique();
 
                     b.ToTable("CommentLikes");
                 });
@@ -2134,9 +2140,10 @@ namespace Chamran.Deed.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PostId");
-
                     b.HasIndex("UserId");
+
+                    b.HasIndex("PostId", "UserId")
+                        .IsUnique();
 
                     b.ToTable("PostLikes");
                 });
@@ -2826,8 +2833,12 @@ namespace Chamran.Deed.Migrations
                     b.HasOne("Chamran.Deed.Info.Comment", "CommentFk")
                         .WithMany()
                         .HasForeignKey("CommentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.HasOne("Chamran.Deed.Info.Comment", null)
+                        .WithMany("Likes")
+                        .HasForeignKey("CommentId1");
 
                     b.HasOne("Chamran.Deed.Authorization.Users.User", "UserFk")
                         .WithMany()
@@ -3066,6 +3077,11 @@ namespace Chamran.Deed.Migrations
                     b.Navigation("Settings");
 
                     b.Navigation("Tokens");
+                });
+
+            modelBuilder.Entity("Chamran.Deed.Info.Comment", b =>
+                {
+                    b.Navigation("Likes");
                 });
 #pragma warning restore 612, 618
         }
