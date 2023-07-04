@@ -3,7 +3,7 @@ using System;
 
 namespace Chamran.Deed.Info.Dtos
 {
-    public class GetAllCommentsInput : PagedAndSortedResultRequestDto
+    public class GetAllCommentsForExcelInput
     {
         public string Filter { get; set; }
 

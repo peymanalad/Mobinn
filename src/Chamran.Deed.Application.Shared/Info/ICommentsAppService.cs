@@ -19,9 +19,13 @@ namespace Chamran.Deed.Info
 
         Task Delete(EntityDto input);
 
+        Task<FileDto> GetCommentsToExcel(GetAllCommentsForExcelInput input);
+
         Task<PagedResultDto<CommentPostLookupTableDto>> GetAllPostForLookupTable(GetAllForLookupTableInput input);
 
         Task<PagedResultDto<CommentUserLookupTableDto>> GetAllUserForLookupTable(GetAllForLookupTableInput input);
+
+        Task<PagedResultDto<CommentCommentLookupTableDto>> GetAllCommentForLookupTable(GetAllForLookupTableInput input);
 
     }
 }
