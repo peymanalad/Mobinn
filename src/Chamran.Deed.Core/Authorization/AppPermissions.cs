@@ -6,6 +6,16 @@
     /// </summary>
     public static class AppPermissions
     {
+        public const string Pages_CommentLikes = "Pages.CommentLikes";
+        public const string Pages_CommentLikes_Create = "Pages.CommentLikes.Create";
+        public const string Pages_CommentLikes_Edit = "Pages.CommentLikes.Edit";
+        public const string Pages_CommentLikes_Delete = "Pages.CommentLikes.Delete";
+
+        public const string Pages_PostLikes = "Pages.PostLikes";
+        public const string Pages_PostLikes_Create = "Pages.PostLikes.Create";
+        public const string Pages_PostLikes_Edit = "Pages.PostLikes.Edit";
+        public const string Pages_PostLikes_Delete = "Pages.PostLikes.Delete";
+
         public const string Pages_SoftwareUpdates = "Pages.SoftwareUpdates";
         public const string Pages_SoftwareUpdates_Create = "Pages.SoftwareUpdates.Create";
         public const string Pages_SoftwareUpdates_Edit = "Pages.SoftwareUpdates.Edit";

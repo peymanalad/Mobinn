@@ -4,6 +4,7 @@ using Chamran.Deed.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Chamran.Deed.Migrations
 {
     [DbContext(typeof(DeedDbContext))]
-    partial class DeedDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230704233034_Added_PostLike")]
+    partial class Added_PostLike
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1926,32 +1929,6 @@ namespace Chamran.Deed.Migrations
                     b.ToTable("Comments");
                 });
 
-            modelBuilder.Entity("Chamran.Deed.Info.CommentLike", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CommentId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("LikeTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CommentId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("CommentLikes");
-                });
-
             modelBuilder.Entity("Chamran.Deed.Info.Hashtag", b =>
                 {
                     b.Property<int>("Id")
@@ -2814,25 +2791,6 @@ namespace Chamran.Deed.Migrations
                     b.Navigation("CommentFk");
 
                     b.Navigation("PostFk");
-
-                    b.Navigation("UserFk");
-                });
-
-            modelBuilder.Entity("Chamran.Deed.Info.CommentLike", b =>
-                {
-                    b.HasOne("Chamran.Deed.Info.Comment", "CommentFk")
-                        .WithMany()
-                        .HasForeignKey("CommentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Chamran.Deed.Authorization.Users.User", "UserFk")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CommentFk");
 
                     b.Navigation("UserFk");
                 });

@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="en">
-  <texts>    <text name="Common">Common</text>
+  <texts>    <text name="CommentLike">Comment like</text>
+    <text name="CreateNewCommentLike">Create new comment like</text>
+    <text name="EditCommentLike">Edit comment like</text>
+    <text name="DeleteCommentLike">Delete comment like</text>
+    <text name="PostLike">Post like</text>
+    <text name="CreateNewPostLike">Create new post like</text>
+    <text name="EditPostLike">Edit post like</text>
+    <text name="DeletePostLike">Delete post like</text>
+    <text name="Common">Common</text>
     <text name="SoftwareUpdate">Software update</text>
     <text name="CreateNewSoftwareUpdate">Create new software update</text>
     <text name="EditSoftwareUpdate">Edit software update</text>
