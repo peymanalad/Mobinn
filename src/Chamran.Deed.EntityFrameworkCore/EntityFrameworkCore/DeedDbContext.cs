@@ -14,6 +14,7 @@ using Chamran.Deed.MultiTenancy;
 using Chamran.Deed.MultiTenancy.Accounting;
 using Chamran.Deed.MultiTenancy.Payments;
 using Chamran.Deed.Storage;
+using Chamran.Deed.Configurations;
 
 namespace Chamran.Deed.EntityFrameworkCore
 {
@@ -75,6 +76,8 @@ namespace Chamran.Deed.EntityFrameworkCore
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.ApplyConfiguration(new CommentLikeConfiguration());
+
             modelBuilder.Entity<BinaryObject>(b =>
             {
                 b.HasIndex(e => new { e.TenantId });
@@ -130,6 +133,16 @@ namespace Chamran.Deed.EntityFrameworkCore
             modelBuilder.Entity<Seen>()
                 .HasIndex(s => new { s.PostId, s.UserId })
                 .IsUnique();
+
+            modelBuilder.Entity<PostLike>()
+                .HasIndex(s => new { s.PostId, s.UserId })
+                .IsUnique();
+
+            modelBuilder.Entity<CommentLike>()
+                .HasIndex(s => new { s.CommentId, s.UserId })
+                .IsUnique();
+
+            
 
             modelBuilder.ConfigurePersistedGrantEntity();
         }

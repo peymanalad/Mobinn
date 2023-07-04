@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Abp.Domain.Entities.Auditing;
 using Abp.Domain.Entities;
 using Abp.Auditing;
+using System.Collections.Generic;
 
 namespace Chamran.Deed.Info
 {
@@ -35,6 +36,8 @@ namespace Chamran.Deed.Info
 
         [ForeignKey("CommentId")]
         public Comment CommentFk { get; set; }
+
+        public ICollection<CommentLike> Likes { get; set; }
 
     }
 }
