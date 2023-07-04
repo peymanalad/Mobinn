@@ -1,4 +1,6 @@
-﻿using Chamran.Deed.Info.Dtos;
+﻿using Chamran.Deed.Common.Dtos;
+using Chamran.Deed.Common;
+using Chamran.Deed.Info.Dtos;
 using Chamran.Deed.Info;
 using Chamran.Deed.People.Dtos;
 using Chamran.Deed.People;
@@ -52,6 +54,8 @@ namespace Chamran.Deed
     {
         public static void CreateMappings(IMapperConfigurationExpression configuration)
         {
+            configuration.CreateMap<CreateOrEditSoftwareUpdateDto, SoftwareUpdate>().ReverseMap();
+            configuration.CreateMap<SoftwareUpdateDto, SoftwareUpdate>().ReverseMap();
             configuration.CreateMap<CreateOrEditCommentDto, Comment>().ReverseMap();
             configuration.CreateMap<CommentDto, Comment>().ReverseMap();
             configuration.CreateMap<CreateOrEditSeenDto, Seen>().ReverseMap();
