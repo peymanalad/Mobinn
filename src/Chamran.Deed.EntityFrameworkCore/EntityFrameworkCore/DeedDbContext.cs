@@ -1,4 +1,5 @@
-﻿using Chamran.Deed.Info;
+﻿using Chamran.Deed.Common;
+using Chamran.Deed.Info;
 using Chamran.Deed.People;
 using Abp.IdentityServer4vNext;
 using Abp.Zero.EntityFrameworkCore;
@@ -18,6 +19,8 @@ namespace Chamran.Deed.EntityFrameworkCore
 {
     public class DeedDbContext : AbpZeroDbContext<Tenant, Role, User, DeedDbContext>, IAbpPersistedGrantDbContext
     {
+        public virtual DbSet<SoftwareUpdate> SoftwareUpdates { get; set; }
+
         public virtual DbSet<Comment> Comments { get; set; }
 
         public virtual DbSet<Seen> Seens { get; set; }
@@ -123,7 +126,6 @@ namespace Chamran.Deed.EntityFrameworkCore
             modelBuilder.Entity<Seen>()
                 .HasIndex(s => new { s.PostId, s.UserId })
                 .IsUnique();
-
 
             modelBuilder.ConfigurePersistedGrantEntity();
         }

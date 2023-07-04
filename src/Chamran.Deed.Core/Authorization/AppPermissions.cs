@@ -6,6 +6,11 @@
     /// </summary>
     public static class AppPermissions
     {
+        public const string Pages_SoftwareUpdates = "Pages.SoftwareUpdates";
+        public const string Pages_SoftwareUpdates_Create = "Pages.SoftwareUpdates.Create";
+        public const string Pages_SoftwareUpdates_Edit = "Pages.SoftwareUpdates.Edit";
+        public const string Pages_SoftwareUpdates_Delete = "Pages.SoftwareUpdates.Delete";
+
         public const string Pages_Comments = "Pages.Comments";
         public const string Pages_Comments_Create = "Pages.Comments.Create";
         public const string Pages_Comments_Edit = "Pages.Comments.Edit";

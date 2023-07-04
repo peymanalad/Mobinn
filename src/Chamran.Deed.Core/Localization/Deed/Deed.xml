@@ -1,6 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="en">
-  <texts>    <text name="Comment">Comment</text>
+  <texts>    <text name="Common">Common</text>
+    <text name="SoftwareUpdate">Software update</text>
+    <text name="CreateNewSoftwareUpdate">Create new software update</text>
+    <text name="EditSoftwareUpdate">Edit software update</text>
+    <text name="DeleteSoftwareUpdate">Delete software update</text>
+    <text name="Comment">Comment</text>
     <text name="CreateNewComment">Create new comment</text>
     <text name="EditComment">Edit comment</text>
     <text name="DeleteComment">Delete comment</text>
