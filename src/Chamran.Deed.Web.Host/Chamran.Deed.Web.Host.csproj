@@ -97,7 +97,12 @@
     </ItemGroup>
 
     <ItemGroup>
+      <_ContentIncludedByDefault Remove="Views\Dashboard\Design.cshtml" />
       <_ContentIncludedByDefault Remove="Views\Dashboard\Index.cshtml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <UpToDateCheckInput Remove="Views\Dashboard\Design.cshtml" />
     </ItemGroup>
 
 </Project>
