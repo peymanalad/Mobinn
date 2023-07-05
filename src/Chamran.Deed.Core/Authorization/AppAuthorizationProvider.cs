@@ -30,6 +30,11 @@ namespace Chamran.Deed.Authorization
 
             var pages = context.GetPermissionOrNull(AppPermissions.Pages) ?? context.CreatePermission(AppPermissions.Pages, L("Pages"));
 
+            var reports = pages.CreateChildPermission(AppPermissions.Pages_Reports, L("Reports"));
+            reports.CreateChildPermission(AppPermissions.Pages_Reports_Create, L("CreateNewReport"));
+            reports.CreateChildPermission(AppPermissions.Pages_Reports_Edit, L("EditReport"));
+            reports.CreateChildPermission(AppPermissions.Pages_Reports_Delete, L("DeleteReport"));
+
             var commentLikes = pages.CreateChildPermission(AppPermissions.Pages_CommentLikes, L("CommentLikes"));
             commentLikes.CreateChildPermission(AppPermissions.Pages_CommentLikes_Create, L("CreateNewCommentLike"));
             commentLikes.CreateChildPermission(AppPermissions.Pages_CommentLikes_Edit, L("EditCommentLike"));
