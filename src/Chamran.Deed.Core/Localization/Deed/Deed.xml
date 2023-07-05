@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="en">
-  <texts>    <text name="CommentLike">Comment like</text>
+  <texts>    <text name="Report">Report</text>
+    <text name="CreateNewReport">Create new report</text>
+    <text name="EditReport">Edit report</text>
+    <text name="DeleteReport">Delete report</text>
+    <text name="CommentLike">Comment like</text>
     <text name="CreateNewCommentLike">Create new comment like</text>
     <text name="EditCommentLike">Edit comment like</text>
     <text name="DeleteCommentLike">Delete comment like</text>

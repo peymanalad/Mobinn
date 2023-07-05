@@ -20,6 +20,8 @@ namespace Chamran.Deed.EntityFrameworkCore
 {
     public class DeedDbContext : AbpZeroDbContext<Tenant, Role, User, DeedDbContext>, IAbpPersistedGrantDbContext
     {
+        public virtual DbSet<Report> Reports { get; set; }
+
         public virtual DbSet<CommentLike> CommentLikes { get; set; }
 
         public virtual DbSet<PostLike> PostLikes { get; set; }
@@ -141,8 +143,6 @@ namespace Chamran.Deed.EntityFrameworkCore
             modelBuilder.Entity<CommentLike>()
                 .HasIndex(s => new { s.CommentId, s.UserId })
                 .IsUnique();
-
-            
 
             modelBuilder.ConfigurePersistedGrantEntity();
         }
