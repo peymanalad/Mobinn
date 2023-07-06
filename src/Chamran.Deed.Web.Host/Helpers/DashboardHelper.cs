@@ -97,7 +97,7 @@ namespace Chamran.Deed.Web.Helpers
                          join grpMember in groupMemberRepository.GetAll() on orgGroup.OrganizationId equals grpMember
                              .OrganizationGroupId into joined2
                          from grpMember in joined2.DefaultIfEmpty()
-                         where grpMember.UserId == userId
+                         where grpMember.UserId == userId && !orgGroup.IsDeleted && !report.IsDeleted 
                          select new
                          {
                              report.ReportContent
@@ -113,10 +113,10 @@ namespace Chamran.Deed.Web.Helpers
             if (!string.IsNullOrEmpty(reportContent)) return GetReportFromContent(reportContent);
             var orgQuery =
                 from orgGroup in organizationGroupRepository.GetAll().Include(orgGroup => orgGroup.OrganizationFk)
-                join grpMember in groupMemberRepository.GetAll() on orgGroup.OrganizationId equals grpMember
+                join grpMember in groupMemberRepository.GetAll() on orgGroup.Id equals grpMember
                     .OrganizationGroupId into joined2
                 from grpMember in joined2.DefaultIfEmpty()
-                where grpMember.UserId == userId
+                where grpMember.UserId == userId && !orgGroup.IsDeleted
                 select orgGroup.OrganizationFk;
 
             if (!orgQuery.Any())
@@ -235,7 +235,7 @@ namespace Chamran.Deed.Web.Helpers
                     from orgGroup in joined1.DefaultIfEmpty()
                     join grpMember in groupMemberRepository.GetAll() on orgGroup.OrganizationId equals grpMember.OrganizationGroupId into joined2
                     from grpMember in joined2.DefaultIfEmpty()
-                    where grpMember.UserId == userId
+                    where grpMember.UserId == userId && !orgGroup.IsDeleted && !report.IsDeleted
                     select report;
 
                 if (query2.Any())
