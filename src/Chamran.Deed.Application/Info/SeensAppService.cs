@@ -138,8 +138,8 @@ namespace Chamran.Deed.Info
                 .PageBy(input);
 
             var seens = from o in pagedAndFilteredSeens
-                        //join o1 in _lookup_postRepository.GetAll() on o.PostId equals o1.Id into j1
-                        //from s1 in j1.DefaultIfEmpty()
+                            //join o1 in _lookup_postRepository.GetAll() on o.PostId equals o1.Id into j1
+                            //from s1 in j1.DefaultIfEmpty()
                         join o2 in _lookup_userRepository.GetAll() on o.UserId equals o2.Id into j2
                         from s2 in j2.DefaultIfEmpty()
 
@@ -160,7 +160,7 @@ namespace Chamran.Deed.Info
                 var res = new GetSeenOfPostDto()
                 {
                     ProfilePictureId = o.ProfilePictureId,
-                    FullName=o.FullName,
+                    FullName = o.FullName,
                 };
 
                 results.Add(res);
@@ -177,7 +177,7 @@ namespace Chamran.Deed.Info
             var filteredSeens = _seenRepository.GetAll()
                 .Include(e => e.UserFk)
                 .WhereIf(input.PostId > 0, e => e.PostId == input.PostId)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => e.UserFk.Surname.Contains(input.Filter)|| e.UserFk.Name.Contains(input.Filter));
+                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => e.UserFk.Surname.Contains(input.Filter) || e.UserFk.Name.Contains(input.Filter));
 
 
             var pagedAndFilteredSeens = filteredSeens
@@ -185,17 +185,17 @@ namespace Chamran.Deed.Info
                 .PageBy(input);
 
             var seens = from o in pagedAndFilteredSeens
-                //join o1 in _lookup_postRepository.GetAll() on o.PostId equals o1.Id into j1
-                //from s1 in j1.DefaultIfEmpty()
-                join o2 in _lookup_userRepository.GetAll() on o.UserId equals o2.Id into j2
-                from s2 in j2.DefaultIfEmpty()
+                            //join o1 in _lookup_postRepository.GetAll() on o.PostId equals o1.Id into j1
+                            //from s1 in j1.DefaultIfEmpty()
+                        join o2 in _lookup_userRepository.GetAll() on o.UserId equals o2.Id into j2
+                        from s2 in j2.DefaultIfEmpty()
 
-                select new
-                {
-                    s2.ProfilePictureId,
-                    FullName=s2.Name+" "+s2.Surname
+                        select new
+                        {
+                            s2.ProfilePictureId,
+                            FullName = s2.Name + " " + s2.Surname
 
-                };
+                        };
 
             var totalCount = await filteredSeens.CountAsync();
 
@@ -221,7 +221,8 @@ namespace Chamran.Deed.Info
 
         public async Task<int> GetSeenCountOfPost(int postId)
         {
-            return await _seenRepository.GetAll().WhereIf(postId > 0, e => e.PostId == postId).CountAsync();
+            if (postId <= 0) throw new UserFriendlyException("PostId should be greater than zero");
+            return await _seenRepository.GetAll().Where(e => e.PostId == postId).CountAsync();
 
         }
 

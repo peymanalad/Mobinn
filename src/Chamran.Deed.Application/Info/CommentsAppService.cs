@@ -335,5 +335,15 @@ namespace Chamran.Deed.Info
             );
         }
 
+        [AbpAuthorize(AppPermissions.Pages_Comments_Create)]
+        public async Task CreateComment(CreateCommentDto input)
+        {
+            if (AbpSession.UserId == null) throw new UserFriendlyException("Not Logged In!");
+            var comment = ObjectMapper.Map<Comment>(input);
+            comment.UserId = AbpSession.UserId.Value;
+            comment.InsertDate = DateTime.Now;
+            await _commentRepository.InsertAsync(comment);
+
+        }
     }
 }

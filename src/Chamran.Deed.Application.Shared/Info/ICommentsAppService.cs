@@ -27,5 +27,8 @@ namespace Chamran.Deed.Info
 
         Task<PagedResultDto<CommentCommentLookupTableDto>> GetAllCommentForLookupTable(GetAllForLookupTableInput input);
 
+        Task CreateComment(CreateCommentDto input);
+
+
     }
 }

@@ -18,6 +18,7 @@ using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Chamran.Deed.Storage;
+using System.ComponentModel.Design;
 
 namespace Chamran.Deed.Info
 {
@@ -272,5 +273,48 @@ namespace Chamran.Deed.Info
             );
         }
 
+
+        public async Task<int> GetLikeCountOfComment(int commentId)
+        {
+            if (commentId <= 0) throw new UserFriendlyException("PostId should be greater than zero");
+            return await _commentLikeRepository.GetAll().Where(e => e.CommentId == commentId).CountAsync();
+        }
+
+        public async Task<bool> IsCommentLiked(int commentId)
+        {
+            if (commentId <= 0) throw new UserFriendlyException("PostId should be greater than zero");
+            if (!AbpSession.UserId.HasValue) throw new UserFriendlyException("Not Logged In!");
+            return await _commentLikeRepository.GetAll()
+                .Where(e => e.CommentId == commentId && e.UserId == AbpSession.UserId.Value).AnyAsync();
+
+        }
+
+        [AbpAuthorize(AppPermissions.Pages_CommentLikes_Create)]
+        public async Task CreateCurrentCommentLike(int commentId)
+        {
+            if (AbpSession.UserId == null) throw new UserFriendlyException("Not Logged In!");
+
+            var seen = new CommentLike()
+            {
+                UserId = AbpSession.UserId.Value,
+                CommentId = commentId,
+                LikeTime = DateTime.Now,
+            };
+            await _commentLikeRepository.InsertAsync(seen);
+        }
+
+        [AbpAuthorize(AppPermissions.Pages_CommentLikes_Create)]
+        public async Task CreateCommentLikeByDate(int commentId, DateTime likeDateTime)
+        {
+            if (AbpSession.UserId == null) throw new UserFriendlyException("Not Logged In!");
+
+            var seen = new CommentLike()
+            {
+                UserId = AbpSession.UserId.Value,
+                CommentId = commentId,
+                LikeTime = likeDateTime
+            };
+            await _commentLikeRepository.InsertAsync(seen);
+        }
     }
 }

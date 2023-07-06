@@ -272,5 +272,50 @@ namespace Chamran.Deed.Info
             );
         }
 
+        public async Task<int> GetLikeCountOfPost(int postId)
+        {
+            if (postId <= 0) throw new UserFriendlyException("PostId should be greater than zero");
+            return await _postLikeRepository.GetAll().Where(e => e.PostId == postId).CountAsync();
+
+        }
+
+        public async Task<bool> IsPostLiked(int postId)
+        {
+            if (postId <= 0) throw new UserFriendlyException("PostId should be greater than zero");
+            if(!AbpSession.UserId.HasValue) throw new UserFriendlyException("Not Logged In!");
+            return await _postLikeRepository.GetAll()
+                .Where(e => e.PostId == postId && e.UserId == AbpSession.UserId.Value).AnyAsync();
+
+        }
+
+        [AbpAuthorize(AppPermissions.Pages_PostLikes_Create)]
+        public async Task CreateCurrentLike(int postId)
+        {
+            if (AbpSession.UserId == null) throw new UserFriendlyException("Not Logged In!");
+
+            var seen = new PostLike()
+            {
+                UserId = AbpSession.UserId.Value,
+                PostId = postId,
+                LikeTime = DateTime.Now
+            };
+            await _postLikeRepository.InsertAsync(seen);
+        }
+
+        [AbpAuthorize(AppPermissions.Pages_PostLikes_Create)]
+        public async Task CreateLikeByDate(int postId, DateTime seenDateTime)
+        {
+            if (AbpSession.UserId == null) throw new UserFriendlyException("Not Logged In!");
+
+            var seen = new PostLike()
+            {
+                UserId = AbpSession.UserId.Value,
+                PostId = postId,
+                LikeTime = seenDateTime
+            };
+            await _postLikeRepository.InsertAsync(seen);
+        }
+
+
     }
 }

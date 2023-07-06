@@ -3,18 +3,10 @@ using Abp.AspNetCore.Mvc.Authorization;
 using Abp.Auditing;
 using Abp.Configuration.Startup;
 using System.Threading.Tasks;
-using Abp.Auditing;
-using Abp.Authorization;
-using Abp.Authorization.Users;
-using Abp.Configuration.Startup;
-using Abp.UI;
 using Microsoft.AspNetCore.Mvc;
 using Chamran.Deed.Authorization;
 using Chamran.Deed.Authorization.Accounts;
-using Chamran.Deed.Authorization.Accounts.Dto;
-using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.Identity;
-using Chamran.Deed.MultiTenancy;
 using Chamran.Deed.Web.Models.Ui;
 using Chamran.Deed.Web.Session;
 using Stimulsoft.Report.Mvc;
@@ -24,8 +16,9 @@ using Chamran.Deed.People;
 using Abp.Domain.Uow;
 using Stimulsoft.Report.Dictionary;
 using Stimulsoft.Report.Web;
-using Stimulsoft.Base;
 using System.IO;
+using Chamran.Deed.DashboardCustomization;
+using Stimulsoft.Base;
 
 namespace Chamran.Deed.Web.Controllers.Stimulsoft
 {
@@ -84,7 +77,7 @@ namespace Chamran.Deed.Web.Controllers.Stimulsoft
             return View(model);
         }
 
-        public Task<IActionResult> Design()
+        public async Task<IActionResult> Design()
         {
             // Check if the user is logged in or redirect to the login page if not
 
@@ -134,6 +127,17 @@ namespace Chamran.Deed.Web.Controllers.Stimulsoft
             //var resource = new StiResource("IRANSans", "IRANSans", false, StiResourceType.FontTtf, fontContent, false);
             //StiFontCollection.AddResourceFont(resource.Name, resource.Content, "ttf", resource.Alias);
 
+            // Loading and adding a font to resources
+            var fontPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Fonts", "IRANSans.ttf");
+            var fontContent = await System.IO.File.ReadAllBytesAsync(fontPath);
+            var resource = new StiResource("IRANSans", "IRANSans", false, StiResourceType.FontTtf, fontContent, false);
+            StiFontCollection.AddResourceFont(resource.Name, resource.Content, "ttf", resource.Alias);
+
+            fontPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Fonts", "IRANSans(FaNum)_Medium.ttf");
+            fontContent = await System.IO.File.ReadAllBytesAsync(fontPath);
+            resource = new StiResource("IRANSans(FaNum) Medium", "IRANSans(FaNum)", false, StiResourceType.FontTtf, fontContent, false);
+            StiFontCollection.AddResourceFont(resource.Name, resource.Content, "ttf", resource.Alias);
+
 
 
             // Add the custom function
@@ -152,7 +156,7 @@ namespace Chamran.Deed.Web.Controllers.Stimulsoft
 
             ViewBag.Options = options;
 
-            return Task.FromResult<IActionResult>(View());
+            return await Task.FromResult<IActionResult>(View());
         }
 
         public async Task<IActionResult> GetReport()

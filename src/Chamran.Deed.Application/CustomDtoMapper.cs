@@ -64,6 +64,7 @@ namespace Chamran.Deed
             configuration.CreateMap<SoftwareUpdateDto, SoftwareUpdate>().ReverseMap();
             configuration.CreateMap<CreateOrEditCommentDto, Comment>().ReverseMap();
             configuration.CreateMap<CommentDto, Comment>().ReverseMap();
+            configuration.CreateMap<CreateCommentDto, Comment>().ReverseMap();
             configuration.CreateMap<CreateOrEditSeenDto, Seen>().ReverseMap();
             configuration.CreateMap<SeenDto, Seen>().ReverseMap();
             configuration.CreateMap<CreateOrEditHashtagDto, Hashtag>().ReverseMap();

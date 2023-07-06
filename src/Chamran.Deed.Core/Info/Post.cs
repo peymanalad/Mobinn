@@ -7,6 +7,7 @@ using Abp.Domain.Entities.Auditing;
 using Abp.Domain.Entities;
 using Abp.Auditing;
 using Chamran.Deed.Storage;
+using System.Collections.Generic;
 
 namespace Chamran.Deed.Info
 {
@@ -49,6 +50,7 @@ namespace Chamran.Deed.Info
 
         public virtual string PostRefLink { get; set; }
 
-
+        public virtual ICollection<PostLike> PostLikes { get; set; } // Collection of PostLikes
+        
     }
 }
