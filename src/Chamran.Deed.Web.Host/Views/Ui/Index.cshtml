@@ -24,6 +24,8 @@
             {
                 <li><a href="@WebConsts.SwaggerUiEndPoint">Swagger UI</a></li>
             }
+            <li><a href="/Dashboard">Dashboard</a></li>
+            <li><a href="/Dashboard/Design">Dashboard Designer</a></li>
             @if (WebConsts.HangfireDashboardEnabled && IsGranted(AppPermissions.Pages_Administration_HangfireDashboard))
             {
                 <li><a href="@WebConsts.HangfireDashboardEndPoint">Hangfire</a></li>
