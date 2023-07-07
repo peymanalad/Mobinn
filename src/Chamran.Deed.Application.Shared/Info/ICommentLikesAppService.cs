@@ -28,6 +28,7 @@ namespace Chamran.Deed.Info
 
         Task<int> GetLikeCountOfComment(int commentId);
         Task<bool> IsCommentLiked(int commentId);
+        Task<bool> CommentDisLike(int commentId);
         Task CreateCurrentCommentLike(int commentId);
 
         Task CreateCommentLikeByDate(int commentId, DateTime likeDateTime);
