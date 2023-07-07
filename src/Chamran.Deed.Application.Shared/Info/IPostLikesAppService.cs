@@ -28,8 +28,8 @@ namespace Chamran.Deed.Info
 
         Task<int> GetLikeCountOfPost(int postId);
         Task<bool> IsPostLiked(int postId);
+        Task<bool> PostDisLike(int postId);
         Task CreateCurrentLike(int postId);
-
         Task CreateLikeByDate(int postId, DateTime seenDateTime);
 
 

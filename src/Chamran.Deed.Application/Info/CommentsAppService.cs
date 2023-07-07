@@ -345,5 +345,68 @@ namespace Chamran.Deed.Info
             await _commentRepository.InsertAsync(comment);
 
         }
+
+        public async Task<PagedResultDto<GetCommentForViewDto>> GetListOfComments(GetCommentsOfPostInput input)
+        {
+            if (input.PostId <= 0) throw new UserFriendlyException("PostId should be greater than zero");
+            var filteredComments = _commentRepository.GetAll()
+                .Include(e => e.PostFk)
+                .Include(e => e.UserFk)
+                .Include(e => e.CommentFk).Where(x => x.PostId == input.PostId);
+
+            var pagedAndFilteredComments = filteredComments
+                .OrderBy(input.Sorting ?? "id asc")
+                .PageBy(input);
+
+            var comments = from o in pagedAndFilteredComments
+                           join o1 in _lookup_postRepository.GetAll() on o.PostId equals o1.Id into j1
+                           from s1 in j1.DefaultIfEmpty()
+
+                           join o2 in _lookup_userRepository.GetAll() on o.UserId equals o2.Id into j2
+                           from s2 in j2.DefaultIfEmpty()
+
+                           join o3 in _lookup_commentRepository.GetAll() on o.CommentId equals o3.Id into j3
+                           from s3 in j3.DefaultIfEmpty()
+
+                           select new
+                           {
+
+                               o.CommentCaption,
+                               o.InsertDate,
+                               Id = o.Id,
+                               PostPostTitle = s1 == null || s1.PostTitle == null ? "" : s1.PostTitle.ToString(),
+                               UserName = s2 == null || s2.Name == null ? "" : s2.Name.ToString(),
+                               CommentCommentCaption = s3 == null || s3.CommentCaption == null ? "" : s3.CommentCaption.ToString()
+                           };
+
+            var totalCount = await filteredComments.CountAsync();
+
+            var dbList = await comments.ToListAsync();
+            var results = new List<GetCommentForViewDto>();
+
+            foreach (var o in dbList)
+            {
+                var res = new GetCommentForViewDto()
+                {
+                    Comment = new CommentDto
+                    {
+
+                        CommentCaption = o.CommentCaption,
+                        InsertDate = o.InsertDate,
+                        Id = o.Id,
+                    },
+                    PostPostTitle = o.PostPostTitle,
+                    UserName = o.UserName,
+                    CommentCommentCaption = o.CommentCommentCaption
+                };
+
+                results.Add(res);
+            }
+
+            return new PagedResultDto<GetCommentForViewDto>(
+                totalCount,
+                results
+            );
+        }
     }
 }

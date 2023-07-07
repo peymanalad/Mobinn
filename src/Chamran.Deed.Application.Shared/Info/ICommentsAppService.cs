@@ -29,6 +29,7 @@ namespace Chamran.Deed.Info
 
         Task CreateComment(CreateCommentDto input);
 
+        Task<PagedResultDto<GetCommentForViewDto>> GetListOfComments(GetCommentsOfPostInput input);
 
     }
 }

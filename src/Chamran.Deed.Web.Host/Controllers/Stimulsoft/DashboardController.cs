@@ -19,6 +19,7 @@ using Stimulsoft.Report.Web;
 using System.IO;
 using Chamran.Deed.DashboardCustomization;
 using Stimulsoft.Base;
+using Chamran.Deed.Web.Helpers;
 
 namespace Chamran.Deed.Web.Controllers.Stimulsoft
 {
@@ -75,6 +76,36 @@ namespace Chamran.Deed.Web.Controllers.Stimulsoft
             //}
 
             return View(model);
+        }
+
+        [DisableAuditing]
+        public async Task<IActionResult> Js()
+        {
+            var model = new HomePageModel
+            {
+                LoginInformation = await _sessionCache.GetCurrentLoginInformationsAsync(),
+                IsMultiTenancyEnabled = _multiTenancyConfig.IsEnabled
+            };
+
+            //if (model.LoginInformation?.User == null)
+            //{
+            //    return RedirectToAction("Login");
+            //}
+
+            var loginInformation = await _sessionCache.GetCurrentLoginInformationsAsync();
+            var dashboard = await Helpers.DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationGroupRepository, _groupMemberRepository, loginInformation.User.Id);
+
+            //ToDo: MapData to Dashboard
+
+            using var stream = new MemoryStream();
+            dashboard.Save(stream);
+
+            stream.Seek(0, SeekOrigin.Begin);
+
+            var fileContents = stream.ToArray();
+            var fileName = "dashboard.mrt"; // Provide a desired file name with the appropriate extension
+
+            return File(fileContents, "application/octet-stream", fileName);
         }
 
         public async Task<IActionResult> Design()
@@ -196,6 +227,7 @@ namespace Chamran.Deed.Web.Controllers.Stimulsoft
 
             return StiNetCoreDesigner.GetReportResult(this, dashboard);
         }
+
 
         public IActionResult ViewerEvent()
         {

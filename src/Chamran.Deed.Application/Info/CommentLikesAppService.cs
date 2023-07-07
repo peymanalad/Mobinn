@@ -289,6 +289,14 @@ namespace Chamran.Deed.Info
 
         }
 
+        public async Task<bool> CommentDisLike(int commentId)
+        {
+            if (commentId <= 0) throw new UserFriendlyException("PostId should be greater than zero");
+            if (!AbpSession.UserId.HasValue) throw new UserFriendlyException("Not Logged In!");
+            return await _commentLikeRepository.GetAll()
+                .Where(e => e.CommentId == commentId && e.UserId == AbpSession.UserId.Value).ExecuteDeleteAsync()>0;
+        }
+
         [AbpAuthorize(AppPermissions.Pages_CommentLikes_Create)]
         public async Task CreateCurrentCommentLike(int commentId)
         {
