@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 
-namespace Chamran.Deed.Web.Helpers
+namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
 {
     public class ConversionFunctions
     {

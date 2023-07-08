@@ -46,7 +46,7 @@ using HealthChecksUISettings = HealthChecks.UI.Configuration.Settings;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Chamran.Deed.Web.MultiTenancy;
 using Abp.AspNetCore.Localization;
-using Chamran.Deed.Web.Helpers;
+using Chamran.Deed.Web.Helpers.StimulsoftHelpers;
 using Microsoft.AspNetCore.HttpOverrides;
 
 namespace Chamran.Deed.Web.Startup

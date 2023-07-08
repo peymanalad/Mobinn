@@ -1,9 +1,7 @@
 ﻿using System.Security.Cryptography;
 using HarmonyLib;
-using Stimulsoft.Base;
-using Stimulsoft.Base.Licenses;
 
-namespace Chamran.Deed.Web.Helpers
+namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
 {
     [HarmonyPatch]
     internal static class LicenseHelper

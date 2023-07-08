@@ -1,22 +1,22 @@
 ﻿using System;
+using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
-using Abp.Domain.Uow;
-using Abp.Logging;
 using Abp.UI;
 using Chamran.Deed.Info;
 using Chamran.Deed.People;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Stimulsoft.Base.Drawing;
 using Stimulsoft.Dashboard.Components;
 using Stimulsoft.Dashboard.Components.Table;
 using Stimulsoft.Data.Engine;
 using Stimulsoft.Report;
-using Z.EntityFramework.Plus;
+using Stimulsoft.Report.Dictionary;
 
-namespace Chamran.Deed.Web.Helpers
+namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
 {
     public class DashboardHelper
     {
@@ -91,7 +91,7 @@ namespace Chamran.Deed.Web.Helpers
         {
             var query = reportRepository.GetAll().Where(x => x.IsDashboard && !x.IsDeleted);
             var query2 = from report in query
-                         join orgGroup in organizationGroupRepository.GetAll().Where(x=>!x.IsDeleted) on report.OrganizationId equals orgGroup
+                         join orgGroup in organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on report.OrganizationId equals orgGroup
                              .OrganizationId into joined1
                          from orgGroup in joined1.DefaultIfEmpty()
                          join grpMember in groupMemberRepository.GetAll() on orgGroup.Id equals grpMember
@@ -112,7 +112,7 @@ namespace Chamran.Deed.Web.Helpers
 
             if (!string.IsNullOrEmpty(reportContent)) return GetReportFromContent(reportContent);
             var orgQuery =
-                from orgGroup in organizationGroupRepository.GetAll().Where(x=>!x.IsDeleted).Include(orgGroup => orgGroup.OrganizationFk)
+                from orgGroup in organizationGroupRepository.GetAll().Where(x => !x.IsDeleted).Include(orgGroup => orgGroup.OrganizationFk)
                 join grpMember in groupMemberRepository.GetAll() on orgGroup.Id equals grpMember
                     .OrganizationGroupId into joined2
                 from grpMember in joined2.DefaultIfEmpty()
@@ -141,7 +141,7 @@ namespace Chamran.Deed.Web.Helpers
                 //ignored
             }
             return GetTemplateDashboard();
-            
+
         }
 
         private static StiReport CreateEmptyReport(long userId, Organization org, IRepository<Report> reportRepository)
@@ -229,25 +229,81 @@ namespace Chamran.Deed.Web.Helpers
 
         public static async Task SaveCurrentOrganizationDashboard(StiReport savedReport, IRepository<Report> reportRepository, IRepository<OrganizationGroup> organizationGroupRepository, IRepository<GroupMember> groupMemberRepository, long userId)
         {
-                var query = reportRepository.GetAll().Where(x => x.IsDashboard && !x.IsDeleted);
-                var query2 = from report in query
-                    join orgGroup in organizationGroupRepository.GetAll().Where(x=>!x.IsDeleted) on report.OrganizationId equals orgGroup.OrganizationId into joined1
-                    from orgGroup in joined1.DefaultIfEmpty()
-                    join grpMember in groupMemberRepository.GetAll() on orgGroup.Id equals grpMember.OrganizationGroupId into joined2
-                    from grpMember in joined2.DefaultIfEmpty()
-                    where grpMember.UserId == userId 
-                    select report;
+            var query = reportRepository.GetAll().Where(x => x.IsDashboard && !x.IsDeleted);
+            var query2 = from report in query
+                         join orgGroup in organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on report.OrganizationId equals orgGroup.OrganizationId into joined1
+                         from orgGroup in joined1.DefaultIfEmpty()
+                         join grpMember in groupMemberRepository.GetAll() on orgGroup.Id equals grpMember.OrganizationGroupId into joined2
+                         from grpMember in joined2.DefaultIfEmpty()
+                         where grpMember.UserId == userId
+                         select report;
 
-                if (query2.Any())
-                {
-                    var result = await query2.FirstAsync();
-                    result.ReportContent = savedReport.SaveEncryptedReportToString("DrM@s");
-                    result.LastModificationTime = DateTime.Now;
-                    result.LastModifierUserId = userId;
+            if (query2.Any())
+            {
+                var result = await query2.FirstAsync();
+                result.ReportContent = savedReport.SaveEncryptedReportToString("DrM@s");
+                result.LastModificationTime = DateTime.Now;
+                result.LastModifierUserId = userId;
 
-                    await reportRepository.UpdateAsync(result);
-                }
-
+                await reportRepository.UpdateAsync(result);
+            }
         }
+
+        public static void MapDataToReportNoPassword(StiReport dashboard, IConfigurationRoot _appConfiguration)
+        {
+            foreach (var stiDatabase in dashboard.Dictionary.Databases.Items)
+            {
+                if (stiDatabase.Name == "DeedDb")
+                    dashboard.Dictionary.Databases.Remove(stiDatabase);
+            }
+            var cn = _appConfiguration[$"ConnectionStrings:{DeedConsts.ConnectionStringName}"];
+            var sqlconbuilder = new SqlConnectionStringBuilder(cn)
+            {
+                ConnectTimeout = 180,
+                //UserID = "",
+                //Password = ""
+            };
+            dashboard.Dictionary.Databases.Add(new StiSqlDatabase("DeedDb","DeedDb", sqlconbuilder.ConnectionString,false));
+            //dashboard.Dictionary.Synchronize();
+        }
+
+        public static void MapDataToReportWithPassword(StiReport dashboard, IConfigurationRoot _appConfiguration)
+        {
+            foreach (var stiDatabase in dashboard.Dictionary.Databases.Items)
+            {
+                if (stiDatabase.Name == "DeedDb")
+                    dashboard.Dictionary.Databases.Remove(stiDatabase);
+            }
+            var cn = _appConfiguration[$"ConnectionStrings:{DeedConsts.ConnectionStringName}"];
+            var sqlconbuilder = new SqlConnectionStringBuilder(cn)
+            {
+                ConnectTimeout = 180,
+            };
+            dashboard.Dictionary.Databases.Add(new StiSqlDatabase("DeedDb","DeedDb" ,sqlconbuilder.ConnectionString, false));
+            //dashboard.Dictionary.Synchronize();
+        }
+
+        //public static void BundleDataToReport(StiReport dashboard, IConfigurationRoot configuration)
+        //{
+        //foreach (var stiDatabase in dashboard.Dictionary.Databases.Items)
+        //{
+        //    if (stiDatabase.ConnectionType == StiConnectionType.Rest &&
+        //        stiDatabase.ConnectionOrder == StiConnectionOrder.GraphQLDataSource)
+        //    {
+        //        Console.WriteLine(stiDatabase);
+
+        //        var endpoint = ((StiGraphQLDatabase)stiDatabase).EndPoint;
+        //        var query= ((StiGraphQLDatabase)stiDatabase).EndPoint;
+        //        var enc=StiEncryption.Decrypt(((StiGraphQLDatabase)stiDatabase).ConnectionStringEncrypted, "8pTP5X15uKADcSw7");
+        //        Console.WriteLine(enc);
+
+        //    }
+        //}
+        //dashboard.Dictionary.Databases.Add(new StiSqlDatabase("DeedDb", sqlconbuilder.ConnectionString));
+        //}
+
+
+
+
     }
 }
