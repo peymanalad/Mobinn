@@ -162,8 +162,6 @@ namespace Chamran.Deed.Queries
                 return new List<OrganizationUnitsOfUser>();
             }
 
-            //TODO: Try to reduce to single query
-
             var userOrgUnits = (await _userOrganizationUnitRepository.GetAll().Where(x => userIdList.Contains(x.UserId))
                 .Select(u => new { u.UserId, u.OrganizationUnitId }).ToListAsync()
                 )

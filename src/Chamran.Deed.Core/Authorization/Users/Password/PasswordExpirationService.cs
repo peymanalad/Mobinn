@@ -56,7 +56,6 @@ namespace Chamran.Deed.Authorization.Users.Password
 
                 var passwordExpireDate = Clock.Now.AddDays(-passwordExpirationDayCount).ToUniversalTime();
 
-                // TODO: Query seems wrong !
                 var passwordExpiredUsers = _userRepository.GetPasswordExpiredUserIds(passwordExpireDate);
 
                 var separationCount = 1000;

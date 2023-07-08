@@ -1,7 +1,4 @@
-﻿using Chamran.Deed.Info;
-using Chamran.Deed.Authorization.Users;
-using Chamran.Deed.Info;
-
+﻿using Chamran.Deed.Authorization.Users;
 using System;
 using System.Linq;
 using System.Linq.Dynamic.Core;
@@ -14,11 +11,9 @@ using Chamran.Deed.Info.Dtos;
 using Chamran.Deed.Dto;
 using Abp.Application.Services.Dto;
 using Chamran.Deed.Authorization;
-using Abp.Extensions;
 using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
-using Chamran.Deed.Storage;
 
 namespace Chamran.Deed.Info
 {
@@ -336,13 +331,14 @@ namespace Chamran.Deed.Info
         }
 
         [AbpAuthorize(AppPermissions.Pages_Comments_Create)]
-        public async Task CreateComment(CreateCommentDto input)
+        public async Task<int> CreateComment(CreateCommentDto input)
         {
             if (AbpSession.UserId == null) throw new UserFriendlyException("Not Logged In!");
             var comment = ObjectMapper.Map<Comment>(input);
             comment.UserId = AbpSession.UserId.Value;
             comment.InsertDate = DateTime.Now;
-            await _commentRepository.InsertAsync(comment);
+            var res=await _commentRepository.InsertAsync(comment);
+            return res.Id;
 
         }
 
@@ -407,6 +403,13 @@ namespace Chamran.Deed.Info
                 totalCount,
                 results
             );
+        }
+
+        public async Task<int> GetCommentCount(int postId)
+        {
+            if (postId <= 0) throw new UserFriendlyException("PostId should be greater than zero");
+            return await _commentRepository.GetAll().Where(e => e.PostId == postId).CountAsync();
+
         }
     }
 }

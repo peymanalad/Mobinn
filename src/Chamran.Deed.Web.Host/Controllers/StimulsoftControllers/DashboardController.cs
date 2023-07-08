@@ -1,27 +1,26 @@
 ﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using Abp.AspNetCore.Mvc.Authorization;
 using Abp.Auditing;
 using Abp.Configuration.Startup;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using Abp.Domain.Repositories;
+using Abp.Domain.Uow;
 using Chamran.Deed.Authorization;
 using Chamran.Deed.Authorization.Accounts;
+using Chamran.Deed.Configuration;
 using Chamran.Deed.Identity;
-using Chamran.Deed.Web.Models.Ui;
-using Chamran.Deed.Web.Session;
-using Stimulsoft.Report.Mvc;
-using Abp.Domain.Repositories;
 using Chamran.Deed.Info;
 using Chamran.Deed.People;
-using Abp.Domain.Uow;
-using Stimulsoft.Report.Dictionary;
-using Stimulsoft.Report.Web;
-using System.IO;
-using Chamran.Deed.DashboardCustomization;
+using Chamran.Deed.Web.Helpers.StimulsoftHelpers;
+using Chamran.Deed.Web.Models.Ui;
+using Chamran.Deed.Web.Session;
+using Microsoft.AspNetCore.Mvc;
 using Stimulsoft.Base;
-using Chamran.Deed.Web.Helpers;
+using Stimulsoft.Report.Dictionary;
+using Stimulsoft.Report.Mvc;
 
-namespace Chamran.Deed.Web.Controllers.Stimulsoft
+namespace Chamran.Deed.Web.Controllers.StimulsoftControllers
 {
     [AbpMvcAuthorize(AppPermissions.Pages_Administration)]
     public class DashboardController : DeedControllerBase
@@ -36,6 +35,8 @@ namespace Chamran.Deed.Web.Controllers.Stimulsoft
         private readonly IRepository<OrganizationGroup> _organizationGroupRepository;
         private readonly IRepository<GroupMember> _groupMemberRepository;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
+        private readonly IAppConfigurationAccessor _appConfigurationAccessor;
+
 
         public DashboardController(
             IPerRequestSessionCache sessionCache,
@@ -47,7 +48,8 @@ namespace Chamran.Deed.Web.Controllers.Stimulsoft
             IRepository<Report> reportRepository,
             IRepository<OrganizationGroup> organizationGroupRepository,
             IRepository<GroupMember> groupMemberRepository,
-            IUnitOfWorkManager unitOfWorkManager)
+            IUnitOfWorkManager unitOfWorkManager,
+            IAppConfigurationAccessor appConfigurationAccessor)
         {
             _sessionCache = sessionCache;
             _multiTenancyConfig = multiTenancyConfig;
@@ -59,6 +61,7 @@ namespace Chamran.Deed.Web.Controllers.Stimulsoft
             _organizationGroupRepository = organizationGroupRepository;
             _groupMemberRepository = groupMemberRepository;
             _unitOfWorkManager = unitOfWorkManager;
+            _appConfigurationAccessor = appConfigurationAccessor;
         }
         // GET
         [DisableAuditing]
@@ -93,9 +96,9 @@ namespace Chamran.Deed.Web.Controllers.Stimulsoft
             //}
 
             var loginInformation = await _sessionCache.GetCurrentLoginInformationsAsync();
-            var dashboard = await Helpers.DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationGroupRepository, _groupMemberRepository, loginInformation.User.Id);
+            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationGroupRepository, _groupMemberRepository, loginInformation.User.Id);
 
-            //ToDo: MapData to Dashboard
+            DashboardHelper.MapDataToReportNoPassword(dashboard, _appConfigurationAccessor.Configuration);
 
             using var stream = new MemoryStream();
             dashboard.Save(stream);
@@ -146,8 +149,8 @@ namespace Chamran.Deed.Web.Controllers.Stimulsoft
                 Dictionary =
                 {
                     //PermissionSqlParameters = StiDesignerPermissions.View,
-                    PermissionDataSources = StiDesignerPermissions.View,
-                    PermissionDataConnections = StiDesignerPermissions.View,
+                    //PermissionDataSources = StiDesignerPermissions.View,
+                    //PermissionDataConnections = StiDesignerPermissions.View,
 
                 }
             };
@@ -194,9 +197,9 @@ namespace Chamran.Deed.Web.Controllers.Stimulsoft
         {
             //var appPath = StiNetCoreHelper.MapPath(this, string.Empty);
             var loginInformation = await _sessionCache.GetCurrentLoginInformationsAsync();
-            var dashboard = await Helpers.DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationGroupRepository, _groupMemberRepository, loginInformation.User.Id);
+            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationGroupRepository, _groupMemberRepository, loginInformation.User.Id);
 
-            //ToDo:MapData to Dashboard
+            DashboardHelper.MapDataToReportWithPassword(dashboard, _appConfigurationAccessor.Configuration);
 
             return StiNetCoreViewer.GetReportResult(this, dashboard);
         }
@@ -205,9 +208,9 @@ namespace Chamran.Deed.Web.Controllers.Stimulsoft
         {
             //var appPath = StiNetCoreHelper.MapPath(this, string.Empty);
             var loginInformation = await _sessionCache.GetCurrentLoginInformationsAsync();
-            var dashboard = await Helpers.DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationGroupRepository, _groupMemberRepository, loginInformation.User.Id);
+            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationGroupRepository, _groupMemberRepository, loginInformation.User.Id);
 
-            //ToDo:MapData to Dashboard
+            DashboardHelper.MapDataToReportWithPassword(dashboard, _appConfigurationAccessor.Configuration);
 
             // Loading and adding a font to resources
             var fontPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Fonts", "IRANSans.ttf");
@@ -259,7 +262,7 @@ namespace Chamran.Deed.Web.Controllers.Stimulsoft
 
             using (var unitOfWork = _unitOfWorkManager.Begin())
             {
-                await Helpers.DashboardHelper.SaveCurrentOrganizationDashboard(report, _reportRepository, _organizationGroupRepository, _groupMemberRepository, loginInformation.User.Id);
+                await DashboardHelper.SaveCurrentOrganizationDashboard(report, _reportRepository, _organizationGroupRepository, _groupMemberRepository, loginInformation.User.Id);
 
                 await unitOfWork.CompleteAsync();
             }

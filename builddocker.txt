@@ -99,3 +99,17 @@ do
     fi
 done
 
+
+
+
+
+
+docker build -t ideed:4.2 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
+docker images
+docker tag 28b92211b801 yasnadocker.yasnasystem.ir/ideed:4.2
+docker push yasnadocker.yasnasystem.ir/ideed:4.2
+
+docker-compose down -v
+nano docker-compose.yml
+docker-compose up -d
+docker network connect sqlpoolnetwork deed_registry_1
