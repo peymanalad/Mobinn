@@ -10,7 +10,7 @@
                 </span>
             </div>
             <div class="col-md-6 text-right">
-				{{Get_Excel_Button_Here}}<button *ngIf="isGranted('{{Permission_Value_Here}}.Create')" (click)="create{{Entity_Name_Here}}()" 
+				{{Get_Excel_Button_Here}}<button id=\"btn_create_{{entity_Name_Here}}\" *ngIf="isGranted('{{Permission_Value_Here}}.Create')" (click)="create{{Entity_Name_Here}}()" 
 			class="btn btn-primary blue"><i class="fa fa-plus"></i> {{l("CreateNew{{Entity_Name_Here}}")}}</button>
             </div>
         </div>

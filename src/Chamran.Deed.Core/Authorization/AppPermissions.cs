@@ -6,6 +6,11 @@
     /// </summary>
     public static class AppPermissions
     {
+        public const string Pages_FCMQueues = "Pages.FCMQueues";
+        public const string Pages_FCMQueues_Create = "Pages.FCMQueues.Create";
+        public const string Pages_FCMQueues_Edit = "Pages.FCMQueues.Edit";
+        public const string Pages_FCMQueues_Delete = "Pages.FCMQueues.Delete";
+
         public const string Pages_Reports = "Pages.Reports";
         public const string Pages_Reports_Create = "Pages.Reports.Create";
         public const string Pages_Reports_Edit = "Pages.Reports.Edit";

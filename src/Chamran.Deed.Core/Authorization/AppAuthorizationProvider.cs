@@ -30,6 +30,11 @@ namespace Chamran.Deed.Authorization
 
             var pages = context.GetPermissionOrNull(AppPermissions.Pages) ?? context.CreatePermission(AppPermissions.Pages, L("Pages"));
 
+            var fcmQueues = pages.CreateChildPermission(AppPermissions.Pages_FCMQueues, L("FCMQueues"));
+            fcmQueues.CreateChildPermission(AppPermissions.Pages_FCMQueues_Create, L("CreateNewFCMQueue"));
+            fcmQueues.CreateChildPermission(AppPermissions.Pages_FCMQueues_Edit, L("EditFCMQueue"));
+            fcmQueues.CreateChildPermission(AppPermissions.Pages_FCMQueues_Delete, L("DeleteFCMQueue"));
+
             var reports = pages.CreateChildPermission(AppPermissions.Pages_Reports, L("Reports"));
             reports.CreateChildPermission(AppPermissions.Pages_Reports_Create, L("CreateNewReport"));
             reports.CreateChildPermission(AppPermissions.Pages_Reports_Edit, L("EditReport"));
