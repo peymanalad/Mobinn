@@ -21,8 +21,5 @@ namespace Chamran.Deed.Common
 
         Task RemoveUpdateFileFile(EntityDto input);
 
-        Task<GetSoftwareUpdateForViewDto> GetLatestUpdateInformation();
-
-        
     }
 }

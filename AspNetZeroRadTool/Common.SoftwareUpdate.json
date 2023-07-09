@@ -6,7 +6,7 @@
   "EntityNamePlural": "SoftwareUpdates",
   "TableName": "SoftwareUpdates",
   "PrimaryKeyType": "int",
-  "BaseClass": "Entity",
+  "BaseClass": "CreationAuditedEntity",
   "EntityHistory": false,
   "AutoMigration": true,
   "UpdateDatabase": false,
@@ -128,15 +128,15 @@
     {
       "Name": "UpdateFile",
       "Type": "file",
-      "MaxLength": 0,
-      "MinLength": 0,
+      "MaxLength": -1,
+      "MinLength": -1,
       "Range": {
         "IsRangeSet": false,
         "MinimumValue": 0.0,
         "MaximumValue": 0.0
       },
       "Required": false,
-      "Nullable": true,
+      "Nullable": false,
       "Regex": "",
       "UserInterface": {
         "AdvancedFilter": false,
