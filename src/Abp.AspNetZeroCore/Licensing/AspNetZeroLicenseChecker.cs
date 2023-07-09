@@ -1,4 +1,6 @@
 ﻿
+using Abp.Timing;
+
 namespace Abp.AspNetZeroCore.Licensing
 {
     using Abp.Dependency;
@@ -88,7 +90,7 @@ namespace Abp.AspNetZeroCore.Licensing
             "";
 
         private static string GetTodayAsString() =>
-            DateTime.Now.ToString("yyyy-MM-dd");
+            Clock.Now.ToString("yyyy-MM-dd");
 
         private static string GetUniqueComputerId() =>
             "";

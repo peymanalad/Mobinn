@@ -12,6 +12,7 @@ using Chamran.Deed.Dto;
 using Abp.Application.Services.Dto;
 using Chamran.Deed.Authorization;
 using Abp.Authorization;
+using Abp.Timing;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 
@@ -71,8 +72,8 @@ namespace Chamran.Deed.Info
                                o.CommentCaption,
                                o.InsertDate,
                                Id = o.Id,
-                               PostPostTitle = s1 == null || s1.PostTitle == null ? "" : s1.PostTitle.ToString(),
-                               UserName = s2 == null || s2.Name == null ? "" : s2.Name.ToString(),
+                               PostPostTitle = s1 == null || s1.PostTitle == null ? "" : s1.PostTitle,
+                               UserName = s2 == null || s2.Name == null ? "" : s2.Name,
                                CommentCommentCaption = s3 == null || s3.CommentCaption == null ? "" : s3.CommentCaption.ToString()
                            };
 
@@ -116,19 +117,19 @@ namespace Chamran.Deed.Info
             if (output.Comment.PostId != null)
             {
                 var _lookupPost = await _lookup_postRepository.FirstOrDefaultAsync((int)output.Comment.PostId);
-                output.PostPostTitle = _lookupPost?.PostTitle?.ToString();
+                output.PostPostTitle = _lookupPost?.PostTitle;
             }
 
             if (output.Comment.UserId != null)
             {
                 var _lookupUser = await _lookup_userRepository.FirstOrDefaultAsync((long)output.Comment.UserId);
-                output.UserName = _lookupUser?.Name?.ToString();
+                output.UserName = _lookupUser?.Name;
             }
 
             if (output.Comment.CommentId != null)
             {
                 var _lookupComment = await _lookup_commentRepository.FirstOrDefaultAsync((int)output.Comment.CommentId);
-                output.CommentCommentCaption = _lookupComment?.CommentCaption?.ToString();
+                output.CommentCommentCaption = _lookupComment?.CommentCaption;
             }
 
             return output;
@@ -144,19 +145,19 @@ namespace Chamran.Deed.Info
             if (output.Comment.PostId != null)
             {
                 var _lookupPost = await _lookup_postRepository.FirstOrDefaultAsync((int)output.Comment.PostId);
-                output.PostPostTitle = _lookupPost?.PostTitle?.ToString();
+                output.PostPostTitle = _lookupPost?.PostTitle;
             }
 
             if (output.Comment.UserId != null)
             {
                 var _lookupUser = await _lookup_userRepository.FirstOrDefaultAsync((long)output.Comment.UserId);
-                output.UserName = _lookupUser?.Name?.ToString();
+                output.UserName = _lookupUser?.Name;
             }
 
             if (output.Comment.CommentId != null)
             {
                 var _lookupComment = await _lookup_commentRepository.FirstOrDefaultAsync((int)output.Comment.CommentId);
-                output.CommentCommentCaption = _lookupComment?.CommentCaption?.ToString();
+                output.CommentCommentCaption = _lookupComment?.CommentCaption;
             }
 
             return output;
@@ -230,8 +231,8 @@ namespace Chamran.Deed.Info
                                  InsertDate = o.InsertDate,
                                  Id = o.Id
                              },
-                             PostPostTitle = s1 == null || s1.PostTitle == null ? "" : s1.PostTitle.ToString(),
-                             UserName = s2 == null || s2.Name == null ? "" : s2.Name.ToString(),
+                             PostPostTitle = s1 == null || s1.PostTitle == null ? "" : s1.PostTitle,
+                             UserName = s2 == null || s2.Name == null ? "" : s2.Name,
                              CommentCommentCaption = s3 == null || s3.CommentCaption == null ? "" : s3.CommentCaption.ToString()
                          });
 
@@ -260,7 +261,7 @@ namespace Chamran.Deed.Info
                 lookupTableDtoList.Add(new CommentPostLookupTableDto
                 {
                     Id = post.Id,
-                    DisplayName = post.PostTitle?.ToString()
+                    DisplayName = post.PostTitle
                 });
             }
 
@@ -290,7 +291,7 @@ namespace Chamran.Deed.Info
                 lookupTableDtoList.Add(new CommentUserLookupTableDto
                 {
                     Id = user.Id,
-                    DisplayName = user.Name?.ToString()
+                    DisplayName = user.Name
                 });
             }
 
@@ -320,7 +321,7 @@ namespace Chamran.Deed.Info
                 lookupTableDtoList.Add(new CommentCommentLookupTableDto
                 {
                     Id = comment.Id,
-                    DisplayName = comment.CommentCaption?.ToString()
+                    DisplayName = comment.CommentCaption
                 });
             }
 
@@ -336,8 +337,9 @@ namespace Chamran.Deed.Info
             if (AbpSession.UserId == null) throw new UserFriendlyException("Not Logged In!");
             var comment = ObjectMapper.Map<Comment>(input);
             comment.UserId = AbpSession.UserId.Value;
-            comment.InsertDate = DateTime.Now;
+            comment.InsertDate = Clock.Now;
             var res=await _commentRepository.InsertAsync(comment);
+            await CurrentUnitOfWork.SaveChangesAsync(); // Save changes to generate the identity value
             return res.Id;
 
         }
@@ -345,10 +347,10 @@ namespace Chamran.Deed.Info
         public async Task<PagedResultDto<GetCommentForViewDto>> GetListOfComments(GetCommentsOfPostInput input)
         {
             if (input.PostId <= 0) throw new UserFriendlyException("PostId should be greater than zero");
-            var filteredComments = _commentRepository.GetAll()
+            var filteredComments = _commentRepository.GetAll().Where(x => x.PostId == input.PostId)
                 .Include(e => e.PostFk)
                 .Include(e => e.UserFk)
-                .Include(e => e.CommentFk).Where(x => x.PostId == input.PostId);
+                .Include(e => e.CommentFk);
 
             var pagedAndFilteredComments = filteredComments
                 .OrderBy(input.Sorting ?? "id asc")
@@ -361,17 +363,21 @@ namespace Chamran.Deed.Info
                            join o2 in _lookup_userRepository.GetAll() on o.UserId equals o2.Id into j2
                            from s2 in j2.DefaultIfEmpty()
 
-                           join o3 in _lookup_commentRepository.GetAll() on o.CommentId equals o3.Id into j3
+                           join o3 in _lookup_commentRepository.GetAll()
+                           on o.CommentId equals o3.Id into j3
                            from s3 in j3.DefaultIfEmpty()
+
 
                            select new
                            {
-
+                               ReplyUserName=s3.UserFk==null?"": s3.UserFk.Name+" "+ s3.UserFk.Surname,
+                               o.PostId,
+                               o.UserId,
                                o.CommentCaption,
                                o.InsertDate,
                                Id = o.Id,
-                               PostPostTitle = s1 == null || s1.PostTitle == null ? "" : s1.PostTitle.ToString(),
-                               UserName = s2 == null || s2.Name == null ? "" : s2.Name.ToString(),
+                               PostPostTitle = s1 == null || s1.PostTitle == null ? "" : s1.PostTitle,
+                               UserName = s2 == null || s2.Name == null ? "" : s2.Name+ " "+s2.Surname,
                                CommentCommentCaption = s3 == null || s3.CommentCaption == null ? "" : s3.CommentCaption.ToString()
                            };
 
@@ -386,11 +392,13 @@ namespace Chamran.Deed.Info
                 {
                     Comment = new CommentDto
                     {
-
+                        PostId = o.PostId,
+                        UserId = o.UserId,
                         CommentCaption = o.CommentCaption,
                         InsertDate = o.InsertDate,
                         Id = o.Id,
                     },
+                    ReplyUserName=o.ReplyUserName,
                     PostPostTitle = o.PostPostTitle,
                     UserName = o.UserName,
                     CommentCommentCaption = o.CommentCommentCaption

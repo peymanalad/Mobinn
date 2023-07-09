@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Abp.Timing;
 using Chamran.Deed.Tenants.Dashboard.Dto;
 
 namespace Chamran.Deed.Tenants.Dashboard
@@ -61,21 +62,21 @@ namespace Chamran.Deed.Tenants.Dashboard
                 case SalesSummaryDatePeriod.Daily:
                     data = new List<SalesSummaryData>
                     {
-                        new SalesSummaryData(DateTime.Now.AddDays(-5).ToString(DateFormat), Random.Next(1000, 2000),
+                        new SalesSummaryData(Clock.Now.AddDays(-5).ToString(DateFormat), Random.Next(1000, 2000),
                             Random.Next(100, 999)),
-                        new SalesSummaryData(DateTime.Now.AddDays(-4).ToString(DateFormat), Random.Next(1000, 2000),
+                        new SalesSummaryData(Clock.Now.AddDays(-4).ToString(DateFormat), Random.Next(1000, 2000),
                             Random.Next(100, 999)),
-                        new SalesSummaryData(DateTime.Now.AddDays(-3).ToString(DateFormat), Random.Next(1000, 2000),
+                        new SalesSummaryData(Clock.Now.AddDays(-3).ToString(DateFormat), Random.Next(1000, 2000),
                             Random.Next(100, 999)),
-                        new SalesSummaryData(DateTime.Now.AddDays(-2).ToString(DateFormat), Random.Next(1000, 2000),
+                        new SalesSummaryData(Clock.Now.AddDays(-2).ToString(DateFormat), Random.Next(1000, 2000),
                             Random.Next(100, 999)),
-                        new SalesSummaryData(DateTime.Now.AddDays(-1).ToString(DateFormat), Random.Next(1000, 2000),
+                        new SalesSummaryData(Clock.Now.AddDays(-1).ToString(DateFormat), Random.Next(1000, 2000),
                             Random.Next(100, 999)),
                     };
 
                     break;
                 case SalesSummaryDatePeriod.Weekly:
-                    var lastYear = DateTime.Now.AddYears(-1).Year;
+                    var lastYear = Clock.Now.AddYears(-1).Year;
                     data = new List<SalesSummaryData>
                     {
                         new SalesSummaryData(lastYear + " W4", Random.Next(1000, 2000),
@@ -92,13 +93,13 @@ namespace Chamran.Deed.Tenants.Dashboard
                 case SalesSummaryDatePeriod.Monthly:
                     data = new List<SalesSummaryData>
                     {
-                        new SalesSummaryData(DateTime.Now.AddMonths(-4).ToString("yyyy-MM"), Random.Next(1000, 2000),
+                        new SalesSummaryData(Clock.Now.AddMonths(-4).ToString("yyyy-MM"), Random.Next(1000, 2000),
                             Random.Next(100, 999)),
-                        new SalesSummaryData(DateTime.Now.AddMonths(-3).ToString("yyyy-MM"), Random.Next(1000, 2000),
+                        new SalesSummaryData(Clock.Now.AddMonths(-3).ToString("yyyy-MM"), Random.Next(1000, 2000),
                             Random.Next(100, 999)),
-                        new SalesSummaryData(DateTime.Now.AddMonths(-2).ToString("yyyy-MM"), Random.Next(1000, 2000),
+                        new SalesSummaryData(Clock.Now.AddMonths(-2).ToString("yyyy-MM"), Random.Next(1000, 2000),
                             Random.Next(100, 999)),
-                        new SalesSummaryData(DateTime.Now.AddMonths(-1).ToString("yyyy-MM"), Random.Next(1000, 2000),
+                        new SalesSummaryData(Clock.Now.AddMonths(-1).ToString("yyyy-MM"), Random.Next(1000, 2000),
                             Random.Next(100, 999))
                     };
 

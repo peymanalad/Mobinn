@@ -13,6 +13,7 @@ using Chamran.Deed.Dto;
 using Abp.Application.Services.Dto;
 using Chamran.Deed.Authorization;
 using Abp.Authorization;
+using Abp.Timing;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 
@@ -302,7 +303,7 @@ namespace Chamran.Deed.Info
             {
                 UserId = AbpSession.UserId.Value,
                 CommentId = commentId,
-                LikeTime = DateTime.Now,
+                LikeTime = Clock.Now,
             };
             await _commentLikeRepository.InsertAsync(seen);
         }

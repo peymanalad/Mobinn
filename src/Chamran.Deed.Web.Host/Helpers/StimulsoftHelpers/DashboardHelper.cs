@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
+using Abp.Timing;
 using Abp.UI;
 using Chamran.Deed.Info;
 using Chamran.Deed.People;
@@ -152,7 +153,7 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
                 OrganizationId = org.Id,
                 IsDashboard = true,
                 ReportContent = report.SaveEncryptedReportToString("DrM@s"),
-                CreationTime = DateTime.Now,
+                CreationTime = Clock.Now,
                 CreatorUserId = userId,
                 ReportDescription = "داشبورد سازمانی " + org.OrganizationName
             });
@@ -242,7 +243,7 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
             {
                 var result = await query2.FirstAsync();
                 result.ReportContent = savedReport.SaveEncryptedReportToString("DrM@s");
-                result.LastModificationTime = DateTime.Now;
+                result.LastModificationTime = Clock.Now;
                 result.LastModifierUserId = userId;
 
                 await reportRepository.UpdateAsync(result);
