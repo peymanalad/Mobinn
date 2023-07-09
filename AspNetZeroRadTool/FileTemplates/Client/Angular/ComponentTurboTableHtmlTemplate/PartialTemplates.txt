@@ -447,7 +447,7 @@
                     </div>
                     <div class=\"kt-subheader__toolbar\">
                         <div class=\"kt-subheader__wrapper\">
-            				{{Get_Excel_Button_Here}}<button *ngIf=\"isGranted('{{Permission_Value_Here}}.Create')\" (click)=\"create{{Entity_Name_Here}}()\" 
+            				{{Get_Excel_Button_Here}}<button id=\"btn_create_{{entity_Name_Here}}\" *ngIf=\"isGranted('{{Permission_Value_Here}}.Create')\" (click)=\"create{{Entity_Name_Here}}()\" 
             			class=\"btn btn-primary blue\"><i class=\"fa fa-plus\"></i> {{l(\"CreateNew{{Entity_Name_Here}}\")}}</button>
                         </div>
                     </div>
@@ -461,7 +461,7 @@
             "content": " <sub-header [title]=\"'{{Entity_Name_Plural_Here}}' | localize\" [description]=\"'{{Entity_Name_Plural_Here}}HeaderInfo' | localize\">
              <div role=\"actions\">
                  {{Get_Excel_Button_Here}}
-                 <button *ngIf=\"isGranted('{{Permission_Value_Here}}.Create')\" (click)=\"create{{Entity_Name_Here}}()\" 
+                 <button id=\"btn_create_{{entity_Name_Here}}\" *ngIf=\"isGranted('{{Permission_Value_Here}}.Create')\" (click)=\"create{{Entity_Name_Here}}()\" 
                                         class=\"btn btn-primary blue\"><i class=\"fa fa-plus\"></i> {{l(\"CreateNew{{Entity_Name_Here}}\")}}</button>
              </div>
             </sub-header>"

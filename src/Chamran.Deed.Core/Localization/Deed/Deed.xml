@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="en">
-  <texts>    <text name="Report">Report</text>
+  <texts>    <text name="FCMQueue">F c m queue</text>
+    <text name="CreateNewFCMQueue">Create new f c m queue</text>
+    <text name="EditFCMQueue">Edit f c m queue</text>
+    <text name="DeleteFCMQueue">Delete f c m queue</text>
+    <text name="Report">Report</text>
     <text name="CreateNewReport">Create new report</text>
     <text name="EditReport">Edit report</text>
     <text name="DeleteReport">Delete report</text>

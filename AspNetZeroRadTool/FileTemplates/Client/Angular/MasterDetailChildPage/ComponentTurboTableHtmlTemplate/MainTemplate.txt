@@ -42,7 +42,7 @@
                                      [lazy]="true"
                                      [scrollable]="true"
                                      ScrollWidth="100%"
-                                     [responsive]="primengTableHelper.isResponsive"
+                                     [tableStyle]="{'min-width': '50rem'}"
                                      [resizableColumns]="primengTableHelper.resizableColumns">
                             <ng-template pTemplate="header">
                                 <tr>

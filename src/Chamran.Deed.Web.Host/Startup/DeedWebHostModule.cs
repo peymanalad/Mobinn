@@ -20,6 +20,7 @@ using Chamran.Deed.Auditing;
 using Chamran.Deed.Authorization.Users.Password;
 using Chamran.Deed.Configuration;
 using Chamran.Deed.EntityFrameworkCore;
+using Chamran.Deed.Info;
 using Chamran.Deed.MultiTenancy;
 using Chamran.Deed.Web.Startup.ExternalLoginInfoProviders;
 
@@ -69,6 +70,8 @@ namespace Chamran.Deed.Web.Startup
                 workManager.Add(IocManager.Resolve<SubscriptionExpireEmailNotifierWorker>());
                 workManager.Add(IocManager.Resolve<SubscriptionPaymentNotCompletedEmailNotifierWorker>());
             }
+
+            workManager.Add(IocManager.Resolve<PushNotificationWorker>());
 
             var expiredAuditLogDeleterWorker = IocManager.Resolve<ExpiredAuditLogDeleterWorker>();
             if (Configuration.Auditing.IsEnabled && expiredAuditLogDeleterWorker.IsEnabled)
