@@ -11,8 +11,6 @@ namespace Chamran.Deed.Common.Dtos
 
         public int? ForceUpdateFilter { get; set; }
 
-        public string UpdatePathFilter { get; set; }
-
         public string WhatsNewFilter { get; set; }
 
         public string PlatformFilter { get; set; }

@@ -16,9 +16,6 @@ namespace Chamran.Deed.Common
 
         public virtual bool ForceUpdate { get; set; }
 
-        [StringLength(SoftwareUpdateConsts.MaxUpdatePathLength, MinimumLength = SoftwareUpdateConsts.MinUpdatePathLength)]
-        public virtual string UpdatePath { get; set; }
-
         [StringLength(SoftwareUpdateConsts.MaxWhatsNewLength, MinimumLength = SoftwareUpdateConsts.MinWhatsNewLength)]
         public virtual string WhatsNew { get; set; }
 
@@ -26,6 +23,9 @@ namespace Chamran.Deed.Common
         public virtual string Platform { get; set; }
 
         public virtual int BuildNo { get; set; }
+        //File
+
+        public virtual Guid? UpdateFile { get; set; } //File, (BinaryObjectId)
 
     }
 }

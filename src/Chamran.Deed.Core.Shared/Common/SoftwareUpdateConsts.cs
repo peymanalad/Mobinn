@@ -6,9 +6,6 @@
         public const int MinSoftwareVersionLength = 0;
         public const int MaxSoftwareVersionLength = 20;
 
-        public const int MinUpdatePathLength = 0;
-        public const int MaxUpdatePathLength = 255;
-
         public const int MinWhatsNewLength = 0;
         public const int MaxWhatsNewLength = 1024;
 

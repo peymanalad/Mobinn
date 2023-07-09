@@ -1,6 +1,6 @@
 {
-  "IsRegenerate": false,
-  "MenuPosition": null,
+  "IsRegenerate": true,
+  "MenuPosition": "",
   "RelativeNamespace": "Common",
   "EntityName": "SoftwareUpdate",
   "EntityNamePlural": "SoftwareUpdates",
@@ -44,29 +44,8 @@
     {
       "Name": "ForceUpdate",
       "Type": "bool",
-      "MaxLength": 0,
-      "MinLength": 0,
-      "Range": {
-        "IsRangeSet": false,
-        "MinimumValue": 0.0,
-        "MaximumValue": 0.0
-      },
-      "Required": false,
-      "Nullable": false,
-      "Regex": "",
-      "UserInterface": {
-        "AdvancedFilter": true,
-        "List": true,
-        "CreateOrUpdate": true
-      },
-      "ViewType": null,
-      "AdditionalData": {}
-    },
-    {
-      "Name": "UpdatePath",
-      "Type": "string",
-      "MaxLength": 255,
-      "MinLength": 0,
+      "MaxLength": -1,
+      "MinLength": -1,
       "Range": {
         "IsRangeSet": false,
         "MinimumValue": 0.0,
@@ -128,8 +107,8 @@
     {
       "Name": "BuildNo",
       "Type": "int",
-      "MaxLength": 0,
-      "MinLength": 0,
+      "MaxLength": -1,
+      "MinLength": -1,
       "Range": {
         "IsRangeSet": false,
         "MinimumValue": 0.0,
@@ -141,6 +120,27 @@
       "UserInterface": {
         "AdvancedFilter": true,
         "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    },
+    {
+      "Name": "UpdateFile",
+      "Type": "file",
+      "MaxLength": 0,
+      "MinLength": 0,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": true,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": false,
+        "List": false,
         "CreateOrUpdate": true
       },
       "ViewType": null,

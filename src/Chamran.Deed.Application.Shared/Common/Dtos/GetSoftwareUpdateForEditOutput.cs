@@ -8,5 +8,7 @@ namespace Chamran.Deed.Common.Dtos
     {
         public CreateOrEditSoftwareUpdateDto SoftwareUpdate { get; set; }
 
+        public string UpdateFileFileName { get; set; }
+
     }
 }
