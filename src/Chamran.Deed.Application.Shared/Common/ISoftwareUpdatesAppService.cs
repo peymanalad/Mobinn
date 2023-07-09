@@ -19,5 +19,7 @@ namespace Chamran.Deed.Common
 
         Task Delete(EntityDto input);
 
+        Task RemoveUpdateFileFile(EntityDto input);
+
     }
 }

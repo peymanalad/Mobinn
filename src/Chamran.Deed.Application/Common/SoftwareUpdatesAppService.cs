@@ -22,9 +22,15 @@ namespace Chamran.Deed.Common
     {
         private readonly IRepository<SoftwareUpdate> _softwareUpdateRepository;
 
-        public SoftwareUpdatesAppService(IRepository<SoftwareUpdate> softwareUpdateRepository)
+        private readonly ITempFileCacheManager _tempFileCacheManager;
+        private readonly IBinaryObjectManager _binaryObjectManager;
+
+        public SoftwareUpdatesAppService(IRepository<SoftwareUpdate> softwareUpdateRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager)
         {
             _softwareUpdateRepository = softwareUpdateRepository;
+
+            _tempFileCacheManager = tempFileCacheManager;
+            _binaryObjectManager = binaryObjectManager;
 
         }
 
@@ -32,10 +38,9 @@ namespace Chamran.Deed.Common
         {
 
             var filteredSoftwareUpdates = _softwareUpdateRepository.GetAll()
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.SoftwareVersion.Contains(input.Filter) || e.UpdatePath.Contains(input.Filter) || e.WhatsNew.Contains(input.Filter) || e.Platform.Contains(input.Filter))
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.SoftwareVersion.Contains(input.Filter) || e.WhatsNew.Contains(input.Filter) || e.Platform.Contains(input.Filter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.SoftwareVersionFilter), e => e.SoftwareVersion.Contains(input.SoftwareVersionFilter))
                         .WhereIf(input.ForceUpdateFilter.HasValue && input.ForceUpdateFilter > -1, e => (input.ForceUpdateFilter == 1 && e.ForceUpdate) || (input.ForceUpdateFilter == 0 && !e.ForceUpdate))
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.UpdatePathFilter), e => e.UpdatePath.Contains(input.UpdatePathFilter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.WhatsNewFilter), e => e.WhatsNew.Contains(input.WhatsNewFilter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.PlatformFilter), e => e.Platform.Contains(input.PlatformFilter))
                         .WhereIf(input.MinBuildNoFilter != null, e => e.BuildNo >= input.MinBuildNoFilter)
@@ -51,7 +56,6 @@ namespace Chamran.Deed.Common
 
                                       o.SoftwareVersion,
                                       o.ForceUpdate,
-                                      o.UpdatePath,
                                       o.WhatsNew,
                                       o.Platform,
                                       o.BuildNo,
@@ -72,7 +76,6 @@ namespace Chamran.Deed.Common
 
                         SoftwareVersion = o.SoftwareVersion,
                         ForceUpdate = o.ForceUpdate,
-                        UpdatePath = o.UpdatePath,
                         WhatsNew = o.WhatsNew,
                         Platform = o.Platform,
                         BuildNo = o.BuildNo,
@@ -127,6 +130,7 @@ namespace Chamran.Deed.Common
             var softwareUpdate = ObjectMapper.Map<SoftwareUpdate>(input);
 
             await _softwareUpdateRepository.InsertAsync(softwareUpdate);
+            softwareUpdate.UpdateFile = await GetBinaryObjectFromCache(input.UpdateFileToken);
 
         }
 
@@ -135,6 +139,7 @@ namespace Chamran.Deed.Common
         {
             var softwareUpdate = await _softwareUpdateRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, softwareUpdate);
+            softwareUpdate.UpdateFile = await GetBinaryObjectFromCache(input.UpdateFileToken);
 
         }
 
@@ -142,6 +147,55 @@ namespace Chamran.Deed.Common
         public async Task Delete(EntityDto input)
         {
             await _softwareUpdateRepository.DeleteAsync(input.Id);
+        }
+
+        private async Task<Guid?> GetBinaryObjectFromCache(string fileToken)
+        {
+            if (fileToken.IsNullOrWhiteSpace())
+            {
+                return null;
+            }
+
+            var fileCache = _tempFileCacheManager.GetFileInfo(fileToken);
+
+            if (fileCache == null)
+            {
+                throw new UserFriendlyException("There is no such file with the token: " + fileToken);
+            }
+
+            var storedFile = new BinaryObject(AbpSession.TenantId, fileCache.File, fileCache.FileName);
+            await _binaryObjectManager.SaveAsync(storedFile);
+
+            return storedFile.Id;
+        }
+
+        private async Task<string> GetBinaryFileName(Guid? fileId)
+        {
+            if (!fileId.HasValue)
+            {
+                return null;
+            }
+
+            var file = await _binaryObjectManager.GetOrNullAsync(fileId.Value);
+            return file?.Description;
+        }
+
+        [AbpAuthorize(AppPermissions.Pages_SoftwareUpdates_Edit)]
+        public async Task RemoveUpdateFileFile(EntityDto input)
+        {
+            var softwareUpdate = await _softwareUpdateRepository.FirstOrDefaultAsync(input.Id);
+            if (softwareUpdate == null)
+            {
+                throw new UserFriendlyException(L("EntityNotFound"));
+            }
+
+            if (!softwareUpdate.UpdateFile.HasValue)
+            {
+                throw new UserFriendlyException(L("FileNotFound"));
+            }
+
+            await _binaryObjectManager.DeleteAsync(softwareUpdate.UpdateFile.Value);
+            softwareUpdate.UpdateFile = null;
         }
 
     }
