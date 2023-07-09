@@ -39,7 +39,7 @@ namespace Chamran.Deed.Web.Controllers
                     throw new UserFriendlyException(L("Warn_File_SizeLimit", MaxUpdateFileLengthUserFriendlyValue));
                 }
 
-                var fileType = Path.GetExtension(file.FileName).Substring(1);
+                var fileType = Path.GetExtension(file.FileName).Substring(1).ToLower();
                 if (UpdateFileAllowedFileTypes != null && UpdateFileAllowedFileTypes.Length > 0 && !UpdateFileAllowedFileTypes.Contains(fileType))
                 {
                     throw new UserFriendlyException(L("FileNotInAllowedFileTypes", UpdateFileAllowedFileTypes));

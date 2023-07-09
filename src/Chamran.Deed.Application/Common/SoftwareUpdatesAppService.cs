@@ -198,5 +198,13 @@ namespace Chamran.Deed.Common
             softwareUpdate.UpdateFile = null;
         }
 
+        public async Task<GetSoftwareUpdateForViewDto> GetLatestUpdateInformation()
+        {
+            var softwareUpdate = await _softwareUpdateRepository.GetAll().LastOrDefaultAsync();
+
+            var output = new GetSoftwareUpdateForViewDto { SoftwareUpdate = ObjectMapper.Map<SoftwareUpdateDto>(softwareUpdate) };
+
+            return output;
+        }
     }
 }

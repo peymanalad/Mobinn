@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq.Dynamic.Core;
 using System.Net;
 using System.Threading.Tasks;
 using Abp.Auditing;
@@ -11,7 +12,11 @@ using Chamran.Deed.Storage;
 using Microsoft.AspNetCore.OutputCaching;
 using Twilio.TwiML.Voice;
 using Abp.AspNetZeroCore.Net;
+using Abp.Domain.Repositories;
 using Abp.Web.Models;
+using Chamran.Deed.Common;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace Chamran.Deed.Web.Controllers
 {
@@ -20,16 +25,19 @@ namespace Chamran.Deed.Web.Controllers
         private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IBinaryObjectManager _binaryObjectManager;
         private readonly IMimeTypeMap _mimeTypeMap;
+        private readonly IRepository<SoftwareUpdate> _softwareUpdateRepository;
 
         public FileController(
             ITempFileCacheManager tempFileCacheManager,
             IBinaryObjectManager binaryObjectManager,
-            IMimeTypeMap mimeTypeMap
+            IMimeTypeMap mimeTypeMap,
+            IRepository<SoftwareUpdate> softwareUpdateRepository
         )
         {
             _tempFileCacheManager = tempFileCacheManager;
             _binaryObjectManager = binaryObjectManager;
             _mimeTypeMap = mimeTypeMap;
+            _softwareUpdateRepository = softwareUpdateRepository;
         }
 
         [DisableAuditing]
@@ -79,6 +87,24 @@ namespace Chamran.Deed.Web.Controllers
             }
 
             return File(fileObject.Bytes, contentType, fileName);
+        }
+
+        [DisableAuditing]
+        [AllowAnonymous]
+        public async Task<ActionResult> LatestBuild()
+        {
+            if(!_softwareUpdateRepository.GetAll().Any()) return StatusCode(404, "File not found");
+            var latestUpdate = await _softwareUpdateRepository.GetAll().LastAsync();
+            if(latestUpdate.UpdateFile==null) return StatusCode(404, "File not found");
+            var fileObject = await _binaryObjectManager.GetOrNullAsync(latestUpdate.UpdateFile.Value);
+            if (fileObject == null)
+            {
+                return StatusCode((int)HttpStatusCode.NotFound);
+            }
+
+           
+
+            return File(fileObject.Bytes, "application/octet-stream", "Deed"+latestUpdate.BuildNo+".apk");
         }
 
         [DisableAuditing]

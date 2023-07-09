@@ -347,7 +347,7 @@ namespace Chamran.Deed.Info
         public async Task<PagedResultDto<GetCommentForViewDto>> GetListOfComments(GetCommentsOfPostInput input)
         {
             if (input.PostId <= 0) throw new UserFriendlyException("PostId should be greater than zero");
-            var filteredComments = _commentRepository.GetAll().Where(x => x.PostId == input.PostId)
+            var filteredComments = _commentRepository.GetAll().Where(x => x.PostId == input.PostId && !x.IsDeleted)
                 .Include(e => e.PostFk)
                 .Include(e => e.UserFk)
                 .Include(e => e.CommentFk);
