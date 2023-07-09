@@ -17,6 +17,7 @@ using Abp.Web.Models;
 using Chamran.Deed.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Chamran.Deed.Web.Controllers
 {
@@ -94,16 +95,15 @@ namespace Chamran.Deed.Web.Controllers
         public async Task<ActionResult> LatestBuild()
         {
             if(!_softwareUpdateRepository.GetAll().Any()) return StatusCode(404, "File not found");
-            var latestUpdate = await _softwareUpdateRepository.GetAll().LastAsync();
-            if(latestUpdate.UpdateFile==null) return StatusCode(404, "File not found");
+            var latestUpdate = _softwareUpdateRepository.GetAll()
+                .OrderByDescending(m => m.CreationTime)
+                .First();
+            if (latestUpdate.UpdateFile==null) return StatusCode(404, "File not found");
             var fileObject = await _binaryObjectManager.GetOrNullAsync(latestUpdate.UpdateFile.Value);
             if (fileObject == null)
             {
                 return StatusCode((int)HttpStatusCode.NotFound);
             }
-
-           
-
             return File(fileObject.Bytes, "application/octet-stream", "Deed"+latestUpdate.BuildNo+".apk");
         }
 

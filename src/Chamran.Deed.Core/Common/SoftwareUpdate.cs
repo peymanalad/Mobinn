@@ -7,7 +7,7 @@ using Abp.Domain.Entities;
 namespace Chamran.Deed.Common
 {
     [Table("SoftwareUpdates")]
-    public class SoftwareUpdate : Entity
+    public class SoftwareUpdate : CreationAuditedEntity
     {
 
         [Required]

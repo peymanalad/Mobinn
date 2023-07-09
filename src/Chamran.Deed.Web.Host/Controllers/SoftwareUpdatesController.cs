@@ -14,9 +14,9 @@ namespace Chamran.Deed.Web.Controllers
     {
         private readonly ITempFileCacheManager _tempFileCacheManager;
 
-        private const long MaxUpdateFileLength = 104857600; //5MB
-        private const string MaxUpdateFileLengthUserFriendlyValue = "150MB"; //5MB
-        private readonly string[] UpdateFileAllowedFileTypes = { "apk"};
+        private const long MaxUpdateFileLength = 5242880; //5MB
+        private const string MaxUpdateFileLengthUserFriendlyValue = "5MB"; //5MB
+        private readonly string[] UpdateFileAllowedFileTypes = { "jpeg", "jpg", "png" };
 
         public SoftwareUpdatesController(ITempFileCacheManager tempFileCacheManager)
         {
@@ -39,7 +39,7 @@ namespace Chamran.Deed.Web.Controllers
                     throw new UserFriendlyException(L("Warn_File_SizeLimit", MaxUpdateFileLengthUserFriendlyValue));
                 }
 
-                var fileType = Path.GetExtension(file.FileName).Substring(1).ToLower();
+                var fileType = Path.GetExtension(file.FileName).Substring(1);
                 if (UpdateFileAllowedFileTypes != null && UpdateFileAllowedFileTypes.Length > 0 && !UpdateFileAllowedFileTypes.Contains(fileType))
                 {
                     throw new UserFriendlyException(L("FileNotInAllowedFileTypes", UpdateFileAllowedFileTypes));
