@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@using Abp.Timing
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -37,7 +39,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; @DateTime.Now.Year - My Company - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; @Clock.Now.Year - Chamran Scentific Institue - ServerTime: @Clock.Now<a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

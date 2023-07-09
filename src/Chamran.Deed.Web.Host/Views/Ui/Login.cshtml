@@ -1,6 +1,8 @@
 ﻿@using Abp.Web.Security.AntiForgery
 @using Chamran.Deed
 @using Abp.Configuration.Startup
+@using Abp.Timing
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model Chamran.Deed.Web.Models.Ui.LoginModel
 @inject IAbpAntiForgeryManager AbpAntiForgeryManager
 @inject IMultiTenancyConfig MultiTenancyConfig
@@ -42,5 +44,5 @@
         </div>
         <button type="submit" class="login-form-button">@L("LogIn")</button>
     </form>
-    <span style="font-size: 0.8em;font-style:italic"> v@(AppVersionHelper.Version) [@AppVersionHelper.ReleaseDate.ToString("yyyyMMdd")]</span>
+    <span style="font-size: 0.8em;font-style:italic"> v@(AppVersionHelper.Version) [@AppVersionHelper.ReleaseDate.ToString("yyyyMMdd")] [ServerTime:@Clock.Now]</span>
 </div>

@@ -13,6 +13,7 @@ using Chamran.Deed.Authorization;
 using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
+using Abp.Timing;
 
 namespace Chamran.Deed.Info
 {
@@ -40,7 +41,7 @@ namespace Chamran.Deed.Info
             {
                 UserId = AbpSession.UserId,
                 PostId = postId,
-                SeenTime = DateTime.Now
+                SeenTime = Clock.Now
             };
             await _seenRepository.InsertAsync(seen);
         }

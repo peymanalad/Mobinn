@@ -20,8 +20,8 @@ namespace Chamran.Deed.Web.Common
             public const string PlaygroundEndPoint = "/ui/playground";
             public const string EndPoint = "/graphql";
 
-            public static bool PlaygroundEnabled = true;
-            public static bool Enabled = true;
+            public static bool PlaygroundEnabled = false;
+            public static bool Enabled = false;
         }
     }
 }

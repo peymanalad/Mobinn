@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Abp.Timing;
 using Abp.Webhooks;
 
 namespace Chamran.Deed.WebHooks
@@ -15,7 +16,7 @@ namespace Chamran.Deed.WebHooks
 
         public async Task PublishTestWebhook()
         {
-            var separator = DateTime.Now.Millisecond;
+            var separator = Clock.Now.Millisecond;
             await _webHookPublisher.PublishAsync(AppWebHookNames.TestWebhook,
                 new
                 {

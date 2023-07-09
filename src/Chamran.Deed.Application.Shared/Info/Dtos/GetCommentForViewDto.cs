@@ -10,5 +10,7 @@
 
         public string CommentCommentCaption { get; set; }
 
+        public string ReplyUserName { get; set; }
+
     }
 }
