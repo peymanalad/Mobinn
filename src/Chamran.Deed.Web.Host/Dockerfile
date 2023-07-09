@@ -14,6 +14,12 @@ RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/usr-local-lib.conf && ldconfig
 RUN apt-get update && \
     apt-get install -y sudo nano
 
+# Install tzdata package
+RUN apt-get install -y tzdata
+
+# Set the time zone
+ENV TZ=Asia/Tehran
+
 # Copy application to container
 COPY bin/Release/net7.0/publish/ App/
 WORKDIR /App
