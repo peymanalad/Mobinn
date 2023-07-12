@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="en">
-  <texts>    <text name="FCMQueue">F c m queue</text>
+  <texts>    <text name="UserToken">User token</text>
+    <text name="CreateNewUserToken">Create new user token</text>
+    <text name="EditUserToken">Edit user token</text>
+    <text name="DeleteUserToken">Delete user token</text>
+    <text name="FCMQueue">F c m queue</text>
     <text name="CreateNewFCMQueue">Create new f c m queue</text>
     <text name="EditFCMQueue">Edit f c m queue</text>
     <text name="DeleteFCMQueue">Delete f c m queue</text>

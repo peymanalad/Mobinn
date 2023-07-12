@@ -46,6 +46,7 @@ using HealthChecksUISettings = HealthChecks.UI.Configuration.Settings;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Chamran.Deed.Web.MultiTenancy;
 using Abp.AspNetCore.Localization;
+using Chamran.Deed.Info;
 using Chamran.Deed.Web.Helpers.StimulsoftHelpers;
 using Microsoft.AspNetCore.HttpOverrides;
 
@@ -162,6 +163,7 @@ namespace Chamran.Deed.Web.Startup
             {
                 ConfigureHealthChecks(services);
             }
+
 
             //Configure Abp and Dependency Injection
             return services.AddAbp<DeedWebHostModule>(options =>

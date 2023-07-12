@@ -20,6 +20,8 @@ namespace Chamran.Deed.EntityFrameworkCore
 {
     public class DeedDbContext : AbpZeroDbContext<Tenant, Role, User, DeedDbContext>, IAbpPersistedGrantDbContext
     {
+        public virtual DbSet<UserToken> UserTokens { get; set; }
+
         public virtual DbSet<FCMQueue> FCMQueues { get; set; }
 
         public virtual DbSet<Report> Reports { get; set; }

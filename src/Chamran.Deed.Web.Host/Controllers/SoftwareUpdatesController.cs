@@ -14,9 +14,9 @@ namespace Chamran.Deed.Web.Controllers
     {
         private readonly ITempFileCacheManager _tempFileCacheManager;
 
-        private const long MaxUpdateFileLength = 5242880; //5MB
-        private const string MaxUpdateFileLengthUserFriendlyValue = "5MB"; //5MB
-        private readonly string[] UpdateFileAllowedFileTypes = { "jpeg", "jpg", "png" };
+        private const long MaxUpdateFileLength = 524288000; //500MB
+        private const string MaxUpdateFileLengthUserFriendlyValue = "500MB"; //5MB
+        private readonly string[] UpdateFileAllowedFileTypes = { "apk"};
 
         public SoftwareUpdatesController(ITempFileCacheManager tempFileCacheManager)
         {
