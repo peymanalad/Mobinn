@@ -1864,6 +1864,35 @@ namespace Chamran.Deed.Migrations
                     b.ToTable("SoftwareUpdates");
                 });
 
+            modelBuilder.Entity("Chamran.Deed.Common.UserToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatorUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserTokens");
+                });
+
             modelBuilder.Entity("Chamran.Deed.Friendships.Friendship", b =>
                 {
                     b.Property<long>("Id")
@@ -2894,6 +2923,15 @@ namespace Chamran.Deed.Migrations
                     b.Navigation("DeleterUser");
 
                     b.Navigation("LastModifierUser");
+                });
+
+            modelBuilder.Entity("Chamran.Deed.Common.UserToken", b =>
+                {
+                    b.HasOne("Chamran.Deed.Authorization.Users.User", "UserFk")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("UserFk");
                 });
 
             modelBuilder.Entity("Chamran.Deed.Info.Comment", b =>

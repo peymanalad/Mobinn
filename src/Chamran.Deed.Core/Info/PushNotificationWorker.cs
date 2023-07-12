@@ -17,7 +17,6 @@ public class PushNotificationWorker : PeriodicBackgroundWorkerBase, ISingletonDe
     private readonly ILogger<PushNotificationWorker> _logger;
     private readonly IRepository<FCMQueue> _fcmQueueRepository;
     private readonly IPushNotificationService _pushNotificationService;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
     
     public PushNotificationWorker(
         AbpTimer timer,
@@ -35,9 +34,7 @@ public class PushNotificationWorker : PeriodicBackgroundWorkerBase, ISingletonDe
 
     protected override async void DoWork()
     {
-        using var scope = _serviceScopeFactory.CreateScope();
         
-
         try
         {
             var notifications = _fcmQueueRepository.GetAll().Where(x=>!x.IsSent);

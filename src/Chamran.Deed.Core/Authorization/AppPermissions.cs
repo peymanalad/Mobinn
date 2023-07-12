@@ -6,6 +6,11 @@
     /// </summary>
     public static class AppPermissions
     {
+        public const string Pages_UserTokens = "Pages.UserTokens";
+        public const string Pages_UserTokens_Create = "Pages.UserTokens.Create";
+        public const string Pages_UserTokens_Edit = "Pages.UserTokens.Edit";
+        public const string Pages_UserTokens_Delete = "Pages.UserTokens.Delete";
+
         public const string Pages_FCMQueues = "Pages.FCMQueues";
         public const string Pages_FCMQueues_Create = "Pages.FCMQueues.Create";
         public const string Pages_FCMQueues_Edit = "Pages.FCMQueues.Edit";
