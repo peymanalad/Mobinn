@@ -4,7 +4,7 @@
     {
 
         public const int MinTokenLength = 0;
-        public const int MaxTokenLength = 128;
+        public const int MaxTokenLength = 1024;
 
     }
 }

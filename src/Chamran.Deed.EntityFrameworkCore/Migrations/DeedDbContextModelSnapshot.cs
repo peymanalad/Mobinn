@@ -1799,8 +1799,8 @@ namespace Chamran.Deed.Migrations
 
                     b.Property<string>("DeviceToken")
                         .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<bool>("IsSent")
                         .HasColumnType("bit");
@@ -1880,8 +1880,8 @@ namespace Chamran.Deed.Migrations
 
                     b.Property<string>("Token")
                         .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<long?>("UserId")
                         .HasColumnType("bigint");

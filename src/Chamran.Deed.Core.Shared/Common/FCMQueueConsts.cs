@@ -4,7 +4,7 @@
     {
 
         public const int MinDeviceTokenLength = 0;
-        public const int MaxDeviceTokenLength = 128;
+        public const int MaxDeviceTokenLength = 1024;
 
         public const int MinPushTitleLength = 0;
         public const int MaxPushTitleLength = 128;
