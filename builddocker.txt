@@ -1,4 +1,4 @@
-docker build -t ideed:4.9 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
+docker build -t ideed:5.0 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 
 docker build -t ideedreact:1.2 C:\ZProjects\ideed\react
 
@@ -8,8 +8,8 @@ yasnasystem
 Y@snaSystem75424
 
 docker images
-docker tag 70f481df2cfc yasnadocker.yasnasystem.ir/ideed:4.9
-docker push yasnadocker.yasnasystem.ir/ideed:4.9
+docker tag 70f481df2cfc yasnadocker.yasnasystem.ir/ideed:5.0
+docker push yasnadocker.yasnasystem.ir/ideed:5.0
 
 
 
@@ -23,7 +23,7 @@ docker-compose up -d
 docker network connect sqlpoolnetwork deed_registry_1
 
 
-sudo docker pull yasnadocker.yasnasystem.ir/ideed:4.9
+sudo docker pull yasnadocker.yasnasystem.ir/ideed:5.0
 docker build -t ideedfront:1.1 .
 docker images
 1bde69740be7
@@ -104,10 +104,10 @@ done
 
 
 
-docker build -t ideed:4.9 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
+docker build -t ideed:5.0 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 docker images
-docker tag 6b801cb889df yasnadocker.yasnasystem.ir/ideed:4.9
-docker push yasnadocker.yasnasystem.ir/ideed:4.9
+docker tag 94f85c223230 yasnadocker.yasnasystem.ir/ideed:5.0
+docker push yasnadocker.yasnasystem.ir/ideed:5.0
 
 docker-compose down -v
 nano docker-compose.yml
