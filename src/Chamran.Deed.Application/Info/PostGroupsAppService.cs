@@ -284,9 +284,13 @@ namespace Chamran.Deed.Info
             postGroup.GroupFile = null;
         }
 
-        public Task UpdatePostGroupOrdering(Dictionary<int, int> orderDictionary)
+        public async Task UpdatePostGroupOrdering(Dictionary<int, int> orderDictionary)
         {
-            
+            foreach (var row in orderDictionary)
+            {
+                var res=await _postGroupRepository.GetAsync(row.Key);
+                res.Ordering = row.Value;
+            }
         }
     }
 }
