@@ -489,7 +489,7 @@ namespace Chamran.Deed.Info
                         PostFile3 = post.PostFile3,
                         PostTitle = post.PostTitle,
                         PostGroupId = post.PostGroupId,
-                        PostRefLink=post.PostRefLink,
+                        PostRefLink = post.PostRefLink,
                     };
                     if (post.GroupMemberFk != null)
                     {
@@ -536,6 +536,100 @@ namespace Chamran.Deed.Info
                 //Thread.CurrentThread.CurrentCulture = _originalCulture;
                 //Thread.CurrentThread.CurrentUICulture = _originalCulture;
             }
+        }
+
+        public Task<GetExploreForViewDto> GetExploreForView(GetExploreForViewInput input)
+        {
+            try
+            {
+                var res = new GetExploreForViewDto();
+
+                var cat = new List<GetPostCategoriesForViewDto>();
+
+                foreach (var postCategory in _postCategoryRepository.GetAll())
+                {
+                    cat.Add(new GetPostCategoriesForViewDto()
+                    {
+                        //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
+                        Base64Image = postCategory.FileId,
+                        Id = postCategory.Id,
+                        PostGroupDescription = postCategory.PostGroupDescription
+                    });
+                }
+
+
+                var posts = new List<GetPostsForViewDto>();
+                var filteredPosts = _postRepository.GetAll()
+                    .Include(e => e.GroupMemberFk)
+                    .Include(e => e.PostGroupFk)
+                    .Include(e => e.GroupMemberFk.UserFk)
+                    .Include(e => e.AppBinaryObjectFk)
+                    .Include(e => e.AppBinaryObjectFk2)
+                    .Include(e => e.AppBinaryObjectFk3);
+                            //.WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
+                            //.WhereIf(input.PostGroupId > 0, e => e.PostGroupId == input.PostGroupId);
+                        var pagedAndFilteredPosts = filteredPosts
+                            .OrderBy(input.Sorting ?? "id desc")
+                            .PageBy(input);
+                foreach (var post in pagedAndFilteredPosts)
+                {
+                    var datam = new GetPostsForViewDto()
+                    {
+                        //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
+                        Id = post.Id,
+                        GroupMemberId = post.GroupMemberId ?? 0,
+                        IsSpecial = post.IsSpecial,
+                        PostCaption = post.PostCaption,
+                        PostTime = post.CreationTime,
+                        PostFile = post.PostFile,
+                        PostFile2 = post.PostFile2,
+                        PostFile3 = post.PostFile3,
+                        PostTitle = post.PostTitle,
+                        PostGroupId = post.PostGroupId,
+                        PostRefLink = post.PostRefLink,
+                    };
+                    if (post.GroupMemberFk != null)
+                    {
+                        datam.MemberFullName = post.GroupMemberFk.UserFk.FullName;
+                        datam.MemberPosition = post.GroupMemberFk.MemberPosition;
+                        datam.MemberUserName = post.GroupMemberFk.UserFk.UserName;
+                    }
+
+                    if (post.PostGroupFk != null)
+                    {
+                        datam.GroupFile = post.PostGroupFk.GroupFile;
+                        datam.GroupDescription = post.PostGroupFk.PostGroupDescription;
+
+                    }
+
+                    if (post.AppBinaryObjectFk != null)
+                    {
+                        datam.Attachment1 = post.AppBinaryObjectFk.Description;
+                    }
+
+                    if (post.AppBinaryObjectFk2 != null)
+                    {
+                        datam.Attachment2 = post.AppBinaryObjectFk2.Description;
+                    }
+
+                    if (post.AppBinaryObjectFk3 != null)
+                    {
+                        datam.Attachment3 = post.AppBinaryObjectFk3.Description;
+                    }
+
+                    posts.Add(datam);
+
+
+                }
+                res.PostCategoriesForViewDto = new PagedResultDto<GetPostCategoriesForViewDto>(cat.Count, cat);
+                res.PostsForViewDto = new PagedResultDto<GetPostsForViewDto>(posts.Count, posts);
+                return Task.FromResult(res);
+            }
+            catch (Exception ex)
+            {
+                throw new UserFriendlyException(ex.Message);
+            }
+
         }
     }
 }

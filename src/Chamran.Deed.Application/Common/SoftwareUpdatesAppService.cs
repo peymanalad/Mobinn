@@ -14,6 +14,7 @@ using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Chamran.Deed.Storage;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Chamran.Deed.Common
 {
@@ -196,6 +197,16 @@ namespace Chamran.Deed.Common
 
             await _binaryObjectManager.DeleteAsync(softwareUpdate.UpdateFile.Value);
             softwareUpdate.UpdateFile = null;
+        }
+
+        [AllowAnonymous]
+        public async Task<GetSoftwareUpdateForViewDto> GetLatestUpdateInformation()
+        {
+            var softwareUpdate = await _softwareUpdateRepository.GetAll().LastOrDefaultAsync();
+
+            var output = new GetSoftwareUpdateForViewDto { SoftwareUpdate = ObjectMapper.Map<SoftwareUpdateDto>(softwareUpdate) };
+
+            return output;
         }
 
     }
