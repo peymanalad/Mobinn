@@ -1,6 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="en">
-  <texts>    <text name="UserToken">User token</text>
+  <texts>    <text name="UserLocation">User location</text>
+    <text name="Chamran.Deed.Info.UserLocation">UserLocation</text>
+    <text name="UserLat">User lat</text>
+    <text name="UserLong">User long</text>
+    <text name="UserLocationsHeaderInfo">User locations header info</text>
+    <text name="CreateNewUserLocation">Create new user location</text>
+    <text name="EditUserLocation">Edit user location</text>
+    <text name="DeleteUserLocation">Delete user location</text>
+    <text name="UserLocations">User locations</text>
+    <text name="GroupFile">Group file</text>
+    <text name="Ordering">Ordering</text>
+    <text name="UserToken">User token</text>
     <text name="CreateNewUserToken">Create new user token</text>
     <text name="EditUserToken">Edit user token</text>
     <text name="DeleteUserToken">Delete user token</text>

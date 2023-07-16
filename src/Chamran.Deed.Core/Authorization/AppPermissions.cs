@@ -6,6 +6,11 @@
     /// </summary>
     public static class AppPermissions
     {
+        public const string Pages_UserLocations = "Pages.UserLocations";
+        public const string Pages_UserLocations_Create = "Pages.UserLocations.Create";
+        public const string Pages_UserLocations_Edit = "Pages.UserLocations.Edit";
+        public const string Pages_UserLocations_Delete = "Pages.UserLocations.Delete";
+
         public const string Pages_UserTokens = "Pages.UserTokens";
         public const string Pages_UserTokens_Create = "Pages.UserTokens.Create";
         public const string Pages_UserTokens_Edit = "Pages.UserTokens.Edit";
