@@ -30,6 +30,11 @@ namespace Chamran.Deed.Authorization
 
             var pages = context.GetPermissionOrNull(AppPermissions.Pages) ?? context.CreatePermission(AppPermissions.Pages, L("Pages"));
 
+            var userLocations = pages.CreateChildPermission(AppPermissions.Pages_UserLocations, L("UserLocations"));
+            userLocations.CreateChildPermission(AppPermissions.Pages_UserLocations_Create, L("CreateNewUserLocation"));
+            userLocations.CreateChildPermission(AppPermissions.Pages_UserLocations_Edit, L("EditUserLocation"));
+            userLocations.CreateChildPermission(AppPermissions.Pages_UserLocations_Delete, L("DeleteUserLocation"));
+
             var userTokens = pages.CreateChildPermission(AppPermissions.Pages_UserTokens, L("UserTokens"));
             userTokens.CreateChildPermission(AppPermissions.Pages_UserTokens_Create, L("CreateNewUserToken"));
             userTokens.CreateChildPermission(AppPermissions.Pages_UserTokens_Edit, L("EditUserToken"));

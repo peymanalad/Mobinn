@@ -7,10 +7,13 @@ namespace Chamran.Deed.Info.Dtos
     {
         public string PostGroupDescription { get; set; }
 
-        public int? OrganizationGroupId { get; set; }
+        public int Ordering { get; set; }
 
         public Guid? GroupFile { get; set; }
 
+        public string GroupFileFileName { get; set; }
+
+        public int? OrganizationGroupId { get; set; }
 
     }
 }

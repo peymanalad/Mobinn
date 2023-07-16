@@ -2,15 +2,15 @@
   "IsRegenerate": true,
   "MenuPosition": "main",
   "RelativeNamespace": "Info",
-  "EntityName": "PostGroup",
-  "EntityNamePlural": "PostGroups",
-  "TableName": "PostGroups",
+  "EntityName": "UserLocation",
+  "EntityNamePlural": "UserLocations",
+  "TableName": "UserLocations",
   "PrimaryKeyType": "int",
-  "BaseClass": "FullAuditedEntity",
-  "EntityHistory": true,
+  "BaseClass": "CreationAuditedEntity",
+  "EntityHistory": false,
   "AutoMigration": true,
   "UpdateDatabase": false,
-  "CreateUserInterface": true,
+  "CreateUserInterface": false,
   "CreateViewOnly": true,
   "CreateExcelExport": true,
   "IsNonModalCRUDPage": false,
@@ -23,8 +23,8 @@
   },
   "Properties": [
     {
-      "Name": "PostGroupDescription",
-      "Type": "string",
+      "Name": "UserLat",
+      "Type": "decimal",
       "MaxLength": -1,
       "MinLength": -1,
       "Range": {
@@ -41,11 +41,13 @@
         "CreateOrUpdate": true
       },
       "ViewType": null,
-      "AdditionalData": {}
+      "AdditionalData": {
+        "Precision": "6"
+      }
     },
     {
-      "Name": "Ordering",
-      "Type": "int",
+      "Name": "UserLong",
+      "Type": "decimal",
       "MaxLength": -1,
       "MinLength": -1,
       "Range": {
@@ -62,44 +64,25 @@
         "CreateOrUpdate": true
       },
       "ViewType": null,
-      "AdditionalData": {}
-    },
-    {
-      "Name": "GroupFile",
-      "Type": "file",
-      "MaxLength": 0,
-      "MinLength": 0,
-      "Range": {
-        "IsRangeSet": false,
-        "MinimumValue": 0.0,
-        "MaximumValue": 0.0
-      },
-      "Required": false,
-      "Nullable": true,
-      "Regex": "",
-      "UserInterface": {
-        "AdvancedFilter": false,
-        "List": true,
-        "CreateOrUpdate": true
-      },
-      "ViewType": null,
-      "AdditionalData": {}
+      "AdditionalData": {
+        "Precision": "6"
+      }
     }
   ],
   "NavigationProperties": [
     {
-      "Namespace": "Chamran.Deed.People",
-      "ForeignEntityName": "OrganizationGroup",
-      "IdType": "int",
-      "IsNullable": true,
-      "PropertyName": "OrganizationGroupId",
+      "Namespace": "Chamran.Deed.Authorization.Users",
+      "ForeignEntityName": "User",
+      "IdType": "long",
+      "IsNullable": false,
+      "PropertyName": "UserId",
       "DuplicationNumber": 0,
       "RelationType": "single",
       "ViewType": "LookupTable",
       "DisplayPropertyNameInfos": {
         "MergeFormat": "{0}",
         "DisplayPropertyNames": [
-          "GroupName"
+          "Name"
         ]
       }
     }

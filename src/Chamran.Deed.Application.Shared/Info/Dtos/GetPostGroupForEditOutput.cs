@@ -10,5 +10,7 @@ namespace Chamran.Deed.Info.Dtos
 
         public string OrganizationGroupGroupName { get; set; }
 
+        public string GroupFileFileName { get; set; }
+
     }
 }

@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Abp.Domain.Entities.Auditing;
 using Abp.Domain.Entities;
 using Abp.Auditing;
-using Chamran.Deed.Storage;
 
 namespace Chamran.Deed.Info
 {
@@ -16,15 +15,15 @@ namespace Chamran.Deed.Info
 
         public virtual string PostGroupDescription { get; set; }
 
+        public virtual int Ordering { get; set; }
+        //File
+
+        public virtual Guid? GroupFile { get; set; } //File, (BinaryObjectId)
+
         public virtual int? OrganizationGroupId { get; set; }
 
         [ForeignKey("OrganizationGroupId")]
         public OrganizationGroup OrganizationGroupFk { get; set; }
-
-        public virtual Guid? GroupFile { get; set; } //File, (BinaryObjectId)
-        
-        [ForeignKey("GroupFile")]
-        public BinaryObject AppBinaryObjectFk { get; set; }
 
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp.Application.Services;
 using Abp.Application.Services.Dto;
@@ -23,5 +24,8 @@ namespace Chamran.Deed.Info
 
         Task<PagedResultDto<PostGroupOrganizationGroupLookupTableDto>> GetAllOrganizationGroupForLookupTable(GetAllForLookupTableInput input);
 
+        Task RemoveGroupFileFile(EntityDto input);
+
+        Task UpdatePostGroupOrdering(Dictionary<int, int> orderDictionary);
     }
 }

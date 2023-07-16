@@ -9,6 +9,9 @@ namespace Chamran.Deed.Info.Dtos
 
         public string PostGroupDescriptionFilter { get; set; }
 
+        public int? MaxOrderingFilter { get; set; }
+        public int? MinOrderingFilter { get; set; }
+
         public string OrganizationGroupGroupNameFilter { get; set; }
 
     }

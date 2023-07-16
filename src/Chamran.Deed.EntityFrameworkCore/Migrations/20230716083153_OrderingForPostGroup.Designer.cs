@@ -4,6 +4,7 @@ using Chamran.Deed.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Chamran.Deed.Migrations
 {
     [DbContext(typeof(DeedDbContext))]
-    partial class DeedDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230716083153_OrderingForPostGroup")]
+    partial class OrderingForPostGroup
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2299,36 +2302,6 @@ namespace Chamran.Deed.Migrations
                     b.ToTable("Seens");
                 });
 
-            modelBuilder.Entity("Chamran.Deed.Info.UserLocation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<decimal>("UserLat")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("UserLong")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("UserLocations");
-                });
-
             modelBuilder.Entity("Chamran.Deed.MultiTenancy.Accounting.Invoice", b =>
                 {
                     b.Property<int>("Id")
@@ -3105,17 +3078,6 @@ namespace Chamran.Deed.Migrations
                         .HasForeignKey("UserId");
 
                     b.Navigation("PostFk");
-
-                    b.Navigation("UserFk");
-                });
-
-            modelBuilder.Entity("Chamran.Deed.Info.UserLocation", b =>
-                {
-                    b.HasOne("Chamran.Deed.Authorization.Users.User", "UserFk")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
 
                     b.Navigation("UserFk");
                 });

@@ -8,13 +8,13 @@ using Chamran.Deed.Storage;
 
 namespace Chamran.Deed.Info.Exporting
 {
-    public class PostGroupsExcelExporter : NpoiExcelExporterBase, IPostGroupsExcelExporter
+    public class UserLocationsExcelExporter : NpoiExcelExporterBase, IUserLocationsExcelExporter
     {
 
         private readonly ITimeZoneConverter _timeZoneConverter;
         private readonly IAbpSession _abpSession;
 
-        public PostGroupsExcelExporter(
+        public UserLocationsExcelExporter(
             ITimeZoneConverter timeZoneConverter,
             IAbpSession abpSession,
             ITempFileCacheManager tempFileCacheManager) :
@@ -24,29 +24,27 @@ namespace Chamran.Deed.Info.Exporting
             _abpSession = abpSession;
         }
 
-        public FileDto ExportToFile(List<GetPostGroupForViewDto> postGroups)
+        public FileDto ExportToFile(List<GetUserLocationForViewDto> userLocations)
         {
             return CreateExcelPackage(
-                    "PostGroups.xlsx",
+                    "UserLocations.xlsx",
                     excelPackage =>
                     {
 
-                        var sheet = excelPackage.CreateSheet(L("PostGroups"));
+                        var sheet = excelPackage.CreateSheet(L("UserLocations"));
 
                         AddHeader(
                             sheet,
-                        L("PostGroupDescription"),
-                        L("Ordering"),
-                        L("GroupFile"),
-                        (L("OrganizationGroup")) + L("GroupName")
+                        L("UserLat"),
+                        L("UserLong"),
+                        (L("User")) + L("Name")
                             );
 
                         AddObjects(
-                            sheet, postGroups,
-                        _ => _.PostGroup.PostGroupDescription,
-                        _ => _.PostGroup.Ordering,
-                        _ => _.PostGroup.GroupFileFileName,
-                        _ => _.OrganizationGroupGroupName
+                            sheet, userLocations,
+                        _ => _.UserLocation.UserLat,
+                        _ => _.UserLocation.UserLong,
+                        _ => _.UserName
                             );
 
                     });
