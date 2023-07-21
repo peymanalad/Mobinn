@@ -29,14 +29,15 @@ namespace Chamran.Deed.Info
 
         private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IBinaryObjectManager _binaryObjectManager;
+        private readonly IRepository<OrganizationGroup> _organizationGroupRepository;
 
-        private readonly IRepository<PostCategory> _postCategoryRepository;
+        //private readonly IRepository<PostCategory> _postCategoryRepository;
         //private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
 
         //private CultureInfo _originalCulture;
         //private readonly CultureInfo _targetCulture=new CultureInfo("fa-IR");
 
-        public PostsAppService(IRepository<Post> postRepository, IPostsExcelExporter postsExcelExporter, IRepository<GroupMember, int> lookup_groupMemberRepository, IRepository<PostGroup, int> lookup_postGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager, IRepository<PostCategory> postCategoryRepository)
+        public PostsAppService(IRepository<Post> postRepository, IPostsExcelExporter postsExcelExporter, IRepository<GroupMember, int> lookup_groupMemberRepository, IRepository<PostGroup, int> lookup_postGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager, IRepository<OrganizationGroup> organizationGroup)
         {
             _postRepository = postRepository;
             _postsExcelExporter = postsExcelExporter;
@@ -44,7 +45,8 @@ namespace Chamran.Deed.Info
             _lookup_postGroupRepository = lookup_postGroupRepository;
             _tempFileCacheManager = tempFileCacheManager;
             _binaryObjectManager = binaryObjectManager;
-            _postCategoryRepository = postCategoryRepository;
+            _organizationGroupRepository = organizationGroup;
+            //_postCategoryRepository = postCategoryRepository;
             //_dbContextProvider= dbContextProvider;
         }
 
@@ -391,7 +393,7 @@ namespace Chamran.Deed.Info
             try
             {
                 var res = new List<GetPostCategoriesForViewDto>();
-                foreach (var postCategory in _postCategoryRepository.GetAll())
+                foreach (var postCategory in _lookup_postGroupRepository.GetAll())
                 {
                     res.Add(new GetPostCategoriesForViewDto()
                     {
@@ -545,13 +547,21 @@ namespace Chamran.Deed.Info
                 var res = new GetExploreForViewDto();
 
                 var cat = new List<GetPostCategoriesForViewDto>();
-
-                foreach (var postCategory in _postCategoryRepository.GetAll())
+                var queryPostCat = from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
+                    join g in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationGroupId equals  g.Id into joiner1
+                    from g in joiner1.DefaultIfEmpty()
+                    select new
+                    {
+                        pc.Id,
+                        pc.PostGroupDescription,
+                        pc.GroupFile
+                    };
+                foreach (var postCategory in queryPostCat)
                 {
                     cat.Add(new GetPostCategoriesForViewDto()
                     {
                         //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
-                        Base64Image = postCategory.FileId,
+                        Base64Image = postCategory.GroupFile,
                         Id = postCategory.Id,
                         PostGroupDescription = postCategory.PostGroupDescription
                     });
