@@ -280,16 +280,16 @@ namespace Chamran.Deed.Info
                                            where gm.UserId == userId
                                            select og.OrganizationId;
 
-            var organizationGroupId = await organizationGroupIdQuery.FirstOrDefaultAsync();
+            var organizationId = await organizationGroupIdQuery.FirstOrDefaultAsync();
 
-            if (organizationGroupId == null)
+            if (organizationId == null)
             {
                 throw new UserFriendlyException("User is not member of any organizations");
             }
 
             var query = _lookup_postGroupRepository.GetAll()
                 .Include(e => e.OrganizationGroupFk)
-                .Where(pg => pg.OrganizationGroupId == organizationGroupId);
+                .Where(pg => pg.OrganizationGroupFk.OrganizationId == organizationId);
 
             var pagedAndFilteredUserPostGroups = query
                 .OrderBy(input.Sorting ?? "id asc")
