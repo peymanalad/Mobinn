@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp.Application.Services;
 using Abp.Application.Services.Dto;
@@ -22,6 +23,8 @@ namespace Chamran.Deed.Info
         Task<FileDto> GetUserLocationsToExcel(GetAllUserLocationsForExcelInput input);
 
         Task<PagedResultDto<UserLocationUserLookupTableDto>> GetAllUserForLookupTable(GetAllForLookupTableInput input);
+
+        Task CreateLocationsByDate(List<CreateLocationsDto> input);
 
     }
 }
