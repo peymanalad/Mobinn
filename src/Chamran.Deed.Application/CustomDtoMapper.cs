@@ -83,8 +83,8 @@ namespace Chamran.Deed
             configuration.CreateMap<PostDto, Post>().ReverseMap();
             configuration.CreateMap<CreateOrEditGroupMemberDto, GroupMember>().ReverseMap();
             configuration.CreateMap<GroupMemberDto, GroupMember>().ReverseMap();
-            configuration.CreateMap<CreateOrEditOrganizationGroupDto, OrganizationGroup>().ReverseMap();
-            configuration.CreateMap<OrganizationGroupDto, OrganizationGroup>().ReverseMap();
+            //configuration.CreateMap<CreateOrEditOrganizationGroupDto, OrganizationGroup>().ReverseMap();
+            //configuration.CreateMap<OrganizationGroupDto, OrganizationGroup>().ReverseMap();
             configuration.CreateMap<CreateOrEditOrganizationDto, Organization>().ReverseMap();
             configuration.CreateMap<OrganizationDto, Organization>().ReverseMap();
             //Inputs

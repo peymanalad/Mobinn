@@ -87,18 +87,14 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
         }*/
 
         public static async Task<StiReport> GetCurrentOrganizationDashboard(IRepository<Report> reportRepository,
-            IRepository<OrganizationGroup> organizationGroupRepository, IRepository<GroupMember> groupMemberRepository,
+            IRepository<Organization> organizationRepository, IRepository<GroupMember> groupMemberRepository,
             long userId)
         {
             var query = reportRepository.GetAll().Where(x => x.IsDashboard && !x.IsDeleted);
             var query2 = from report in query
-                         join orgGroup in organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on report.OrganizationId equals orgGroup
-                             .OrganizationId into joined1
-                         from orgGroup in joined1.DefaultIfEmpty()
-                         join grpMember in groupMemberRepository.GetAll() on orgGroup.Id equals grpMember
-                             .OrganizationGroupId into joined2
+                         join grpMember in groupMemberRepository.GetAll() on report.OrganizationId equals grpMember.OrganizationId into joined2
                          from grpMember in joined2.DefaultIfEmpty()
-                         where grpMember.UserId == userId
+                         where grpMember.UserId == userId && report.IsDashboard
                          select new
                          {
                              report.ReportContent
@@ -113,12 +109,12 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
 
             if (!string.IsNullOrEmpty(reportContent)) return GetReportFromContent(reportContent);
             var orgQuery =
-                from orgGroup in organizationGroupRepository.GetAll().Where(x => !x.IsDeleted).Include(orgGroup => orgGroup.OrganizationFk)
-                join grpMember in groupMemberRepository.GetAll() on orgGroup.Id equals grpMember
-                    .OrganizationGroupId into joined2
+                from org in organizationRepository.GetAll().Where(x => !x.IsDeleted)
+                join grpMember in groupMemberRepository.GetAll() on org.Id equals grpMember
+                    .OrganizationId into joined2
                 from grpMember in joined2.DefaultIfEmpty()
                 where grpMember.UserId == userId
-                select orgGroup.OrganizationFk;
+                select org;
 
             if (!orgQuery.Any())
             {
@@ -228,13 +224,13 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
             return report;
         }
 
-        public static async Task SaveCurrentOrganizationDashboard(StiReport savedReport, IRepository<Report> reportRepository, IRepository<OrganizationGroup> organizationGroupRepository, IRepository<GroupMember> groupMemberRepository, long userId)
+        public static async Task SaveCurrentOrganizationDashboard(StiReport savedReport, IRepository<Report> reportRepository, IRepository<Organization> organizationRepository, IRepository<GroupMember> groupMemberRepository, long userId)
         {
             var query = reportRepository.GetAll().Where(x => x.IsDashboard && !x.IsDeleted);
             var query2 = from report in query
-                         join orgGroup in organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on report.OrganizationId equals orgGroup.OrganizationId into joined1
-                         from orgGroup in joined1.DefaultIfEmpty()
-                         join grpMember in groupMemberRepository.GetAll() on orgGroup.Id equals grpMember.OrganizationGroupId into joined2
+                         join org in organizationRepository.GetAll().Where(x => !x.IsDeleted) on report.OrganizationId equals org.Id into joined1
+                         from org in joined1.DefaultIfEmpty()
+                         join grpMember in groupMemberRepository.GetAll() on org.Id equals grpMember.OrganizationId into joined2
                          from grpMember in joined2.DefaultIfEmpty()
                          where grpMember.UserId == userId
                          select report;
@@ -245,6 +241,7 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
                 result.ReportContent = savedReport.SaveEncryptedReportToString("DrM@s");
                 result.LastModificationTime = Clock.Now;
                 result.LastModifierUserId = userId;
+                result.IsDashboard = true;
 
                 await reportRepository.UpdateAsync(result);
             }
