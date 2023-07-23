@@ -50,7 +50,7 @@ namespace Chamran.Deed.EntityFrameworkCore
 
         public virtual DbSet<GroupMember> GroupMembers { get; set; }
 
-        public virtual DbSet<OrganizationGroup> OrganizationGroups { get; set; }
+        //public virtual DbSet<OrganizationGroup> OrganizationGroups { get; set; }
 
         public virtual DbSet<Organization> Organizations { get; set; }
 

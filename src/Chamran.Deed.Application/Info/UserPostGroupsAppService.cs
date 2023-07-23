@@ -31,17 +31,17 @@ namespace Chamran.Deed.Info
         private readonly IRepository<User, long> _lookup_userRepository;
         private readonly IRepository<PostGroup, int> _lookup_postGroupRepository;
         private readonly IRepository<GroupMember, int> _groupMembersRepository;
-        private readonly IRepository<OrganizationGroup> _organizationGroupsRepository;
+        private readonly IRepository<Organization> _organizationGroupsRepository;
 
 
-        public UserPostGroupsAppService(IRepository<UserPostGroup> userPostGroupRepository, IUserPostGroupsExcelExporter userPostGroupsExcelExporter, IRepository<User, long> lookupUserRepository, IRepository<PostGroup, int> lookupPostGroupRepository, IRepository<GroupMember, int> groupMembersRepository, IRepository<OrganizationGroup> organizationGroupsRepository)
+        public UserPostGroupsAppService(IRepository<UserPostGroup> userPostGroupRepository, IUserPostGroupsExcelExporter userPostGroupsExcelExporter, IRepository<User, long> lookupUserRepository, IRepository<PostGroup, int> lookupPostGroupRepository, IRepository<GroupMember, int> groupMembersRepository, IRepository<Organization> organizationRepository)
         {
             _userPostGroupRepository = userPostGroupRepository;
             _userPostGroupsExcelExporter = userPostGroupsExcelExporter;
             _lookup_userRepository = lookupUserRepository;
             _lookup_postGroupRepository = lookupPostGroupRepository;
             _groupMembersRepository = groupMembersRepository;
-            _organizationGroupsRepository = organizationGroupsRepository;
+            _organizationGroupsRepository = organizationRepository;
         }
 
         public async Task<PagedResultDto<GetUserPostGroupForViewDto>> GetAll(GetAllUserPostGroupsInput input)
@@ -275,10 +275,10 @@ namespace Chamran.Deed.Info
         {
 
             var query = from pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
-                join og in _organizationGroupsRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationGroupId
+                join og in _organizationGroupsRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
                     equals og.Id into joiner1
                 from og in joiner1.DefaultIfEmpty()
-                join gm in _groupMembersRepository.GetAll() on og.Id equals gm.OrganizationGroupId into joiner2
+                join gm in _groupMembersRepository.GetAll() on og.Id equals gm.OrganizationId into joiner2
                 from gm in joiner2.DefaultIfEmpty()
 
                 where gm.UserId == AbpSession.UserId

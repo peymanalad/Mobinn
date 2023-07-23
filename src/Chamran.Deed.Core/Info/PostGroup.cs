@@ -20,10 +20,10 @@ namespace Chamran.Deed.Info
 
         public virtual Guid? GroupFile { get; set; } //File, (BinaryObjectId)
 
-        public virtual int? OrganizationGroupId { get; set; }
+        public virtual int? OrganizationId { get; set; }
 
-        [ForeignKey("OrganizationGroupId")]
-        public OrganizationGroup OrganizationGroupFk { get; set; }
+        [ForeignKey("OrganizationId")]
+        public Organization OrganizationFk { get; set; }
 
     }
 }

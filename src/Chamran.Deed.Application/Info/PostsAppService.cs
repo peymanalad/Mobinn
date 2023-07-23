@@ -29,7 +29,7 @@ namespace Chamran.Deed.Info
 
         private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IBinaryObjectManager _binaryObjectManager;
-        private readonly IRepository<OrganizationGroup> _organizationGroupRepository;
+        private readonly IRepository<Organization> _organizationGroupRepository;
 
         //private readonly IRepository<PostCategory> _postCategoryRepository;
         //private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
@@ -37,7 +37,7 @@ namespace Chamran.Deed.Info
         //private CultureInfo _originalCulture;
         //private readonly CultureInfo _targetCulture=new CultureInfo("fa-IR");
 
-        public PostsAppService(IRepository<Post> postRepository, IPostsExcelExporter postsExcelExporter, IRepository<GroupMember, int> lookup_groupMemberRepository, IRepository<PostGroup, int> lookup_postGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager, IRepository<OrganizationGroup> organizationGroup)
+        public PostsAppService(IRepository<Post> postRepository, IPostsExcelExporter postsExcelExporter, IRepository<GroupMember, int> lookup_groupMemberRepository, IRepository<PostGroup, int> lookup_postGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager, IRepository<Organization> organizationGroup)
         {
             _postRepository = postRepository;
             _postsExcelExporter = postsExcelExporter;
@@ -394,9 +394,9 @@ namespace Chamran.Deed.Info
             {
                 var cat = new List<GetPostCategoriesForViewDto>();
                 var queryPostCat = from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
-                    join g in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationGroupId equals g.Id into joiner1
+                    join g in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationId equals g.Id into joiner1
                     from g in joiner1.DefaultIfEmpty()
-                    join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationGroupId into joiner2
+                    join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
                     from gm in joiner2.DefaultIfEmpty()
                     where gm.UserId == AbpSession.UserId
                     select new
@@ -483,10 +483,10 @@ namespace Chamran.Deed.Info
                                     join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
                                         pg.Id into joiner1
                                     from pg in joiner1.DefaultIfEmpty()
-                                    join og in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationGroupId
+                                    join og in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
                                         equals og.Id into joiner2
                                     from og in joiner2.DefaultIfEmpty()
-                                    join gm in _lookup_groupMemberRepository.GetAll() on og.Id equals gm.OrganizationGroupId into
+                                    join gm in _lookup_groupMemberRepository.GetAll() on og.Id equals gm.OrganizationId into
                                         joiner3
                                     from gm in joiner3.DefaultIfEmpty()
                                     where gm.UserId == AbpSession.UserId
@@ -589,9 +589,9 @@ namespace Chamran.Deed.Info
 
                 var cat = new List<GetPostCategoriesForViewDto>();
                 var queryPostCat = from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
-                                   join g in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationGroupId equals g.Id into joiner1
+                                   join g in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationId equals g.Id into joiner1
                                    from g in joiner1.DefaultIfEmpty()
-                                   join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationGroupId into joiner2
+                                   join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
                                    from gm in joiner2.DefaultIfEmpty()
                                    where gm.UserId == AbpSession.UserId
                                    select new
@@ -623,10 +623,10 @@ namespace Chamran.Deed.Info
                                     join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
                                         pg.Id into joiner1
                                     from pg in joiner1.DefaultIfEmpty()
-                                    join og in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationGroupId
+                                    join og in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
                                         equals og.Id into joiner2
                                     from og in joiner2.DefaultIfEmpty()
-                                    join gm in _lookup_groupMemberRepository.GetAll() on og.Id equals gm.OrganizationGroupId into
+                                    join gm in _lookup_groupMemberRepository.GetAll() on og.Id equals gm.OrganizationId into
                                         joiner3
                                     from gm in joiner3.DefaultIfEmpty()
                                     where gm.UserId == AbpSession.UserId

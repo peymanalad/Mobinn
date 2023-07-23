@@ -25,16 +25,16 @@ namespace Chamran.Deed.Info
     {
         private readonly IRepository<PostGroup> _postGroupRepository;
         private readonly IPostGroupsExcelExporter _postGroupsExcelExporter;
-        private readonly IRepository<OrganizationGroup, int> _lookup_organizationGroupRepository;
+        private readonly IRepository<Organization, int> _lookup_organizationRepository;
 
         private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IBinaryObjectManager _binaryObjectManager;
 
-        public PostGroupsAppService(IRepository<PostGroup> postGroupRepository, IPostGroupsExcelExporter postGroupsExcelExporter, IRepository<OrganizationGroup, int> lookup_organizationGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager)
+        public PostGroupsAppService(IRepository<PostGroup> postGroupRepository, IPostGroupsExcelExporter postGroupsExcelExporter, IRepository<Organization, int> lookup_organizationGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager)
         {
             _postGroupRepository = postGroupRepository;
             _postGroupsExcelExporter = postGroupsExcelExporter;
-            _lookup_organizationGroupRepository = lookup_organizationGroupRepository;
+            _lookup_organizationRepository = lookup_organizationGroupRepository;
 
             _tempFileCacheManager = tempFileCacheManager;
             _binaryObjectManager = binaryObjectManager;
@@ -45,19 +45,19 @@ namespace Chamran.Deed.Info
         {
 
             var filteredPostGroups = _postGroupRepository.GetAll()
-                        .Include(e => e.OrganizationGroupFk)
+                        .Include(e => e.OrganizationFk)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.PostGroupDescription.Contains(input.Filter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupDescriptionFilter), e => e.PostGroupDescription.Contains(input.PostGroupDescriptionFilter))
                         .WhereIf(input.MinOrderingFilter != null, e => e.Ordering >= input.MinOrderingFilter)
                         .WhereIf(input.MaxOrderingFilter != null, e => e.Ordering <= input.MaxOrderingFilter)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationGroupGroupNameFilter), e => e.OrganizationGroupFk != null && e.OrganizationGroupFk.GroupName == input.OrganizationGroupGroupNameFilter);
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationGroupGroupNameFilter), e => e.OrganizationFk != null && e.OrganizationFk.OrganizationName == input.OrganizationGroupGroupNameFilter);
 
             var pagedAndFilteredPostGroups = filteredPostGroups
                 .OrderBy(input.Sorting ?? "id asc")
                 .PageBy(input);
 
             var postGroups = from o in pagedAndFilteredPostGroups
-                             join o1 in _lookup_organizationGroupRepository.GetAll() on o.OrganizationGroupId equals o1.Id into j1
+                             join o1 in _lookup_organizationRepository.GetAll() on o.OrganizationId equals o1.Id into j1
                              from s1 in j1.DefaultIfEmpty()
 
                              select new
@@ -67,7 +67,7 @@ namespace Chamran.Deed.Info
                                  o.Ordering,
                                  o.GroupFile,
                                  Id = o.Id,
-                                 OrganizationGroupGroupName = s1 == null || s1.GroupName == null ? "" : s1.GroupName.ToString()
+                                 OrganizationGroupGroupName = s1 == null || s1.OrganizationName == null ? "" : s1.OrganizationName.ToString()
                              };
 
             var totalCount = await filteredPostGroups.CountAsync();
@@ -107,10 +107,10 @@ namespace Chamran.Deed.Info
 
             var output = new GetPostGroupForViewDto { PostGroup = ObjectMapper.Map<PostGroupDto>(postGroup) };
 
-            if (output.PostGroup.OrganizationGroupId != null)
+            if (output.PostGroup.OrganizationId != null)
             {
-                var _lookupOrganizationGroup = await _lookup_organizationGroupRepository.FirstOrDefaultAsync((int)output.PostGroup.OrganizationGroupId);
-                output.OrganizationGroupGroupName = _lookupOrganizationGroup?.GroupName?.ToString();
+                var _lookupOrganizationGroup = await _lookup_organizationRepository.FirstOrDefaultAsync((int)output.PostGroup.OrganizationId);
+                output.OrganizationGroupGroupName = _lookupOrganizationGroup?.OrganizationName?.ToString();
             }
 
             output.PostGroup.GroupFileFileName = await GetBinaryFileName(postGroup.GroupFile);
@@ -125,10 +125,10 @@ namespace Chamran.Deed.Info
 
             var output = new GetPostGroupForEditOutput { PostGroup = ObjectMapper.Map<CreateOrEditPostGroupDto>(postGroup) };
 
-            if (output.PostGroup.OrganizationGroupId != null)
+            if (output.PostGroup.OrganizationId != null)
             {
-                var _lookupOrganizationGroup = await _lookup_organizationGroupRepository.FirstOrDefaultAsync((int)output.PostGroup.OrganizationGroupId);
-                output.OrganizationGroupGroupName = _lookupOrganizationGroup?.GroupName?.ToString();
+                var _lookupOrganizationGroup = await _lookup_organizationRepository.FirstOrDefaultAsync((int)output.PostGroup.OrganizationId);
+                output.OrganizationGroupGroupName = _lookupOrganizationGroup?.OrganizationName?.ToString();
             }
 
             output.GroupFileFileName = await GetBinaryFileName(postGroup.GroupFile);
@@ -177,15 +177,15 @@ namespace Chamran.Deed.Info
         {
 
             var filteredPostGroups = _postGroupRepository.GetAll()
-                        .Include(e => e.OrganizationGroupFk)
+                        .Include(e => e.OrganizationFk)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.PostGroupDescription.Contains(input.Filter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupDescriptionFilter), e => e.PostGroupDescription.Contains(input.PostGroupDescriptionFilter))
                         .WhereIf(input.MinOrderingFilter != null, e => e.Ordering >= input.MinOrderingFilter)
                         .WhereIf(input.MaxOrderingFilter != null, e => e.Ordering <= input.MaxOrderingFilter)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationGroupGroupNameFilter), e => e.OrganizationGroupFk != null && e.OrganizationGroupFk.GroupName == input.OrganizationGroupGroupNameFilter);
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationGroupGroupNameFilter), e => e.OrganizationFk != null && e.OrganizationFk.OrganizationName == input.OrganizationGroupGroupNameFilter);
 
             var query = (from o in filteredPostGroups
-                         join o1 in _lookup_organizationGroupRepository.GetAll() on o.OrganizationGroupId equals o1.Id into j1
+                         join o1 in _lookup_organizationRepository.GetAll() on o.OrganizationId equals o1.Id into j1
                          from s1 in j1.DefaultIfEmpty()
 
                          select new GetPostGroupForViewDto()
@@ -197,7 +197,7 @@ namespace Chamran.Deed.Info
                                  GroupFile = o.GroupFile,
                                  Id = o.Id
                              },
-                             OrganizationGroupGroupName = s1 == null || s1.GroupName == null ? "" : s1.GroupName.ToString()
+                             OrganizationGroupGroupName = s1 == null || s1.OrganizationName == null ? "" : s1.OrganizationName.ToString()
                          });
 
             var postGroupListDtos = await query.ToListAsync();
@@ -208,9 +208,9 @@ namespace Chamran.Deed.Info
         [AbpAuthorize(AppPermissions.Pages_PostGroups)]
         public async Task<PagedResultDto<PostGroupOrganizationGroupLookupTableDto>> GetAllOrganizationGroupForLookupTable(GetAllForLookupTableInput input)
         {
-            var query = _lookup_organizationGroupRepository.GetAll().WhereIf(
+            var query = _lookup_organizationRepository.GetAll().WhereIf(
                    !string.IsNullOrWhiteSpace(input.Filter),
-                  e => e.GroupName != null && e.GroupName.Contains(input.Filter)
+                  e => e.OrganizationName != null && e.OrganizationName.Contains(input.Filter)
                );
 
             var totalCount = await query.CountAsync();
@@ -225,7 +225,7 @@ namespace Chamran.Deed.Info
                 lookupTableDtoList.Add(new PostGroupOrganizationGroupLookupTableDto
                 {
                     Id = organizationGroup.Id,
-                    DisplayName = organizationGroup.GroupName?.ToString()
+                    DisplayName = organizationGroup.OrganizationName?.ToString()
                 });
             }
 

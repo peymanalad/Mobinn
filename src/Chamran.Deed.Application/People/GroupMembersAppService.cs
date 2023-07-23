@@ -27,9 +27,9 @@ namespace Chamran.Deed.People
         private readonly IRepository<GroupMember> _groupMemberRepository;
         private readonly IGroupMembersExcelExporter _groupMembersExcelExporter;
         private readonly IRepository<User, long> _lookup_userRepository;
-        private readonly IRepository<OrganizationGroup, int> _lookup_organizationGroupRepository;
+        private readonly IRepository<Organization, int> _lookup_organizationGroupRepository;
 
-        public GroupMembersAppService(IRepository<GroupMember> groupMemberRepository, IGroupMembersExcelExporter groupMembersExcelExporter, IRepository<User, long> lookup_userRepository, IRepository<OrganizationGroup, int> lookup_organizationGroupRepository)
+        public GroupMembersAppService(IRepository<GroupMember> groupMemberRepository, IGroupMembersExcelExporter groupMembersExcelExporter, IRepository<User, long> lookup_userRepository, IRepository<Organization, int> lookup_organizationGroupRepository)
         {
             _groupMemberRepository = groupMemberRepository;
             _groupMembersExcelExporter = groupMembersExcelExporter;
@@ -43,11 +43,11 @@ namespace Chamran.Deed.People
 
             var filteredGroupMembers = _groupMemberRepository.GetAll()
                         .Include(e => e.UserFk)
-                        .Include(e => e.OrganizationGroupFk)
+                        .Include(e => e.OrganizationFk)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.MemberPosition.Contains(input.Filter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.MemberPositionFilter), e => e.MemberPosition.Contains(input.MemberPositionFilter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter), e => e.UserFk != null && e.UserFk.Name == input.UserNameFilter)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationGroupGroupNameFilter), e => e.OrganizationGroupFk != null && e.OrganizationGroupFk.GroupName == input.OrganizationGroupGroupNameFilter);
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationGroupGroupNameFilter), e => e.OrganizationFk != null && e.OrganizationFk.OrganizationName == input.OrganizationGroupGroupNameFilter);
 
             var pagedAndFilteredGroupMembers = filteredGroupMembers
                 .OrderBy(input.Sorting ?? "id asc")
@@ -57,7 +57,7 @@ namespace Chamran.Deed.People
                                join o1 in _lookup_userRepository.GetAll() on o.UserId equals o1.Id into j1
                                from s1 in j1.DefaultIfEmpty()
 
-                               join o2 in _lookup_organizationGroupRepository.GetAll() on o.OrganizationGroupId equals o2.Id into j2
+                               join o2 in _lookup_organizationGroupRepository.GetAll() on o.OrganizationId equals o2.Id into j2
                                from s2 in j2.DefaultIfEmpty()
 
                                select new
@@ -66,7 +66,7 @@ namespace Chamran.Deed.People
                                    o.MemberPosition,
                                    Id = o.Id,
                                    UserName = s1 == null || s1.Name == null ? "" : s1.Name.ToString(),
-                                   OrganizationGroupGroupName = s2 == null || s2.GroupName == null ? "" : s2.GroupName.ToString()
+                                   OrganizationGroupGroupName = s2 == null || s2.OrganizationName== null ? "" : s2.OrganizationName.ToString()
                                };
 
             var totalCount = await filteredGroupMembers.CountAsync();
@@ -110,10 +110,10 @@ namespace Chamran.Deed.People
                 output.UserName = _lookupUser?.Name?.ToString();
             }
 
-            if (output.GroupMember.OrganizationGroupId != null)
+            if (output.GroupMember.OrganizationId != null)
             {
-                var _lookupOrganizationGroup = await _lookup_organizationGroupRepository.FirstOrDefaultAsync((int)output.GroupMember.OrganizationGroupId);
-                output.OrganizationGroupGroupName = _lookupOrganizationGroup?.GroupName?.ToString();
+                var _lookupOrganizationGroup = await _lookup_organizationGroupRepository.FirstOrDefaultAsync((int)output.GroupMember.OrganizationId);
+                output.OrganizationGroupGroupName = _lookupOrganizationGroup?.OrganizationName?.ToString();
             }
 
             return output;
@@ -132,10 +132,10 @@ namespace Chamran.Deed.People
                 output.UserName = _lookupUser?.Name?.ToString();
             }
 
-            if (output.GroupMember.OrganizationGroupId != null)
+            if (output.GroupMember.OrganizationId != null)
             {
-                var _lookupOrganizationGroup = await _lookup_organizationGroupRepository.FirstOrDefaultAsync((int)output.GroupMember.OrganizationGroupId);
-                output.OrganizationGroupGroupName = _lookupOrganizationGroup?.GroupName?.ToString();
+                var _lookupOrganizationGroup = await _lookup_organizationGroupRepository.FirstOrDefaultAsync((int)output.GroupMember.OrganizationId);
+                output.OrganizationGroupGroupName = _lookupOrganizationGroup?.OrganizationName?.ToString();
             }
 
             return output;
@@ -181,17 +181,17 @@ namespace Chamran.Deed.People
 
             var filteredGroupMembers = _groupMemberRepository.GetAll()
                         .Include(e => e.UserFk)
-                        .Include(e => e.OrganizationGroupFk)
+                        .Include(e => e.OrganizationFk)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.MemberPosition.Contains(input.Filter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.MemberPositionFilter), e => e.MemberPosition.Contains(input.MemberPositionFilter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter), e => e.UserFk != null && e.UserFk.Name == input.UserNameFilter)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationGroupGroupNameFilter), e => e.OrganizationGroupFk != null && e.OrganizationGroupFk.GroupName == input.OrganizationGroupGroupNameFilter);
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationGroupGroupNameFilter), e => e.OrganizationFk != null && e.OrganizationFk.OrganizationName== input.OrganizationGroupGroupNameFilter);
 
             var query = (from o in filteredGroupMembers
                          join o1 in _lookup_userRepository.GetAll() on o.UserId equals o1.Id into j1
                          from s1 in j1.DefaultIfEmpty()
 
-                         join o2 in _lookup_organizationGroupRepository.GetAll() on o.OrganizationGroupId equals o2.Id into j2
+                         join o2 in _lookup_organizationGroupRepository.GetAll() on o.OrganizationId equals o2.Id into j2
                          from s2 in j2.DefaultIfEmpty()
 
                          select new GetGroupMemberForViewDto()
@@ -202,7 +202,7 @@ namespace Chamran.Deed.People
                                  Id = o.Id
                              },
                              UserName = s1 == null || s1.Name == null ? "" : s1.Name.ToString(),
-                             OrganizationGroupGroupName = s2 == null || s2.GroupName == null ? "" : s2.GroupName.ToString()
+                             OrganizationGroupGroupName = s2 == null || s2.OrganizationName == null ? "" : s2.OrganizationName.ToString()
                          });
 
             var groupMemberListDtos = await query.ToListAsync();
@@ -245,7 +245,7 @@ namespace Chamran.Deed.People
         {
             var query = _lookup_organizationGroupRepository.GetAll().WhereIf(
                    !string.IsNullOrWhiteSpace(input.Filter),
-                  e => e.GroupName != null && e.GroupName.Contains(input.Filter)
+                  e => e.OrganizationName != null && e.OrganizationName.Contains(input.Filter)
                );
 
             var totalCount = await query.CountAsync();
@@ -260,7 +260,7 @@ namespace Chamran.Deed.People
                 lookupTableDtoList.Add(new GroupMemberOrganizationGroupLookupTableDto
                 {
                     Id = organizationGroup.Id,
-                    DisplayName = organizationGroup.GroupName?.ToString()
+                    DisplayName = organizationGroup.OrganizationName?.ToString()
                 });
             }
 

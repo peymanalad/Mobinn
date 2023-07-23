@@ -12,7 +12,7 @@ namespace Chamran.Deed.People
 {
     [Table("GroupMembers")]
     [Audited]
-    [Index(nameof(UserId), nameof(OrganizationGroupId), IsDescending = new[] { false, false }, Name = "IX_GroupMember_UserId_OrganizationGroupId",IsUnique = true)]
+    
     public class GroupMember : Entity
     {
 
@@ -28,9 +28,9 @@ namespace Chamran.Deed.People
         public User UserFk { get; set; }
 
         [Required]
-        public virtual int? OrganizationGroupId { get; set; }
+        public virtual int? OrganizationId { get; set; }
 
-        [ForeignKey("OrganizationGroupId")]
-        public OrganizationGroup OrganizationGroupFk { get; set; }
+        [ForeignKey("OrganizationId")]
+        public Organization OrganizationFk { get; set; }
     }
 }

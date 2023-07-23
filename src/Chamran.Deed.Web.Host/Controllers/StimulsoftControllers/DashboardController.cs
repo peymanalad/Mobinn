@@ -32,7 +32,7 @@ namespace Chamran.Deed.Web.Controllers.StimulsoftControllers
         private readonly SignInManager _signInManager;
         private readonly AbpLoginResultTypeHelper _abpLoginResultTypeHelper;
         private readonly IRepository<Report> _reportRepository;
-        private readonly IRepository<OrganizationGroup> _organizationGroupRepository;
+        private readonly IRepository<Organization> _organizationRepository;
         private readonly IRepository<GroupMember> _groupMemberRepository;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly IAppConfigurationAccessor _appConfigurationAccessor;
@@ -46,7 +46,7 @@ namespace Chamran.Deed.Web.Controllers.StimulsoftControllers
             SignInManager signInManager,
             AbpLoginResultTypeHelper abpLoginResultTypeHelper,
             IRepository<Report> reportRepository,
-            IRepository<OrganizationGroup> organizationGroupRepository,
+            IRepository<Organization> organizationRepository,
             IRepository<GroupMember> groupMemberRepository,
             IUnitOfWorkManager unitOfWorkManager,
             IAppConfigurationAccessor appConfigurationAccessor)
@@ -58,7 +58,7 @@ namespace Chamran.Deed.Web.Controllers.StimulsoftControllers
             _signInManager = signInManager;
             _abpLoginResultTypeHelper = abpLoginResultTypeHelper;
             _reportRepository = reportRepository;
-            _organizationGroupRepository = organizationGroupRepository;
+            _organizationRepository = organizationRepository;
             _groupMemberRepository = groupMemberRepository;
             _unitOfWorkManager = unitOfWorkManager;
             _appConfigurationAccessor = appConfigurationAccessor;
@@ -96,7 +96,7 @@ namespace Chamran.Deed.Web.Controllers.StimulsoftControllers
             //}
 
             var loginInformation = await _sessionCache.GetCurrentLoginInformationsAsync();
-            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationGroupRepository, _groupMemberRepository, loginInformation.User.Id);
+            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationRepository, _groupMemberRepository, loginInformation.User.Id);
 
             DashboardHelper.MapDataToReportNoPassword(dashboard, _appConfigurationAccessor.Configuration);
 
@@ -197,7 +197,7 @@ namespace Chamran.Deed.Web.Controllers.StimulsoftControllers
         {
             //var appPath = StiNetCoreHelper.MapPath(this, string.Empty);
             var loginInformation = await _sessionCache.GetCurrentLoginInformationsAsync();
-            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationGroupRepository, _groupMemberRepository, loginInformation.User.Id);
+            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationRepository, _groupMemberRepository, loginInformation.User.Id);
 
             DashboardHelper.MapDataToReportWithPassword(dashboard, _appConfigurationAccessor.Configuration);
 
@@ -208,7 +208,7 @@ namespace Chamran.Deed.Web.Controllers.StimulsoftControllers
         {
             //var appPath = StiNetCoreHelper.MapPath(this, string.Empty);
             var loginInformation = await _sessionCache.GetCurrentLoginInformationsAsync();
-            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationGroupRepository, _groupMemberRepository, loginInformation.User.Id);
+            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationRepository, _groupMemberRepository, loginInformation.User.Id);
 
             DashboardHelper.MapDataToReportWithPassword(dashboard, _appConfigurationAccessor.Configuration);
 
@@ -262,7 +262,7 @@ namespace Chamran.Deed.Web.Controllers.StimulsoftControllers
 
             using (var unitOfWork = _unitOfWorkManager.Begin())
             {
-                await DashboardHelper.SaveCurrentOrganizationDashboard(report, _reportRepository, _organizationGroupRepository, _groupMemberRepository, loginInformation.User.Id);
+                await DashboardHelper.SaveCurrentOrganizationDashboard(report, _reportRepository, _organizationRepository, _groupMemberRepository, loginInformation.User.Id);
 
                 await unitOfWork.CompleteAsync();
             }
