@@ -21,5 +21,9 @@ namespace Chamran.Deed.Friendships.Cache
         public int UnreadMessageCount { get; set; }
 
         public FriendshipState State { get; set; }
+
+        public string LatestMessage { get; set; }
+
+        public DateTime LastMessageDateTime { get; set; }
     }
 }

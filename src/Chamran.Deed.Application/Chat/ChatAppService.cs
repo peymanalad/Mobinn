@@ -38,7 +38,7 @@ namespace Chamran.Deed.Chat
         }
 
         [DisableAuditing]
-        public GetUserChatFriendsWithSettingsOutput GetUserChatFriendsWithSettings()
+        public async Task<GetUserChatFriendsWithSettingsOutput> GetUserChatFriendsWithSettings()
         {
             var userIdentifier = AbpSession.ToUserIdentifier();
             if (userIdentifier == null)
@@ -54,6 +54,18 @@ namespace Chamran.Deed.Chat
                 friend.IsOnline = _onlineClientManager.IsOnline(
                     new UserIdentifier(friend.FriendTenantId, friend.FriendUserId)
                 );
+                var query=await _chatMessageRepository.GetAll()
+                    .Where(m => m.UserId == AbpSession.UserId && m.TargetTenantId == AbpSession.TenantId && m.TargetUserId == friend.FriendUserId)
+                    .OrderByDescending(m => m.CreationTime)
+                    .Take(1)
+                    .ToListAsync();
+                if (query.Any())
+                {
+                    var entity = query.First();
+                    friend.LatestMessage = entity.Message;
+                    friend.LastMessageDateTime = entity.CreationTime;
+
+                }
             }
 
             return new GetUserChatFriendsWithSettingsOutput

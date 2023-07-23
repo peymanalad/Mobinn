@@ -225,9 +225,34 @@ namespace Chamran.Deed.Info
         {
             var post = await _postRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, post);
-            post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken);
-            post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2);
-            post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3);
+            try
+            {
+                post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken);
+
+            }
+            catch (UserFriendlyException ex)
+            {
+                //ignore
+            }
+            try
+            {
+                post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2);
+
+
+            }
+            catch (UserFriendlyException ex)
+            {
+                //ignore
+            }
+            try
+            {
+                post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3);
+
+            }
+            catch (UserFriendlyException ex)
+            {
+                //ignore
+            }
 
         }
 
@@ -282,7 +307,7 @@ namespace Chamran.Deed.Info
         [AbpAuthorize(AppPermissions.Pages_Posts)]
         public async Task<PagedResultDto<PostGroupMemberLookupTableDto>> GetAllGroupMemberForLookupTable(GetAllForLookupTableInput input)
         {
-            var query = _lookup_groupMemberRepository.GetAll().WhereIf(
+            var query = _lookup_groupMemberRepository.GetAll().Include(x => x.UserFk).WhereIf(
                    !string.IsNullOrWhiteSpace(input.Filter),
                   e => e.MemberPosition != null && e.MemberPosition.Contains(input.Filter)
                );
@@ -299,7 +324,7 @@ namespace Chamran.Deed.Info
                 lookupTableDtoList.Add(new PostGroupMemberLookupTableDto
                 {
                     Id = groupMember.Id,
-                    DisplayName = groupMember.MemberPosition
+                    DisplayName = groupMember.UserFk.Name + " " + groupMember.UserFk.Surname
                 });
             }
 
@@ -394,17 +419,17 @@ namespace Chamran.Deed.Info
             {
                 var cat = new List<GetPostCategoriesForViewDto>();
                 var queryPostCat = from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
-                    join g in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationId equals g.Id into joiner1
-                    from g in joiner1.DefaultIfEmpty()
-                    join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
-                    from gm in joiner2.DefaultIfEmpty()
-                    where gm.UserId == AbpSession.UserId
-                    select new
-                    {
-                        pc.Id,
-                        pc.PostGroupDescription,
-                        pc.GroupFile
-                    };
+                                   join g in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationId equals g.Id into joiner1
+                                   from g in joiner1.DefaultIfEmpty()
+                                   join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
+                                   from gm in joiner2.DefaultIfEmpty()
+                                   where gm.UserId == AbpSession.UserId
+                                   select new
+                                   {
+                                       pc.Id,
+                                       pc.PostGroupDescription,
+                                       pc.GroupFile
+                                   };
 
                 foreach (var postCategory in queryPostCat)
                 {
