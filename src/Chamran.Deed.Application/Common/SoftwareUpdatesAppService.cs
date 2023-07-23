@@ -202,7 +202,7 @@ namespace Chamran.Deed.Common
         [AllowAnonymous]
         public async Task<GetSoftwareUpdateForViewDto> GetLatestUpdateInformation()
         {
-            var softwareUpdate = await _softwareUpdateRepository.GetAll().LastOrDefaultAsync();
+            var softwareUpdate = await _softwareUpdateRepository.GetAll().OrderByDescending(x => x.Id).FirstOrDefaultAsync()!;
 
             var output = new GetSoftwareUpdateForViewDto { SoftwareUpdate = ObjectMapper.Map<SoftwareUpdateDto>(softwareUpdate) };
 

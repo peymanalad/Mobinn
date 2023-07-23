@@ -14,9 +14,9 @@ namespace Chamran.Deed.Web.Controllers
     {
         private readonly ITempFileCacheManager _tempFileCacheManager;
 
-        private const long MaxPostFileLength = 5242880; //5MB
-        private const string MaxPostFileLengthUserFriendlyValue = "5MB"; //5MB
-        private readonly string[] PostFileAllowedFileTypes = { "jpeg", "jpg", "png","mp4" };
+        private const long MaxPostFileLength = 157286400; //150MB
+        private const string MaxPostFileLengthUserFriendlyValue = "150MB"; //150MB
+        private readonly string[] PostFileAllowedFileTypes = { "jpeg", "jpg", "png","mp4","mkv","3gp" };
 
         public PostsController(ITempFileCacheManager tempFileCacheManager)
         {
