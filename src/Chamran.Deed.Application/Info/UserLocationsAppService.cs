@@ -221,5 +221,22 @@ namespace Chamran.Deed.Info
             );
         }
 
+        public async Task CreateLocationsByDate(List<CreateLocationsDto> input)
+        {
+            if (AbpSession.UserId == null) throw new UserFriendlyException("User must be logged in!");
+            foreach (var row in input)
+            {
+                var loc = new UserLocation()
+                {
+                    UserId = (long)AbpSession.UserId,
+                    CreationTime = row.CreationTime,
+                    CreatorUserId = (long)AbpSession.UserId,
+                    UserLat = row.UserLat,
+                    UserLong = row.UserLong
+                };
+                await _userLocationRepository.InsertAsync(loc);
+            }
+            
+        }
     }
 }

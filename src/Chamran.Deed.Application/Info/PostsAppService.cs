@@ -392,18 +392,31 @@ namespace Chamran.Deed.Info
         {
             try
             {
-                var res = new List<GetPostCategoriesForViewDto>();
-                foreach (var postCategory in _lookup_postGroupRepository.GetAll())
+                var cat = new List<GetPostCategoriesForViewDto>();
+                var queryPostCat = from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
+                    join g in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationGroupId equals g.Id into joiner1
+                    from g in joiner1.DefaultIfEmpty()
+                    join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationGroupId into joiner2
+                    from gm in joiner2.DefaultIfEmpty()
+                    where gm.UserId == AbpSession.UserId
+                    select new
+                    {
+                        pc.Id,
+                        pc.PostGroupDescription,
+                        pc.GroupFile
+                    };
+
+                foreach (var postCategory in queryPostCat)
                 {
-                    res.Add(new GetPostCategoriesForViewDto()
+                    cat.Add(new GetPostCategoriesForViewDto()
                     {
                         //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
-                        Base64Image = postCategory.FileId,
+                        Base64Image = postCategory.GroupFile,
                         Id = postCategory.Id,
                         PostGroupDescription = postCategory.PostGroupDescription
                     });
                 }
-                return Task.FromResult(new PagedResultDto<GetPostCategoriesForViewDto>(res.Count, res));
+                return Task.FromResult(new PagedResultDto<GetPostCategoriesForViewDto>(cat.Count, cat));
             }
             catch (Exception ex)
             {
@@ -459,23 +472,51 @@ namespace Chamran.Deed.Info
         {
             try
             {
-                //_originalCulture = Thread.CurrentThread.CurrentCulture;
+                var posts = new List<GetPostsForViewDto>();
+                var filteredPosts = from p in _postRepository.GetAll().Where(x => !x.IsDeleted)
+                        .Include(e => e.GroupMemberFk)
+                        .Include(e => e.PostGroupFk)
+                        .Include(e => e.GroupMemberFk.UserFk)
+                        .Include(e => e.AppBinaryObjectFk)
+                        .Include(e => e.AppBinaryObjectFk2)
+                        .Include(e => e.AppBinaryObjectFk3)
+                                    join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
+                                        pg.Id into joiner1
+                                    from pg in joiner1.DefaultIfEmpty()
+                                    join og in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationGroupId
+                                        equals og.Id into joiner2
+                                    from og in joiner2.DefaultIfEmpty()
+                                    join gm in _lookup_groupMemberRepository.GetAll() on og.Id equals gm.OrganizationGroupId into
+                                        joiner3
+                                    from gm in joiner3.DefaultIfEmpty()
+                                    where gm.UserId == AbpSession.UserId
+                                    select new
+                                    {
+                                        p.Id,
+                                        p.GroupMemberId,
+                                        p.IsSpecial,
+                                        p.PostCaption,
+                                        p.CreationTime,
+                                        p.PostFile,
+                                        p.PostFile2,
+                                        p.PostFile3,
+                                        p.PostTitle,
+                                        p.PostTime,
+                                        p.PostRefLink,
+                                        p.PostGroupId,
+                                        p.GroupMemberFk,
+                                        p.PostGroupFk,
+                                        p.AppBinaryObjectFk,
+                                        p.AppBinaryObjectFk2,
+                                        p.AppBinaryObjectFk3,
+                                    };
 
-                //Thread.CurrentThread.CurrentCulture = _targetCulture;
-                //Thread.CurrentThread.CurrentUICulture = _targetCulture;
-                var res = new List<GetPostsForViewDto>();
-                var filteredPosts = _postRepository.GetAll()
-                    .Include(e => e.GroupMemberFk)
-                    .Include(e => e.PostGroupFk)
-                    .Include(e => e.GroupMemberFk.UserFk)
-                    .Include(e => e.AppBinaryObjectFk)
-                    .Include(e => e.AppBinaryObjectFk2)
-                    .Include(e => e.AppBinaryObjectFk3)
-                    //.WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
-                    .WhereIf(input.PostGroupId > 0, e => e.PostGroupId == input.PostGroupId);
+                //.WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
+                //.WhereIf(input.PostGroupId > 0, e => e.PostGroupId == input.PostGroupId);
                 var pagedAndFilteredPosts = filteredPosts
-                    .OrderBy(input.Sorting ?? "id desc")
-                    .PageBy(input);
+    .OrderBy(input.Sorting ?? "id desc")
+    .PageBy(input);
+
                 foreach (var post in pagedAndFilteredPosts)
                 {
                     var datam = new GetPostsForViewDto()
@@ -522,12 +563,12 @@ namespace Chamran.Deed.Info
                         datam.Attachment3 = post.AppBinaryObjectFk3.Description;
                     }
 
-                    res.Add(datam);
+                    posts.Add(datam);
 
 
                 }
 
-                return Task.FromResult(new PagedResultDto<GetPostsForViewDto>(res.Count, res));
+                return Task.FromResult(new PagedResultDto<GetPostsForViewDto>(posts.Count, posts));
             }
             catch (Exception ex)
             {
@@ -548,14 +589,17 @@ namespace Chamran.Deed.Info
 
                 var cat = new List<GetPostCategoriesForViewDto>();
                 var queryPostCat = from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
-                    join g in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationGroupId equals  g.Id into joiner1
-                    from g in joiner1.DefaultIfEmpty()
-                    select new
-                    {
-                        pc.Id,
-                        pc.PostGroupDescription,
-                        pc.GroupFile
-                    };
+                                   join g in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationGroupId equals g.Id into joiner1
+                                   from g in joiner1.DefaultIfEmpty()
+                                   join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationGroupId into joiner2
+                                   from gm in joiner2.DefaultIfEmpty()
+                                   where gm.UserId == AbpSession.UserId
+                                   select new
+                                   {
+                                       pc.Id,
+                                       pc.PostGroupDescription,
+                                       pc.GroupFile
+                                   };
                 foreach (var postCategory in queryPostCat)
                 {
                     cat.Add(new GetPostCategoriesForViewDto()
@@ -569,18 +613,52 @@ namespace Chamran.Deed.Info
 
 
                 var posts = new List<GetPostsForViewDto>();
-                var filteredPosts = _postRepository.GetAll()
-                    .Include(e => e.GroupMemberFk)
-                    .Include(e => e.PostGroupFk)
-                    .Include(e => e.GroupMemberFk.UserFk)
-                    .Include(e => e.AppBinaryObjectFk)
-                    .Include(e => e.AppBinaryObjectFk2)
-                    .Include(e => e.AppBinaryObjectFk3);
-                            //.WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
-                            //.WhereIf(input.PostGroupId > 0, e => e.PostGroupId == input.PostGroupId);
-                        var pagedAndFilteredPosts = filteredPosts
-                            .OrderBy(input.Sorting ?? "id desc")
-                            .PageBy(input);
+                var filteredPosts = from p in _postRepository.GetAll().Where(x => !x.IsDeleted)
+                        .Include(e => e.GroupMemberFk)
+                        .Include(e => e.PostGroupFk)
+                        .Include(e => e.GroupMemberFk.UserFk)
+                        .Include(e => e.AppBinaryObjectFk)
+                        .Include(e => e.AppBinaryObjectFk2)
+                        .Include(e => e.AppBinaryObjectFk3)
+                                    join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
+                                        pg.Id into joiner1
+                                    from pg in joiner1.DefaultIfEmpty()
+                                    join og in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationGroupId
+                                        equals og.Id into joiner2
+                                    from og in joiner2.DefaultIfEmpty()
+                                    join gm in _lookup_groupMemberRepository.GetAll() on og.Id equals gm.OrganizationGroupId into
+                                        joiner3
+                                    from gm in joiner3.DefaultIfEmpty()
+                                    where gm.UserId == AbpSession.UserId
+                                    select new
+                                    {
+                                        p.Id,
+                                        p.GroupMemberId,
+                                        p.IsSpecial,
+                                        p.PostCaption,
+                                        p.CreationTime,
+                                        p.PostFile,
+                                        p.PostFile2,
+                                        p.PostFile3,
+                                        p.PostTitle,
+                                        p.PostTime,
+                                        p.PostRefLink,
+                                        p.PostGroupId,
+                                        p.GroupMemberFk,
+                                        p.PostGroupFk,
+                                        p.AppBinaryObjectFk,
+                                        p.AppBinaryObjectFk2,
+                                        p.AppBinaryObjectFk3,
+                                    };
+
+                //.WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
+                //.WhereIf(input.PostGroupId > 0, e => e.PostGroupId == input.PostGroupId);
+                var pagedAndFilteredPosts = filteredPosts
+    .OrderBy(input.Sorting ?? "id desc")
+    .PageBy(input);
+
+
+
                 foreach (var post in pagedAndFilteredPosts)
                 {
                     var datam = new GetPostsForViewDto()

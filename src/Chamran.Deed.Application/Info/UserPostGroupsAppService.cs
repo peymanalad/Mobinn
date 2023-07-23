@@ -31,15 +31,15 @@ namespace Chamran.Deed.Info
         private readonly IRepository<User, long> _lookup_userRepository;
         private readonly IRepository<PostGroup, int> _lookup_postGroupRepository;
         private readonly IRepository<GroupMember, int> _groupMembersRepository;
-        private readonly IRepository<OrganizationGroup, int> _organizationGroupsRepository;
+        private readonly IRepository<OrganizationGroup> _organizationGroupsRepository;
 
 
-        public UserPostGroupsAppService(IRepository<UserPostGroup> userPostGroupRepository, IUserPostGroupsExcelExporter userPostGroupsExcelExporter, IRepository<User, long> lookup_userRepository, IRepository<PostGroup, int> lookup_postGroupRepository, IRepository<GroupMember, int> groupMembersRepository, IRepository<OrganizationGroup, int> organizationGroupsRepository)
+        public UserPostGroupsAppService(IRepository<UserPostGroup> userPostGroupRepository, IUserPostGroupsExcelExporter userPostGroupsExcelExporter, IRepository<User, long> lookupUserRepository, IRepository<PostGroup, int> lookupPostGroupRepository, IRepository<GroupMember, int> groupMembersRepository, IRepository<OrganizationGroup> organizationGroupsRepository)
         {
             _userPostGroupRepository = userPostGroupRepository;
             _userPostGroupsExcelExporter = userPostGroupsExcelExporter;
-            _lookup_userRepository = lookup_userRepository;
-            _lookup_postGroupRepository = lookup_postGroupRepository;
+            _lookup_userRepository = lookupUserRepository;
+            _lookup_postGroupRepository = lookupPostGroupRepository;
             _groupMembersRepository = groupMembersRepository;
             _organizationGroupsRepository = organizationGroupsRepository;
         }
@@ -273,25 +273,23 @@ namespace Chamran.Deed.Info
 
         public async Task<PagedResultDto<UserPostGroupSelectDto>> GetUserPostGroupSelection(GetUserPostGroupSelectInput input)
         {
-            var userId = AbpSession.UserId;
 
-            var organizationGroupIdQuery = from gm in _groupMembersRepository.GetAll()
-                                           join og in _organizationGroupsRepository.GetAll() on gm.OrganizationGroupId equals og.Id
-                                           where gm.UserId == userId
-                                           select og.OrganizationId;
+            var query = from pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
+                join og in _organizationGroupsRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationGroupId
+                    equals og.Id into joiner1
+                from og in joiner1.DefaultIfEmpty()
+                join gm in _groupMembersRepository.GetAll() on og.Id equals gm.OrganizationGroupId into joiner2
+                from gm in joiner2.DefaultIfEmpty()
 
-            var organizationId = await organizationGroupIdQuery.FirstOrDefaultAsync();
+                where gm.UserId == AbpSession.UserId
+                select new
+                {
+                    pg.Id,
+                    pg.PostGroupDescription
+                };
 
-            if (organizationId == null)
-            {
-                throw new UserFriendlyException("User is not member of any organizations");
-            }
 
-            var query = _lookup_postGroupRepository.GetAll()
-                .Include(e => e.OrganizationGroupFk)
-                .Where(pg => pg.OrganizationGroupFk.OrganizationId == organizationId);
-
-            var pagedAndFilteredUserPostGroups = query
+                        var pagedAndFilteredUserPostGroups = query
                 .OrderBy(input.Sorting ?? "id asc")
                 .PageBy(input);
 
@@ -323,6 +321,7 @@ namespace Chamran.Deed.Info
             await _userPostGroupRepository.DeleteAsync(x => x.UserId == AbpSession.UserId);
             foreach (var row in input)
             {
+
                 await _userPostGroupRepository.InsertAsync(new UserPostGroup()
                 {
                     UserId = (long)AbpSession.UserId,
