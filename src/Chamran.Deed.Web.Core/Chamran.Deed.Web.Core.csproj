@@ -43,9 +43,9 @@
 	
 	<ItemGroup>
 		<PackageReference Include="System.Diagnostics.PerformanceCounter" Version="7.0.0" />
-		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="7.0.1" />
+		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="7.0.3" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
-		<PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="7.0.5" />
+		<PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="7.0.9" />
 	</ItemGroup>
 	
 	<ItemGroup>

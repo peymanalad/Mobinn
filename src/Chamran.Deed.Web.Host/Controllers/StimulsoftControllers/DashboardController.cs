@@ -155,11 +155,7 @@ namespace Chamran.Deed.Web.Controllers.StimulsoftControllers
                 }
             };
 
-            //// Loading and adding a font to resources
-            //var fontPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot","Fonts", "IRANSans.ttf");
-            //var fontContent = System.IO.File.ReadAllBytes(fontPath);
-            //var resource = new StiResource("IRANSans", "IRANSans", false, StiResourceType.FontTtf, fontContent, false);
-            //StiFontCollection.AddResourceFont(resource.Name, resource.Content, "ttf", resource.Alias);
+        
 
             // Loading and adding a font to resources
             var fontPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Fonts", "IRANSans.ttf");
