@@ -9,7 +9,11 @@ namespace Chamran.Deed.Chat
     {
         Task<GetUserChatFriendsWithSettingsOutput> GetUserChatFriendsWithSettings();
 
+        Task<GetPagedUserChatFriendsWithSettingsOutput> GetPagedUserChatFriendsWithSettings(GetUserChatFriendsWithSettingsInput input);
+
         Task<ListResultDto<ChatMessageDto>> GetUserChatMessages(GetUserChatMessagesInput input);
+
+        Task<PagedResultDto<ChatMessageDto>> GetPagedUserChatMessages(GetPagedUserChatMessagesInput input);
 
         Task MarkAllUnreadMessagesOfUserAsRead(MarkAllUnreadMessagesOfUserAsReadInput input);
     }

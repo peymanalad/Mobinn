@@ -52,6 +52,13 @@ namespace Chamran.Deed.Chat
             _unitOfWorkManager = unitOfWorkManager;
         }
 
+        public async Task DeleteMessageAsync(UserIdentifier sender, int messageId)
+        {
+
+            var clients = _onlineClientManager.GetAllByUserId(sender);
+            await _chatCommunicator.DeleteMessageToClients(clients,sender,messageId);
+        }
+
         public async Task SendMessageAsync(UserIdentifier sender, UserIdentifier receiver, string message, string senderTenancyName, string senderUserName, Guid? senderProfilePictureId)
         {
             CheckReceiverExists(receiver);

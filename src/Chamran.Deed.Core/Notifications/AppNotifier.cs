@@ -20,12 +20,12 @@ namespace Chamran.Deed.Notifications
 
         public async Task WelcomeToTheApplicationAsync(User user)
         {
-            await _notificationPublisher.PublishAsync(
-                AppNotificationNames.WelcomeToTheApplication,
-                new MessageNotificationData(L("WelcomeToTheApplicationNotificationMessage")),
-                severity: NotificationSeverity.Success,
-                userIds: new[] {user.ToUserIdentifier()}
-            );
+            //await _notificationPublisher.PublishAsync(
+            //    AppNotificationNames.WelcomeToTheApplication,
+            //    new MessageNotificationData(L("WelcomeToTheApplicationNotificationMessage")),
+            //    severity: NotificationSeverity.Success,
+            //    userIds: new[] {user.ToUserIdentifier()}
+            //);
         }
 
         public async Task NewUserRegisteredAsync(User user)

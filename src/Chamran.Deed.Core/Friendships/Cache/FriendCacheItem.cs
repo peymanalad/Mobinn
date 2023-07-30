@@ -25,5 +25,9 @@ namespace Chamran.Deed.Friendships.Cache
         public string LatestMessage { get; set; }
 
         public DateTime LastMessageDateTime { get; set; }
+
+        public string FriendName { get; set; }
+
+        public string FriendSurName { get; set; }
     }
 }
