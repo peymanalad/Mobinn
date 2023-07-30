@@ -539,6 +539,7 @@ namespace Chamran.Deed.Info
                                         p.AppBinaryObjectFk,
                                         p.AppBinaryObjectFk2,
                                         p.AppBinaryObjectFk3,
+                                        
                                     };
 
                 //.WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
@@ -562,6 +563,7 @@ namespace Chamran.Deed.Info
                         PostTitle = post.PostTitle,
                         PostGroupId = post.PostGroupId,
                         PostRefLink = post.PostRefLink,
+                        CreationTime=post.CreationTime,
                     };
                     if (post.GroupMemberFk != null)
                     {
@@ -705,6 +707,7 @@ namespace Chamran.Deed.Info
                         PostTitle = post.PostTitle,
                         PostGroupId = post.PostGroupId,
                         PostRefLink = post.PostRefLink,
+                        CreationTime = post.CreationTime
                     };
                     if (post.GroupMemberFk != null)
                     {
