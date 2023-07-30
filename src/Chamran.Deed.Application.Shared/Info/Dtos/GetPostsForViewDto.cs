@@ -22,6 +22,7 @@ namespace Chamran.Deed.Info.Dtos
         public Guid? GroupFile { get; set; }
         public string GroupDescription { get; set; }
         public string PostRefLink { get; set; }
+        public DateTime CreationTime { get; set; }
 
     }
 }
