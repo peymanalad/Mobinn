@@ -101,7 +101,9 @@ namespace Chamran.Deed.Info
                                     s1 == null || s1.MemberPosition == null ? "" : s1.MemberPosition,
                                 PostGroupPostGroupDescription = s2 == null || s2.PostGroupDescription == null
                                     ? ""
-                                    : s2.PostGroupDescription.ToString()
+                                    : s2.PostGroupDescription.ToString(),
+                                o.CreationTime,
+                                o.LastModificationTime
 
                             };
 
@@ -122,6 +124,8 @@ namespace Chamran.Deed.Info
                             PostTitle = o.PostTitle,
                             Id = o.Id,
                             PostRefLink = o.PostRefLink,
+                            CreationTime = o.CreationTime,
+                            LastModificationTime = o.LastModificationTime
                         },
                         GroupMemberMemberPosition = o.GroupMemberMemberPosition,
                         PostGroupPostGroupDescription = o.PostGroupPostGroupDescription,
