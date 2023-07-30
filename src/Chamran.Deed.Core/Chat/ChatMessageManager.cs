@@ -55,6 +55,7 @@ namespace Chamran.Deed.Chat
         public async Task DeleteMessageAsync(UserIdentifier sender, int messageId)
         {
 
+            await _chatMessageRepository.DeleteAsync(x => x.Id == messageId);
             var clients = _onlineClientManager.GetAllByUserId(sender);
             await _chatCommunicator.DeleteMessageToClients(clients,sender,messageId);
         }

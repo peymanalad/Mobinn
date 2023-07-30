@@ -12,8 +12,6 @@ namespace Chamran.Deed.Info.Dtos
 
         public string PostCaption { get; set; }
 
-        public DateTime PostTime { get; set; }
-
         public bool IsSpecial { get; set; }
 
         public string PostTitle { get; set; }
@@ -23,5 +21,8 @@ namespace Chamran.Deed.Info.Dtos
         public int? PostGroupId { get; set; }
 
         public string PostRefLink { get; set; }
+
+        public DateTime CreationTime { get; set; }
+        public DateTime? LastModificationTime { get; set; }
     }
 }

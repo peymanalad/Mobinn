@@ -9,9 +9,6 @@ namespace Chamran.Deed.Info.Dtos
 
         public string PostCaptionFilter { get; set; }
 
-        public DateTime? MaxPostTimeFilter { get; set; }
-        public DateTime? MinPostTimeFilter { get; set; }
-
         public int? IsSpecialFilter { get; set; }
 
         public string PostTitleFilter { get; set; }

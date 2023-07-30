@@ -23,8 +23,6 @@ namespace Chamran.Deed.Info
 
         public virtual string PostCaption { get; set; }
 
-        public virtual DateTime PostTime { get; set; }
-
         public virtual bool IsSpecial { get; set; }
 
         public virtual string PostTitle { get; set; }

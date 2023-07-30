@@ -7,7 +7,6 @@ namespace Chamran.Deed.Info.Dtos
         public int Id { get; set; }
         public Guid? PostFile { get; set; }
         public string PostCaption { get; set; }
-        public DateTime PostTime { get; set; }
         public int GroupMemberId { get; set; }
         public string MemberPosition { get; set; }
         public string MemberUserName { get; set; }
