@@ -65,8 +65,6 @@ namespace Chamran.Deed.Info
                         e => false || e.PostCaption.Contains(input.Filter) || e.PostTitle.Contains(input.Filter))
                     .WhereIf(!string.IsNullOrWhiteSpace(input.PostCaptionFilter),
                         e => e.PostCaption.Contains(input.PostCaptionFilter))
-                    .WhereIf(input.MinPostTimeFilter != null, e => e.PostTime >= input.MinPostTimeFilter)
-                    .WhereIf(input.MaxPostTimeFilter != null, e => e.PostTime <= input.MaxPostTimeFilter)
                     .WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1,
                         e => (input.IsSpecialFilter == 1 && e.IsSpecial) ||
                              (input.IsSpecialFilter == 0 && !e.IsSpecial))
@@ -94,7 +92,6 @@ namespace Chamran.Deed.Info
                             {
                                 o.PostFile,
                                 o.PostCaption,
-                                o.PostTime,
                                 o.IsSpecial,
                                 o.PostTitle,
                                 o.PostRefLink,
@@ -121,7 +118,6 @@ namespace Chamran.Deed.Info
                         {
                             PostFile = o.PostFile,
                             PostCaption = o.PostCaption,
-                            PostTime = o.PostTime,
                             IsSpecial = o.IsSpecial,
                             PostTitle = o.PostTitle,
                             Id = o.Id,
@@ -211,8 +207,13 @@ namespace Chamran.Deed.Info
         [AbpAuthorize(AppPermissions.Pages_Posts_Create)]
         protected virtual async Task Create(CreateOrEditPostDto input)
         {
+            var grpMemberId = await _lookup_groupMemberRepository.GetAll().FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId);
+            if (grpMemberId == null)
+            {
+                throw new UserFriendlyException("کاربر حاضر به هیچ سازمانی تعلق ندارد");
+            }
             var post = ObjectMapper.Map<Post>(input);
-
+            post.GroupMemberId = grpMemberId.Id;
             await _postRepository.InsertAsync(post);
             post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken);
             post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2);
@@ -273,8 +274,6 @@ namespace Chamran.Deed.Info
                         .Include(e => e.PostGroupFk)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.PostCaption.Contains(input.Filter) || e.PostTitle.Contains(input.Filter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.PostCaptionFilter), e => e.PostCaption.Contains(input.PostCaptionFilter))
-                        .WhereIf(input.MinPostTimeFilter != null, e => e.PostTime >= input.MinPostTimeFilter)
-                        .WhereIf(input.MaxPostTimeFilter != null, e => e.PostTime <= input.MaxPostTimeFilter)
                         .WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.PostTitleFilter), e => e.PostTitle.Contains(input.PostTitleFilter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter), e => e.GroupMemberFk != null && e.GroupMemberFk.MemberPosition == input.GroupMemberMemberPositionFilter)
@@ -293,7 +292,6 @@ namespace Chamran.Deed.Info
                              {
                                  PostFile = o.PostFile,
                                  PostCaption = o.PostCaption,
-                                 PostTime = o.PostTime,
                                  IsSpecial = o.IsSpecial,
                                  PostTitle = o.PostTitle,
                                  Id = o.Id
@@ -431,15 +429,16 @@ namespace Chamran.Deed.Info
                                    {
                                        pc.Id,
                                        pc.PostGroupDescription,
-                                       pc.GroupFile
+                                       PostGroupHeaderPicFile=pc.GroupFile,
+                                       PostGroupLatestPicFile = _postRepository.GetAll().Where(p => p.PostGroupId == pc.Id).OrderByDescending(p => p.CreationTime).FirstOrDefault().PostFile
                                    };
 
                 foreach (var postCategory in queryPostCat)
                 {
                     cat.Add(new GetPostCategoriesForViewDto()
                     {
-                        //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
-                        Base64Image = postCategory.GroupFile,
+                        PostGroupLatestPicFile = postCategory.PostGroupLatestPicFile,
+                        PostGroupHeaderPicFile=postCategory.PostGroupHeaderPicFile,
                         Id = postCategory.Id,
                         PostGroupDescription = postCategory.PostGroupDescription
                     });
@@ -473,7 +472,6 @@ namespace Chamran.Deed.Info
                         GroupMemberId = post.GroupMemberId ?? 0,
                         IsSpecial = post.IsSpecial,
                         PostCaption = post.PostCaption,
-                        PostTime = post.CreationTime,
                         PostFile = post.PostFile,
                         PostTitle = post.PostTitle
                     };
@@ -508,6 +506,7 @@ namespace Chamran.Deed.Info
                         .Include(e => e.AppBinaryObjectFk)
                         .Include(e => e.AppBinaryObjectFk2)
                         .Include(e => e.AppBinaryObjectFk3)
+                        .WhereIf(input.PostGroupId>0,p=>p.PostGroupId == input.PostGroupId)
                                     join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
                                         pg.Id into joiner1
                                     from pg in joiner1.DefaultIfEmpty()
@@ -517,7 +516,7 @@ namespace Chamran.Deed.Info
                                     join gm in _lookup_groupMemberRepository.GetAll() on og.Id equals gm.OrganizationId into
                                         joiner3
                                     from gm in joiner3.DefaultIfEmpty()
-                                    where gm.UserId == AbpSession.UserId
+                                    where gm.UserId == AbpSession.UserId 
                                     select new
                                     {
                                         p.Id,
@@ -529,7 +528,6 @@ namespace Chamran.Deed.Info
                                         p.PostFile2,
                                         p.PostFile3,
                                         p.PostTitle,
-                                        p.PostTime,
                                         p.PostRefLink,
                                         p.PostGroupId,
                                         p.GroupMemberFk,
@@ -554,7 +552,6 @@ namespace Chamran.Deed.Info
                         GroupMemberId = post.GroupMemberId ?? 0,
                         IsSpecial = post.IsSpecial,
                         PostCaption = post.PostCaption,
-                        PostTime = post.CreationTime,
                         PostFile = post.PostFile,
                         PostFile2 = post.PostFile2,
                         PostFile3 = post.PostFile3,
@@ -626,14 +623,17 @@ namespace Chamran.Deed.Info
                                    {
                                        pc.Id,
                                        pc.PostGroupDescription,
-                                       pc.GroupFile
+                                       PostGroupHeaderPicFile = pc.GroupFile,
+                                       PostGroupLatestPicFile = _postRepository.GetAll().Where(p => p.PostGroupId == pc.Id).OrderByDescending(p => p.CreationTime).FirstOrDefault().PostFile
+
                                    };
                 foreach (var postCategory in queryPostCat)
                 {
                     cat.Add(new GetPostCategoriesForViewDto()
                     {
                         //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
-                        Base64Image = postCategory.GroupFile,
+                        PostGroupLatestPicFile = postCategory.PostGroupLatestPicFile,
+                        PostGroupHeaderPicFile = postCategory.PostGroupHeaderPicFile,
                         Id = postCategory.Id,
                         PostGroupDescription = postCategory.PostGroupDescription
                     });
@@ -669,7 +669,6 @@ namespace Chamran.Deed.Info
                                         p.PostFile2,
                                         p.PostFile3,
                                         p.PostTitle,
-                                        p.PostTime,
                                         p.PostRefLink,
                                         p.PostGroupId,
                                         p.GroupMemberFk,
@@ -696,7 +695,6 @@ namespace Chamran.Deed.Info
                         GroupMemberId = post.GroupMemberId ?? 0,
                         IsSpecial = post.IsSpecial,
                         PostCaption = post.PostCaption,
-                        PostTime = post.CreationTime,
                         PostFile = post.PostFile,
                         PostFile2 = post.PostFile2,
                         PostFile3 = post.PostFile3,
