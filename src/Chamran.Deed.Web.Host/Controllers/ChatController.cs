@@ -29,5 +29,29 @@ namespace Chamran.Deed.Web.Controllers
                 return File(fileObject.Bytes, contentType, fileName);
             }
         }
+
+        public async Task<ActionResult> GetUploadedObjectSize(Guid fileId)
+        {
+            using (CurrentUnitOfWork.SetTenantId(null))
+            {
+                var fileObject = await BinaryObjectManager.GetOrNullAsync(fileId);
+                if (fileObject == null)
+                {
+                    return StatusCode((int)HttpStatusCode.NotFound);
+                }
+                const int scale = 1024;
+                string[] sizeUnits = { "Bytes", "KB", "MB" };
+                long size = fileObject.Bytes.Length;
+                int unitIndex = 0;
+                while (size >= scale && unitIndex < sizeUnits.Length - 1)
+                {
+                    size /= scale;
+                    unitIndex++;
+                }
+                var data = new { SizeInByte= size, SizeInText= $"{size} {sizeUnits[unitIndex]}" };
+
+                return Json(data);
+            }
+        }
     }
 }
