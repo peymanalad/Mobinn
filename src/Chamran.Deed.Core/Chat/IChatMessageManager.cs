@@ -7,6 +7,8 @@ namespace Chamran.Deed.Chat
 {
     public interface IChatMessageManager : IDomainService
     {
+        Task DeleteMessageAsync(UserIdentifier sender, int messageId);
+
         Task SendMessageAsync(UserIdentifier sender, UserIdentifier receiver, string message, string senderTenancyName, string senderUserName, Guid? senderProfilePictureId);
 
         long Save(ChatMessage message);

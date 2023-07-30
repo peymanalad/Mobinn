@@ -71,6 +71,32 @@ namespace Chamran.Deed.Web.Chat.SignalR
             }
         }
 
+        public async Task<string> DeleteMessage(DeleteChatMessageInput input)
+        {
+            var sender = Context.ToUserIdentifier();
+            try
+            {
+                using (ChatAbpSession.Use(Context.GetTenantId(), Context.GetUserId()))
+                {
+                    await _chatMessageManager.DeleteMessageAsync(sender, input.MessageId);
+                    return string.Empty;
+                }
+            }
+            catch (UserFriendlyException ex)
+            {
+                Logger.Warn("Could not delete chat message with id: " + input.MessageId);
+                Logger.Warn(ex.ToString(), ex);
+                return ex.Message;
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn("Could not delete chat message with id: " + input.MessageId);
+                Logger.Warn(ex.ToString(), ex);
+                return _localizationManager.GetSource("AbpWeb").GetString("InternalServerError");
+            }
+        }
+
+
         public void Register()
         {
             Logger.Debug("A client is registered: " + Context.ConnectionId);

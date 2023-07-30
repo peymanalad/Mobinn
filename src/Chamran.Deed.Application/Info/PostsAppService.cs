@@ -227,7 +227,8 @@ namespace Chamran.Deed.Info
             ObjectMapper.Map(input, post);
             try
             {
-                post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken);
+                if (!string.IsNullOrEmpty(input.PostFileToken))
+                    post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken);
 
             }
             catch (UserFriendlyException ex)
@@ -236,7 +237,8 @@ namespace Chamran.Deed.Info
             }
             try
             {
-                post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2);
+                if (!string.IsNullOrEmpty(input.PostFileToken2))
+                    post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2);
 
 
             }
@@ -246,7 +248,8 @@ namespace Chamran.Deed.Info
             }
             try
             {
-                post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3);
+                if (!string.IsNullOrEmpty(input.PostFileToken3))
+                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3);
 
             }
             catch (UserFriendlyException ex)

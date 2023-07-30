@@ -15,6 +15,7 @@ namespace Chamran.Deed.Friendships.Cache
         private readonly ICacheManager _cacheManager;
         private readonly IRepository<Friendship, long> _friendshipRepository;
         private readonly IRepository<ChatMessage, long> _chatMessageRepository;
+        private readonly IRepository<User, long> _userRepository;
         private readonly ITenantCache _tenantCache;
         private readonly UserStore _userStore;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
@@ -25,6 +26,7 @@ namespace Chamran.Deed.Friendships.Cache
             ICacheManager cacheManager,
             IRepository<Friendship, long> friendshipRepository,
             IRepository<ChatMessage, long> chatMessageRepository,
+            IRepository<User, long> userRepository,
             ITenantCache tenantCache,
             IUnitOfWorkManager unitOfWorkManager,
             UserStore userStore)
@@ -32,6 +34,7 @@ namespace Chamran.Deed.Friendships.Cache
             _cacheManager = cacheManager;
             _friendshipRepository = friendshipRepository;
             _chatMessageRepository = chatMessageRepository;
+            _userRepository = userRepository;
             _tenantCache = tenantCache;
             _unitOfWorkManager = unitOfWorkManager;
             _userStore = userStore;
@@ -184,22 +187,26 @@ namespace Chamran.Deed.Friendships.Cache
                 {
                     var friendCacheItems = _friendshipRepository.GetAll()
                         .Where(friendship => friendship.UserId == userIdentifier.UserId)
-                        .Select(friendship => new FriendCacheItem
-                        {
-                            FriendUserId = friendship.FriendUserId,
-                            FriendTenantId = friendship.FriendTenantId,
-                            State = friendship.State,
-                            FriendUserName = friendship.FriendUserName,
-                            FriendTenancyName = friendship.FriendTenancyName,
-                            FriendProfilePictureId = friendship.FriendProfilePictureId,
-                            UnreadMessageCount = _chatMessageRepository.GetAll().Count(cm =>
-                                cm.ReadState == ChatMessageReadState.Unread &&
-                                cm.UserId == userIdentifier.UserId &&
-                                cm.TenantId == userIdentifier.TenantId &&
-                                cm.TargetUserId == friendship.FriendUserId &&
-                                cm.TargetTenantId == friendship.FriendTenantId &&
-                                cm.Side == ChatSide.Receiver)
-                        }).ToList();
+                        .Join(_userRepository.GetAll(),
+                            friendship => friendship.FriendUserId,
+                            user => user.Id, (friendship, user) => new FriendCacheItem
+                            {
+                                FriendUserId = friendship.FriendUserId,
+                                FriendTenantId = friendship.FriendTenantId,
+                                State = friendship.State,
+                                FriendUserName = friendship.FriendUserName,
+                                FriendName = user.Name,
+                                FriendSurName = user.Surname,
+                                FriendTenancyName = friendship.FriendTenancyName,
+                                FriendProfilePictureId = friendship.FriendProfilePictureId,
+                                UnreadMessageCount = _chatMessageRepository.GetAll().Count(cm =>
+                                    cm.ReadState == ChatMessageReadState.Unread &&
+                                    cm.UserId == userIdentifier.UserId &&
+                                    cm.TenantId == userIdentifier.TenantId &&
+                                    cm.TargetUserId == friendship.FriendUserId &&
+                                    cm.TargetTenantId == friendship.FriendTenantId &&
+                                    cm.Side == ChatSide.Receiver)
+                            }).OrderByDescending(x=>x.LastMessageDateTime).ToList();
 
                     var user = _userStore.FindById(userIdentifier.UserId.ToString());
 

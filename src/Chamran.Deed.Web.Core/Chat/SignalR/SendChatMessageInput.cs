@@ -16,4 +16,9 @@ namespace Chamran.Deed.Web.Chat.SignalR
 
         public string Message { get; set; }
     }
+
+    public class DeleteChatMessageInput
+    {
+        public int MessageId { get; set; }
+    }
 }

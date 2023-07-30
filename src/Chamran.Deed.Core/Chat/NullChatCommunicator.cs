@@ -8,6 +8,11 @@ namespace Chamran.Deed.Chat
 {
     public class NullChatCommunicator : IChatCommunicator
     {
+        public async Task DeleteMessageToClients(IReadOnlyList<IOnlineClient> clients, UserIdentifier user, int messageId)
+        {
+            await Task.CompletedTask;
+        }
+
         public async Task SendMessageToClient(IReadOnlyList<IOnlineClient> clients, ChatMessage message)
         {
             await Task.CompletedTask;

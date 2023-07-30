@@ -33,6 +33,20 @@ namespace Chamran.Deed.Web.Chat.SignalR
             Logger = NullLogger.Instance;
         }
 
+        public async Task DeleteMessageToClients(IReadOnlyList<IOnlineClient> clients, UserIdentifier user, int messageId)
+        {
+            foreach (var client in clients)
+            {
+                var signalRClient = GetSignalRClientOrNull(client);
+                if (signalRClient == null)
+                {
+                    return;
+                }
+
+                await signalRClient.SendAsync("deleteChatMessage", messageId);
+            }
+        }
+
         public async Task SendMessageToClient(IReadOnlyList<IOnlineClient> clients, ChatMessage message)
         {
             foreach (var client in clients)
