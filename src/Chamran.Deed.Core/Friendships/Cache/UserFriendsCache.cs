@@ -190,24 +190,30 @@ namespace Chamran.Deed.Friendships.Cache
                         .Join(_userRepository.GetAll(),
                             friendship => friendship.FriendUserId,
                             user => user.Id,
-                            (friendship, user) => new FriendCacheItem
+                            (friendship, user) => new
                             {
-                                FriendUserId = friendship.FriendUserId,
-                                FriendTenantId = friendship.FriendTenantId,
-                                State = friendship.State,
-                                FriendUserName = friendship.FriendUserName,
-                                FriendName = user.Name,
-                                FriendSurName = user.Surname,
-                                FriendTenancyName = friendship.FriendTenancyName,
-                                FriendProfilePictureId = friendship.FriendProfilePictureId,
-                                UnreadMessageCount = _chatMessageRepository.GetAll()
-                                    .Count(cm => cm.ReadState == ChatMessageReadState.Unread &&
-                                                 cm.UserId == userIdentifier.UserId &&
-                                                 cm.TenantId == userIdentifier.TenantId &&
-                                                 cm.TargetUserId == friendship.FriendUserId &&
-                                                 cm.TargetTenantId == friendship.FriendTenantId &&
-                                                 cm.Side == ChatSide.Receiver)
+                                Friendship = friendship,
+                                User = user
                             })
+                        .Select(result => new FriendCacheItem
+                        {
+                            FriendUserId = result.Friendship.FriendUserId,
+                            FriendTenantId = result.Friendship.FriendTenantId,
+                            State = result.Friendship.State,
+                            FriendUserName = result.Friendship.FriendUserName,
+                            FriendName = result.User.Name,
+                            FriendSurName = result.User.Surname,
+                            FriendTenancyName = result.Friendship.FriendTenancyName,
+                            FriendProfilePictureId = result.Friendship.FriendProfilePictureId,
+                            UnreadMessageCount = _chatMessageRepository.GetAll()
+                                .Count(cm => cm.ReadState == ChatMessageReadState.Unread &&
+                                             cm.UserId == userIdentifier.UserId &&
+                                             cm.TenantId == userIdentifier.TenantId &&
+                                             cm.TargetUserId == result.Friendship.FriendUserId &&
+                                             cm.TargetTenantId == result.Friendship.FriendTenantId &&
+                                             cm.Side == ChatSide.Receiver)
+                        })
+                        .AsEnumerable()
                         .OrderByDescending(x => x.LastMessageDateTime)
                         .ToList();
 
