@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Chamran.Deed.Dto;
+using Abp.Application.Services.Dto;
 
 namespace Chamran.Deed.Chat.Dto
 {
-    public class GetUserChatMessagesInput
+    public class GetPagedUserChatMessagesInput: PagedAndSortedResultRequestDto
     {
         public int? TenantId { get; set; }
 
