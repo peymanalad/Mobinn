@@ -4,6 +4,7 @@ using Chamran.Deed.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Chamran.Deed.Migrations
 {
     [DbContext(typeof(DeedDbContext))]
-    partial class DeedDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230806075419_editfilemanager")]
+    partial class editfilemanager
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1643,9 +1646,6 @@ namespace Chamran.Deed.Migrations
                     b.Property<bool>("IsPhoneNumberConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsSuperUser")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsTwoFactorEnabled")
                         .HasColumnType("bit");
 
@@ -2244,9 +2244,6 @@ namespace Chamran.Deed.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsSuperUser")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LastModificationTime")

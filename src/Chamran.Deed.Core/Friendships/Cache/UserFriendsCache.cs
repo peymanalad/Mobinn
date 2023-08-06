@@ -204,7 +204,7 @@ namespace Chamran.Deed.Friendships.Cache
                             FriendName = result.User.Name,
                             FriendSurName = result.User.Surname,
                             FriendTenancyName = result.Friendship.FriendTenancyName,
-                            FriendProfilePictureId = result.Friendship.FriendProfilePictureId,
+                            FriendProfilePictureId = result.User.ProfilePictureId,
                             UnreadMessageCount = _chatMessageRepository.GetAll()
                                 .Count(cm => cm.ReadState == ChatMessageReadState.Unread &&
                                              cm.UserId == userIdentifier.UserId &&

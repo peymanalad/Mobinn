@@ -13,6 +13,7 @@ using Chamran.Deed.Authorization;
 using Chamran.Deed.Authorization.Roles;
 using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.Chat;
+using Chamran.Deed.Common;
 using Chamran.Deed.Configuration;
 using Chamran.Deed.Friendships;
 using Chamran.Deed.Storage;
@@ -214,7 +215,7 @@ namespace Chamran.Deed.MultiTenancy.Demo
             {
                 //Save a random profile picture
                 var (fileBytes, fileName) = GetRandomProfilePictureBytes();
-                var storedFile = new BinaryObject(user.TenantId, fileBytes, $"{user.Name}-{DateTime.UtcNow}-{fileName}");
+                var storedFile = new BinaryObject(user.TenantId, fileBytes,BinarySourceType.ProfilePicture, $"{user.Name}-{DateTime.UtcNow}-{fileName}");
                 await _binaryObjectManager.SaveAsync(storedFile);
 
                 //Update new picture on the user

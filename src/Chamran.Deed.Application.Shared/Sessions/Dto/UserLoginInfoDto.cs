@@ -13,5 +13,7 @@ namespace Chamran.Deed.Sessions.Dto
         public string EmailAddress { get; set; }
 
         public string ProfilePictureId { get; set; }
+
+        public bool IsSuperUser { get; set; }
     }
 }

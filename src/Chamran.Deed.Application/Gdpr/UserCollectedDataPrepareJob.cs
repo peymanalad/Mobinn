@@ -10,6 +10,7 @@ using Abp.Configuration;
 using Abp.Dependency;
 using Abp.Domain.Uow;
 using Abp.Localization;
+using Chamran.Deed.Common;
 using Chamran.Deed.Dto;
 using Chamran.Deed.Localization;
 using Chamran.Deed.Notifications;
@@ -74,6 +75,7 @@ namespace Chamran.Deed.Gdpr
                         (
                             args.TenantId,
                             CompressFiles(files),
+                            BinarySourceType.UserCollectedData,
                             $"{args.UserId} {DateTime.UtcNow} UserCollectedDataPrepareJob result"
                         );
 

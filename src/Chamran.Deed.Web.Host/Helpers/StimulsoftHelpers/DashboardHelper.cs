@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
+using Abp.Runtime.Session;
 using Abp.Timing;
 using Abp.UI;
 using Chamran.Deed.Info;
@@ -16,6 +17,7 @@ using Stimulsoft.Dashboard.Components.Table;
 using Stimulsoft.Data.Engine;
 using Stimulsoft.Report;
 using Stimulsoft.Report.Dictionary;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
 {
@@ -88,39 +90,71 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
 
         public static async Task<StiReport> GetCurrentOrganizationDashboard(IRepository<Report> reportRepository,
             IRepository<Organization> organizationRepository, IRepository<GroupMember> groupMemberRepository,
-            long userId)
+            long userId,bool isSuperUser)
         {
-            var query = reportRepository.GetAll().Where(x => x.IsDashboard && !x.IsDeleted);
-            var query2 = from report in query
-                         join grpMember in groupMemberRepository.GetAll() on report.OrganizationId equals grpMember.OrganizationId into joined2
-                         from grpMember in joined2.DefaultIfEmpty()
-                         where grpMember.UserId == userId && report.IsDashboard
-                         select new
-                         {
-                             report.ReportContent
-                         };
-            string reportContent = null;
-            if (query2.Any())
+            if (isSuperUser)
             {
-                var result = await query2.FirstAsync();
-                reportContent = result.ReportContent;
+                var query = reportRepository.GetAll().Where(x => x.IsDashboard && !x.IsDeleted && x.IsSuperUser);
+                string reportContent = null;
+                if (query.Any())
+                {
+                    var result = await query.FirstAsync();
+                    reportContent = result.ReportContent;
 
+                }
+
+                if (!string.IsNullOrEmpty(reportContent)) return GetReportFromContent(reportContent);
+                //var orgQuery =
+                //    from org in organizationRepository.GetAll().Where(x => !x.IsDeleted)
+                //    join grpMember in groupMemberRepository.GetAll() on org.Id equals grpMember
+                //        .OrganizationId into joined2
+                //    from grpMember in joined2.DefaultIfEmpty()
+                //    where grpMember.UserId == userId
+                //    select org;
+
+                //if (!orgQuery.Any())
+                //{
+                //    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+                //}
+                return CreateEmptyReport(userId, null,"کلی", reportRepository);
             }
-
-            if (!string.IsNullOrEmpty(reportContent)) return GetReportFromContent(reportContent);
-            var orgQuery =
-                from org in organizationRepository.GetAll().Where(x => !x.IsDeleted)
-                join grpMember in groupMemberRepository.GetAll() on org.Id equals grpMember
-                    .OrganizationId into joined2
-                from grpMember in joined2.DefaultIfEmpty()
-                where grpMember.UserId == userId
-                select org;
-
-            if (!orgQuery.Any())
+            else
             {
-                throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+                var query = reportRepository.GetAll().Where(x => x.IsDashboard && !x.IsDeleted);
+                var query2 = from report in query
+                    join grpMember in groupMemberRepository.GetAll() on report.OrganizationId equals grpMember.OrganizationId into joined2
+                    from grpMember in joined2.DefaultIfEmpty()
+                    where grpMember.UserId == userId && report.IsDashboard
+                    select new
+                    {
+                        report.ReportContent
+                    };
+                string reportContent = null;
+                if (query2.Any())
+                {
+                    var result = await query2.FirstAsync();
+                    reportContent = result.ReportContent;
+
+                }
+
+                if (!string.IsNullOrEmpty(reportContent)) return GetReportFromContent(reportContent);
+                var orgQuery =
+                    from org in organizationRepository.GetAll().Where(x => !x.IsDeleted)
+                    join grpMember in groupMemberRepository.GetAll() on org.Id equals grpMember
+                        .OrganizationId into joined2
+                    from grpMember in joined2.DefaultIfEmpty()
+                    where grpMember.UserId == userId
+                    select org;
+
+                if (!orgQuery.Any())
+                {
+                    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+                }
+
+                var orgEntity = orgQuery.First();
+                return CreateEmptyReport(userId, orgEntity.Id, orgEntity.OrganizationName,reportRepository);
             }
-            return CreateEmptyReport(userId, orgQuery.First(), reportRepository);
+           
 
 
         }
@@ -141,17 +175,17 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
 
         }
 
-        private static StiReport CreateEmptyReport(long userId, Organization org, IRepository<Report> reportRepository)
+        private static StiReport CreateEmptyReport(long userId, int? organizationId, string organizationName, IRepository<Report> reportRepository)
         {
             var report = GetTemplateDashboard();
             reportRepository.Insert(new Report()
             {
-                OrganizationId = org.Id,
+                OrganizationId = organizationId,
                 IsDashboard = true,
                 ReportContent = report.SaveEncryptedReportToString("DrM@s"),
                 CreationTime = Clock.Now,
                 CreatorUserId = userId,
-                ReportDescription = "داشبورد سازمانی " + org.OrganizationName
+                ReportDescription = "داشبورد سازمانی " + organizationName
             });
 
             return report;
@@ -224,27 +258,45 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
             return report;
         }
 
-        public static async Task SaveCurrentOrganizationDashboard(StiReport savedReport, IRepository<Report> reportRepository, IRepository<Organization> organizationRepository, IRepository<GroupMember> groupMemberRepository, long userId)
+        public static async Task SaveCurrentOrganizationDashboard(StiReport savedReport, IRepository<Report> reportRepository, IRepository<Organization> organizationRepository, IRepository<GroupMember> groupMemberRepository, long userId,bool isSuperUser)
         {
-            var query = reportRepository.GetAll().Where(x => x.IsDashboard && !x.IsDeleted);
-            var query2 = from report in query
-                         join org in organizationRepository.GetAll().Where(x => !x.IsDeleted) on report.OrganizationId equals org.Id into joined1
-                         from org in joined1.DefaultIfEmpty()
-                         join grpMember in groupMemberRepository.GetAll() on org.Id equals grpMember.OrganizationId into joined2
-                         from grpMember in joined2.DefaultIfEmpty()
-                         where grpMember.UserId == userId
-                         select report;
-
-            if (query2.Any())
+            if (isSuperUser)
             {
-                var result = await query2.FirstAsync();
-                result.ReportContent = savedReport.SaveEncryptedReportToString("DrM@s");
-                result.LastModificationTime = Clock.Now;
-                result.LastModifierUserId = userId;
-                result.IsDashboard = true;
+                var query = reportRepository.GetAll().Where(x => x.IsDashboard && !x.IsDeleted && x.IsSuperUser);
+                if (query.Any())
+                {
+                    var result = await query.FirstAsync();
+                    result.ReportContent = savedReport.SaveEncryptedReportToString("DrM@s");
+                    result.LastModificationTime = Clock.Now;
+                    result.LastModifierUserId = userId;
+                    result.IsDashboard = true;
 
-                await reportRepository.UpdateAsync(result);
+                    await reportRepository.UpdateAsync(result);
+                }
             }
+            else
+            {
+                var query = reportRepository.GetAll().Where(x => x.IsDashboard && !x.IsDeleted);
+                var query2 = from report in query
+                    join org in organizationRepository.GetAll().Where(x => !x.IsDeleted) on report.OrganizationId equals org.Id into joined1
+                    from org in joined1.DefaultIfEmpty()
+                    join grpMember in groupMemberRepository.GetAll() on org.Id equals grpMember.OrganizationId into joined2
+                    from grpMember in joined2.DefaultIfEmpty()
+                    where grpMember.UserId == userId
+                    select report;
+
+                if (query2.Any())
+                {
+                    var result = await query2.FirstAsync();
+                    result.ReportContent = savedReport.SaveEncryptedReportToString("DrM@s");
+                    result.LastModificationTime = Clock.Now;
+                    result.LastModifierUserId = userId;
+                    result.IsDashboard = true;
+
+                    await reportRepository.UpdateAsync(result);
+                }
+            }
+            
         }
 
         public static void MapDataToReportNoPassword(StiReport dashboard, IConfigurationRoot _appConfiguration)

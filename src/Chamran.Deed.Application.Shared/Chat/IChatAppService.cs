@@ -16,5 +16,6 @@ namespace Chamran.Deed.Chat
         Task<PagedResultDto<ChatMessageDto>> GetPagedUserChatMessages(GetPagedUserChatMessagesInput input);
 
         Task MarkAllUnreadMessagesOfUserAsRead(MarkAllUnreadMessagesOfUserAsReadInput input);
+        Task MarkAllUnreadMessagesOfUserAsReceived(MarkAllUnreadMessagesOfUserAsReceivedInput input);
     }
 }

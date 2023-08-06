@@ -96,7 +96,7 @@ namespace Chamran.Deed.Web.Controllers.StimulsoftControllers
             //}
 
             var loginInformation = await _sessionCache.GetCurrentLoginInformationsAsync();
-            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationRepository, _groupMemberRepository, loginInformation.User.Id);
+            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationRepository, _groupMemberRepository, loginInformation.User.Id,loginInformation.User.IsSuperUser);
 
             DashboardHelper.MapDataToReportNoPassword(dashboard, _appConfigurationAccessor.Configuration);
 
@@ -193,7 +193,7 @@ namespace Chamran.Deed.Web.Controllers.StimulsoftControllers
         {
             //var appPath = StiNetCoreHelper.MapPath(this, string.Empty);
             var loginInformation = await _sessionCache.GetCurrentLoginInformationsAsync();
-            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationRepository, _groupMemberRepository, loginInformation.User.Id);
+            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationRepository, _groupMemberRepository, loginInformation.User.Id,loginInformation.User.IsSuperUser);
 
             DashboardHelper.MapDataToReportWithPassword(dashboard, _appConfigurationAccessor.Configuration);
 
@@ -204,7 +204,7 @@ namespace Chamran.Deed.Web.Controllers.StimulsoftControllers
         {
             //var appPath = StiNetCoreHelper.MapPath(this, string.Empty);
             var loginInformation = await _sessionCache.GetCurrentLoginInformationsAsync();
-            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationRepository, _groupMemberRepository, loginInformation.User.Id);
+            var dashboard = await DashboardHelper.GetCurrentOrganizationDashboard(_reportRepository, _organizationRepository, _groupMemberRepository, loginInformation.User.Id, loginInformation.User.IsSuperUser);
 
             DashboardHelper.MapDataToReportWithPassword(dashboard, _appConfigurationAccessor.Configuration);
 
@@ -258,7 +258,7 @@ namespace Chamran.Deed.Web.Controllers.StimulsoftControllers
 
             using (var unitOfWork = _unitOfWorkManager.Begin())
             {
-                await DashboardHelper.SaveCurrentOrganizationDashboard(report, _reportRepository, _organizationRepository, _groupMemberRepository, loginInformation.User.Id);
+                await DashboardHelper.SaveCurrentOrganizationDashboard(report, _reportRepository, _organizationRepository, _groupMemberRepository, loginInformation.User.Id,loginInformation.User.IsSuperUser);
 
                 await unitOfWork.CompleteAsync();
             }

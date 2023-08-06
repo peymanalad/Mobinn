@@ -12,6 +12,7 @@ using Chamran.Deed.Authorization;
 using Abp.AspNetCore.Mvc.Authorization;
 using Abp.Runtime.Session;
 using Chamran.Deed.Authorization.Users.Importing;
+using Chamran.Deed.Common;
 
 namespace Chamran.Deed.Web.Controllers
 {
@@ -47,13 +48,13 @@ namespace Chamran.Deed.Web.Controllers
                 }
 
                 byte[] fileBytes;
-                using (var stream = file.OpenReadStream())
+                await using (var stream = file.OpenReadStream())
                 {
                     fileBytes = stream.GetAllBytes();
                 }
 
                 var tenantId = AbpSession.TenantId;
-                var fileObject = new BinaryObject(tenantId, fileBytes, $"{DateTime.UtcNow} import from excel file.");
+                var fileObject = new BinaryObject(tenantId, fileBytes,BinarySourceType.Excel, $"{DateTime.UtcNow} import from excel file.");
 
                 await BinaryObjectManager.SaveAsync(fileObject);
 
