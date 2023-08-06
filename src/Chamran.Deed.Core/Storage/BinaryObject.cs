@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Abp;
 using Abp.Domain.Entities;
+using Chamran.Deed.Common;
 
 namespace Chamran.Deed.Storage
 {
@@ -17,17 +18,25 @@ namespace Chamran.Deed.Storage
         [MaxLength(BinaryObjectConsts.BytesMaxSize)]
         public virtual byte[] Bytes { get; set; }
 
+        public int? SourceType { get; set; }
+
+        public int? SourceId { get; set; }
+
+        public Guid? SourceGuid { get; set; }
+
         public BinaryObject()
         {
             Id = SequentialGuidGenerator.Instance.Create();
         }
 
-        public BinaryObject(int? tenantId, byte[] bytes, string description = null)
+        public BinaryObject(int? tenantId, byte[] bytes, BinarySourceType sourceType, string description = null)
             : this()
         {
             TenantId = tenantId;
             Bytes = bytes;
             Description = description;
+            SourceType = (int?)sourceType;
         }
+
     }
 }

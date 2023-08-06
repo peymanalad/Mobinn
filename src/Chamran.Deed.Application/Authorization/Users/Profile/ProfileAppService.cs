@@ -17,6 +17,7 @@ using Chamran.Deed.Authentication.TwoFactor.Google;
 using Chamran.Deed.Authorization.Users.Dto;
 using Chamran.Deed.Authorization.Users.Profile.Cache;
 using Chamran.Deed.Authorization.Users.Profile.Dto;
+using Chamran.Deed.Common;
 using Chamran.Deed.Configuration;
 using Chamran.Deed.Friendships;
 using Chamran.Deed.Gdpr;
@@ -204,6 +205,9 @@ namespace Chamran.Deed.Authorization.Users.Profile
             }
 
             var user = await UserManager.GetUserAsync(AbpSession.ToUserIdentifier());
+            if(user.IsSuperUser)
+                throw new UserFriendlyException("SuperUser Can't Login to the App!");
+
             user.IsPhoneNumberConfirmed = true;
             user.PhoneNumber = input.PhoneNumber;
             await UserManager.UpdateAsync(user);
@@ -346,8 +350,6 @@ namespace Chamran.Deed.Authorization.Users.Profile
                 return;
             }
 
-            byte[] byteArray;
-
             var imageBytes = _tempFileCacheManager.GetFile(input.FileToken);
 
             if (imageBytes == null)
@@ -355,7 +357,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
                 throw new UserFriendlyException("There is no such image file with the token: " + input.FileToken);
             }
 
-            byteArray = imageBytes;
+            var byteArray = imageBytes;
 
             if (byteArray.Length > MaxProfilePictureBytes)
             {
@@ -371,9 +373,11 @@ namespace Chamran.Deed.Authorization.Users.Profile
             }
 
             var storedFile = new BinaryObject(userIdentifier.TenantId, byteArray,
+                BinarySourceType.ProfilePicture,
                 //$"Profile picture of user {userIdentifier.UserId}. {DateTime.UtcNow}");
                 $"{userIdentifier.UserId}.png");
             await _binaryObjectManager.SaveAsync(storedFile);
+            storedFile.SourceId = (int?)user.Id;
 
             user.ProfilePictureId = storedFile.Id;
         }

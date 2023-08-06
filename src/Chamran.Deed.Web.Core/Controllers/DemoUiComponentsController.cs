@@ -5,6 +5,7 @@ using Abp.AspNetCore.Mvc.Authorization;
 using Abp.IO.Extensions;
 using Abp.UI;
 using Abp.Web.Models;
+using Chamran.Deed.Common;
 using Microsoft.AspNetCore.Mvc;
 using Chamran.Deed.DemoUiComponents.Dto;
 using Chamran.Deed.Storage;
@@ -44,12 +45,12 @@ namespace Chamran.Deed.Web.Controllers
                     }
 
                     byte[] fileBytes;
-                    using (var stream = file.OpenReadStream())
+                    await using (var stream = file.OpenReadStream())
                     {
                         fileBytes = stream.GetAllBytes();
                     }
 
-                    var fileObject = new BinaryObject(AbpSession.TenantId, fileBytes, $"Demo ui, uploaded file {DateTime.UtcNow}");
+                    var fileObject = new BinaryObject(AbpSession.TenantId, fileBytes,BinarySourceType.Other, $"Demo ui, uploaded file {DateTime.UtcNow}");
                     await _binaryObjectManager.SaveAsync(fileObject);
 
                     filesOutput.Add(new UploadFileOutput

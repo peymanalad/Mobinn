@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Chamran.Deed.Authorization;
 using Chamran.Deed.Authorization.Users.Profile.Dto;
+using Chamran.Deed.Common;
 using Chamran.Deed.Graphics;
 using Chamran.Deed.MultiTenancy;
 using Chamran.Deed.Storage;
@@ -104,7 +105,7 @@ namespace Chamran.Deed.Web.Controllers
                 _imageFormatValidator.Validate(fileBytes);
             }
 
-            var logoObject = new BinaryObject(AbpSession.GetTenantId(), fileBytes, $"Logo {DateTime.UtcNow}");
+            var logoObject = new BinaryObject(AbpSession.GetTenantId(), fileBytes,BinarySourceType.Logo, $"Logo {DateTime.UtcNow}");
             await _binaryObjectManager.SaveAsync(logoObject);
             return (logoObject.Id, logoFile.ContentType);
         }
@@ -129,12 +130,12 @@ namespace Chamran.Deed.Web.Controllers
                 }
 
                 byte[] fileBytes;
-                using (var stream = cssFile.OpenReadStream())
+                await using (var stream = cssFile.OpenReadStream())
                 {
                     fileBytes = stream.GetAllBytes();
                 }
 
-                var cssFileObject = new BinaryObject(AbpSession.GetTenantId(), fileBytes,
+                var cssFileObject = new BinaryObject(AbpSession.GetTenantId(), fileBytes,BinarySourceType.Css,
                     $"Custom Css {cssFile.FileName} {DateTime.UtcNow}");
                 await _binaryObjectManager.SaveAsync(cssFileObject);
 

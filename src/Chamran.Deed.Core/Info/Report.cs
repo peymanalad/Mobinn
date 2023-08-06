@@ -27,5 +27,7 @@ namespace Chamran.Deed.Info
         [ForeignKey("OrganizationId")]
         public Organization OrganizationFk { get; set; }
 
+        public bool IsSuperUser { get; set; }
+
     }
 }

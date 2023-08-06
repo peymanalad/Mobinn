@@ -14,8 +14,11 @@ using Abp.Application.Services.Dto;
 using Chamran.Deed.Authorization;
 using Abp.Extensions;
 using Abp.Authorization;
+using Abp.Runtime.Session;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
+using Chamran.Deed.Authorization.Users;
+using Chamran.Deed.Common;
 using Chamran.Deed.Storage;
 
 namespace Chamran.Deed.Info
@@ -23,34 +26,68 @@ namespace Chamran.Deed.Info
     [AbpAuthorize(AppPermissions.Pages_PostGroups)]
     public class PostGroupsAppService : DeedAppServiceBase, IPostGroupsAppService
     {
+        private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<PostGroup> _postGroupRepository;
+        private readonly IRepository<GroupMember> _groupMemberRepository;
         private readonly IPostGroupsExcelExporter _postGroupsExcelExporter;
         private readonly IRepository<Organization, int> _lookup_organizationRepository;
-
         private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IBinaryObjectManager _binaryObjectManager;
 
-        public PostGroupsAppService(IRepository<PostGroup> postGroupRepository, IPostGroupsExcelExporter postGroupsExcelExporter, IRepository<Organization, int> lookup_organizationGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager)
+        public PostGroupsAppService(IRepository<PostGroup> postGroupRepository,
+            IPostGroupsExcelExporter postGroupsExcelExporter,
+            IRepository<Organization, int> lookup_organizationGroupRepository,
+            ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager,
+            IRepository<User, long> userRepository, IRepository<GroupMember> groupMemberRepository)
         {
             _postGroupRepository = postGroupRepository;
             _postGroupsExcelExporter = postGroupsExcelExporter;
             _lookup_organizationRepository = lookup_organizationGroupRepository;
-
+            _userRepository = userRepository;
             _tempFileCacheManager = tempFileCacheManager;
             _binaryObjectManager = binaryObjectManager;
-
+            _groupMemberRepository = groupMemberRepository;
         }
 
         public async Task<PagedResultDto<GetPostGroupForViewDto>> GetAll(GetAllPostGroupsInput input)
         {
+            if (AbpSession.UserId == null) throw new Exception("User Must be Logged in!");
+            var user = await _userRepository.GetAsync(AbpSession.UserId.Value);
 
             var filteredPostGroups = _postGroupRepository.GetAll()
-                        .Include(e => e.OrganizationFk)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.PostGroupDescription.Contains(input.Filter))
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupDescriptionFilter), e => e.PostGroupDescription.Contains(input.PostGroupDescriptionFilter))
-                        .WhereIf(input.MinOrderingFilter != null, e => e.Ordering >= input.MinOrderingFilter)
-                        .WhereIf(input.MaxOrderingFilter != null, e => e.Ordering <= input.MaxOrderingFilter)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationGroupGroupNameFilter), e => e.OrganizationFk != null && e.OrganizationFk.OrganizationName == input.OrganizationGroupGroupNameFilter);
+                .Include(e => e.OrganizationFk)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter),
+                    e => false || e.PostGroupDescription.Contains(input.Filter))
+                .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupDescriptionFilter),
+                    e => e.PostGroupDescription.Contains(input.PostGroupDescriptionFilter))
+                .WhereIf(input.MinOrderingFilter != null, e => e.Ordering >= input.MinOrderingFilter)
+                .WhereIf(input.MaxOrderingFilter != null, e => e.Ordering <= input.MaxOrderingFilter)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationGroupGroupNameFilter),
+                    e => e.OrganizationFk != null &&
+                         e.OrganizationFk.OrganizationName == input.OrganizationGroupGroupNameFilter);
+
+            if (!user.IsSuperUser)
+            {
+                var orgQuery =
+                    from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
+                    join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
+                        .OrganizationId into joined2
+                    from grpMember in joined2.DefaultIfEmpty()
+                    where grpMember.UserId == AbpSession.UserId
+                    select org;
+
+                if (!orgQuery.Any())
+                {
+                    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+                }
+                var orgEntity = orgQuery.First();
+
+                filteredPostGroups = filteredPostGroups.Where(x => x.OrganizationId == orgEntity.Id);
+
+            }
+
+
+
 
             var pagedAndFilteredPostGroups = filteredPostGroups
                 .OrderBy(input.Sorting ?? "id asc")
@@ -154,7 +191,7 @@ namespace Chamran.Deed.Info
             var postGroup = ObjectMapper.Map<PostGroup>(input);
 
             await _postGroupRepository.InsertAsync(postGroup);
-            postGroup.GroupFile = await GetBinaryObjectFromCache(input.GroupFileToken);
+            postGroup.GroupFile = await GetBinaryObjectFromCache(input.GroupFileToken, postGroup.Id);
 
         }
 
@@ -163,7 +200,7 @@ namespace Chamran.Deed.Info
         {
             var postGroup = await _postGroupRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, postGroup);
-            postGroup.GroupFile = await GetBinaryObjectFromCache(input.GroupFileToken);
+            postGroup.GroupFile = await GetBinaryObjectFromCache(input.GroupFileToken, postGroup.Id);
 
         }
 
@@ -235,7 +272,7 @@ namespace Chamran.Deed.Info
             );
         }
 
-        private async Task<Guid?> GetBinaryObjectFromCache(string fileToken)
+        private async Task<Guid?> GetBinaryObjectFromCache(string fileToken, int? refId)
         {
             if (fileToken.IsNullOrWhiteSpace())
             {
@@ -249,9 +286,9 @@ namespace Chamran.Deed.Info
                 throw new UserFriendlyException("There is no such file with the token: " + fileToken);
             }
 
-            var storedFile = new BinaryObject(AbpSession.TenantId, fileCache.File, fileCache.FileName);
+            var storedFile = new BinaryObject(AbpSession.TenantId, fileCache.File, BinarySourceType.PostGroupLogo, fileCache.FileName);
             await _binaryObjectManager.SaveAsync(storedFile);
-
+            if (refId != null) storedFile.SourceId = refId;
             return storedFile.Id;
         }
 
@@ -288,7 +325,7 @@ namespace Chamran.Deed.Info
         {
             foreach (var row in orderDictionary)
             {
-                var res=await _postGroupRepository.GetAsync(row.Key);
+                var res = await _postGroupRepository.GetAsync(row.Key);
                 res.Ordering = row.Value;
             }
         }

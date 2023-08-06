@@ -3,10 +3,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Abp.AspNetCore.Mvc.Authorization;
 using Abp.IO.Extensions;
+using Abp.Timing;
 using Abp.UI;
 using Abp.Web.Models;
 using Microsoft.AspNetCore.Mvc;
 using Chamran.Deed.Chat;
+using Chamran.Deed.Common;
 using Chamran.Deed.Storage;
 
 namespace Chamran.Deed.Web.Controllers
@@ -42,12 +44,12 @@ namespace Chamran.Deed.Web.Controllers
                 }
 
                 byte[] fileBytes;
-                using (var stream = file.OpenReadStream())
+                await using (var stream = file.OpenReadStream())
                 {
                     fileBytes = stream.GetAllBytes();
                 }
 
-                var fileObject = new BinaryObject(null, fileBytes, $"File uploaded from chat by {AbpSession.UserId}, File name: {file.FileName} {DateTime.UtcNow}");
+                var fileObject = new BinaryObject(null, fileBytes,BinarySourceType.ChatFile, $"File uploaded from chat by {AbpSession.UserId}, File name: {file.FileName} {Clock.Now}");
                 using (CurrentUnitOfWork.SetTenantId(null))
                 {
                     await BinaryObjectManager.SaveAsync(fileObject);

@@ -15,6 +15,7 @@ using Abp.Extensions;
 using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
+using Chamran.Deed.Common;
 using Chamran.Deed.Storage;
 
 namespace Chamran.Deed.Info
@@ -219,9 +220,9 @@ namespace Chamran.Deed.Info
             var post = ObjectMapper.Map<Post>(input);
             post.GroupMemberId = grpMemberId.Id;
             await _postRepository.InsertAsync(post);
-            post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken);
-            post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2);
-            post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3);
+            post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken, post.Id);
+            post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2, post.Id);
+            post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3, post.Id);
 
         }
 
@@ -233,7 +234,7 @@ namespace Chamran.Deed.Info
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken))
-                    post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken);
+                    post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken, post.Id);
 
             }
             catch (UserFriendlyException ex)
@@ -243,7 +244,7 @@ namespace Chamran.Deed.Info
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken2))
-                    post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2);
+                    post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2, post.Id);
 
 
             }
@@ -254,7 +255,7 @@ namespace Chamran.Deed.Info
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken3))
-                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3);
+                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3, post.Id);
 
             }
             catch (UserFriendlyException ex)
@@ -369,7 +370,7 @@ namespace Chamran.Deed.Info
             );
         }
 
-        private async Task<Guid?> GetBinaryObjectFromCache(string fileToken)
+        private async Task<Guid?> GetBinaryObjectFromCache(string fileToken,int? refId)
         {
             if (fileToken.IsNullOrWhiteSpace())
             {
@@ -383,9 +384,9 @@ namespace Chamran.Deed.Info
                 throw new UserFriendlyException("There is no such file with the token: " + fileToken);
             }
 
-            var storedFile = new BinaryObject(AbpSession.TenantId, fileCache.File, fileCache.FileName);
+            var storedFile = new BinaryObject(AbpSession.TenantId, fileCache.File,BinarySourceType.Post, fileCache.FileName);
             await _binaryObjectManager.SaveAsync(storedFile);
-
+            if (refId != null) storedFile.SourceId = refId;
             return storedFile.Id;
         }
 
@@ -429,6 +430,7 @@ namespace Chamran.Deed.Info
                                    join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
                                    from gm in joiner2.DefaultIfEmpty()
                                    where gm.UserId == AbpSession.UserId
+                                   orderby pc.Ordering
                                    select new
                                    {
                                        pc.Id,
@@ -612,145 +614,145 @@ namespace Chamran.Deed.Info
             }
         }
 
-        public Task<GetExploreForViewDto> GetExploreForView(GetExploreForViewInput input)
-        {
-            try
-            {
-                var res = new GetExploreForViewDto();
+    //    public Task<GetExploreForViewDto> GetExploreForView(GetExploreForViewInput input)
+    //    {
+    //        try
+    //        {
+    //            var res = new GetExploreForViewDto();
 
-                var cat = new List<GetPostCategoriesForViewDto>();
-                var queryPostCat = from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
-                                   join g in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationId equals g.Id into joiner1
-                                   from g in joiner1.DefaultIfEmpty()
-                                   join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
-                                   from gm in joiner2.DefaultIfEmpty()
-                                   where gm.UserId == AbpSession.UserId
-                                   select new
-                                   {
-                                       pc.Id,
-                                       pc.PostGroupDescription,
-                                       PostGroupHeaderPicFile = pc.GroupFile,
-                                       PostGroupLatestPicFile = _postRepository.GetAll().Where(p => p.PostGroupId == pc.Id).OrderByDescending(p => p.CreationTime).FirstOrDefault().PostFile
+    //            var cat = new List<GetPostCategoriesForViewDto>();
+    //            var queryPostCat = from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
+    //                               join g in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationId equals g.Id into joiner1
+    //                               from g in joiner1.DefaultIfEmpty()
+    //                               join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
+    //                               from gm in joiner2.DefaultIfEmpty()
+    //                               where gm.UserId == AbpSession.UserId
+    //                               select new
+    //                               {
+    //                                   pc.Id,
+    //                                   pc.PostGroupDescription,
+    //                                   PostGroupHeaderPicFile = pc.GroupFile,
+    //                                   PostGroupLatestPicFile = _postRepository.GetAll().Where(p => p.PostGroupId == pc.Id).OrderByDescending(p => p.CreationTime).FirstOrDefault().PostFile
 
-                                   };
-                foreach (var postCategory in queryPostCat)
-                {
-                    cat.Add(new GetPostCategoriesForViewDto()
-                    {
-                        //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
-                        PostGroupLatestPicFile = postCategory.PostGroupLatestPicFile,
-                        PostGroupHeaderPicFile = postCategory.PostGroupHeaderPicFile,
-                        Id = postCategory.Id,
-                        PostGroupDescription = postCategory.PostGroupDescription
-                    });
-                }
-
-
-                var posts = new List<GetPostsForViewDto>();
-                var filteredPosts = from p in _postRepository.GetAll().Where(x => !x.IsDeleted)
-                        .Include(e => e.GroupMemberFk)
-                        .Include(e => e.PostGroupFk)
-                        .Include(e => e.GroupMemberFk.UserFk)
-                        .Include(e => e.AppBinaryObjectFk)
-                        .Include(e => e.AppBinaryObjectFk2)
-                        .Include(e => e.AppBinaryObjectFk3)
-                                    join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
-                                        pg.Id into joiner1
-                                    from pg in joiner1.DefaultIfEmpty()
-                                    join og in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
-                                        equals og.Id into joiner2
-                                    from og in joiner2.DefaultIfEmpty()
-                                    join gm in _lookup_groupMemberRepository.GetAll() on og.Id equals gm.OrganizationId into
-                                        joiner3
-                                    from gm in joiner3.DefaultIfEmpty()
-                                    where gm.UserId == AbpSession.UserId
-                                    select new
-                                    {
-                                        p.Id,
-                                        p.GroupMemberId,
-                                        p.IsSpecial,
-                                        p.PostCaption,
-                                        p.CreationTime,
-                                        p.PostFile,
-                                        p.PostFile2,
-                                        p.PostFile3,
-                                        p.PostTitle,
-                                        p.PostRefLink,
-                                        p.PostGroupId,
-                                        p.GroupMemberFk,
-                                        p.PostGroupFk,
-                                        p.AppBinaryObjectFk,
-                                        p.AppBinaryObjectFk2,
-                                        p.AppBinaryObjectFk3,
-                                    };
-
-                //.WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
-                //.WhereIf(input.PostGroupId > 0, e => e.PostGroupId == input.PostGroupId);
-                var pagedAndFilteredPosts = filteredPosts
-    .OrderBy(input.Sorting ?? "id desc")
-    .PageBy(input);
+    //                               };
+    //            foreach (var postCategory in queryPostCat)
+    //            {
+    //                cat.Add(new GetPostCategoriesForViewDto()
+    //                {
+    //                    //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
+    //                    PostGroupLatestPicFile = postCategory.PostGroupLatestPicFile,
+    //                    PostGroupHeaderPicFile = postCategory.PostGroupHeaderPicFile,
+    //                    Id = postCategory.Id,
+    //                    PostGroupDescription = postCategory.PostGroupDescription
+    //                });
+    //            }
 
 
+    //            var posts = new List<GetPostsForViewDto>();
+    //            var filteredPosts = from p in _postRepository.GetAll().Where(x => !x.IsDeleted)
+    //                    .Include(e => e.GroupMemberFk)
+    //                    .Include(e => e.PostGroupFk)
+    //                    .Include(e => e.GroupMemberFk.UserFk)
+    //                    .Include(e => e.AppBinaryObjectFk)
+    //                    .Include(e => e.AppBinaryObjectFk2)
+    //                    .Include(e => e.AppBinaryObjectFk3)
+    //                                join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
+    //                                    pg.Id into joiner1
+    //                                from pg in joiner1.DefaultIfEmpty()
+    //                                join og in _organizationGroupRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
+    //                                    equals og.Id into joiner2
+    //                                from og in joiner2.DefaultIfEmpty()
+    //                                join gm in _lookup_groupMemberRepository.GetAll() on og.Id equals gm.OrganizationId into
+    //                                    joiner3
+    //                                from gm in joiner3.DefaultIfEmpty()
+    //                                where gm.UserId == AbpSession.UserId
+    //                                select new
+    //                                {
+    //                                    p.Id,
+    //                                    p.GroupMemberId,
+    //                                    p.IsSpecial,
+    //                                    p.PostCaption,
+    //                                    p.CreationTime,
+    //                                    p.PostFile,
+    //                                    p.PostFile2,
+    //                                    p.PostFile3,
+    //                                    p.PostTitle,
+    //                                    p.PostRefLink,
+    //                                    p.PostGroupId,
+    //                                    p.GroupMemberFk,
+    //                                    p.PostGroupFk,
+    //                                    p.AppBinaryObjectFk,
+    //                                    p.AppBinaryObjectFk2,
+    //                                    p.AppBinaryObjectFk3,
+    //                                };
 
-                foreach (var post in pagedAndFilteredPosts)
-                {
-                    var datam = new GetPostsForViewDto()
-                    {
-                        //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
-                        Id = post.Id,
-                        GroupMemberId = post.GroupMemberId ?? 0,
-                        IsSpecial = post.IsSpecial,
-                        PostCaption = post.PostCaption,
-                        PostFile = post.PostFile,
-                        PostFile2 = post.PostFile2,
-                        PostFile3 = post.PostFile3,
-                        PostTitle = post.PostTitle,
-                        PostGroupId = post.PostGroupId,
-                        PostRefLink = post.PostRefLink,
-                        CreationTime = post.CreationTime
-                    };
-                    if (post.GroupMemberFk != null)
-                    {
-                        datam.MemberFullName = post.GroupMemberFk.UserFk.FullName;
-                        datam.MemberPosition = post.GroupMemberFk.MemberPosition;
-                        datam.MemberUserName = post.GroupMemberFk.UserFk.UserName;
-                    }
-
-                    if (post.PostGroupFk != null)
-                    {
-                        datam.GroupFile = post.PostGroupFk.GroupFile;
-                        datam.GroupDescription = post.PostGroupFk.PostGroupDescription;
-
-                    }
-
-                    if (post.AppBinaryObjectFk != null)
-                    {
-                        datam.Attachment1 = post.AppBinaryObjectFk.Description;
-                    }
-
-                    if (post.AppBinaryObjectFk2 != null)
-                    {
-                        datam.Attachment2 = post.AppBinaryObjectFk2.Description;
-                    }
-
-                    if (post.AppBinaryObjectFk3 != null)
-                    {
-                        datam.Attachment3 = post.AppBinaryObjectFk3.Description;
-                    }
-
-                    posts.Add(datam);
+    //            //.WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
+    //            //.WhereIf(input.PostGroupId > 0, e => e.PostGroupId == input.PostGroupId);
+    //            var pagedAndFilteredPosts = filteredPosts
+    //.OrderBy(input.Sorting ?? "id desc")
+    //.PageBy(input);
 
 
-                }
-                res.PostCategoriesForViewDto = new PagedResultDto<GetPostCategoriesForViewDto>(cat.Count, cat);
-                res.PostsForViewDto = new PagedResultDto<GetPostsForViewDto>(posts.Count, posts);
-                return Task.FromResult(res);
-            }
-            catch (Exception ex)
-            {
-                throw new UserFriendlyException(ex.Message);
-            }
 
-        }
+    //            foreach (var post in pagedAndFilteredPosts)
+    //            {
+    //                var datam = new GetPostsForViewDto()
+    //                {
+    //                    //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
+    //                    Id = post.Id,
+    //                    GroupMemberId = post.GroupMemberId ?? 0,
+    //                    IsSpecial = post.IsSpecial,
+    //                    PostCaption = post.PostCaption,
+    //                    PostFile = post.PostFile,
+    //                    PostFile2 = post.PostFile2,
+    //                    PostFile3 = post.PostFile3,
+    //                    PostTitle = post.PostTitle,
+    //                    PostGroupId = post.PostGroupId,
+    //                    PostRefLink = post.PostRefLink,
+    //                    CreationTime = post.CreationTime
+    //                };
+    //                if (post.GroupMemberFk != null)
+    //                {
+    //                    datam.MemberFullName = post.GroupMemberFk.UserFk.FullName;
+    //                    datam.MemberPosition = post.GroupMemberFk.MemberPosition;
+    //                    datam.MemberUserName = post.GroupMemberFk.UserFk.UserName;
+    //                }
+
+    //                if (post.PostGroupFk != null)
+    //                {
+    //                    datam.GroupFile = post.PostGroupFk.GroupFile;
+    //                    datam.GroupDescription = post.PostGroupFk.PostGroupDescription;
+
+    //                }
+
+    //                if (post.AppBinaryObjectFk != null)
+    //                {
+    //                    datam.Attachment1 = post.AppBinaryObjectFk.Description;
+    //                }
+
+    //                if (post.AppBinaryObjectFk2 != null)
+    //                {
+    //                    datam.Attachment2 = post.AppBinaryObjectFk2.Description;
+    //                }
+
+    //                if (post.AppBinaryObjectFk3 != null)
+    //                {
+    //                    datam.Attachment3 = post.AppBinaryObjectFk3.Description;
+    //                }
+
+    //                posts.Add(datam);
+
+
+    //            }
+    //            res.PostCategoriesForViewDto = new PagedResultDto<GetPostCategoriesForViewDto>(cat.Count, cat);
+    //            res.PostsForViewDto = new PagedResultDto<GetPostsForViewDto>(posts.Count, posts);
+    //            return Task.FromResult(res);
+    //        }
+    //        catch (Exception ex)
+    //        {
+    //            throw new UserFriendlyException(ex.Message);
+    //        }
+
+    //    }
     }
 }

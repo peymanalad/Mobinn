@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Abp;
 using Abp.Authorization;
@@ -9,8 +10,10 @@ using Abp.MultiTenancy;
 using Abp.RealTime;
 using Abp.UI;
 using Chamran.Deed.Authorization.Users;
+using Chamran.Deed.Common;
 using Chamran.Deed.Friendships;
 using Chamran.Deed.Friendships.Cache;
+using Chamran.Deed.Storage;
 
 namespace Chamran.Deed.Chat
 {
@@ -27,6 +30,7 @@ namespace Chamran.Deed.Chat
         private readonly IRepository<ChatMessage, long> _chatMessageRepository;
         private readonly IChatFeatureChecker _chatFeatureChecker;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
+        private readonly IRepository<BinaryObject,Guid> _binaryObjectRepository;
 
         public ChatMessageManager(
             IFriendshipManager friendshipManager,
@@ -38,7 +42,8 @@ namespace Chamran.Deed.Chat
             IUserEmailer userEmailer,
             IRepository<ChatMessage, long> chatMessageRepository,
             IChatFeatureChecker chatFeatureChecker,
-            IUnitOfWorkManager unitOfWorkManager)
+            IUnitOfWorkManager unitOfWorkManager,
+            IRepository<BinaryObject,Guid> binaryObjectRepository)
         {
             _friendshipManager = friendshipManager;
             _chatCommunicator = chatCommunicator;
@@ -50,14 +55,20 @@ namespace Chamran.Deed.Chat
             _chatMessageRepository = chatMessageRepository;
             _chatFeatureChecker = chatFeatureChecker;
             _unitOfWorkManager = unitOfWorkManager;
+            _binaryObjectRepository = binaryObjectRepository;
         }
 
         public async Task DeleteMessageAsync(UserIdentifier sender, int messageId)
         {
 
-            await _chatMessageRepository.DeleteAsync(x => x.Id == messageId);
-            var clients = _onlineClientManager.GetAllByUserId(sender);
-            await _chatCommunicator.DeleteMessageToClients(clients,sender,messageId);
+            //await _chatMessageRepository.DeleteAsync(x => x.Id == messageId);
+            await UnitOfWorkManager.WithUnitOfWorkAsync(async () =>
+            {
+                await _chatMessageRepository.DeleteAsync(messageId);
+                var clients = _onlineClientManager.GetAllByUserId(sender);
+                await _chatCommunicator.DeleteMessageToClients(clients, sender, messageId);
+            });
+
         }
 
         public async Task SendMessageAsync(UserIdentifier sender, UserIdentifier receiver, string message, string senderTenancyName, string senderUserName, Guid? senderProfilePictureId)
@@ -94,9 +105,45 @@ namespace Chamran.Deed.Chat
             {
                 using (CurrentUnitOfWork.SetTenantId(message.TenantId))
                 {
-                    return _chatMessageRepository.InsertAndGetId(message);
+                    var id= _chatMessageRepository.InsertAndGetId(message);
+                    var fileId=GetIdFromMessage(message.Message);
+                    if (fileId != null)
+                    {
+                        var binaryFile=_binaryObjectRepository.Get(fileId.Value);
+                        binaryFile.SourceType=(int?)BinarySourceType.ChatFile;
+                        binaryFile.SourceGuid= fileId;
+
+                    }
+                    return id;
                 }
             });
+        }
+
+        private Guid? GetIdFromMessage(string input)
+        {
+            try
+            {
+
+                // Define a regular expression pattern to match the id value with or without backslashes
+                var pattern = "(?<=\\\"id\\\":\\\")([^\"]+)(?=\\\")";
+
+                // Create a regex object
+                var regex = new Regex(pattern);
+
+                // Find all matches in the input
+                var matches = regex.Matches(input);
+
+                // Extract and print the id values
+                foreach (Match match in matches)
+                {
+                    return Guid.Parse(match.Value);
+                }
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            return null;
         }
 
         public virtual int GetUnreadMessageCount(UserIdentifier sender, UserIdentifier receiver)
