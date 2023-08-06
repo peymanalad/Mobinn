@@ -11,6 +11,8 @@ namespace Chamran.Deed.Chat
 
         Task SendMessageAsync(UserIdentifier sender, UserIdentifier receiver, string message, string senderTenancyName, string senderUserName, Guid? senderProfilePictureId);
 
+        Task EditMessageAsync(UserIdentifier sender, UserIdentifier receiver, int messageId,string message, string senderTenancyName, string senderUserName, Guid? senderProfilePictureId);
+
         long Save(ChatMessage message);
 
         int GetUnreadMessageCount(UserIdentifier userIdentifier, UserIdentifier sender);
