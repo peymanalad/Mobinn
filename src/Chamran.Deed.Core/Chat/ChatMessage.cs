@@ -35,6 +35,7 @@ namespace Chamran.Deed.Chat
 
         public Guid? SharedMessageId { get; set; }
 
+
         public ChatMessage(
             UserIdentifier user,
             UserIdentifier targetUser,

@@ -71,6 +71,34 @@ namespace Chamran.Deed.Web.Chat.SignalR
             }
         }
 
+        public async Task<string> EditMessage(EditChatMessageInput input)
+        {
+            input.Message = _htmlSanitizer.Sanitize(input.Message);
+            var sender = Context.ToUserIdentifier();
+            var receiver = new UserIdentifier(input.TenantId, input.UserId);
+
+            try
+            {
+                using (ChatAbpSession.Use(Context.GetTenantId(), Context.GetUserId()))
+                {
+                    await _chatMessageManager.EditMessageAsync(sender, receiver,input.MessageId, input.Message, input.TenancyName, input.UserName, input.ProfilePictureId);
+                    return string.Empty;
+                }
+            }
+            catch (UserFriendlyException ex)
+            {
+                Logger.Warn("Could not edit chat message to user: " + receiver);
+                Logger.Warn(ex.ToString(), ex);
+                return ex.Message;
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn("Could not edit chat message to user: " + receiver);
+                Logger.Warn(ex.ToString(), ex);
+                return _localizationManager.GetSource("AbpWeb").GetString("InternalServerError");
+            }
+        }
+
         public async Task<string> DeleteMessage(DeleteChatMessageInput input)
         {
             var sender = Context.ToUserIdentifier();
