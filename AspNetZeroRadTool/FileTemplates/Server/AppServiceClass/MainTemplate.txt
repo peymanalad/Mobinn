@@ -20,19 +20,19 @@ using {{Namespace_Here}}.Storage;
 namespace {{Namespace_Here}}.{{Namespace_Relative_Full_Here}}
 {
 	[AbpAuthorize(AppPermissions.{{Permission_Name_Here}})]
-    public class {{Entity_Name_Plural_Here}}AppService : {{Project_Name_Here}}AppServiceBase, I{{Entity_Name_Plural_Here}}AppService
+    public{{Overridable_Entity_Abstract_Here}} class {{Entity_Name_Plural_Here}}AppService{{Overridable_Entity_Base_Here}} : {{Project_Name_Here}}AppServiceBase{{Add_Interface_Here}}
     {
 		 private readonly IRepository<{{Entity_Name_Here}}{{Primary_Key_With_Comma_Here}}> _{{entity_Name_Here}}Repository;{{Excel_Declaration_Here}}
 		 {{NP_Looped_Declaration_Here}}
          {{File_Prop_Declaration_Here}}
-		  public {{Entity_Name_Plural_Here}}AppService(IRepository<{{Entity_Name_Here}}{{Primary_Key_With_Comma_Here}}> {{entity_Name_Here}}Repository{{Excel_Constructor_Parameter_Here}} {{NP_Looped_Ctor_Parameter_Here}} {{File_Prop_Ctor_Parameters_Here}}) 
+		  public {{Entity_Name_Plural_Here}}AppService{{Overridable_Entity_Base_Here}}(IRepository<{{Entity_Name_Here}}{{Primary_Key_With_Comma_Here}}> {{entity_Name_Here}}Repository{{Excel_Constructor_Parameter_Here}} {{NP_Looped_Ctor_Parameter_Here}} {{File_Prop_Ctor_Parameters_Here}}) 
 		  {
 			_{{entity_Name_Here}}Repository = {{entity_Name_Here}}Repository;{{Excel_Constructor_Init_Here}}
 			{{NP_Looped_Ctor_Initialize_Here}}
 			{{File_Prop_Ctor_Initialize_Here}}
 		  }
 
-		 public async Task<PagedResultDto<Get{{Entity_Name_Here}}ForViewDto>> GetAll(GetAll{{Entity_Name_Plural_Here}}Input input)
+		 public virtual async Task<PagedResultDto<Get{{Entity_Name_Here}}ForViewDto>> GetAll(GetAll{{Entity_Name_Plural_Here}}Input input)
          {
 			{{Property_Enum_Variable_Here}}
 			var filtered{{Entity_Name_Plural_Here}} = _{{entity_Name_Here}}Repository.GetAll(){{NP_Loop_Include_In_GetList_Here}}
@@ -76,7 +76,7 @@ namespace {{Namespace_Here}}.{{Namespace_Relative_Full_Here}}
          }{{GetForView_Method_Here}}
 		 
 		 [AbpAuthorize(AppPermissions.{{Permission_Name_Here}}_Edit)]
-		 public async Task<Get{{Entity_Name_Here}}ForEditOutput> Get{{Entity_Name_Here}}ForEdit(EntityDto{{Primary_Key_Inside_Tag_Here}} input)
+		 public virtual async Task<Get{{Entity_Name_Here}}ForEditOutput> Get{{Entity_Name_Here}}ForEdit(EntityDto{{Primary_Key_Inside_Tag_Here}} input)
          {
             var {{entity_Name_Here}} = await _{{entity_Name_Here}}Repository.FirstOrDefaultAsync(input.Id);
            
@@ -87,7 +87,7 @@ namespace {{Namespace_Here}}.{{Namespace_Relative_Full_Here}}
             return output;
          }
 
-		 public async Task CreateOrEdit(CreateOrEdit{{Entity_Name_Here}}Dto input)
+		 public virtual async Task CreateOrEdit(CreateOrEdit{{Entity_Name_Here}}Dto input)
          {
             if({{Id_Null_Check_Here}}){
 				await Create(input);
@@ -117,7 +117,7 @@ namespace {{Namespace_Here}}.{{Namespace_Relative_Full_Here}}
          }
 
 		 [AbpAuthorize(AppPermissions.{{Permission_Name_Here}}_Delete)]
-         public async Task Delete(EntityDto{{Primary_Key_Inside_Tag_Here}} input)
+         public virtual async Task Delete(EntityDto{{Primary_Key_Inside_Tag_Here}} input)
          {
             await _{{entity_Name_Here}}Repository.DeleteAsync(input.Id);
          } {{Get_Excel_Method_Here}}{{NP_Looped_GetAllForLookupTable_Here}}

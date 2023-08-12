@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="en">
-  <texts>    <text name="UserPostGroup">User post group</text>
+  <texts>    <text name="OrganizationUser">Organization user</text>
+    <text name="CreateNewOrganizationUser">Create new organization user</text>
+    <text name="EditOrganizationUser">Edit organization user</text>
+    <text name="DeleteOrganizationUser">Delete organization user</text>
+    <text name="OrganizationChart">Organization chart</text>
+    <text name="CreateNewOrganizationChart">Create new organization chart</text>
+    <text name="EditOrganizationChart">Edit organization chart</text>
+    <text name="DeleteOrganizationChart">Delete organization chart</text>
+    <text name="UserPostGroup">User post group</text>
     <text name="CreateNewUserPostGroup">Create new user post group</text>
     <text name="EditUserPostGroup">Edit user post group</text>
     <text name="DeleteUserPostGroup">Delete user post group</text>

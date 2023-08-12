@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace {{Namespace_Here}}.{{Namespace_Relative_Full_Here}}.Dtos
 {
-    public class Get{{Entity_Name_Here}}ForEditOutput
+    public{{Overridable_Entity_Abstract_Here}} class Get{{Entity_Name_Here}}ForEditOutput{{Overridable_Entity_Base_Here}}
     {
 		public CreateOrEdit{{Entity_Name_Here}}Dto {{Entity_Name_Here}} { get; set; }
 

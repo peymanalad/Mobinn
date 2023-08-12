@@ -15,12 +15,12 @@ namespace {{Namespace_Here}}.Web.Areas.{{App_Area_Name_Here}}.Controllers
 {
     [Area("{{App_Area_Name_Here}}")]
     [AbpMvcAuthorize(AppPermissions.{{Permission_Name_Here}})]
-    public class {{Entity_Name_Plural_Here}}Controller : {{Project_Name_Here}}ControllerBase
+    public{{Overridable_Entity_Abstract_Here}} class {{Entity_Name_Plural_Here}}Controller{{Overridable_Entity_Base_Here}} : {{Project_Name_Here}}ControllerBase
     {
         private readonly I{{Entity_Name_Plural_Here}}AppService _{{entity_Name_Plural_Here}}AppService;
         {{TempFileCacheManager_Prop_Init_Here}}
         {{File_Prop_Definitions_Here}}
-        public {{Entity_Name_Plural_Here}}Controller(I{{Entity_Name_Plural_Here}}AppService {{entity_Name_Plural_Here}}AppService{{TempFileCacheManager_Prop_Cons_Here}})
+        public {{Entity_Name_Plural_Here}}Controller{{Overridable_Entity_Base_Here}}(I{{Entity_Name_Plural_Here}}AppService {{entity_Name_Plural_Here}}AppService{{TempFileCacheManager_Prop_Cons_Here}})
         {
             _{{entity_Name_Plural_Here}}AppService = {{entity_Name_Plural_Here}}AppService;
             {{TempFileCacheManager_Prop_Define_Here}}

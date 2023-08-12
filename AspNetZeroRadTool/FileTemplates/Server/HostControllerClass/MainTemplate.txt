@@ -10,7 +10,7 @@ using {{Namespace_Here}}.Storage;
 namespace {{Namespace_Here}}.Web.Controllers
 {
     [Authorize]
-    public class {{Entity_Name_Plural_Here}}Controller : {{Project_Name_Here}}ControllerBase
+    public{{Overridable_Entity_Abstract_Here}} class {{Entity_Name_Plural_Here}}Controller{{Overridable_Entity_Base_Here}} : {{Project_Name_Here}}ControllerBase
     {
         private readonly ITempFileCacheManager _tempFileCacheManager;
         {{File_Prop_Definitions_Here}}
@@ -18,6 +18,8 @@ namespace {{Namespace_Here}}.Web.Controllers
         public {{Entity_Name_Plural_Here}}Controller(ITempFileCacheManager tempFileCacheManager)
         {
             _tempFileCacheManager = tempFileCacheManager;
+            var hasFileProp = {{Has_File_Prop}};
+            var projetcType = {{Project_Type_Here}};
         }
         
         {{File_Upload_Action_Here}}
