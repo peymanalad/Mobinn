@@ -27,14 +27,7 @@ namespace {{Namespace_Here}}.Tests.{{Namespace_Relative_Full_Here}}
 
         private void SeedTestData()
         {            
-            var currentTenant = GetCurrentTenant();
-            
-            var {{entity_Name_Here}} = new {{Entity_Name_Here}}
-            {
-                {{Seed_Default_Value}}
-                Id = _{{entity_Name_Here}}TestId,
-                TenantId = currentTenant.Id
-            };
+            {{Seed_Entity_Data}}
             
             UsingDbContext(context =>
             {

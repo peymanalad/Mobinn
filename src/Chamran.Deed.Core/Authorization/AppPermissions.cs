@@ -6,6 +6,16 @@
     /// </summary>
     public static class AppPermissions
     {
+        public const string Pages_OrganizationUsers = "Pages.OrganizationUsers";
+        public const string Pages_OrganizationUsers_Create = "Pages.OrganizationUsers.Create";
+        public const string Pages_OrganizationUsers_Edit = "Pages.OrganizationUsers.Edit";
+        public const string Pages_OrganizationUsers_Delete = "Pages.OrganizationUsers.Delete";
+
+        public const string Pages_OrganizationCharts = "Pages.OrganizationCharts";
+        public const string Pages_OrganizationCharts_Create = "Pages.OrganizationCharts.Create";
+        public const string Pages_OrganizationCharts_Edit = "Pages.OrganizationCharts.Edit";
+        public const string Pages_OrganizationCharts_Delete = "Pages.OrganizationCharts.Delete";
+
         public const string Pages_UserPostGroups = "Pages.UserPostGroups";
         public const string Pages_UserPostGroups_Create = "Pages.UserPostGroups.Create";
         public const string Pages_UserPostGroups_Edit = "Pages.UserPostGroups.Edit";

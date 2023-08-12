@@ -2,7 +2,7 @@
 
 namespace {{Namespace_Here}}.Web.Areas.{{App_Area_Name_Here}}.Models.{{Entity_Name_Plural_Here}}
 {
-    public class {{Master_Detail_Child_Prefix_Here}}{{Entity_Name_Here}}ViewModel : Get{{Entity_Name_Here}}ForViewDto
+    public{{Overridable_Entity_Abstract_Here}} class {{Master_Detail_Child_Prefix_Here}}{{Entity_Name_Here}}ViewModel{{Overridable_Entity_Base_Here}} : Get{{Entity_Name_Here}}ForViewDto
     {
 
     }

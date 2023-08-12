@@ -1,6 +1,6 @@
 ﻿namespace {{Namespace_Here}}.{{Namespace_Relative_Full_Here}}.Dtos
 {
-    public class Get{{Entity_Name_Here}}ForViewDto
+    public{{Overridable_Entity_Abstract_Here}} class Get{{Entity_Name_Here}}ForViewDto{{Overridable_Entity_Base_Here}}
     {
 		public {{Entity_Name_Here}}Dto {{Entity_Name_Here}} { get; set; }
 

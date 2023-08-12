@@ -3,7 +3,7 @@ using System;
 
 namespace {{Namespace_Here}}.{{Namespace_Relative_Full_Here}}.Dtos
 {
-    public class GetAll{{Entity_Name_Plural_Here}}Input : PagedAndSortedResultRequestDto
+    public{{Overridable_Entity_Abstract_Here}} class GetAll{{Entity_Name_Plural_Here}}Input{{Overridable_Entity_Base_Here}} : PagedAndSortedResultRequestDto
     {
 		public string Filter { get; set; }
 

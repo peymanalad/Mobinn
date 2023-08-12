@@ -2056,6 +2056,69 @@ namespace Chamran.Deed.Migrations
                     b.ToTable("Hashtags");
                 });
 
+            modelBuilder.Entity("Chamran.Deed.Info.OrganizationChart", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Caption")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatorUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("LeafPath")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
+
+                    b.ToTable("OrganizationCharts");
+                });
+
+            modelBuilder.Entity("Chamran.Deed.Info.OrganizationUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatorUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("OrganizationChartId")
+                        .HasColumnType("int");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationChartId");
+
+                    b.HasIndex("UserId", "OrganizationChartId")
+                        .IsUnique();
+
+                    b.ToTable("OrganizationUsers");
+                });
+
             modelBuilder.Entity("Chamran.Deed.Info.Post", b =>
                 {
                     b.Property<int>("Id")
@@ -3021,6 +3084,35 @@ namespace Chamran.Deed.Migrations
                     b.Navigation("PostFk");
                 });
 
+            modelBuilder.Entity("Chamran.Deed.Info.OrganizationChart", b =>
+                {
+                    b.HasOne("Chamran.Deed.Info.OrganizationChart", "ParentFk")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.ClientCascade);
+
+                    b.Navigation("ParentFk");
+                });
+
+            modelBuilder.Entity("Chamran.Deed.Info.OrganizationUser", b =>
+                {
+                    b.HasOne("Chamran.Deed.Info.OrganizationChart", "OrganizationChartFk")
+                        .WithMany()
+                        .HasForeignKey("OrganizationChartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Chamran.Deed.Authorization.Users.User", "UserFk")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OrganizationChartFk");
+
+                    b.Navigation("UserFk");
+                });
+
             modelBuilder.Entity("Chamran.Deed.Info.Post", b =>
                 {
                     b.HasOne("Chamran.Deed.People.GroupMember", "GroupMemberFk")
@@ -3271,6 +3363,11 @@ namespace Chamran.Deed.Migrations
             modelBuilder.Entity("Chamran.Deed.Info.Comment", b =>
                 {
                     b.Navigation("Likes");
+                });
+
+            modelBuilder.Entity("Chamran.Deed.Info.OrganizationChart", b =>
+                {
+                    b.Navigation("Children");
                 });
 
             modelBuilder.Entity("Chamran.Deed.Info.Post", b =>

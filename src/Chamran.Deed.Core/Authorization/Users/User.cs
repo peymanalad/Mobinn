@@ -25,7 +25,7 @@ namespace Chamran.Deed.Authorization.Users
         
         public List<UserOrganizationUnit> OrganizationUnits { get; set; }
 
-        public bool IsSuperUser { get; set; }
+        public bool IsSuperUser { get; set; }   
 
         //Can add application specific user properties here
 

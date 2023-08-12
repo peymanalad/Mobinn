@@ -1,0 +1,65 @@
+{
+  "IsRegenerate": false,
+  "MenuPosition": null,
+  "RelativeNamespace": "Info",
+  "EntityName": "OrganizationUser",
+  "EntityNamePlural": "OrganizationUsers",
+  "TableName": "OrganizationUsers",
+  "PrimaryKeyType": "int",
+  "BaseClass": "CreationAuditedEntity",
+  "EntityHistory": false,
+  "AutoMigration": true,
+  "UpdateDatabase": false,
+  "CreateUserInterface": false,
+  "CreateViewOnly": true,
+  "CreateExcelExport": true,
+  "IsNonModalCRUDPage": false,
+  "IsMasterDetailPage": false,
+  "GenerateOverridableEntity": false,
+  "GenerateUnitTest": false,
+  "GenerateUiTest": false,
+  "PagePermission": {
+    "Host": false,
+    "Tenant": false
+  },
+  "Properties": [],
+  "NavigationProperties": [
+    {
+      "Namespace": "Chamran.Deed.Authorization.Users",
+      "ForeignEntityName": "User",
+      "ForeignEntityNamePlural": "Users",
+      "IdType": "long",
+      "IsNullable": false,
+      "PropertyName": "UserId",
+      "DuplicationNumber": 0,
+      "RelationType": "single",
+      "ViewType": "LookupTable",
+      "DisplayPropertyNameInfos": {
+        "MergeFormat": "{0}",
+        "DisplayPropertyNames": [
+          "Name"
+        ]
+      }
+    },
+    {
+      "Namespace": "Chamran.Deed.Info",
+      "ForeignEntityName": "OrganizationChart",
+      "ForeignEntityNamePlural": "OrganizationCharts",
+      "IdType": "int",
+      "IsNullable": false,
+      "PropertyName": "OrganizationChartId",
+      "DuplicationNumber": 0,
+      "RelationType": "single",
+      "ViewType": "LookupTable",
+      "DisplayPropertyNameInfos": {
+        "MergeFormat": "{0}",
+        "DisplayPropertyNames": [
+          "Caption"
+        ]
+      }
+    }
+  ],
+  "NavigationPropertyOneToManyTables": [],
+  "EnumDefinitions": [],
+  "DbContext": null
+}

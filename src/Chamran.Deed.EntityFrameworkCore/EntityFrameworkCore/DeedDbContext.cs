@@ -20,6 +20,10 @@ namespace Chamran.Deed.EntityFrameworkCore
 {
     public class DeedDbContext : AbpZeroDbContext<Tenant, Role, User, DeedDbContext>, IAbpPersistedGrantDbContext
     {
+        public virtual DbSet<OrganizationUser> OrganizationUsers { get; set; }
+
+        public virtual DbSet<OrganizationChart> OrganizationCharts { get; set; }
+
         public virtual DbSet<UserPostGroup> UserPostGroups { get; set; }
 
         public virtual DbSet<UserLocation> UserLocations { get; set; }
@@ -84,9 +88,16 @@ namespace Chamran.Deed.EntityFrameworkCore
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<OrganizationChart>()
+                .HasOne(node => node.ParentFk)   // Use ParentFk navigation property
+                .WithMany(parent => parent.Children)
+                .HasForeignKey(node => node.ParentId)
+                .OnDelete(DeleteBehavior.ClientCascade);
+
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.ApplyConfiguration(new CommentLikeConfiguration());
+            modelBuilder.ApplyConfiguration(new OrganizationUserConfiguration());
 
             modelBuilder.Entity<BinaryObject>(b =>
             {

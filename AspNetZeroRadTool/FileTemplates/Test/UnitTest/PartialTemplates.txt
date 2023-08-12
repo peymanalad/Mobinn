@@ -141,6 +141,27 @@
 		}
 	],
 "conditionalTemplates":[
+		{
+            "placeholder" : "{{Seed_Entity_Data}}",
+			"condition": "{{Is_Available_To_Tenant_Here}} == true",
+            "content" : "var currentTenant = GetCurrentTenant();
+
+            var {{entity_Name_Here}} = new {{Entity_Name_Here}}
+            {
+                {{Seed_Default_Value}}
+                Id = _{{entity_Name_Here}}TestId,
+                TenantId = currentTenant.Id
+            };"
+        },
+	    {
+            "placeholder" : "{{Seed_Entity_Data}}",
+			"condition": "{{Is_Available_To_Tenant_Here}} == false",
+            "content" : "var {{entity_Name_Here}} = new {{Entity_Name_Here}}
+            {
+                {{Seed_Default_Value}}
+                Id = _{{entity_Name_Here}}TestId
+            };"
+        },
         {
             "placeholder" : "{{Primary_Key_Test_Value}}",
             "condition": "{{Primary_Key_Here}} == 'int'",
