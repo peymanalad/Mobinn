@@ -286,5 +286,67 @@ namespace Chamran.Deed.Chat
                 await _chatCommunicator.SendReadStateChangeToClients(onlineFriendClients, userIdentifier);
             }
         }
+
+        public async Task MarkMessageAsReceived(MarkMessageAsReceivedInput input)
+        {
+            var userId = AbpSession.GetUserId();
+            var tenantId = AbpSession.TenantId;
+
+            // receiver messages
+            var messages = await _chatMessageRepository
+                 .GetAll()
+                 .Where(m =>
+                        m.UserId == userId &&
+                        m.TargetTenantId == input.TenantId &&
+                        m.TargetUserId == input.UserId &&
+                        m.ReadState == ChatMessageReadState.Unread &&
+                        m.SharedMessageId==input.SharedMessageId)
+                 .ToListAsync();
+
+            if (!messages.Any())
+            {
+                return;
+            }
+
+            foreach (var message in messages)
+            {
+                message.ChangeReadState(ChatMessageReadState.Received);
+            }
+
+            // sender messages
+            using (CurrentUnitOfWork.SetTenantId(input.TenantId))
+            {
+                var reverseMessages = await _chatMessageRepository.GetAll()
+                    .Where(m => m.UserId == input.UserId && m.TargetTenantId == tenantId && m.TargetUserId == userId && m.SharedMessageId == input.SharedMessageId)
+                    .ToListAsync();
+
+                if (!reverseMessages.Any())
+                {
+                    return;
+                }
+
+                foreach (var message in reverseMessages)
+                {
+                    message.ChangeReceiverReadState(ChatMessageReadState.Received);
+                }
+            }
+
+            var userIdentifier = AbpSession.ToUserIdentifier();
+            var friendIdentifier = input.ToUserIdentifier();
+
+            _userFriendsCache.ResetUnreadMessageCount(userIdentifier, friendIdentifier);
+
+            var onlineUserClients = _onlineClientManager.GetAllByUserId(userIdentifier);
+            if (onlineUserClients.Any())
+            {
+                await _chatCommunicator.SendAllUnreadMessagesOfUserReadToClients(onlineUserClients, friendIdentifier);
+            }
+
+            var onlineFriendClients = _onlineClientManager.GetAllByUserId(friendIdentifier);
+            if (onlineFriendClients.Any())
+            {
+                await _chatCommunicator.SendReadStateChangeToClients(onlineFriendClients, userIdentifier);
+            }
+        }
     }
 }

@@ -14,7 +14,6 @@ using Abp.Application.Services.Dto;
 using Chamran.Deed.Authorization;
 using Abp.Extensions;
 using Abp.Authorization;
-using Abp.Runtime.Session;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Chamran.Deed.Authorization.Users;

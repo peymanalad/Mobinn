@@ -14,5 +14,7 @@
         public const string TenantsMovedToEdition = "App.TenantsMovedToEdition";
         public const string DownloadInvalidImportUsers = "App.DownloadInvalidImportUsers";
         public const string MassNotification = "App.MassNotification";
+        public const string ChatMessage = "App.ChatMessage";
+        public const string NewPost = "App.NewPost";
     }
 }
