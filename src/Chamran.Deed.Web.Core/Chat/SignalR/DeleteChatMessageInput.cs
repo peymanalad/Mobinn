@@ -1,6 +1,8 @@
-﻿namespace Chamran.Deed.Web.Chat.SignalR;
+﻿using System;
+
+namespace Chamran.Deed.Web.Chat.SignalR;
 
 public class DeleteChatMessageInput
 {
-    public int MessageId { get; set; }
+    public Guid SharedMessageId { get; set; }
 }

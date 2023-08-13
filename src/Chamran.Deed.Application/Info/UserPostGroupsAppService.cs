@@ -1,7 +1,4 @@
 ﻿using Chamran.Deed.Authorization.Users;
-using Chamran.Deed.Info;
-
-using System;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using Abp.Linq.Extensions;
@@ -13,13 +10,11 @@ using Chamran.Deed.Info.Dtos;
 using Chamran.Deed.Dto;
 using Abp.Application.Services.Dto;
 using Chamran.Deed.Authorization;
-using Abp.Extensions;
 using Abp.Authorization;
 using Abp.Timing;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Chamran.Deed.People;
-using Chamran.Deed.Storage;
 
 namespace Chamran.Deed.Info
 {

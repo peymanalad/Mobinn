@@ -1,21 +1,14 @@
-﻿using Chamran.Deed.Info;
-
-using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Dynamic.Core;
 using Abp.Linq.Extensions;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
 using Chamran.Deed.Info.Dtos;
-using Chamran.Deed.Dto;
 using Abp.Application.Services.Dto;
 using Chamran.Deed.Authorization;
-using Abp.Extensions;
 using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Abp.UI;
-using Chamran.Deed.Storage;
 
 namespace Chamran.Deed.Info
 {
@@ -135,8 +128,9 @@ namespace Chamran.Deed.Info
         protected virtual async Task Create(CreateOrEditOrganizationChartDto input)
         {
             var organizationChart = ObjectMapper.Map<OrganizationChart>(input);
-
             await _organizationChartRepository.InsertAsync(organizationChart);
+            organizationChart.GenerateLeafPath();
+
 
         }
 
@@ -145,6 +139,8 @@ namespace Chamran.Deed.Info
         {
             var organizationChart = await _organizationChartRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, organizationChart);
+            organizationChart.GenerateLeafPath();
+
 
         }
 
