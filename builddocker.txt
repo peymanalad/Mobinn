@@ -1,3 +1,9 @@
+docker build -t corsanywhere:1.1 C:\ZProjects\CORSAnywhere\CorsAnywhereService
+docker tag 45a105490bbb yasnadocker.yasnasystem.ir/corsanywhere:1.1
+docker push yasnadocker.yasnasystem.ir/corsanywhere:1.1
+
+
+
 docker build -t ideed:7.0 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 
 docker build -t ideedreact:2.4 C:\ZProjects\ideed\react[obsolete]
