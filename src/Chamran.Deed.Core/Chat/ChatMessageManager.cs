@@ -10,7 +10,6 @@ using Abp.MultiTenancy;
 using Abp.RealTime;
 using Abp.UI;
 using Chamran.Deed.Authorization.Users;
-using Chamran.Deed.Common;
 using Chamran.Deed.Friendships;
 using Chamran.Deed.Friendships.Cache;
 using Chamran.Deed.Storage;

@@ -92,20 +92,34 @@ namespace Chamran.Deed.Web.Controllers
 
         [DisableAuditing]
         [AllowAnonymous]
-        public async Task<ActionResult> LatestBuild()
+        public async Task<IActionResult> LatestBuild()
         {
-            if(!_softwareUpdateRepository.GetAll().Any()) return StatusCode(404, "File not found");
             var latestUpdate = _softwareUpdateRepository.GetAll()
                 .OrderByDescending(m => m.CreationTime)
-                .First();
-            if (latestUpdate.UpdateFile==null) return StatusCode(404, "File not found");
+                .FirstOrDefault();
+
+            if (latestUpdate == null || latestUpdate.UpdateFile == null)
+            {
+                return NotFound("File not found");
+            }
+
             var fileObject = await _binaryObjectManager.GetOrNullAsync(latestUpdate.UpdateFile.Value);
+
             if (fileObject == null)
             {
-                return StatusCode((int)HttpStatusCode.NotFound);
+                return NotFound();
             }
-            return File(fileObject.Bytes, "application/octet-stream", "Deed"+latestUpdate.BuildNo+".apk");
+
+            var contentType = "application/octet-stream";
+            var fileName = "Deed" + latestUpdate.BuildNo + ".apk";
+
+            // Create a stream from the byte array
+            var stream = new MemoryStream(fileObject.Bytes);
+
+            // Return the stream as a FileStreamResult
+            return File(stream, contentType, fileName);
         }
+
 
         [DisableAuditing]
         [OutputCache(Duration = 0,NoStore = true)]

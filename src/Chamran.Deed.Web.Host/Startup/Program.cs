@@ -18,8 +18,11 @@ namespace Chamran.Deed.Web.Startup
             return new WebHostBuilder()
                 .UseKestrel(opt =>
                 {
+                    
                     opt.AddServerHeader = false;
-                    opt.Limits.MaxRequestLineSize = 16 * 1024;
+                    opt.Limits.MaxRequestLineSize = 524288000;
+                    opt.Limits.MaxRequestBufferSize = 524288000;
+                    
                 })
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .ConfigureLogging((context, logging) =>
