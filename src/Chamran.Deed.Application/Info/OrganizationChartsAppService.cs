@@ -128,7 +128,14 @@ namespace Chamran.Deed.Info
         protected virtual async Task Create(CreateOrEditOrganizationChartDto input)
         {
             var organizationChart = ObjectMapper.Map<OrganizationChart>(input);
+
+            // Fetch the parent organization chart using the ParentId from the input
+            if (input.ParentId.HasValue)
+            {
+                organizationChart.ParentFk = await _organizationChartRepository.GetAsync(input.ParentId.Value);
+            }
             await _organizationChartRepository.InsertAsync(organizationChart);
+            await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the role.
             organizationChart.GenerateLeafPath();
 
 
