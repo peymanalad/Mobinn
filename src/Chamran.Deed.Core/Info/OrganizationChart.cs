@@ -29,7 +29,7 @@ namespace Chamran.Deed.Info
 
         [ForeignKey("ParentId")]
         public OrganizationChart ParentFk { get; set; }
-
+        
         // Navigation property for children
         public virtual ICollection<OrganizationChart> Children { get; set; } = new List<OrganizationChart>();
 

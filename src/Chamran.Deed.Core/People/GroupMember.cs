@@ -1,12 +1,8 @@
 ﻿using Chamran.Deed.Authorization.Users;
-using Chamran.Deed.People;
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Abp.Domain.Entities.Auditing;
 using Abp.Domain.Entities;
 using Abp.Auditing;
-using Microsoft.EntityFrameworkCore;
 
 namespace Chamran.Deed.People
 {

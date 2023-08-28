@@ -196,7 +196,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
 
             if (cash == null)
             {
-                throw new Exception("Phone number confirmation code is not found in cache !");
+                throw new UserFriendlyException("Phone number confirmation code is not found in cache !");
             }
 
             if (input.Code != cash.Code)

@@ -244,7 +244,7 @@ namespace Chamran.Deed.Authorization.Accounts
         {
             if (!await _userLinkManager.AreUsersLinked(AbpSession.ToUserIdentifier(), input.ToUserIdentifier()))
             {
-                throw new Exception(L("This account is not linked to your account"));
+                throw new UserFriendlyException(L("This account is not linked to your account"));
             }
 
             return new SwitchToLinkedAccountOutput
