@@ -144,7 +144,7 @@ namespace Chamran.Deed.Notifications
 
             if (userNotification.UserId != AbpSession.GetUserId())
             {
-                throw new Exception(
+                throw new UserFriendlyException(
                     $"Given user notification id ({input.Id}) is not belong to the current user ({AbpSession.GetUserId()})"
                 );
             }

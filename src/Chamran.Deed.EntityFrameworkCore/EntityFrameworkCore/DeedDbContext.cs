@@ -94,8 +94,6 @@ namespace Chamran.Deed.EntityFrameworkCore
                 .HasForeignKey(node => node.ParentId)
                 .OnDelete(DeleteBehavior.ClientCascade);
 
-            base.OnModelCreating(modelBuilder);
-
             modelBuilder.ApplyConfiguration(new CommentLikeConfiguration());
             modelBuilder.ApplyConfiguration(new OrganizationUserConfiguration());
 
@@ -163,7 +161,14 @@ namespace Chamran.Deed.EntityFrameworkCore
                 .HasIndex(s => new { s.CommentId, s.UserId })
                 .IsUnique();
 
+            modelBuilder.Entity<GroupMember>()
+                .HasIndex(gm => new { gm.UserId, gm.OrganizationId })
+                .IsUnique();
+
             modelBuilder.ConfigurePersistedGrantEntity();
+
+            base.OnModelCreating(modelBuilder);
+
         }
     }
 }
