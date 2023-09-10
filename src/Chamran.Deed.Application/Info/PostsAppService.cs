@@ -255,7 +255,7 @@ namespace Chamran.Deed.Info
                 ids.Add(new UserIdentifier(AbpSession.TenantId, row.UserId));
             }
 
-            await _appNotifier.SendPostNotificationAsync("پست جدیدی دریافت شد",
+            await _appNotifier.SendPostNotificationAsync("پست جدیدی ایجاد شد",
                 userIds: ids.ToArray(),
                 NotificationSeverity.Info
             );
