@@ -14,6 +14,7 @@ using Abp.Timing;
 using Microsoft.EntityFrameworkCore;
 using Chamran.Deed.Friendships.Cache;
 using Chamran.Deed.Friendships.Dto;
+using static NPOI.HSSF.UserModel.HeaderFooter;
 
 namespace Chamran.Deed.Chat
 {
@@ -45,34 +46,44 @@ namespace Chamran.Deed.Chat
             {
                 return new GetUserChatFriendsWithSettingsOutput();
             }
-
-            var cacheItem = _userFriendsCache.GetCacheItem(userIdentifier);
-            var friends = ObjectMapper.Map<List<FriendDto>>(cacheItem.Friends);
-
-            foreach (var friend in friends)
+            //var user = await UserManager.GetUserAsync(AbpSession.ToUserIdentifier());
+            //if (user.IsSuperUser)
+            //{
+            //    return new GetUserChatFriendsWithSettingsOutput
+            //    {
+            //        Friends = friends,
+            //        ServerTime = Clock.Now
+            //    };
+            //}
+            //else
             {
-                friend.IsOnline = _onlineClientManager.IsOnline(
-                    new UserIdentifier(friend.FriendTenantId, friend.FriendUserId)
-                );
-                var query = await _chatMessageRepository.GetAll()
-                    .Where(m => m.UserId == AbpSession.UserId && m.TargetTenantId == AbpSession.TenantId && m.TargetUserId == friend.FriendUserId)
-                    .OrderByDescending(m => m.CreationTime)
-                    .Take(1)
-                    .ToListAsync();
-                if (query.Any())
+
+                var cacheItem = _userFriendsCache.GetCacheItem(userIdentifier);
+                var friends = ObjectMapper.Map<List<FriendDto>>(cacheItem.Friends);
+
+                foreach (var friend in friends)
                 {
+                    friend.IsOnline = _onlineClientManager.IsOnline(
+                        new UserIdentifier(friend.FriendTenantId, friend.FriendUserId)
+                    );
+                    var query = await _chatMessageRepository.GetAll()
+                        .Where(m => m.UserId == AbpSession.UserId && m.TargetTenantId == AbpSession.TenantId && m.TargetUserId == friend.FriendUserId)
+                        .OrderByDescending(m => m.CreationTime)
+                        .Take(1)
+                        .ToListAsync();
+                    if (!query.Any()) continue;
                     var entity = query.First();
                     friend.LatestMessage = entity.Message;
                     friend.LastMessageDateTime = entity.CreationTime;
-
                 }
+
+                return new GetUserChatFriendsWithSettingsOutput
+                {
+                    Friends = friends,
+                    ServerTime = Clock.Now
+                };
             }
 
-            return new GetUserChatFriendsWithSettingsOutput
-            {
-                Friends = friends,
-                ServerTime = Clock.Now
-            };
         }
 
 
