@@ -11,5 +11,7 @@ namespace Chamran.Deed.Notifications.Dto
         public DateTime? StartDate { get; set; }
 
         public DateTime? EndDate { get; set; }
+
+        public string NotificationName { get; set; }
     }
 }

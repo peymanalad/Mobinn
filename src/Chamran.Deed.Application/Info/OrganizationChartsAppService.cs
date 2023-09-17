@@ -84,7 +84,8 @@ namespace Chamran.Deed.Info
                                          o.Caption,
                                          o.LeafPath,
                                          Id = o.Id,
-                                         OrganizationChartCaption = s1 == null || s1.Caption == null ? "" : s1.Caption.ToString()
+                                         OrganizationChartCaption = s1 == null || s1.Caption == null ? "" : s1.Caption.ToString(),
+                                         o.OrganizationFk.OrganizationLogo
                                      };
 
             var totalCount = await filteredOrganizationCharts.CountAsync();
@@ -102,6 +103,8 @@ namespace Chamran.Deed.Info
                         Caption = o.Caption,
                         LeafPath = o.LeafPath,
                         Id = o.Id,
+                        OrganizationLogo = o.OrganizationLogo
+                        
                     },
                     OrganizationChartCaption = o.OrganizationChartCaption
                 };

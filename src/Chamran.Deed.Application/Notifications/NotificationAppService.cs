@@ -75,34 +75,48 @@ namespace Chamran.Deed.Notifications
             var unreadCount = await _userNotificationManager.GetUserNotificationCountAsync(
                 AbpSession.ToUserIdentifier(), UserNotificationState.Unread, input.StartDate, input.EndDate
             );
-            var notifications = await _userNotificationManager.GetUserNotificationsAsync(
-                AbpSession.ToUserIdentifier(), input.State, input.SkipCount, input.MaxResultCount, input.StartDate,
-                input.EndDate
-            );
+            if (!string.IsNullOrWhiteSpace(input.NotificationName))
+            {
+                var notifications = await _userNotificationManager.GetUserNotificationsAsync(
+                    AbpSession.ToUserIdentifier(), input.State, 0, int.MaxValue, input.StartDate,
+                    input.EndDate
+                );
+                notifications = notifications.Where(x => x.Notification.NotificationName == input.NotificationName).ToList();
+                notifications = notifications.Skip(input.SkipCount).Take(input.MaxResultCount).ToList();
+                return new GetNotificationsOutput(totalCount, unreadCount, notifications);
 
+            }
+            else
+            {
+                var notifications = await _userNotificationManager.GetUserNotificationsAsync(
+                    AbpSession.ToUserIdentifier(), input.State, input.SkipCount, input.MaxResultCount, input.StartDate,
+                    input.EndDate
+                );
 
-            return new GetNotificationsOutput(totalCount, unreadCount, notifications);
+                return new GetNotificationsOutput(totalCount, unreadCount, notifications);
+            }
+
         }
-        
+
         public async Task<bool> ShouldUserUpdateApp()
         {
             var notifications = await _userNotificationManager.GetUserNotificationsAsync(
                 AbpSession.ToUserIdentifier(), UserNotificationState.Unread
             );
-            
+
             return notifications.Any(x => x.Notification.NotificationName == AppNotificationNames.NewVersionAvailable);
         }
-        
+
         public async Task<SetNotificationAsReadOutput> SetAllAvailableVersionNotificationAsRead()
         {
             var notifications = await _userNotificationManager.GetUserNotificationsAsync(
                 AbpSession.ToUserIdentifier(), UserNotificationState.Unread
             );
-            
-            var filteredNotifications =  notifications
+
+            var filteredNotifications = notifications
                 .Where(x => x.Notification.NotificationName == AppNotificationNames.NewVersionAvailable)
                 .ToList();
-            
+
             if (!filteredNotifications.Any())
             {
                 return new SetNotificationAsReadOutput(false);
@@ -121,7 +135,7 @@ namespace Chamran.Deed.Notifications
                     UserNotificationState.Read
                 );
             }
-            
+
             return new SetNotificationAsReadOutput(true);
         }
 
@@ -344,7 +358,7 @@ namespace Chamran.Deed.Notifications
                 targetNotifiers.ToArray()
             );
         }
-        
+
         [AbpAuthorize(AppPermissions.Pages_Administration_NewVersion_Create)]
         public async Task CreateNewVersionReleasedNotification()
         {

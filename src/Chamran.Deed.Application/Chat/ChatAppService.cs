@@ -177,7 +177,7 @@ namespace Chamran.Deed.Chat
                         m.UserId == userId &&
                         m.TargetTenantId == input.TenantId &&
                         m.TargetUserId == input.UserId &&
-                        m.ReadState == ChatMessageReadState.Unread)
+                        m.ReadState == ChatMessageReadState.Unread || m.ReadState == ChatMessageReadState.Received)
                  .ToListAsync();
 
             if (!messages.Any())
