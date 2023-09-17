@@ -39,6 +39,7 @@ namespace Chamran.Deed.Info
 
             var filteredOrganizationCharts = _organizationChartRepository.GetAll()
                         .Include(e => e.ParentFk)
+                        .Include(e=>e.OrganizationId)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.Caption.Contains(input.Filter) || e.LeafPath.Contains(input.Filter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.CaptionFilter), e => e.Caption.Contains(input.CaptionFilter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.LeafPathFilter), e => e.LeafPath.Contains(input.LeafPathFilter))
