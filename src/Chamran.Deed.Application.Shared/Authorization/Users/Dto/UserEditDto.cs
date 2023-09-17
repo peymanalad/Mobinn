@@ -13,6 +13,8 @@ namespace Chamran.Deed.Authorization.Users.Dto
         /// </summary>
         public long? Id { get; set; }
 
+        public string NationalId { get; set; }
+
         [Required]
         [StringLength(AbpUserBase.MaxNameLength)]
         public string Name { get; set; }

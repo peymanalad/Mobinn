@@ -33,6 +33,7 @@ using Chamran.Deed.Net.Emailing;
 using Chamran.Deed.Notifications;
 using Chamran.Deed.Url;
 using Chamran.Deed.Organizations.Dto;
+using Chamran.Deed.People;
 
 namespace Chamran.Deed.Authorization.Users
 {
@@ -60,7 +61,9 @@ namespace Chamran.Deed.Authorization.Users
         private readonly IRepository<OrganizationUnitRole, long> _organizationUnitRoleRepository;
         private readonly IOptions<UserOptions> _userOptions;
         private readonly IEmailSettingsChecker _emailSettingsChecker;
-        
+        private readonly IRepository<User, long> _userRepository;
+        private readonly IRepository<Organization, int> _lookup_organizationRepository;
+        private readonly IRepository<GroupMember> _groupMemberRepository;
         public UserAppService(
             RoleManager roleManager,
             IUserEmailer userEmailer,
@@ -78,8 +81,8 @@ namespace Chamran.Deed.Authorization.Users
             IRoleManagementConfig roleManagementConfig,
             UserManager userManager,
             IRepository<UserOrganizationUnit, long> userOrganizationUnitRepository,
-            IRepository<OrganizationUnitRole, long> organizationUnitRoleRepository, 
-            IOptions<UserOptions> userOptions, IEmailSettingsChecker emailSettingsChecker)
+            IRepository<OrganizationUnitRole, long> organizationUnitRoleRepository,
+            IOptions<UserOptions> userOptions, IEmailSettingsChecker emailSettingsChecker, IRepository<User, long> userRepository, IRepository<Organization, int> lookupOrganizationRepository, IRepository<GroupMember> groupMemberRepository)
         {
             _roleManager = roleManager;
             _userEmailer = userEmailer;
@@ -99,6 +102,9 @@ namespace Chamran.Deed.Authorization.Users
             _organizationUnitRoleRepository = organizationUnitRoleRepository;
             _userOptions = userOptions;
             _emailSettingsChecker = emailSettingsChecker;
+            _userRepository = userRepository;
+            _lookup_organizationRepository = lookupOrganizationRepository;
+            _groupMemberRepository = groupMemberRepository;
             _roleRepository = roleRepository;
 
             AppUrlService = NullAppUrlService.Instance;
@@ -128,22 +134,68 @@ namespace Chamran.Deed.Authorization.Users
         [HttpGet]
         public async Task<PagedResultDto<UserListDto>> GetListOfUsers(GetUsersInput input)
         {
-            var query = GetUsersFilteredQuery(input);
+            if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
+            var user = await _userRepository.GetAsync(AbpSession.UserId.Value);
 
-            var userCount = await query.CountAsync();
+            if (!user.IsSuperUser)
+            {
+                var orgQuery =
+                    from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
+                    join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
+                        .OrganizationId into joined2
+                    from grpMember in joined2.DefaultIfEmpty()
+                    where grpMember.UserId == AbpSession.UserId
+                    select org;
 
-            var users = await query
-                .OrderBy(input.Sorting)
-                .PageBy(input)
-                .ToListAsync();
+                if (!orgQuery.Any())
+                {
+                    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+                }
+                var orgEntity = orgQuery.First();
+                //filteredOrganizationCharts = filteredOrganizationCharts.Where(x => x.OrganizationId == orgEntity.Id);
+                var query = GetUsersFilteredQuery(input);
+                var joinQuery = from x in query
+                                join y in _groupMemberRepository.GetAll() on x.Id equals y.UserId into joiner
+                                from y in joiner.DefaultIfEmpty()
+                                where y.OrganizationId == orgEntity.Id
+                                select x;
+                var userCount = await joinQuery.CountAsync();
 
-            var userListDtos = ObjectMapper.Map<List<UserListDto>>(users);
-            await FillRoleNames(userListDtos);
+                var users = await joinQuery
+                    .OrderBy(input.Sorting)
+                    .PageBy(input)
+                    .ToListAsync();
 
-            return new PagedResultDto<UserListDto>(
-                userCount,
-                userListDtos
-            );
+                var userListDtos = ObjectMapper.Map<List<UserListDto>>(users);
+                await FillRoleNames(userListDtos);
+
+                return new PagedResultDto<UserListDto>(
+                    userCount,
+                    userListDtos
+                );
+            }
+            else
+            {
+
+                var query = GetUsersFilteredQuery(input);
+
+                var userCount = await query.CountAsync();
+
+                var users = await query
+                    .OrderBy(input.Sorting)
+                    .PageBy(input)
+                    .ToListAsync();
+
+                var userListDtos = ObjectMapper.Map<List<UserListDto>>(users);
+                await FillRoleNames(userListDtos);
+
+                return new PagedResultDto<UserListDto>(
+                    userCount,
+                    userListDtos
+                );
+            }
+
+
         }
 
         public async Task<FileDto> GetUsersToExcel(GetUsersToExcelInput input)
@@ -182,7 +234,7 @@ namespace Chamran.Deed.Authorization.Users
                 AllOrganizationUnits = ObjectMapper.Map<List<OrganizationUnitDto>>(allOrganizationUnits),
                 MemberedOrganizationUnits = new List<string>(),
                 AllowedUserNameCharacters = _userOptions.Value.AllowedUserNameCharacters,
-                IsSMTPSettingsProvided = await _emailSettingsChecker.EmailSettingsValidAsync() 
+                IsSMTPSettingsProvided = await _emailSettingsChecker.EmailSettingsValidAsync()
             };
 
             if (!input.Id.HasValue)
@@ -236,11 +288,11 @@ namespace Chamran.Deed.Authorization.Users
         private List<string> GetAllRoleNamesOfUsersOrganizationUnits(long userId)
         {
             return (from userOu in _userOrganizationUnitRepository.GetAll()
-                join roleOu in _organizationUnitRoleRepository.GetAll() on userOu.OrganizationUnitId equals roleOu
-                    .OrganizationUnitId
-                join userOuRoles in _roleRepository.GetAll() on roleOu.RoleId equals userOuRoles.Id
-                where userOu.UserId == userId
-                select userOuRoles.Name).ToList();
+                    join roleOu in _organizationUnitRoleRepository.GetAll() on userOu.OrganizationUnitId equals roleOu
+                        .OrganizationUnitId
+                    join userOuRoles in _roleRepository.GetAll() on roleOu.RoleId equals userOuRoles.Id
+                    where userOu.UserId == userId
+                    select userOuRoles.Name).ToList();
         }
 
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_ChangePermissions)]
@@ -473,23 +525,23 @@ namespace Chamran.Deed.Authorization.Users
                 input.Permissions = input.Permissions.Where(p => !string.IsNullOrEmpty(p)).ToList();
 
                 var userIds = from user in query
-                    join ur in _userRoleRepository.GetAll() on user.Id equals ur.UserId into urJoined
-                    from ur in urJoined.DefaultIfEmpty()
-                    join urr in _roleRepository.GetAll() on ur.RoleId equals urr.Id into urrJoined
-                    from urr in urrJoined.DefaultIfEmpty()
-                    join up in _userPermissionRepository.GetAll()
-                        .Where(userPermission => input.Permissions.Contains(userPermission.Name)) on user.Id equals up.UserId into upJoined
-                    from up in upJoined.DefaultIfEmpty()
-                    join rp in _rolePermissionRepository.GetAll()
-                        .Where(rolePermission => input.Permissions.Contains(rolePermission.Name)) on
-                        new { RoleId = ur == null ? 0 : ur.RoleId } equals new { rp.RoleId } into rpJoined
-                    from rp in rpJoined.DefaultIfEmpty()
-                    where (up != null && up.IsGranted) ||
-                          (up == null && rp != null && rp.IsGranted) ||
-                          (up == null && rp == null && staticRoleNames.Contains(urr.Name))
-                    group user by user.Id
+                              join ur in _userRoleRepository.GetAll() on user.Id equals ur.UserId into urJoined
+                              from ur in urJoined.DefaultIfEmpty()
+                              join urr in _roleRepository.GetAll() on ur.RoleId equals urr.Id into urrJoined
+                              from urr in urrJoined.DefaultIfEmpty()
+                              join up in _userPermissionRepository.GetAll()
+                                  .Where(userPermission => input.Permissions.Contains(userPermission.Name)) on user.Id equals up.UserId into upJoined
+                              from up in upJoined.DefaultIfEmpty()
+                              join rp in _rolePermissionRepository.GetAll()
+                                  .Where(rolePermission => input.Permissions.Contains(rolePermission.Name)) on
+                                  new { RoleId = ur == null ? 0 : ur.RoleId } equals new { rp.RoleId } into rpJoined
+                              from rp in rpJoined.DefaultIfEmpty()
+                              where (up != null && up.IsGranted) ||
+                                    (up == null && rp != null && rp.IsGranted) ||
+                                    (up == null && rp == null && staticRoleNames.Contains(urr.Name))
+                              group user by user.Id
                     into userGrouped
-                    select userGrouped.Key;
+                              select userGrouped.Key;
 
                 query = UserManager.Users.Where(e => userIds.Contains(e.Id));
             }

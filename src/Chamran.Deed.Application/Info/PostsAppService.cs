@@ -21,6 +21,8 @@ using Chamran.Deed.Common;
 using Chamran.Deed.Notifications;
 using Chamran.Deed.Storage;
 using Abp.Domain.Uow;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Chamran.Deed.Info
 {
@@ -243,19 +245,25 @@ namespace Chamran.Deed.Info
             await _unitOfWorkManager.Current.SaveChangesAsync();
             await unitOfWork.CompleteAsync();
             if (post.PostGroupId.HasValue)
-                await PublishNewPostNotifications(post.PostGroupId.Value);
+                await PublishNewPostNotifications(post);
         }
 
-        private async Task PublishNewPostNotifications(int postGroupId)
+        private async Task PublishNewPostNotifications(Post post)
         {
-            var query = _userPostGroupRepository.GetAll().Where(x => x.PostGroupId == postGroupId);
+            var query = _userPostGroupRepository.GetAll().Where(x => x.PostGroupId == post.PostGroupId.Value);
             var ids = new List<UserIdentifier>();
             foreach (var row in query)
             {
                 ids.Add(new UserIdentifier(AbpSession.TenantId, row.UserId));
             }
-
-            await _appNotifier.SendPostNotificationAsync("پست جدیدی ایجاد شد",
+            
+            await _appNotifier.SendPostNotificationAsync(JsonConvert.SerializeObject(post,new JsonSerializerSettings
+            {
+                ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
+                }
+            }),
                 userIds: ids.ToArray(),
                 NotificationSeverity.Info
             );

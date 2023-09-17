@@ -11,6 +11,8 @@ namespace Chamran.Deed.People.Dtos
 
         public long? UserId { get; set; }
 
+        public string NationalId { get; set; }
+
         public int? OrganizationId { get; set; }
 
     }

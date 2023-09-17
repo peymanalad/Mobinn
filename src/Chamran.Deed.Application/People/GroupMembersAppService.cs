@@ -79,11 +79,14 @@ namespace Chamran.Deed.People
 
                                select new
                                {
+                                   
                                    o.MemberPos,
                                    o.MemberPosition,
                                    Id = o.Id,
-                                   UserName = s1 == null || s1.Name == null ? "" : s1.Name.ToString(),
-                                   OrganizationGroupGroupName = s2 == null || s2.OrganizationName == null ? "" : s2.OrganizationName.ToString()
+                                   UserName = s1.Name ?? "",
+                                   UserId=s1.Id,
+                                   OrganizationGroupGroupName = s2 == null || s2.OrganizationName == null ? "" : s2.OrganizationName.ToString(),
+                                   s1.NationalId
                                };
 
             var totalCount = await filteredGroupMembers.CountAsync();
@@ -100,6 +103,8 @@ namespace Chamran.Deed.People
                         MemberPos = o.MemberPos,
                         MemberPosition = o.MemberPosition,
                         Id = o.Id,
+                        UserId = o.UserId,
+                        NationalId = o.NationalId
                     },
                     UserName = o.UserName,
                     OrganizationGroupGroupName = o.OrganizationGroupGroupName
@@ -285,7 +290,8 @@ namespace Chamran.Deed.People
                 lookupTableDtoList.Add(new GroupMemberUserLookupTableDto
                 {
                     Id = user.Id,
-                    DisplayName = user.Name + " " + user.Surname
+                    DisplayName = user.Name + " " + user.Surname,
+                    NationalId = user.NationalId
                 });
             }
 

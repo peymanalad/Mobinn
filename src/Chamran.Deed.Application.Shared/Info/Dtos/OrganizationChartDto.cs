@@ -10,6 +10,7 @@ namespace Chamran.Deed.Info.Dtos
         public string LeafPath { get; set; }
 
         public int? ParentId { get; set; }
+        public Guid? OrganizationLogo { get; set; }
 
     }
 }

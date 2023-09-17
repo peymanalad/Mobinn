@@ -13,6 +13,8 @@ using Chamran.Deed.Chat.Dto;
 using Chamran.Deed.Friendships;
 using Chamran.Deed.Friendships.Dto;
 using Chamran.Deed.Notifications;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Chamran.Deed.Web.Chat.SignalR
 {
@@ -67,7 +69,13 @@ namespace Chamran.Deed.Web.Chat.SignalR
                 if (client.UserId.HasValue)
                     await _notificationPublisher.PublishAsync(
                         AppNotificationNames.ChatMessage,
-                        new MessageNotificationData("پیام جدیدی دریافت شد"),
+                        new MessageNotificationData(JsonConvert.SerializeObject(message, new JsonSerializerSettings
+                        {
+                            ContractResolver = new DefaultContractResolver
+                            {
+                                NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
+                            }
+                        })),
                         severity: NotificationSeverity.Info,
                         userIds: new UserIdentifier[] { new(client.TenantId, client.UserId.Value) }
                     );
