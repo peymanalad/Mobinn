@@ -23,6 +23,6 @@ namespace Chamran.Deed.Info.Dtos
         public int LevelType { get; set; }
 
         public Guid? ProfilePictureId { get; set; }
-
+        public int OrganizationUserId { get; set; }
     }
 }

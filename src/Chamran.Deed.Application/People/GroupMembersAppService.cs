@@ -14,6 +14,7 @@ using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Chamran.Deed.CustomInputTypes;
+using Chamran.Deed.Info;
 
 namespace Chamran.Deed.People
 {
@@ -24,13 +25,15 @@ namespace Chamran.Deed.People
         private readonly IGroupMembersExcelExporter _groupMembersExcelExporter;
         private readonly IRepository<Organization, int> _lookup_organizationRepository;
         private readonly IRepository<User, long> _lookup_userRepository;
+        private readonly IRepository<OrganizationUser, int> _organizationUsersRepository;
 
-        public GroupMembersAppService(IRepository<GroupMember> groupMemberRepository, IGroupMembersExcelExporter groupMembersExcelExporter, IRepository<User, long> lookup_userRepository, IRepository<Organization, int> lookupOrganizationRepository)
+        public GroupMembersAppService(IRepository<GroupMember> groupMemberRepository, IGroupMembersExcelExporter groupMembersExcelExporter, IRepository<User, long> lookup_userRepository, IRepository<Organization, int> lookupOrganizationRepository, IRepository<OrganizationUser, int> organizationUsersRepository)
         {
             _groupMemberRepository = groupMemberRepository;
             _groupMembersExcelExporter = groupMembersExcelExporter;
             _lookup_userRepository = lookup_userRepository;
             _lookup_organizationRepository = lookupOrganizationRepository;
+            _organizationUsersRepository = organizationUsersRepository;
         }
 
         public async Task<PagedResultDto<GetGroupMemberForViewDto>> GetAll(GetAllGroupMembersInput input)
@@ -83,13 +86,114 @@ namespace Chamran.Deed.People
                                    o.MemberPos,
                                    o.MemberPosition,
                                    Id = o.Id,
-                                   UserName = s1.Name ?? "",
+                                   FirstName = s1.Name ?? "",
+                                   LastName=s1.Surname??"",
+                                   NationalId=s1.NationalId,
+                                   s1.UserName,
                                    UserId=s1.Id,
+                                   OrganizationGroupGroupName = s2 == null || s2.OrganizationName == null ? "" : s2.OrganizationName.ToString(),
+                               };
+
+            var totalCount = await filteredGroupMembers.CountAsync();
+
+            var dbList = await groupMembers.ToListAsync();
+            var results = new List<GetGroupMemberForViewDto>();
+
+            foreach (var o in dbList)
+            {
+                var res = new GetGroupMemberForViewDto()
+                {
+                    GroupMember = new GroupMemberDto
+                    {
+                        MemberPos = o.MemberPos,
+                        MemberPosition = o.MemberPosition,
+                        Id = o.Id,
+                        UserId = o.UserId,
+                        NationalId = o.NationalId,
+                       
+                    },
+                    UserName = o.UserName,
+                    FirstName=o.FirstName,
+                    LastName=o.LastName,
+                    NationalId = o.NationalId,
+                    OrganizationGroupGroupName = o.OrganizationGroupGroupName
+                };
+
+                results.Add(res);
+            }
+
+            return new PagedResultDto<GetGroupMemberForViewDto>(
+                totalCount,
+                results
+            );
+
+        }
+
+        public async Task<PagedResultDto<GetGroupMemberForViewDto>> GetAllNoOrganization(GetAllGroupMembersInput input)
+        {
+            if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
+            var user = await _lookup_userRepository.GetAsync(AbpSession.UserId.Value);
+
+
+            var filteredGroupMembers = _groupMemberRepository.GetAll()
+                        .Include(e => e.UserFk)
+                        .Include(e => e.OrganizationFk)
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.MemberPosition.Contains(input.Filter))
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.MemberPositionFilter), e => e.MemberPosition.Contains(input.MemberPositionFilter))
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter), e => e.UserFk != null && e.UserFk.Name == input.UserNameFilter)
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationGroupGroupNameFilter), e => e.OrganizationFk != null && e.OrganizationFk.OrganizationName == input.OrganizationGroupGroupNameFilter);
+
+            
+            if (!user.IsSuperUser)
+            {
+                var orgQuery =
+                    from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
+                    join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
+                        .OrganizationId into joined2
+                    from grpMember in joined2.DefaultIfEmpty()
+                    where grpMember.UserId == AbpSession.UserId
+                    select org;
+
+                if (!orgQuery.Any())
+                {
+                    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+                }
+                var orgEntity = orgQuery.First();
+                filteredGroupMembers = filteredGroupMembers.Where(x => x.OrganizationId == orgEntity.Id);
+            }
+
+            var joinedMembers = from x in filteredGroupMembers
+                                join
+                              y in _organizationUsersRepository.GetAll() on x.UserId equals y.UserId into joined2
+                                from y in joined2.DefaultIfEmpty()
+                                where y == null
+                                select x;
+
+
+            var pagedAndFilteredGroupMembers = joinedMembers
+                .OrderBy(input.Sorting ?? "id asc")
+                .PageBy(input);
+
+            var groupMembers = from o in pagedAndFilteredGroupMembers
+                               join o1 in _lookup_userRepository.GetAll() on o.UserId equals o1.Id into j1
+                               from s1 in j1.DefaultIfEmpty()
+
+                               join o2 in _lookup_organizationRepository.GetAll() on o.OrganizationId equals o2.Id into j2
+                               from s2 in j2.DefaultIfEmpty()
+
+                               select new
+                               {
+
+                                   o.MemberPos,
+                                   o.MemberPosition,
+                                   Id = o.Id,
+                                   UserName = s1.Name ?? "",
+                                   UserId = s1.Id,
                                    OrganizationGroupGroupName = s2 == null || s2.OrganizationName == null ? "" : s2.OrganizationName.ToString(),
                                    s1.NationalId
                                };
 
-            var totalCount = await filteredGroupMembers.CountAsync();
+            var totalCount = await joinedMembers.CountAsync();
 
             var dbList = await groupMembers.ToListAsync();
             var results = new List<GetGroupMemberForViewDto>();
@@ -119,6 +223,7 @@ namespace Chamran.Deed.People
             );
 
         }
+
 
         public async Task<GetGroupMemberForViewDto> GetGroupMemberForView(int id)
         {

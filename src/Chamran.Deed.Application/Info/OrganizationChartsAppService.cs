@@ -84,9 +84,10 @@ namespace Chamran.Deed.Info
 
                                          o.Caption,
                                          o.LeafPath,
-                                         Id = o.Id,
+                                         o.Id,
                                          OrganizationChartCaption = s1 == null || s1.Caption == null ? "" : s1.Caption.ToString(),
-                                         o.OrganizationFk.OrganizationLogo
+                                         o.OrganizationFk.OrganizationLogo,
+                                         OrganizationId=(int?)o.OrganizationFk.Id
                                      };
 
             var totalCount = await filteredOrganizationCharts.CountAsync();
@@ -104,8 +105,9 @@ namespace Chamran.Deed.Info
                         Caption = o.Caption,
                         LeafPath = o.LeafPath,
                         Id = o.Id,
-                        OrganizationLogo = o.OrganizationLogo
-                        
+                        OrganizationLogo = o.OrganizationLogo,
+                        OrganizationId = o.OrganizationId
+
                     },
                     OrganizationChartCaption = o.OrganizationChartCaption
                 };
@@ -232,7 +234,7 @@ namespace Chamran.Deed.Info
             var query = from x in _lookup_organizationChartRepository.GetAll()
                 where x.Id == input.OrganizationChartId
                 select x;
-            if (query.Any()) throw new UserFriendlyException("شاخه مورد نظر یافت نشد");
+            if (!query.Any()) throw new UserFriendlyException("شاخه مورد نظر یافت نشد");
             query.First().OrganizationId = input.OrganizationId;
             await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the edition.
 

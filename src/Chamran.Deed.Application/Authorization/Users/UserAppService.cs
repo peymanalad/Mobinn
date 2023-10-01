@@ -457,6 +457,37 @@ namespace Chamran.Deed.Authorization.Users
                     input.User.Password
                 );
             }
+
+            if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+
+            if (!currentUser.IsSuperUser)
+            {
+                var orgQuery =
+                   from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
+                   join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
+                       .OrganizationId into joined2
+                   from grpMember in joined2.DefaultIfEmpty()
+                   where grpMember.UserId == AbpSession.UserId
+                   select org;
+
+                if (!orgQuery.Any())
+                {
+                    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+                }
+                var orgEntity = orgQuery.First();
+
+                var groupMember = new GroupMember()
+                {
+                    MemberPos = 0,
+                    MemberPosition="",
+                    UserId= user.Id,
+                    OrganizationId=orgEntity.Id,
+                    
+                };
+                await _groupMemberRepository.InsertAsync(groupMember);
+                //await CurrentUnitOfWork.SaveChangesAsync(); //To get new user's Id.
+            }
         }
 
         private async Task FillRoleNames(IReadOnlyCollection<UserListDto> userListDtos)
