@@ -513,85 +513,150 @@ namespace Chamran.Deed.Info
 
             var leafPath = targetChart.LeafPath;
 
-            var usersInSameLeaf = _userRepository.GetAll()
-                .Join(_organizationUserRepository.GetAll(),
-                    user => user.Id,
-                    orgUser => orgUser.UserId,
-                    (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
-                .Join(_lookup_organizationChartRepository.GetAll(),
-                    join => join.OrganizationChartId,
-                    chart => chart.Id,
-                    (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
-                .Join(_groupMemberRepository.GetAll(),
-                    join2 => join2.User.Id,
-                    grp => grp.UserId,
-                    (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
-                )
-                .Where(join => join.LeafPath == leafPath)
-                .WhereIf(filterUserId,x=>x.User.Id!=AbpSession.UserId)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
-                .Select(x => new
-                {
-                    x.User,
-                    x.LeafPath,
-                    x.MemberPosition,
-                    LevelType = 0
-                });
+            //LAMBDA EDITION
+            //var usersInSameLeaf = _userRepository.GetAll()
+            //    .Join(_organizationUserRepository.GetAll(),
+            //        user => user.Id,
+            //        orgUser => orgUser.UserId,
+            //        (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
+            //    .Join(_lookup_organizationChartRepository.GetAll(),
+            //        join => join.OrganizationChartId,
+            //        chart => chart.Id,
+            //        (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
+            //    .Join(_groupMemberRepository.GetAll(),
+            //        join2 => join2.User.Id,
+            //        grp => grp.UserId,
+            //        (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
+            //    )
+            //    .Where(join => join.LeafPath == leafPath)
+            //    .WhereIf(filterUserId,x=>x.User.Id!=AbpSession.UserId)
+            //    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
+            //    .Select(x => new
+            //    {
+            //        x.User,
+            //        x.LeafPath,
+            //        x.MemberPosition,
+            //        LevelType = 0,
 
-            var usersInChildrenLeaves = _userRepository.GetAll()
-                .Join(_organizationUserRepository.GetAll(),
-                    user => user.Id,
-                    orgUser => orgUser.UserId,
-                    (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
-                .Join(_lookup_organizationChartRepository.GetAll(),
-                    join => join.OrganizationChartId,
-                    chart => chart.Id,
-                    (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
-                .Join(_groupMemberRepository.GetAll(),
-                    join2 => join2.User.Id,
-                    grp => grp.UserId,
-                    (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
-                )
-                .Where(join => join.LeafPath.StartsWith(leafPath) && join.LeafPath != leafPath)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
-                .Select(x => new
-                {
-                    x.User,
-                    x.LeafPath,
-                    x.MemberPosition,
-                    LevelType = 2
-                });
+            //    });
+
+
+            //var usersInChildrenLeaves = _userRepository.GetAll()
+            //    .Join(_organizationUserRepository.GetAll(),
+            //        user => user.Id,
+            //        orgUser => orgUser.UserId,
+            //        (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
+            //    .Join(_lookup_organizationChartRepository.GetAll(),
+            //        join => join.OrganizationChartId,
+            //        chart => chart.Id,
+            //        (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
+            //    .Join(_groupMemberRepository.GetAll(),
+            //        join2 => join2.User.Id,
+            //        grp => grp.UserId,
+            //        (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
+            //    )
+            //    .Where(join => join.LeafPath.StartsWith(leafPath) && join.LeafPath != leafPath)
+            //    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
+            //    .Select(x => new
+            //    {
+            //        x.User,
+            //        x.LeafPath,
+            //        x.MemberPosition,
+            //        LevelType = 2
+            //    });
+
+            //var parentLeafPathWithoutLastPart = GetParentPath(leafPath);
+            //var usersInOneLevelHigherParent = _userRepository.GetAll()
+            //    .Join(_organizationUserRepository.GetAll(),
+            //        user => user.Id,
+            //        orgUser => orgUser.UserId,
+            //        (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
+            //    .Join(_lookup_organizationChartRepository.GetAll(),
+            //        join => join.OrganizationChartId,
+            //        chart => chart.Id,
+            //        (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
+            //    .Join(_groupMemberRepository.GetAll(),
+            //        join2 => join2.User.Id,
+            //        grp => grp.UserId,
+            //        (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
+            //    )
+            //    .Where(join => join.LeafPath == parentLeafPathWithoutLastPart)
+            //    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
+            //    .Select(x => new
+            //    {
+            //        x.User,
+            //        x.LeafPath,
+            //        x.MemberPosition,
+            //        LevelType = 1
+            //    });
+
+            //var allUsers = usersInOneLevelHigherParent
+            //    .Union(usersInSameLeaf)
+            //    .Union(usersInChildrenLeaves);
+
+            var usersInSameLeaf = from user in _userRepository.GetAll()
+                                  join orgUser in _organizationUserRepository.GetAll()
+                                  on user.Id equals orgUser.UserId
+                                  join chart in _lookup_organizationChartRepository.GetAll()
+                                  on orgUser.OrganizationChartId equals chart.Id
+                                  join grp in _groupMemberRepository.GetAll()
+                                  on user.Id equals grp.UserId
+                                  where chart.LeafPath == leafPath
+                                  where !filterUserId || user.Id != AbpSession.UserId
+                                  where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
+                                  select new
+                                  {
+                                      User = user,
+                                      LeafPath = chart.LeafPath,
+                                      MemberPosition = grp.MemberPosition,
+                                      OrgUser=orgUser,
+                                      LevelType = 0
+                                  };
+
+            var usersInChildrenLeaves = from user in _userRepository.GetAll()
+                                        join orgUser in _organizationUserRepository.GetAll()
+                                        on user.Id equals orgUser.UserId
+                                        join chart in _lookup_organizationChartRepository.GetAll()
+                                        on orgUser.OrganizationChartId equals chart.Id
+                                        join grp in _groupMemberRepository.GetAll()
+                                        on user.Id equals grp.UserId
+                                        where chart.LeafPath.StartsWith(leafPath) && chart.LeafPath != leafPath
+                                        where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
+                                        select new
+                                        {
+                                            User = user,
+                                            LeafPath = chart.LeafPath,
+                                            MemberPosition = grp.MemberPosition,
+                                            OrgUser = orgUser,
+                                            LevelType = 2
+                                        };
 
             var parentLeafPathWithoutLastPart = GetParentPath(leafPath);
-            var usersInOneLevelHigherParent = _userRepository.GetAll()
-                .Join(_organizationUserRepository.GetAll(),
-                    user => user.Id,
-                    orgUser => orgUser.UserId,
-                    (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
-                .Join(_lookup_organizationChartRepository.GetAll(),
-                    join => join.OrganizationChartId,
-                    chart => chart.Id,
-                    (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
-                .Join(_groupMemberRepository.GetAll(),
-                    join2 => join2.User.Id,
-                    grp => grp.UserId,
-                    (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
-                )
-                .Where(join => join.LeafPath == parentLeafPathWithoutLastPart)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
-                .Select(x => new
-                {
-                    x.User,
-                    x.LeafPath,
-                    x.MemberPosition,
-                    LevelType = 1
-                });
+
+            var usersInOneLevelHigherParent = from user in _userRepository.GetAll()
+                                              join orgUser in _organizationUserRepository.GetAll()
+                                              on user.Id equals orgUser.UserId
+                                              join chart in _lookup_organizationChartRepository.GetAll()
+                                              on orgUser.OrganizationChartId equals chart.Id
+                                              join grp in _groupMemberRepository.GetAll()
+                                              on user.Id equals grp.UserId
+                                              where chart.LeafPath == parentLeafPathWithoutLastPart
+                                              where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
+                                              select new
+                                              {
+                                                  User = user,
+                                                  LeafPath = chart.LeafPath,
+                                                  MemberPosition = grp.MemberPosition,
+                                                  OrgUser = orgUser,
+                                                  LevelType = 1
+                                              };
 
             var allUsers = usersInOneLevelHigherParent
                 .Union(usersInSameLeaf)
                 .Union(usersInChildrenLeaves);
+            
             //return allUsers;
-            var outputList = await allUsers
+                        var outputList = await allUsers
                 .PageBy(input)
                 .ToListAsync();
             var leafUserDtoList = new List<LeafUserDto>();
@@ -607,6 +672,7 @@ namespace Chamran.Deed.Info
                     ProfilePictureId = row.User.ProfilePictureId,
                     LevelType = row.LevelType,
                     MemberPosition = row.MemberPosition,
+                    OrganizationUserId = row.OrgUser.Id
                 });
 
 
