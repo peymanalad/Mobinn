@@ -30,6 +30,16 @@ namespace Chamran.Deed.Authorization
 
             var pages = context.GetPermissionOrNull(AppPermissions.Pages) ?? context.CreatePermission(AppPermissions.Pages, L("Pages"));
 
+            var taskStats = pages.CreateChildPermission(AppPermissions.Pages_TaskStats, L("TaskStats"));
+            taskStats.CreateChildPermission(AppPermissions.Pages_TaskStats_Create, L("CreateNewTaskStat"));
+            taskStats.CreateChildPermission(AppPermissions.Pages_TaskStats_Edit, L("EditTaskStat"));
+            taskStats.CreateChildPermission(AppPermissions.Pages_TaskStats_Delete, L("DeleteTaskStat"));
+
+            var taskEntries = pages.CreateChildPermission(AppPermissions.Pages_TaskEntries, L("TaskEntries"));
+            taskEntries.CreateChildPermission(AppPermissions.Pages_TaskEntries_Create, L("CreateNewTaskEntry"));
+            taskEntries.CreateChildPermission(AppPermissions.Pages_TaskEntries_Edit, L("EditTaskEntry"));
+            taskEntries.CreateChildPermission(AppPermissions.Pages_TaskEntries_Delete, L("DeleteTaskEntry"));
+
             var organizationUsers = pages.CreateChildPermission(AppPermissions.Pages_OrganizationUsers, L("OrganizationUsers"));
             organizationUsers.CreateChildPermission(AppPermissions.Pages_OrganizationUsers_Create, L("CreateNewOrganizationUser"));
             organizationUsers.CreateChildPermission(AppPermissions.Pages_OrganizationUsers_Edit, L("EditOrganizationUser"));
