@@ -104,6 +104,8 @@ namespace Chamran.Deed.EntityFrameworkCore
                 .HasForeignKey(node => node.ParentId)
                 .OnDelete(DeleteBehavior.ClientCascade);
 
+            base.OnModelCreating(modelBuilder);
+
             modelBuilder.ApplyConfiguration(new CommentLikeConfiguration());
             modelBuilder.ApplyConfiguration(new OrganizationUserConfiguration());
 
@@ -175,34 +177,7 @@ namespace Chamran.Deed.EntityFrameworkCore
                 .HasIndex(gm => new { gm.UserId, gm.OrganizationId })
                 .IsUnique();
 
-            modelBuilder.Entity<TaskEntry>()
-           .HasOne(t => t.PostFk)
-           .WithOne()
-           .HasForeignKey<TaskEntry>(t => t.PostId)
-           .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<TaskEntry>()
-                .HasOne(t => t.IssuerFk)
-                .WithOne()
-                .HasForeignKey<TaskEntry>(t => t.IssuerId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<TaskEntry>()
-                .HasOne(t => t.ReceiverFk)
-                .WithOne()
-                .HasForeignKey<TaskEntry>(t => t.ReceiverId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<TaskEntry>()
-                .HasOne(t => t.ParentFk)
-                .WithOne()
-                .HasForeignKey<TaskEntry>(t => t.ParentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             modelBuilder.ConfigurePersistedGrantEntity();
-
-            base.OnModelCreating(modelBuilder);
-
         }
     }
 }

@@ -106,7 +106,7 @@ namespace Chamran.Deed.Authorization.Users
 
             if (!currentUserAccount.UserLinkId.HasValue)
             {
-                throw new UserFriendlyException(L("YouAreNotLinkedToAnyAccount"));
+                throw new Exception(L("YouAreNotLinkedToAnyAccount"));
             }
 
             if (!await _userLinkManager.AreUsersLinked(AbpSession.ToUserIdentifier(), input.ToUserIdentifier()))

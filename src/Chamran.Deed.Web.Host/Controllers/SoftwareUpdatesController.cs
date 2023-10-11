@@ -27,7 +27,6 @@ namespace Chamran.Deed.Web.Controllers
         {
             try
             {
-                Console.WriteLine(Request);
                 //Check input
                 if (Request.Form.Files.Count == 0)
                 {

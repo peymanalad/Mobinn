@@ -40,7 +40,7 @@ namespace Chamran.Deed.MultiTenancy.Accounting
 
             if (string.IsNullOrEmpty(payment.InvoiceNo))
             {
-                throw new UserFriendlyException("There is no invoice for this payment !");
+                throw new Exception("There is no invoice for this payment !");
             }
 
             if (payment.TenantId != AbpSession.GetTenantId())
@@ -79,7 +79,7 @@ namespace Chamran.Deed.MultiTenancy.Accounting
             var payment = await _subscriptionPaymentRepository.GetAsync(input.SubscriptionPaymentId);
             if (!string.IsNullOrEmpty(payment.InvoiceNo))
             {
-                throw new UserFriendlyException("Invoice is already generated for this payment.");
+                throw new Exception("Invoice is already generated for this payment.");
             }
 
             var invoiceNo = await _invoiceNumberGenerator.GetNewInvoiceNumber();

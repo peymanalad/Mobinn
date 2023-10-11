@@ -49,8 +49,6 @@ using Abp.AspNetCore.Localization;
 using Chamran.Deed.Info;
 using Chamran.Deed.Web.Helpers.StimulsoftHelpers;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.AspNetCore.Http.Features;
 
 namespace Chamran.Deed.Web.Startup
 {
@@ -69,10 +67,9 @@ namespace Chamran.Deed.Web.Startup
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-           
+
             LicenseHelper.StimulsoftRegister();
-            RemoveLimits(services);
-            
+
             //MVC
             services.AddControllersWithViews(options =>
             {
@@ -180,34 +177,6 @@ namespace Chamran.Deed.Web.Startup
 
                 options.PlugInSources.AddFolder(Path.Combine(_hostingEnvironment.WebRootPath, "Plugins"),
                     SearchOption.AllDirectories);
-            });
-        }
-
-        private void RemoveLimits(IServiceCollection services)
-        {
-
-            //services.Configure<KestrelServerOptions>(options =>
-            //{
-            //    options.Limits.MaxRequestBodySize = null; // Set to null to remove the limit
-            //    // or
-            //    options.Limits.MaxRequestBodySize = new long?(); // An alternative way to set it to null
-            //});
-
-            //services.Configure<FormOptions>(options =>
-            //{
-            //    options.MultipartBodyLengthLimit = null; // Set to null to remove the limit
-            //    // or
-            //    options.MultipartBodyLengthLimit = new long?(); // An alternative way to set it to null
-            //});
-
-            services.Configure<KestrelServerOptions>(options =>
-            {
-                options.Limits.MaxRequestBodySize = null; // Set to the desired maximum size in bytes
-            });
-
-            services.Configure<FormOptions>(options =>
-            {
-                options.MultipartBodyLengthLimit = 524288000; // Set the maximum multipart body length (e.g., 100 MB)
             });
         }
 

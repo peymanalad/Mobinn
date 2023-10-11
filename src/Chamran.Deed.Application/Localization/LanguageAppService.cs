@@ -128,7 +128,7 @@ namespace Chamran.Deed.Localization
                         .FirstOrDefault();
                     if (defaultLanguage == null)
                     {
-                        throw new UserFriendlyException("No language found in the application!");
+                        throw new Exception("No language found in the application!");
                     }
                 }
 

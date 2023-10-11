@@ -8,7 +8,5 @@ namespace Chamran.Deed.People.Dtos
     {
         public CreateOrEditOrganizationDto Organization { get; set; }
 
-        public string OrganizationLogoFileName { get; set; }
-
     }
 }

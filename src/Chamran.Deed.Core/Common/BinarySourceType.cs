@@ -18,7 +18,6 @@ namespace Chamran.Deed.Common
         Logo=8,
         Css=9,
         Excel=10,
-        OrganizationLogo=11,
 
 
 

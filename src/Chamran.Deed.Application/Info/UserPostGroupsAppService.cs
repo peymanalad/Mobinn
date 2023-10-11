@@ -1,4 +1,7 @@
 ﻿using Chamran.Deed.Authorization.Users;
+using Chamran.Deed.Info;
+
+using System;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using Abp.Linq.Extensions;
@@ -10,11 +13,13 @@ using Chamran.Deed.Info.Dtos;
 using Chamran.Deed.Dto;
 using Abp.Application.Services.Dto;
 using Chamran.Deed.Authorization;
+using Abp.Extensions;
 using Abp.Authorization;
 using Abp.Timing;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Chamran.Deed.People;
+using Chamran.Deed.Storage;
 
 namespace Chamran.Deed.Info
 {
@@ -239,25 +244,11 @@ namespace Chamran.Deed.Info
         [AbpAuthorize(AppPermissions.Pages_UserPostGroups)]
         public async Task<PagedResultDto<UserPostGroupPostGroupLookupTableDto>> GetAllPostGroupForLookupTable(GetAllForLookupTableInput input)
         {
-            if (AbpSession.UserId == null) throw new UserFriendlyException("Not Logged In!");
-            var orgQuery =
-                from org in _organizationGroupsRepository.GetAll().Where(x => !x.IsDeleted)
-                join grpMember in _groupMembersRepository.GetAll() on org.Id equals grpMember
-                    .OrganizationId into joined2
-                from grpMember in joined2.DefaultIfEmpty()
-                where grpMember.UserId == AbpSession.UserId
-                select org;
-
-            if (!orgQuery.Any())
-            {
-                throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
-            }
-            var orgEntity = orgQuery.First();
             var query = _lookup_postGroupRepository.GetAll().WhereIf(
                    !string.IsNullOrWhiteSpace(input.Filter),
                   e => e.PostGroupDescription != null && e.PostGroupDescription.Contains(input.Filter)
                );
-            query = query.Where(x => x.OrganizationId == orgEntity.Id);
+
             var totalCount = await query.CountAsync();
 
             var postGroupList = await query

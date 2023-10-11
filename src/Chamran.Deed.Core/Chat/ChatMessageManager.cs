@@ -10,6 +10,7 @@ using Abp.MultiTenancy;
 using Abp.RealTime;
 using Abp.UI;
 using Chamran.Deed.Authorization.Users;
+using Chamran.Deed.Common;
 using Chamran.Deed.Friendships;
 using Chamran.Deed.Friendships.Cache;
 using Chamran.Deed.Storage;
@@ -57,22 +58,15 @@ namespace Chamran.Deed.Chat
             _binaryObjectRepository = binaryObjectRepository;
         }
 
-        public async Task DeleteMessageAsync(UserIdentifier sender, Guid sharedMessageId)
+        public async Task DeleteMessageAsync(UserIdentifier sender, int messageId)
         {
 
             //await _chatMessageRepository.DeleteAsync(x => x.Id == messageId);
             await UnitOfWorkManager.WithUnitOfWorkAsync(async () =>
             {
-                var ls = _chatMessageRepository.GetAll().Where(x => x.SharedMessageId == sharedMessageId);
-                foreach (var row in ls)
-                {
-                    await _chatMessageRepository.DeleteAsync(row.Id);
-                    var id = new UserIdentifier(row.TenantId, row.UserId);
-                    var clients = _onlineClientManager.GetAllByUserId(id);
-                    await _chatCommunicator.DeleteMessageToClients(clients, id, sharedMessageId);
-                }
-
-
+                await _chatMessageRepository.DeleteAsync(messageId);
+                var clients = _onlineClientManager.GetAllByUserId(sender);
+                await _chatCommunicator.DeleteMessageToClients(clients, sender, messageId);
             });
 
         }
@@ -98,26 +92,13 @@ namespace Chamran.Deed.Chat
                 senderProfilePictureId);
         }
 
-        public async Task EditMessageAsync(UserIdentifier sender, UserIdentifier receiver, Guid sharedMessageId,
+        public async Task EditMessageAsync(UserIdentifier sender, UserIdentifier receiver, int messageId,
             string message, string senderTenancyName, string senderUserName, Guid? senderProfilePictureId)
         {
-            await _unitOfWorkManager.WithUnitOfWork(async () =>
-            {
-                var ls = _chatMessageRepository.GetAll().Where(x => x.SharedMessageId == sharedMessageId);
-                foreach (var row in ls)
-                {
-                    row.Message = message;
-                    var id = new UserIdentifier(row.TenantId, row.UserId);
-                    var clients = _onlineClientManager.GetAllByUserId(id);
-                    await _chatCommunicator.EditMessageToClient(clients, id, sharedMessageId,message);
-                }
 
-
-
-            });
-
-            //await EditSenderUserInfoChangeAsync(id, receiver, senderTenancyName, senderUserName, sharedMessageId);
-
+            await EditSenderToReceiverAsync(sender, receiver, message, messageId);
+            await EditReceiverToSenderAsync(sender, receiver, message, messageId);
+            await EditSenderUserInfoChangeAsync(sender, receiver, senderTenancyName, senderUserName, messageId);
         }
 
         private void CheckReceiverExists(UserIdentifier receiver)
@@ -149,22 +130,14 @@ namespace Chamran.Deed.Chat
             });
         }
 
-
-
-
-
-        public virtual Task<bool> Edit(ChatMessage message)
+        public virtual Task<long> Edit(ChatMessage message)
         {
             return _unitOfWorkManager.WithUnitOfWork(async () =>
             {
                 using (CurrentUnitOfWork.SetTenantId(message.TenantId))
                 {
-                    var ls = _chatMessageRepository.GetAll()
-                        .Where(x => x.SharedMessageId == message.SharedMessageId);
-                    foreach (var row in ls)
-                    {
-                        row.Message = message.Message;
-                    }
+                    var entity = _chatMessageRepository.Get(message.Id);
+                    entity.Message = message.Message;
                     await CurrentUnitOfWork.SaveChangesAsync();
                     //var fileId=GetIdFromMessage(message.Message);
                     //if (fileId != null)
@@ -174,7 +147,7 @@ namespace Chamran.Deed.Chat
                     //    binaryFile.SourceGuid= fileId;
 
                     //}
-                    return true;
+                    return message.Id;
                 }
             });
         }
@@ -273,51 +246,23 @@ namespace Chamran.Deed.Chat
             );
         }
 
-        //private async Task EditMessageContentAsync(UserIdentifier senderIdentifier, UserIdentifier receiverIdentifier, string message, Guid sharedMessageId)
-        //{
-        //    var editMessage = new ChatMessage(
-        //        senderIdentifier,
-        //        receiverIdentifier,
-        //        ChatSide.Sender,
-        //        message,
-        //        ChatMessageReadState.Read,
-        //        sharedMessageId,
-        //        ChatMessageReadState.Unread
-        //    );
-        //    await Edit(editMessage);
-
-        //    //await _chatCommunicator.EditMessageToClient(_onlineClientManager.GetAllByUserId(senderIdentifier), editMessage);
-        //}
-        private async Task EditSenderUserInfoChangeAsync(UserIdentifier sender, UserIdentifier receiver, string senderTenancyName, string senderUserName, Guid? senderProfilePictureId)
+        private async Task EditSenderToReceiverAsync(UserIdentifier senderIdentifier, UserIdentifier receiverIdentifier, string message, int messageId)
         {
-            var receiverCacheItem = _userFriendsCache.GetCacheItemOrNull(receiver);
 
-            var senderAsFriend = receiverCacheItem?.Friends.FirstOrDefault(f => f.FriendTenantId == sender.TenantId && f.FriendUserId == sender.UserId);
-            if (senderAsFriend == null)
-            {
-                return;
-            }
+            //Edit(sentMessage);
 
-            if (senderAsFriend.FriendTenancyName == senderTenancyName &&
-                senderAsFriend.FriendUserName == senderUserName &&
-                senderAsFriend.FriendProfilePictureId == senderProfilePictureId)
-            {
-                return;
-            }
-
-            var friendship = (await _friendshipManager.GetFriendshipOrNullAsync(receiver, sender));
-            if (friendship == null)
-            {
-                return;
-            }
-
-            friendship.FriendTenancyName = senderTenancyName;
-            friendship.FriendUserName = senderUserName;
-            friendship.FriendProfilePictureId = senderProfilePictureId;
-
-            await _friendshipManager.UpdateFriendshipAsync(friendship);
+            //await _chatCommunicator.SendMessageToClient(_onlineClientManager.GetAllByUserId(senderIdentifier), sentMessage);
         }
 
+        private async Task EditReceiverToSenderAsync(UserIdentifier senderIdentifier, UserIdentifier receiverIdentifier, string message, int messageId)
+        {
+
+        }
+
+        private async Task EditSenderUserInfoChangeAsync(UserIdentifier sender, UserIdentifier receiver, string senderTenancyName, string senderUserName, int messageId)
+        {
+
+        }
 
         private async Task HandleReceiverToSenderAsync(UserIdentifier senderIdentifier, UserIdentifier receiverIdentifier, string message, Guid sharedMessageId)
         {

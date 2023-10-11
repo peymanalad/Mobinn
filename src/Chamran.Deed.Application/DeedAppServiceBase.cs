@@ -5,7 +5,6 @@ using Abp.IdentityFramework;
 using Abp.MultiTenancy;
 using Abp.Runtime.Session;
 using Abp.Threading;
-using Abp.UI;
 using Microsoft.AspNetCore.Identity;
 using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.MultiTenancy;
@@ -31,7 +30,7 @@ namespace Chamran.Deed
             var user = await UserManager.FindByIdAsync(AbpSession.GetUserId().ToString());
             if (user == null)
             {
-                throw new UserFriendlyException("There is no current user!");
+                throw new Exception("There is no current user!");
             }
 
             return user;

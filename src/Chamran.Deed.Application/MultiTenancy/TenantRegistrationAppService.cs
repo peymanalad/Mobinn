@@ -148,7 +148,7 @@ namespace Chamran.Deed.MultiTenancy
             var editions = await _editionManager.GetAllAsync();
             if (editions.Any())
             {
-                throw new UserFriendlyException(
+                throw new Exception(
                     "Tenant registration is not allowed without edition because there are editions defined !");
             }
         }
@@ -280,21 +280,21 @@ namespace Chamran.Deed.MultiTenancy
                 case SubscriptionStartType.Free:
                     if (!edition.IsFree)
                     {
-                        throw new UserFriendlyException("This is not a free edition !");
+                        throw new Exception("This is not a free edition !");
                     }
 
                     break;
                 case SubscriptionStartType.Trial:
                     if (!edition.HasTrial())
                     {
-                        throw new UserFriendlyException("Trial is not available for this edition !");
+                        throw new Exception("Trial is not available for this edition !");
                     }
 
                     break;
                 case SubscriptionStartType.Paid:
                     if (edition.IsFree)
                     {
-                        throw new UserFriendlyException("This is a free edition and cannot be subscribed as paid !");
+                        throw new Exception("This is a free edition and cannot be subscribed as paid !");
                     }
 
                     break;

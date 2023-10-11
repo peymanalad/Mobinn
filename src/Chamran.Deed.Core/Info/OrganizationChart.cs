@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Abp.Domain.Entities.Auditing;
 using Abp.Domain.Entities;
 using System.Collections.Generic;
-using Chamran.Deed.People;
 
 namespace Chamran.Deed.Info
 {
@@ -22,14 +21,9 @@ namespace Chamran.Deed.Info
 
         public virtual int? ParentId { get; set; }
 
-        public int? OrganizationId { get; set; }
-        
-        [ForeignKey("OrganizationId")]
-        public Organization OrganizationFk { get; set; }
-
         [ForeignKey("ParentId")]
         public OrganizationChart ParentFk { get; set; }
-        
+
         // Navigation property for children
         public virtual ICollection<OrganizationChart> Children { get; set; } = new List<OrganizationChart>();
 
@@ -37,7 +31,7 @@ namespace Chamran.Deed.Info
         {
             if (ParentFk == null)
             {
-                LeafPath = Id + "\\";
+                LeafPath = Id+"\\";
             }
             else
             {

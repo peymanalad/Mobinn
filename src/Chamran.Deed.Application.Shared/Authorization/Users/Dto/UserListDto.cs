@@ -9,8 +9,6 @@ namespace Chamran.Deed.Authorization.Users.Dto
 {
     public class UserListDto : EntityDto<long>, IPassivable, IHasCreationTime
     {
-        public string NationalId { get; set; }
-
         public string Name { get; set; }
 
         public string Surname { get; set; }
