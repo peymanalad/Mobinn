@@ -1,17 +1,21 @@
-﻿using System.Linq;
+﻿using Chamran.Deed.Info;
+
+using System;
+using System.Linq;
 using System.Linq.Dynamic.Core;
 using Abp.Linq.Extensions;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
 using Chamran.Deed.Info.Dtos;
+using Chamran.Deed.Dto;
 using Abp.Application.Services.Dto;
 using Chamran.Deed.Authorization;
+using Abp.Extensions;
 using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
-using Chamran.Deed.Authorization.Users;
-using Chamran.Deed.People;
+using Chamran.Deed.Storage;
 
 namespace Chamran.Deed.Info
 {
@@ -20,56 +24,23 @@ namespace Chamran.Deed.Info
     {
         private readonly IRepository<OrganizationChart> _organizationChartRepository;
         private readonly IRepository<OrganizationChart, int> _lookup_organizationChartRepository;
-        private readonly IRepository<User, long> _userRepository;
-        private readonly IRepository<Organization, int> _lookup_organizationRepository;
-        private readonly IRepository<GroupMember> _groupMemberRepository;
-        public OrganizationChartsAppService(IRepository<OrganizationChart> organizationChartRepository, IRepository<OrganizationChart, int> lookup_organizationChartRepository, IRepository<User, long> userRepository, IRepository<Organization, int> lookupOrganizationRepository, IRepository<GroupMember> groupMemberRepository)
+
+        public OrganizationChartsAppService(IRepository<OrganizationChart> organizationChartRepository, IRepository<OrganizationChart, int> lookup_organizationChartRepository)
         {
             _organizationChartRepository = organizationChartRepository;
             _lookup_organizationChartRepository = lookup_organizationChartRepository;
-            _userRepository = userRepository;
-            _lookup_organizationRepository = lookupOrganizationRepository;
-            _groupMemberRepository = groupMemberRepository;
+
         }
 
         public virtual async Task<PagedResultDto<GetOrganizationChartForViewDto>> GetAll(GetAllOrganizationChartsInput input)
         {
-            if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
-            var user = await _userRepository.GetAsync(AbpSession.UserId.Value);
 
             var filteredOrganizationCharts = _organizationChartRepository.GetAll()
                         .Include(e => e.ParentFk)
-                        .Include(e=>e.OrganizationFk)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.Caption.Contains(input.Filter) || e.LeafPath.Contains(input.Filter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.CaptionFilter), e => e.Caption.Contains(input.CaptionFilter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.LeafPathFilter), e => e.LeafPath.Contains(input.LeafPathFilter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationChartCaptionFilter), e => e.ParentFk != null && e.ParentFk.Caption == input.OrganizationChartCaptionFilter);
-
-            if (!user.IsSuperUser)
-            {
-                var orgQuery =
-                    from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
-                    join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
-                        .OrganizationId into joined2
-                    from grpMember in joined2.DefaultIfEmpty()
-                    where grpMember.UserId == AbpSession.UserId
-                    select org;
-
-                if (!orgQuery.Any())
-                {
-                    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
-                }
-                var orgEntity = orgQuery.First();
-                //filteredOrganizationCharts = filteredOrganizationCharts.Where(x => x.OrganizationId == orgEntity.Id);
-                var headerQuery = from x in _organizationChartRepository.GetAll()
-                    where x.OrganizationId == orgEntity.Id
-                    select x;
-                if (!headerQuery.Any()) throw new UserFriendlyException("شاخه مادر برای سازمان انتخابی یافت نشد");
-                var headerEntity= headerQuery.First();
-                filteredOrganizationCharts =
-                    filteredOrganizationCharts.Where(x => x.LeafPath.StartsWith(headerEntity.LeafPath));
-            }
-
 
             var pagedAndFilteredOrganizationCharts = filteredOrganizationCharts
                 .OrderBy(input.Sorting ?? "id asc")
@@ -84,10 +55,8 @@ namespace Chamran.Deed.Info
 
                                          o.Caption,
                                          o.LeafPath,
-                                         o.Id,
-                                         OrganizationChartCaption = s1 == null || s1.Caption == null ? "" : s1.Caption.ToString(),
-                                         o.OrganizationFk.OrganizationLogo,
-                                         OrganizationId=(int?)o.OrganizationFk.Id
+                                         Id = o.Id,
+                                         OrganizationChartCaption = s1 == null || s1.Caption == null ? "" : s1.Caption.ToString()
                                      };
 
             var totalCount = await filteredOrganizationCharts.CountAsync();
@@ -105,9 +74,6 @@ namespace Chamran.Deed.Info
                         Caption = o.Caption,
                         LeafPath = o.LeafPath,
                         Id = o.Id,
-                        OrganizationLogo = o.OrganizationLogo,
-                        OrganizationId = o.OrganizationId
-
                     },
                     OrganizationChartCaption = o.OrganizationChartCaption
                 };
@@ -170,15 +136,7 @@ namespace Chamran.Deed.Info
         {
             var organizationChart = ObjectMapper.Map<OrganizationChart>(input);
 
-            // Fetch the parent organization chart using the ParentId from the input
-            if (input.ParentId.HasValue)
-            {
-                organizationChart.ParentFk = await _organizationChartRepository.GetAsync(input.ParentId.Value);
-            }
             await _organizationChartRepository.InsertAsync(organizationChart);
-            await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the role.
-            organizationChart.GenerateLeafPath();
-
 
         }
 
@@ -187,8 +145,6 @@ namespace Chamran.Deed.Info
         {
             var organizationChart = await _organizationChartRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, organizationChart);
-            organizationChart.GenerateLeafPath();
-
 
         }
 
@@ -228,17 +184,5 @@ namespace Chamran.Deed.Info
             );
         }
 
-        [AbpAuthorize(AppPermissions.Pages_OrganizationCharts)]
-        public async Task SetOrganizationForChartLeaf(SetOrganizationForChartLeafInput input)
-        {
-            var query = from x in _lookup_organizationChartRepository.GetAll()
-                where x.Id == input.OrganizationChartId
-                select x;
-            if (!query.Any()) throw new UserFriendlyException("شاخه مورد نظر یافت نشد");
-            query.First().OrganizationId = input.OrganizationId;
-            await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the edition.
-
-
-        }
     }
 }

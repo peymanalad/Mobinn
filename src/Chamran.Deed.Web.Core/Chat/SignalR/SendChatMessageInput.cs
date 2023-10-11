@@ -30,6 +30,6 @@ namespace Chamran.Deed.Web.Chat.SignalR
         public Guid? ProfilePictureId { get; set; }
 
         public string Message { get; set; }
-        public Guid SharedMessageId { get; set; }
+        public int MessageId { get; set; }
     }
 }

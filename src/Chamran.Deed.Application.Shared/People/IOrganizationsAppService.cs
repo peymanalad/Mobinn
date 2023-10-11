@@ -21,7 +21,5 @@ namespace Chamran.Deed.People
 
         Task<FileDto> GetOrganizationsToExcel(GetAllOrganizationsForExcelInput input);
 
-        Task RemoveOrganizationLogoFile(EntityDto input);
-
     }
 }

@@ -21,7 +21,5 @@ namespace Chamran.Deed.Info
 
         Task<PagedResultDto<OrganizationChartOrganizationChartLookupTableDto>> GetAllOrganizationChartForLookupTable(GetAllForLookupTableInput input);
 
-        Task SetOrganizationForChartLeaf(SetOrganizationForChartLeafInput input);
-
     }
 }

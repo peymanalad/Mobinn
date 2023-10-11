@@ -93,12 +93,12 @@ namespace Chamran.Deed.Authorization.Users.Delegation
         {
             if (AbpSession.ImpersonatorUserId.HasValue)
             {
-                throw new UserFriendlyException("Cannot execute user delegation operations with an impersonated user !");
+                throw new Exception("Cannot execute user delegation operations with an impersonated user !");
             }
 
             if (!_userDelegationConfiguration.IsEnabled)
             {
-                throw new UserFriendlyException("User delegation configuration is not enabled !");
+                throw new Exception("User delegation configuration is not enabled !");
             }
         }
 

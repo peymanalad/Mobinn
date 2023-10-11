@@ -1663,9 +1663,6 @@ namespace Chamran.Deed.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
-                    b.Property<string>("NationalId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("NormalizedEmailAddress")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -2082,15 +2079,10 @@ namespace Chamran.Deed.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
-                    b.Property<int?>("OrganizationId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("ParentId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("OrganizationId");
 
                     b.HasIndex("ParentId");
 
@@ -2779,8 +2771,7 @@ namespace Chamran.Deed.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.HasIndex("UserId", "OrganizationId")
-                        .IsUnique();
+                    b.HasIndex("UserId");
 
                     b.ToTable("GroupMembers");
                 });
@@ -2792,10 +2783,6 @@ namespace Chamran.Deed.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("datetime2");
@@ -2812,38 +2799,16 @@ namespace Chamran.Deed.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsGovernmental")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime?>("LastModificationTime")
                         .HasColumnType("datetime2");
 
                     b.Property<long?>("LastModifierUserId")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("NationalId")
-                        .HasMaxLength(14)
-                        .HasColumnType("nvarchar(14)");
-
-                    b.Property<string>("OrganizationContactPerson")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("OrganizationLocation")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<Guid?>("OrganizationLogo")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("OrganizationName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("OrganizationPhone")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
 
                     b.HasKey("Id");
 
@@ -3208,16 +3173,10 @@ namespace Chamran.Deed.Migrations
 
             modelBuilder.Entity("Chamran.Deed.Info.OrganizationChart", b =>
                 {
-                    b.HasOne("Chamran.Deed.People.Organization", "OrganizationFk")
-                        .WithMany()
-                        .HasForeignKey("OrganizationId");
-
                     b.HasOne("Chamran.Deed.Info.OrganizationChart", "ParentFk")
                         .WithMany("Children")
                         .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.ClientCascade);
-
-                    b.Navigation("OrganizationFk");
 
                     b.Navigation("ParentFk");
                 });

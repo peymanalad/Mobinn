@@ -265,8 +265,6 @@ namespace Chamran.Deed.Web.Controllers
             {
                 throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(AbpLoginResultType.UserPhoneNumberIsNotConfirmed, model.UserNameOrEmailAddress, GetTenancyNameOrNull());
             }
-            if (loginResult.IsSuperUser)
-                throw new UserFriendlyException("SuperUser Can't Login to the App!");
             var identity = (ClaimsIdentity)(await _principalFactory.CreateAsync(loginResult)).Identity;
 
             var refreshToken = CreateRefreshToken(
@@ -476,8 +474,7 @@ namespace Chamran.Deed.Web.Controllers
                 var result = await _cacheManager.GetSmsVerificationCodeCache().GetOrDefaultAsync(phoneNumber);
                 if (result == null)
                 {
-                    return await Task.FromResult(@"");
-                }
+                    return await Task.FromResult(@"");}
                 return result.Code;
             }
             catch (Exception ex)

@@ -1,7 +1,6 @@
 ﻿using System;
 using Abp.Authorization;
 using Abp.Dependency;
-using Abp.UI;
 
 namespace Chamran.Deed.Authorization
 {
@@ -37,7 +36,7 @@ namespace Chamran.Deed.Authorization
             switch (result)
             {
                 case AbpLoginResultType.Success:
-                    throw new UserFriendlyException("Don't call this method with a success result!");
+                    throw new Exception("Don't call this method with a success result!");
                 case AbpLoginResultType.InvalidUserNameOrEmailAddress:
                 case AbpLoginResultType.InvalidPassword:
                     return L("InvalidUserNameOrPassword");

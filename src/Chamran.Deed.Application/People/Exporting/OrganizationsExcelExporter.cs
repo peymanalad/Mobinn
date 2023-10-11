@@ -27,38 +27,23 @@ namespace Chamran.Deed.People.Exporting
         public FileDto ExportToFile(List<GetOrganizationForViewDto> organizations)
         {
             return CreateExcelPackage(
-                    "Organizations.xlsx",
-                    excelPackage =>
-                    {
+                "Organizations.xlsx",
+                excelPackage =>
+                {
 
-                        var sheet = excelPackage.CreateSheet(L("Organizations"));
+                    var sheet = excelPackage.CreateSheet(L("Organizations"));
 
-                        AddHeader(
-                            sheet,
-                        L("OrganizationName"),
-                        L("IsGovernmental"),
-                        L("NationalId"),
-                        L("OrganizationLocation"),
-                        L("OrganizationPhone"),
-                        L("OrganizationContactPerson"),
-                        L("Comment"),
-                        L("OrganizationLogo")
-                            );
+                    AddHeader(
+                        sheet,
+                        L("OrganizationName")
+                        );
 
-                        AddObjects(
-                            sheet, organizations,
-                        _ => _.Organization.OrganizationName,
-                        _ => _.Organization.IsGovernmental,
-                        _ => _.Organization.NationalId,
-                        _ => _.Organization.OrganizationLocation,
-                        _ => _.Organization.OrganizationPhone,
-                        _ => _.Organization.OrganizationContactPerson,
-                        _ => _.Organization.Comment,
-                        _ => _.Organization.OrganizationLogoFileName
-                            );
+                    AddObjects(
+                        sheet, organizations,
+                        _ => _.Organization.OrganizationName
+                        );
 
-                    });
-
+                });
         }
     }
 }

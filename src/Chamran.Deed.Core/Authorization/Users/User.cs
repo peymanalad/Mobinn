@@ -12,7 +12,6 @@ namespace Chamran.Deed.Authorization.Users
     /// </summary>
     public class User : AbpUser<User>
     {
-        public string NationalId { get; set; }
         public virtual Guid? ProfilePictureId { get; set; }
 
         public virtual bool ShouldChangePasswordOnNextLogin { get; set; }

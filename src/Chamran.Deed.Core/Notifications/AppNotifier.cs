@@ -169,19 +169,5 @@ namespace Chamran.Deed.Notifications
                 targetNotifiers: targetNotifiers
             );
         }
-
-        public async Task SendPostNotificationAsync(string message, UserIdentifier[] userIds = null,
-            NotificationSeverity severity = NotificationSeverity.Info,
-            Type[] targetNotifiers = null
-        )
-        {
-            await _notificationPublisher.PublishAsync(
-                AppNotificationNames.NewPost,
-                new MessageNotificationData(message),
-                severity: severity,
-                userIds: userIds,
-                targetNotifiers: targetNotifiers
-            );
-        }
     }
 }

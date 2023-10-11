@@ -81,7 +81,7 @@ namespace Chamran.Deed.Web.Chat.SignalR
             {
                 using (ChatAbpSession.Use(Context.GetTenantId(), Context.GetUserId()))
                 {
-                    await _chatMessageManager.EditMessageAsync(sender, receiver,input.SharedMessageId, input.Message, input.TenancyName, input.UserName, input.ProfilePictureId);
+                    await _chatMessageManager.EditMessageAsync(sender, receiver,input.MessageId, input.Message, input.TenancyName, input.UserName, input.ProfilePictureId);
                     return string.Empty;
                 }
             }
@@ -106,19 +106,19 @@ namespace Chamran.Deed.Web.Chat.SignalR
             {
                 using (ChatAbpSession.Use(Context.GetTenantId(), Context.GetUserId()))
                 {
-                    await _chatMessageManager.DeleteMessageAsync(sender, input.SharedMessageId);
+                    await _chatMessageManager.DeleteMessageAsync(sender, input.MessageId);
                     return string.Empty;
                 }
             }
             catch (UserFriendlyException ex)
             {
-                Logger.Warn("Could not delete chat message with id: " + input.SharedMessageId);
+                Logger.Warn("Could not delete chat message with id: " + input.MessageId);
                 Logger.Warn(ex.ToString(), ex);
                 return ex.Message;
             }
             catch (Exception ex)
             {
-                Logger.Warn("Could not delete chat message with id: " + input.SharedMessageId);
+                Logger.Warn("Could not delete chat message with id: " + input.MessageId);
                 Logger.Warn(ex.ToString(), ex);
                 return _localizationManager.GetSource("AbpWeb").GetString("InternalServerError");
             }

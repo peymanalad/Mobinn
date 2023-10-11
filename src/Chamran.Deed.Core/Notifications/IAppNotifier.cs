@@ -32,7 +32,5 @@ namespace Chamran.Deed.Notifications
 
         Task SendMassNotificationAsync(string message, UserIdentifier[] userIds = null, 
             NotificationSeverity severity = NotificationSeverity.Info, Type[] targetNotifiers = null);
-        Task SendPostNotificationAsync(string message, UserIdentifier[] userIds = null,
-            NotificationSeverity severity = NotificationSeverity.Info, Type[] targetNotifiers = null);
     }
 }
