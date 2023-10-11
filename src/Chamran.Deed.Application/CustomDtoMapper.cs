@@ -54,6 +54,11 @@ namespace Chamran.Deed
     {
         public static void CreateMappings(IMapperConfigurationExpression configuration)
         {
+            configuration.CreateMap<GetEntriesDigestDto, GetEntriesDigest>().ReverseMap();
+            configuration.CreateMap<CreateOrEditTaskStatDto, TaskStat>().ReverseMap();
+            configuration.CreateMap<TaskStatDto, TaskStat>().ReverseMap();
+            configuration.CreateMap<CreateOrEditTaskEntryDto, TaskEntry>().ReverseMap();
+            configuration.CreateMap<TaskEntryDto, TaskEntry>().ReverseMap();
             configuration.CreateMap<CreateOrEditOrganizationUserDto, OrganizationUser>().ReverseMap();
             configuration.CreateMap<OrganizationUserDto, OrganizationUser>().ReverseMap();
             configuration.CreateMap<CreateOrEditOrganizationChartDto, OrganizationChart>().ReverseMap();

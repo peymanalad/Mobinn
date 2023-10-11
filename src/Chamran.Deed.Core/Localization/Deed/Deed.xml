@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="en">
-  <texts>    <text name="OrganizationUser">Organization user</text>
+  <texts>    <text name="TaskStat">Task stat</text>
+    <text name="CreateNewTaskStat">Create new task stat</text>
+    <text name="EditTaskStat">Edit task stat</text>
+    <text name="DeleteTaskStat">Delete task stat</text>
+    <text name="TaskEntry">Task entry</text>
+    <text name="CreateNewTaskEntry">Create new task entry</text>
+    <text name="EditTaskEntry">Edit task entry</text>
+    <text name="DeleteTaskEntry">Delete task entry</text>
+    <text name="OrganizationUser">Organization user</text>
     <text name="CreateNewOrganizationUser">Create new organization user</text>
     <text name="EditOrganizationUser">Edit organization user</text>
     <text name="DeleteOrganizationUser">Delete organization user</text>

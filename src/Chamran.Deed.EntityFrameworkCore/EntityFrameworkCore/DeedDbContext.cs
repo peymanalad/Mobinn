@@ -20,6 +20,14 @@ namespace Chamran.Deed.EntityFrameworkCore
 {
     public class DeedDbContext : AbpZeroDbContext<Tenant, Role, User, DeedDbContext>, IAbpPersistedGrantDbContext
     {
+        //modelBuilder.Entity<MixedEntity>().HasNoKey(); // Configure as a shadow property
+        
+        public virtual DbSet<GetEntriesDigest> EntriesDigest { get; set; }
+        
+        public virtual DbSet<TaskStat> TaskStats { get; set; }
+
+        public virtual DbSet<TaskEntry> TaskEntries { get; set; }
+
         public virtual DbSet<OrganizationUser> OrganizationUsers { get; set; }
 
         public virtual DbSet<OrganizationChart> OrganizationCharts { get; set; }
@@ -88,6 +96,8 @@ namespace Chamran.Deed.EntityFrameworkCore
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<GetEntriesDigest>().HasNoKey();
+
             modelBuilder.Entity<OrganizationChart>()
                 .HasOne(node => node.ParentFk)   // Use ParentFk navigation property
                 .WithMany(parent => parent.Children)
@@ -164,6 +174,30 @@ namespace Chamran.Deed.EntityFrameworkCore
             modelBuilder.Entity<GroupMember>()
                 .HasIndex(gm => new { gm.UserId, gm.OrganizationId })
                 .IsUnique();
+
+            modelBuilder.Entity<TaskEntry>()
+           .HasOne(t => t.PostFk)
+           .WithOne()
+           .HasForeignKey<TaskEntry>(t => t.PostId)
+           .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TaskEntry>()
+                .HasOne(t => t.IssuerFk)
+                .WithOne()
+                .HasForeignKey<TaskEntry>(t => t.IssuerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TaskEntry>()
+                .HasOne(t => t.ReceiverFk)
+                .WithOne()
+                .HasForeignKey<TaskEntry>(t => t.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<TaskEntry>()
+                .HasOne(t => t.ParentFk)
+                .WithOne()
+                .HasForeignKey<TaskEntry>(t => t.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.ConfigurePersistedGrantEntity();
 
