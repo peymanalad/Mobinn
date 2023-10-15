@@ -8,6 +8,7 @@ using Abp.Authorization.Users;
 using Abp.Dependency;
 using Abp.Domain.Repositories;
 using Abp.Organizations;
+using Abp.UI;
 using Microsoft.Extensions.Configuration;
 using Chamran.Deed.Authorization;
 using Chamran.Deed.Authorization.Roles;

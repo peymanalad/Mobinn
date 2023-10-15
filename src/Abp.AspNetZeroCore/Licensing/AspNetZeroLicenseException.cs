@@ -1,4 +1,6 @@
 ﻿
+using Abp.UI;
+
 namespace Abp.AspNetZeroCore.Licensing
 {
     using System;

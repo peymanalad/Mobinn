@@ -18,6 +18,7 @@ using System.Web;
 using Abp.Runtime.Security;
 using Abp.Runtime.Session;
 using Abp.Timing;
+using Abp.UI;
 using Chamran.Deed.Configuration;
 using Chamran.Deed.Net.Emailing;
 

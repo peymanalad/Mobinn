@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
+using Abp.UI;
 using JetBrains.Annotations;
 
 namespace Chamran.Deed.EntityFrameworkCore

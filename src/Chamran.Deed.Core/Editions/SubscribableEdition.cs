@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using Abp.Application.Editions;
+using Abp.UI;
 using Chamran.Deed.MultiTenancy.Payments;
 
 namespace Chamran.Deed.Editions
