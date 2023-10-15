@@ -11,6 +11,7 @@ import {Observable} from "@node_modules/rxjs";
 {{Import_DateTime_Service_Here}}
 {{Import_File_Uploader_Here}}
 {{Import_HttpClient}}
+{{NP_Import_PrimeNG_AutoComplete}}
 
 @Component({
     templateUrl: './create-or-edit-{{entity_Name_Here}}.component.html',
@@ -19,6 +20,7 @@ import {Observable} from "@node_modules/rxjs";
 export class CreateOrEdit{{Entity_Name_Here}}Component extends AppComponentBase implements OnInit {
     active = false;
     saving = false;
+    {{NP_TYPEAHEAD_PROPERTIES_HERE}}
     {{NP_Looped_ViewChild_Here}}
     {{entity_Name_Here}}: CreateOrEdit{{Entity_Name_Here}}Dto = new CreateOrEdit{{Entity_Name_Here}}Dto();
 {{Property_Nullable_Datetime_Dec_Looped_Template_Here}}
@@ -91,6 +93,10 @@ export class CreateOrEdit{{Entity_Name_Here}}Component extends AppComponentBase 
     }
 
 {{NP_Looped_OpenModal_Here}}
+
+{{NP_Typeahead_Filter_Here}}
+
+{{NP_Typeahead_Get_All_Here}}
 
 {{NP_Looped_SetNull_Here}}
 

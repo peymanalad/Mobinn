@@ -72,7 +72,7 @@ namespace Chamran.Deed.Friendships
                 var friendship = (await GetFriendshipOrNullAsync(userIdentifier, probableFriend));
                 if (friendship == null)
                 {
-                    throw new Exception("Friendship does not exist between " + userIdentifier + " and " + probableFriend);
+                    throw new UserFriendlyException("Friendship does not exist between " + userIdentifier + " and " + probableFriend);
                 }
 
                 friendship.State = FriendshipState.Blocked;
@@ -87,7 +87,7 @@ namespace Chamran.Deed.Friendships
                 var friendship = (await GetFriendshipOrNullAsync(userIdentifier, probableFriend));
                 if (friendship == null)
                 {
-                    throw new Exception("Friendship does not exist between " + userIdentifier + " and " + probableFriend);
+                    throw new UserFriendlyException("Friendship does not exist between " + userIdentifier + " and " + probableFriend);
                 }
 
                 await _friendshipRepository.DeleteAsync(friendship);
@@ -101,7 +101,7 @@ namespace Chamran.Deed.Friendships
                 var friendship = (await GetFriendshipOrNullAsync(userIdentifier, probableFriend));
                 if (friendship == null)
                 {
-                    throw new Exception("Friendship does not exist between " + userIdentifier + " and " + probableFriend);
+                    throw new UserFriendlyException("Friendship does not exist between " + userIdentifier + " and " + probableFriend);
                 }
 
                 friendship.State = FriendshipState.Accepted;

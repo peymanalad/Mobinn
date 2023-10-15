@@ -16,7 +16,7 @@ namespace Chamran.Deed.Web
             var coreAssemblyDirectoryPath = Path.GetDirectoryName(typeof(DeedCoreModule).GetAssembly().Location);
             if (coreAssemblyDirectoryPath == null)
             {
-                throw new Exception("Could not find location of Chamran.Deed.Core assembly!");
+                throw new UserFriendlyException("Could not find location of Chamran.Deed.Core assembly!");
             }
 
             var directoryInfo = new DirectoryInfo(coreAssemblyDirectoryPath);
@@ -24,7 +24,7 @@ namespace Chamran.Deed.Web
             {
                 if (directoryInfo.Parent == null)
                 {
-                    throw new Exception("Could not find content root folder!");
+                    throw new UserFriendlyException("Could not find content root folder!");
                 }
 
                 directoryInfo = directoryInfo.Parent;
@@ -42,7 +42,7 @@ namespace Chamran.Deed.Web
                 return webHostFolder;
             }
 
-            throw new Exception("Could not find root folder of the web project!");
+            throw new UserFriendlyException("Could not find root folder of the web project!");
         }
 
         private static bool DirectoryContains(string directory, string fileName)

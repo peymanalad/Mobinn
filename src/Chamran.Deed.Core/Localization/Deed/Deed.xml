@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="en">
-  <texts>    <text name="TaskStat">Task stat</text>
+  <texts>    <text name="DeedChart">Deed chart</text>
+    <text name="CreateNewDeedChart">Create new deed chart</text>
+    <text name="EditDeedChart">Edit deed chart</text>
+    <text name="DeleteDeedChart">Delete deed chart</text>
+    <text name="TaskStat">Task stat</text>
     <text name="CreateNewTaskStat">Create new task stat</text>
     <text name="EditTaskStat">Edit task stat</text>
     <text name="DeleteTaskStat">Delete task stat</text>

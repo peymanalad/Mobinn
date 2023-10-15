@@ -109,7 +109,7 @@ namespace Chamran.Deed.Authorization.Users
             var user = await GetUserOrNullAsync(userIdentifier);
             if (user == null)
             {
-                throw new Exception("There is no user: " + userIdentifier);
+                throw new UserFriendlyException("There is no user: " + userIdentifier);
             }
 
             return user;

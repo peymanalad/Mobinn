@@ -8,16 +8,17 @@ namespace Chamran.Deed.Common
 {
     public enum BinarySourceType
     {
-        ProfilePicture=1,
-        ChatFile=2,
-        SoftwareUpdate=3,
-        UserCollectedData=4,
-        PostGroupLogo=5,
-        Post=6,
-        Other=7,
-        Logo=8,
-        Css=9,
-        Excel=10,
+        ProfilePicture = 1,
+        ChatFile = 2,
+        SoftwareUpdate = 3,
+        UserCollectedData = 4,
+        PostGroupLogo = 5,
+        Post = 6,
+        Other = 7,
+        Logo = 8,
+        Css = 9,
+        Excel = 10,
+        OrganizationLogo = 11,
 
 
 

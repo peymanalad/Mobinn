@@ -7,6 +7,6 @@ namespace Chamran.Deed.People.Dtos
     public class GetOrganizationForEditOutput
     {
         public CreateOrEditOrganizationDto Organization { get; set; }
-
+        public string OrganizationLogoFileName { get; set; }
     }
 }

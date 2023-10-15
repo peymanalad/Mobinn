@@ -23,14 +23,16 @@ namespace Chamran.Deed.Notifications
 
         Task SendMessageAsync(string notificationName, string message, UserIdentifier[] userIds = null,
             NotificationSeverity severity = NotificationSeverity.Info);
-        
+
         Task SendMessageAsync(UserIdentifier user, LocalizableString localizableMessage, IDictionary<string, object> localizableMessageData = null, NotificationSeverity severity = NotificationSeverity.Info);
 
         Task TenantsMovedToEdition(UserIdentifier user, string sourceEditionName, string targetEditionName);
 
         Task SomeUsersCouldntBeImported(UserIdentifier user, string fileToken, string fileType, string fileName);
 
-        Task SendMassNotificationAsync(string message, UserIdentifier[] userIds = null, 
+        Task SendMassNotificationAsync(string message, UserIdentifier[] userIds = null,
+            NotificationSeverity severity = NotificationSeverity.Info, Type[] targetNotifiers = null);
+        Task SendPostNotificationAsync(string message, UserIdentifier[] userIds = null,
             NotificationSeverity severity = NotificationSeverity.Info, Type[] targetNotifiers = null);
     }
 }

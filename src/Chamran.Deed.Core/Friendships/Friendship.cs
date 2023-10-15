@@ -47,7 +47,7 @@ namespace Chamran.Deed.Friendships
 
             if (!Enum.IsDefined(typeof(FriendshipState), state))
             {
-                throw new Exception("Invalid FriendshipState value: " + state);
+                throw new UserFriendlyException("Invalid FriendshipState value: " + state);
             }
 
             UserId = user.UserId;

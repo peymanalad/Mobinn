@@ -6,6 +6,11 @@
     /// </summary>
     public static class AppPermissions
     {
+        public const string Pages_DeedCharts = "Pages.DeedCharts";
+        public const string Pages_DeedCharts_Create = "Pages.DeedCharts.Create";
+        public const string Pages_DeedCharts_Edit = "Pages.DeedCharts.Edit";
+        public const string Pages_DeedCharts_Delete = "Pages.DeedCharts.Delete";
+
         public const string Pages_TaskStats = "Pages.TaskStats";
         public const string Pages_TaskStats_Create = "Pages.TaskStats.Create";
         public const string Pages_TaskStats_Edit = "Pages.TaskStats.Edit";

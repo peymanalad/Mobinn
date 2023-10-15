@@ -34,7 +34,7 @@ namespace Chamran.Deed.Web.Controllers
 
             var exception = exHandlerFeature != null
                                 ? exHandlerFeature.Error
-                                : new Exception("Unhandled exception!");
+                                : new UserFriendlyException("Unhandled exception!");
 
             return View(
                 "Error",

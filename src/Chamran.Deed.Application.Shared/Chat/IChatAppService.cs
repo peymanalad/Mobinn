@@ -17,5 +17,6 @@ namespace Chamran.Deed.Chat
 
         Task MarkAllUnreadMessagesOfUserAsRead(MarkAllUnreadMessagesOfUserAsReadInput input);
         Task MarkAllUnreadMessagesOfUserAsReceived(MarkAllUnreadMessagesOfUserAsReceivedInput input);
+        Task MarkMessageAsReceived(MarkMessageAsReceivedInput input);
     }
 }

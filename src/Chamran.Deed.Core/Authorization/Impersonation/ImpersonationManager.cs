@@ -110,7 +110,7 @@ namespace Chamran.Deed.Authorization.Impersonation
         {
             if (AbpSession.TenantId != tenantId)
             {
-                throw new Exception($"Current tenant is different than given tenant. AbpSession.TenantId: {AbpSession.TenantId}, given tenantId: {tenantId}");
+                throw new UserFriendlyException($"Current tenant is different than given tenant. AbpSession.TenantId: {AbpSession.TenantId}, given tenantId: {tenantId}");
             }
         }
 

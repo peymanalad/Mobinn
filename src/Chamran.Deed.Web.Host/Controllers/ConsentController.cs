@@ -56,7 +56,7 @@ namespace Chamran.Deed.Web.Controllers
                 return View("Index", result.ViewModel);
             }
 
-            throw new Exception("Unexpected model/result!");
+            throw new UserFriendlyException("Unexpected model/result!");
         }
 
         public async Task<ProcessConsentResult> ProcessConsent(ConsentInputModel model)

@@ -29,7 +29,7 @@ namespace Chamran.Deed.Web.Security.Recaptcha
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null)
             {
-                throw new Exception("RecaptchaValidator should be used in a valid HTTP context!");
+                throw new UserFriendlyException("RecaptchaValidator should be used in a valid HTTP context!");
             }
 
             if (captchaResponse.IsNullOrEmpty())

@@ -193,7 +193,7 @@ namespace Chamran.Deed.Sessions
         {
             if (AbpSession.UserId <= 0)
             {
-                throw new Exception(L("ThereIsNoLoggedInUser"));
+                throw new UserFriendlyException(L("ThereIsNoLoggedInUser"));
             }
 
             var user = await UserManager.GetUserAsync(AbpSession.ToUserIdentifier());
@@ -215,7 +215,7 @@ namespace Chamran.Deed.Sessions
                 var user = await UserManager.FindByIdAsync(AbpSession.ImpersonatorUserId.ToString());
                 if (user == null)
                 {
-                    throw new Exception("User not found!");
+                    throw new UserFriendlyException("User not found!");
                 }
 
                 return user;

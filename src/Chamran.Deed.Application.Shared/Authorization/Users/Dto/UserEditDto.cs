@@ -12,7 +12,7 @@ namespace Chamran.Deed.Authorization.Users.Dto
         /// Set null to create a new user. Set user's Id to update a user
         /// </summary>
         public long? Id { get; set; }
-
+        public string NationalId { get; set; }
         [Required]
         [StringLength(AbpUserBase.MaxNameLength)]
         public string Name { get; set; }

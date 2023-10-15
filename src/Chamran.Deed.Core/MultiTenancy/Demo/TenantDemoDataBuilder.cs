@@ -235,7 +235,7 @@ namespace Chamran.Deed.MultiTenancy.Demo
 
             if (!File.Exists(fullPath))
             {
-                throw new Exception("Could not find sample profile picture on " + fullPath);
+                throw new UserFriendlyException("Could not find sample profile picture on " + fullPath);
             }
 
             return (File.ReadAllBytes(fullPath), fileName);

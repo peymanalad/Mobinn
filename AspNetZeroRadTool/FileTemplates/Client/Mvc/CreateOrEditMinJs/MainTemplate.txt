@@ -20,6 +20,8 @@
                 format: 'L'
             });
 
+            {{NP_SELECT2_INIT_HERE}}
+
             _${{entity_Name_Here}}InformationForm = _modalManager.getModal().find('form[name={{Entity_Name_Here}}InformationsForm]');
             _${{entity_Name_Here}}InformationForm.validate();
         };
