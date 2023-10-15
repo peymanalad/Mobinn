@@ -1,9 +1,4 @@
-﻿using Chamran.Deed.Info;
-using Chamran.Deed.Authorization.Users;
-using Chamran.Deed.Authorization.Users;
-using Chamran.Deed.Info;
-
-using System;
+﻿using Chamran.Deed.Authorization.Users;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using Abp.Linq.Extensions;
@@ -11,18 +6,14 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
 using Chamran.Deed.Info.Dtos;
-using Chamran.Deed.Dto;
 using Abp.Application.Services.Dto;
 using Chamran.Deed.Authorization;
-using Abp.Extensions;
 using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
-using Chamran.Deed.Storage;
 using Abp.EntityFrameworkCore;
 using Chamran.Deed.EntityFrameworkCore;
 using Abp.Domain.Uow;
-using AutoMapper;
 
 namespace Chamran.Deed.Info
 {
@@ -105,7 +96,7 @@ DECLARE @UserId INT = {AbpSession.UserId.Value}
         PST.[PostFile2],
         PST.[PostFile3],
         PST.[PostRefLink],
-        ROW_NUMBER() OVER (PARTITION BY MinIdCTE.[SharedTaskId] ORDER BY t.[Id] DESC) AS RowNum
+        ROW_NUMBER() OVER (PARTITION BY MinIdCTE.[SharedTaskId] ORDER BY t.[Id]) AS RowNum
     FROM
         [DeedDb].[dbo].[TaskEntries] t
     JOIN
