@@ -7,6 +7,7 @@ using Abp.Configuration;
 using Abp.Dependency;
 using Abp.Timing;
 using Abp.Timing.Timezone;
+using Abp.UI;
 using TimeZoneConverter;
 
 namespace Chamran.Deed.Timing

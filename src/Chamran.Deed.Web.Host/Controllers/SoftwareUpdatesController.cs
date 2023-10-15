@@ -16,7 +16,7 @@ namespace Chamran.Deed.Web.Controllers
 
         private const long MaxUpdateFileLength = 524288000; //500MB
         private const string MaxUpdateFileLengthUserFriendlyValue = "500MB"; //5MB
-        private readonly string[] UpdateFileAllowedFileTypes = { "apk"};
+        private readonly string[] UpdateFileAllowedFileTypes = { "apk" };
 
         public SoftwareUpdatesController(ITempFileCacheManager tempFileCacheManager)
         {
@@ -27,6 +27,7 @@ namespace Chamran.Deed.Web.Controllers
         {
             try
             {
+                Console.WriteLine(Request);
                 //Check input
                 if (Request.Form.Files.Count == 0)
                 {

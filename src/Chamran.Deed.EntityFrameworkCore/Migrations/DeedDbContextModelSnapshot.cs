@@ -1662,7 +1662,9 @@ namespace Chamran.Deed.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
+                    b.Property<string>("NationalId")
 
+                        .HasColumnType("nvarchar(max)");
                     b.Property<string>("NormalizedEmailAddress")
                         .IsRequired()
                         .HasMaxLength(256)

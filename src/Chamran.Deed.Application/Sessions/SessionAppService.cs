@@ -16,6 +16,7 @@ using Chamran.Deed.Authorization.Delegation;
 using Chamran.Deed.Authorization.Users;
 using Abp.Domain.Uow;
 using Abp.Localization;
+using Abp.UI;
 using Chamran.Deed.Features;
 
 namespace Chamran.Deed.Sessions

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Abp;
 using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
+using Abp.UI;
 
 namespace Chamran.Deed.Authorization.Delegation
 {

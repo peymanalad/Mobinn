@@ -49,6 +49,8 @@ using Abp.AspNetCore.Localization;
 using Chamran.Deed.Info;
 using Chamran.Deed.Web.Helpers.StimulsoftHelpers;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace Chamran.Deed.Web.Startup
 {
@@ -69,6 +71,7 @@ namespace Chamran.Deed.Web.Startup
         {
 
             LicenseHelper.StimulsoftRegister();
+            RemoveLimits(services);
 
             //MVC
             services.AddControllersWithViews(options =>
@@ -180,9 +183,37 @@ namespace Chamran.Deed.Web.Startup
             });
         }
 
+        private void RemoveLimits(IServiceCollection services)
+        {
+
+            //services.Configure<KestrelServerOptions>(options =>
+            //{
+            //    options.Limits.MaxRequestBodySize = null; // Set to null to remove the limit
+            //    // or
+            //    options.Limits.MaxRequestBodySize = new long?(); // An alternative way to set it to null
+            //});
+
+            //services.Configure<FormOptions>(options =>
+            //{
+            //    options.MultipartBodyLengthLimit = null; // Set to null to remove the limit
+            //    // or
+            //    options.MultipartBodyLengthLimit = new long?(); // An alternative way to set it to null
+            //});
+
+            services.Configure<KestrelServerOptions>(options =>
+            {
+                options.Limits.MaxRequestBodySize = null; // Set to the desired maximum size in bytes
+            });
+
+            services.Configure<FormOptions>(options =>
+            {
+                options.MultipartBodyLengthLimit = 524288000; // Set the maximum multipart body length (e.g., 100 MB)
+            });
+        }
+
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
-             app.UseForwardedHeaders(new ForwardedHeadersOptions
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
             {
                 ForwardedHeaders = ForwardedHeaders.All, //ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
                 ForwardLimit = null
@@ -234,10 +265,10 @@ namespace Chamran.Deed.Web.Startup
                 {
                     //app.UseAbpRequestLocalization();
                     app.UseAbpRequestLocalization(options =>
-                         {
-                             var headerProvider = options.RequestCultureProviders.OfType<AbpLocalizationHeaderRequestCultureProvider>().First();
-                             headerProvider.HeaderName = "-AspNetCore-Culture";
-                         });
+                    {
+                        var headerProvider = options.RequestCultureProviders.OfType<AbpLocalizationHeaderRequestCultureProvider>().First();
+                        headerProvider.HeaderName = "-AspNetCore-Culture";
+                    });
                 }
             }
 
