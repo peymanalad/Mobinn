@@ -2,7 +2,7 @@
 
 namespace Chamran.Deed.Chat.Dto
 {
-    public class MarkMessagesAsReadInput
+    public class MarkAllUnreadMessagesOfUserAsReceivedInput
     {
         public int? TenantId { get; set; }
 

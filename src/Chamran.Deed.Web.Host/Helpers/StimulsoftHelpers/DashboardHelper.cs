@@ -9,6 +9,7 @@ using Abp.Timing;
 using Abp.UI;
 using Chamran.Deed.Info;
 using Chamran.Deed.People;
+using Google.Api.Gax.ResourceNames;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Stimulsoft.Base.Drawing;
@@ -90,7 +91,7 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
 
         public static async Task<StiReport> GetCurrentOrganizationDashboard(IRepository<Report> reportRepository,
             IRepository<Organization> organizationRepository, IRepository<GroupMember> groupMemberRepository,
-            long userId,bool isSuperUser)
+            long userId, bool isSuperUser)
         {
             if (isSuperUser)
             {
@@ -103,7 +104,20 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
 
                 }
 
-                if (!string.IsNullOrEmpty(reportContent)) return GetReportFromContent(reportContent);
+                var emptyReport = GetReportFromContent(reportContent);
+                await reportRepository.InsertAsync(new Report()
+                {
+                
+                    IsSuperUser = true,
+                    IsDashboard = true,
+                    ReportContent = emptyReport.SaveEncryptedReportToString("DrM@s"),
+                    CreationTime = Clock.Now,
+                    CreatorUserId = userId,
+                    ReportDescription = "داشبورد دید"
+                });
+
+                return emptyReport;
+
                 //var orgQuery =
                 //    from org in organizationRepository.GetAll().Where(x => !x.IsDeleted)
                 //    join grpMember in groupMemberRepository.GetAll() on org.Id equals grpMember
@@ -116,19 +130,19 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
                 //{
                 //    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
                 //}
-                return CreateEmptyReport(userId, null,"کلی", reportRepository);
+                //return CreateEmptyReport(userId, null, "کلی", reportRepository);
             }
             else
             {
                 var query = reportRepository.GetAll().Where(x => x.IsDashboard && !x.IsDeleted);
                 var query2 = from report in query
-                    join grpMember in groupMemberRepository.GetAll() on report.OrganizationId equals grpMember.OrganizationId into joined2
-                    from grpMember in joined2.DefaultIfEmpty()
-                    where grpMember.UserId == userId && report.IsDashboard
-                    select new
-                    {
-                        report.ReportContent
-                    };
+                             join grpMember in groupMemberRepository.GetAll() on report.OrganizationId equals grpMember.OrganizationId into joined2
+                             from grpMember in joined2.DefaultIfEmpty()
+                             where grpMember.UserId == userId && report.IsDashboard
+                             select new
+                             {
+                                 report.ReportContent
+                             };
                 string reportContent = null;
                 if (query2.Any())
                 {
@@ -152,9 +166,9 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
                 }
 
                 var orgEntity = orgQuery.First();
-                return CreateEmptyReport(userId, orgEntity.Id, orgEntity.OrganizationName,reportRepository);
+                return CreateEmptyReport(userId, orgEntity.Id, orgEntity.OrganizationName, reportRepository);
             }
-           
+
 
 
         }
@@ -258,7 +272,7 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
             return report;
         }
 
-        public static async Task SaveCurrentOrganizationDashboard(StiReport savedReport, IRepository<Report> reportRepository, IRepository<Organization> organizationRepository, IRepository<GroupMember> groupMemberRepository, long userId,bool isSuperUser)
+        public static async Task SaveCurrentOrganizationDashboard(StiReport savedReport, IRepository<Report> reportRepository, IRepository<Organization> organizationRepository, IRepository<GroupMember> groupMemberRepository, long userId, bool isSuperUser)
         {
             if (isSuperUser)
             {
@@ -278,12 +292,12 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
             {
                 var query = reportRepository.GetAll().Where(x => x.IsDashboard && !x.IsDeleted);
                 var query2 = from report in query
-                    join org in organizationRepository.GetAll().Where(x => !x.IsDeleted) on report.OrganizationId equals org.Id into joined1
-                    from org in joined1.DefaultIfEmpty()
-                    join grpMember in groupMemberRepository.GetAll() on org.Id equals grpMember.OrganizationId into joined2
-                    from grpMember in joined2.DefaultIfEmpty()
-                    where grpMember.UserId == userId
-                    select report;
+                             join org in organizationRepository.GetAll().Where(x => !x.IsDeleted) on report.OrganizationId equals org.Id into joined1
+                             from org in joined1.DefaultIfEmpty()
+                             join grpMember in groupMemberRepository.GetAll() on org.Id equals grpMember.OrganizationId into joined2
+                             from grpMember in joined2.DefaultIfEmpty()
+                             where grpMember.UserId == userId
+                             select report;
 
                 if (query2.Any())
                 {
@@ -296,7 +310,7 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
                     await reportRepository.UpdateAsync(result);
                 }
             }
-            
+
         }
 
         public static void MapDataToReportNoPassword(StiReport dashboard, IConfigurationRoot _appConfiguration)
@@ -313,7 +327,7 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
                 //UserID = "",
                 //Password = ""
             };
-            dashboard.Dictionary.Databases.Add(new StiSqlDatabase("DeedDb","DeedDb", sqlconbuilder.ConnectionString,false));
+            dashboard.Dictionary.Databases.Add(new StiSqlDatabase("DeedDb", "DeedDb", sqlconbuilder.ConnectionString, false));
             //dashboard.Dictionary.Synchronize();
         }
 
@@ -329,7 +343,7 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
             {
                 ConnectTimeout = 180,
             };
-            dashboard.Dictionary.Databases.Add(new StiSqlDatabase("DeedDb","DeedDb" ,sqlconbuilder.ConnectionString, false));
+            dashboard.Dictionary.Databases.Add(new StiSqlDatabase("DeedDb", "DeedDb", sqlconbuilder.ConnectionString, false));
             //dashboard.Dictionary.Synchronize();
         }
 
