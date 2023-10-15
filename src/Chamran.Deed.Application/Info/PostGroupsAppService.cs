@@ -14,7 +14,6 @@ using Abp.Application.Services.Dto;
 using Chamran.Deed.Authorization;
 using Abp.Extensions;
 using Abp.Authorization;
-using Abp.Runtime.Session;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Chamran.Deed.Authorization.Users;
@@ -51,7 +50,7 @@ namespace Chamran.Deed.Info
 
         public async Task<PagedResultDto<GetPostGroupForViewDto>> GetAll(GetAllPostGroupsInput input)
         {
-            if (AbpSession.UserId == null) throw new Exception("User Must be Logged in!");
+            if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
             var user = await _userRepository.GetAsync(AbpSession.UserId.Value);
 
             var filteredPostGroups = _postGroupRepository.GetAll()

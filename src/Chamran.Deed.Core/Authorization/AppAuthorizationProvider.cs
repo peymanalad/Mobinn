@@ -30,6 +30,11 @@ namespace Chamran.Deed.Authorization
 
             var pages = context.GetPermissionOrNull(AppPermissions.Pages) ?? context.CreatePermission(AppPermissions.Pages, L("Pages"));
 
+            var deedCharts = pages.CreateChildPermission(AppPermissions.Pages_DeedCharts, L("DeedCharts"));
+            deedCharts.CreateChildPermission(AppPermissions.Pages_DeedCharts_Create, L("CreateNewDeedChart"));
+            deedCharts.CreateChildPermission(AppPermissions.Pages_DeedCharts_Edit, L("EditDeedChart"));
+            deedCharts.CreateChildPermission(AppPermissions.Pages_DeedCharts_Delete, L("DeleteDeedChart"));
+
             var taskStats = pages.CreateChildPermission(AppPermissions.Pages_TaskStats, L("TaskStats"));
             taskStats.CreateChildPermission(AppPermissions.Pages_TaskStats_Create, L("CreateNewTaskStat"));
             taskStats.CreateChildPermission(AppPermissions.Pages_TaskStats_Edit, L("EditTaskStat"));

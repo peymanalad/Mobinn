@@ -130,6 +130,68 @@
 				]
 		},
 		{
+			"placeholder" : "{{NP_SELECT2_INIT_HERE}}",
+			"templates" : [
+					{
+					"relation" : "single",
+					"preventDuplicate":true,
+					"content" : "// Init select2
+			var typeahead{{NP_Name_Here}} = $('#{{nP_Name_Here}}-typeahead-selector');
+		    
+			typeahead{{NP_Name_Here}}.select2({
+                placeholder: 'Select',
+                theme: 'bootstrap5',
+                selectionCssClass: 'form-select',
+				minimumInputLength: 2,
+                ajax: {
+                    url: abp.appPath + 'api/services/app/{{NP_Foreign_Entity_Name_Plural_Here}}/GetAll',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            {{NP_Display_Property_Name_Here}}Filter: params.term, // search term
+                            SkipCount: (params.page || 0) * 10,
+                            MaxResultCount: 10,
+                        };
+                    },
+                    processResults: function (data, params) {
+                        params.page = params.page || 0;
+
+                        return {
+                            results: $.map(data.result.items, function (item) {
+                                return {
+                                    text: item.{{nP_Foreign_Entity_Name_Here}}.name,
+                                    id: item.{{nP_Foreign_Entity_Name_Here}}.id,
+                                };
+                            }),
+                            pagination: {
+                                more: (params.page * 10) < data.result.totalCount,
+                            },
+                        };
+                    },
+                    cache: true,
+                }               
+        	});
+			
+			var selectedEntityId = $('#{{Entity_Name_Here}}_{{NP_Name_Here}}');
+
+			if (selectedEntityId && selectedEntityId.val()) {
+				abp.ajax({
+					type: 'GET',
+					url: '/api/services/app/{{NP_Foreign_Entity_Name_Plural_Here}}/Get{{NP_Foreign_Entity_Name_Here}}ForView',
+					data: {
+						id: selectedEntityId.val()
+					}
+				}).done(function (data) {
+					var option = new Option(data.{{nP_Foreign_Entity_Name_Here}}.name, data.{{nP_Foreign_Entity_Name_Here}}.id, true, true);
+					typeahead{{NP_Name_Here}}.append(option).trigger('change');
+				});
+			}
+			"
+					}
+			]
+		},
+		{
 			"placeholder" : "{{NP_Modal_Open_Clear_Here}}",
 			"viewType":"LookupTable",
 			"templates" : [

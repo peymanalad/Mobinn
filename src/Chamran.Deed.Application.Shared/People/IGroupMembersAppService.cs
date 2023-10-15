@@ -10,7 +10,7 @@ namespace Chamran.Deed.People
     public interface IGroupMembersAppService : IApplicationService
     {
         Task<PagedResultDto<GetGroupMemberForViewDto>> GetAll(GetAllGroupMembersInput input);
-
+        Task<PagedResultDto<GetGroupMemberForViewDto>> GetAllNoOrganization(GetAllGroupMembersInput input);
         Task<GetGroupMemberForViewDto> GetGroupMemberForView(int id);
 
         Task<GetGroupMemberForEditOutput> GetGroupMemberForEdit(EntityDto input);

@@ -80,7 +80,7 @@ namespace Chamran.Deed.Authorization.Users
             {
                 if (user.EmailConfirmationCode.IsNullOrEmpty())
                 {
-                    throw new Exception("EmailConfirmationCode should be set in order to send email activation link.");
+                    throw new UserFriendlyException("EmailConfirmationCode should be set in order to send email activation link.");
                 }
 
                 link = link.Replace("{userId}", user.Id.ToString());
@@ -141,7 +141,7 @@ namespace Chamran.Deed.Authorization.Users
 
             if (user.PasswordResetCode.IsNullOrEmpty())
             {
-                throw new Exception("PasswordResetCode should be set in order to send password reset link.");
+                throw new UserFriendlyException("PasswordResetCode should be set in order to send password reset link.");
             }
 
             var tenancyName = GetTenancyNameOrNull(user.TenantId);

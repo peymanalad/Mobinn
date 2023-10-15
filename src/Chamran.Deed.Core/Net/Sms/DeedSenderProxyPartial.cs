@@ -94,6 +94,8 @@ namespace SmsBehestan
     {
         public string phone_number { get; set; }
         public string token { get; set; }
+        public string appkey { get; set; }
+        public string appname { get; set; }
     }
 
 }

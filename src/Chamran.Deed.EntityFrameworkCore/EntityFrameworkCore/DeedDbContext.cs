@@ -20,10 +20,12 @@ namespace Chamran.Deed.EntityFrameworkCore
 {
     public class DeedDbContext : AbpZeroDbContext<Tenant, Role, User, DeedDbContext>, IAbpPersistedGrantDbContext
     {
+        public virtual DbSet<DeedChart> DeedCharts { get; set; }
+
         //modelBuilder.Entity<MixedEntity>().HasNoKey(); // Configure as a shadow property
-        
+
         public virtual DbSet<GetEntriesDigest> EntriesDigest { get; set; }
-        
+
         public virtual DbSet<TaskStat> TaskStats { get; set; }
 
         public virtual DbSet<TaskEntry> TaskEntries { get; set; }

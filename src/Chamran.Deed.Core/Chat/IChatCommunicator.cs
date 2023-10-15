@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp;
 using Abp.RealTime;
@@ -8,9 +9,10 @@ namespace Chamran.Deed.Chat
 {
     public interface IChatCommunicator
     {
-        Task DeleteMessageToClients(IReadOnlyList<IOnlineClient> clients, UserIdentifier user, int messageId);
+        Task DeleteMessageToClients(IReadOnlyList<IOnlineClient> clients, UserIdentifier user, Guid sharedMessageId);
 
         Task SendMessageToClient(IReadOnlyList<IOnlineClient> clients, ChatMessage message);
+        Task EditMessageToClient(IReadOnlyList<IOnlineClient> clients, UserIdentifier user, Guid sharedMessageId, string message);
 
         Task SendFriendshipRequestToClient(IReadOnlyList<IOnlineClient> clients, Friendship friend, bool isOwnRequest, bool isFriendOnline);
 

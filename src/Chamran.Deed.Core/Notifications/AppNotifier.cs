@@ -41,7 +41,7 @@ namespace Chamran.Deed.Notifications
             notificationData["emailAddress"] = user.EmailAddress;
 
             await _notificationPublisher.PublishAsync(AppNotificationNames.NewUserRegistered, notificationData,
-                tenantIds: new[] {user.TenantId});
+                tenantIds: new[] { user.TenantId });
         }
 
         public async Task NewTenantRegisteredAsync(Tenant tenant)
@@ -69,7 +69,7 @@ namespace Chamran.Deed.Notifications
             notificationData["binaryObjectId"] = binaryObjectId;
 
             await _notificationPublisher.PublishAsync(AppNotificationNames.GdprDataPrepared, notificationData,
-                userIds: new[] {user});
+                userIds: new[] { user });
         }
 
         //This is for test purposes
@@ -80,16 +80,16 @@ namespace Chamran.Deed.Notifications
                 AppNotificationNames.SimpleMessage,
                 new MessageNotificationData(message),
                 severity: severity,
-                userIds: new[] {user}
+                userIds: new[] { user }
             );
         }
-        
+
         public async Task SendMessageAsync(string notificationName, string message, UserIdentifier[] userIds = null,
             NotificationSeverity severity = NotificationSeverity.Info)
         {
             var tenants = NotificationPublisher.AllTenants;
             await _notificationPublisher.PublishAsync(
-                notificationName : notificationName,
+                notificationName: notificationName,
                 new MessageNotificationData(message),
                 severity: severity,
                 userIds: userIds
@@ -118,7 +118,7 @@ namespace Chamran.Deed.Notifications
             }
 
             await _notificationPublisher.PublishAsync(notificationName, notificationData, severity: severity,
-                userIds: new[] {user});
+                userIds: new[] { user });
         }
 
         public Task TenantsMovedToEdition(UserIdentifier user, string sourceEditionName, string targetEditionName)
@@ -143,11 +143,11 @@ namespace Chamran.Deed.Notifications
 
         public Task SomeUsersCouldntBeImported(UserIdentifier user, string fileToken, string fileType, string fileName)
         {
-            return SendNotificationAsync(AppNotificationNames.DownloadInvalidImportUsers, user, 
+            return SendNotificationAsync(AppNotificationNames.DownloadInvalidImportUsers, user,
                 new LocalizableString(
                     "ClickToSeeInvalidUsers",
                     DeedConsts.LocalizationSourceName
-                ), 
+                ),
                 new Dictionary<string, object>
                 {
                     { "fileToken", fileToken },
@@ -163,6 +163,20 @@ namespace Chamran.Deed.Notifications
         {
             await _notificationPublisher.PublishAsync(
                 AppNotificationNames.MassNotification,
+                new MessageNotificationData(message),
+                severity: severity,
+                userIds: userIds,
+                targetNotifiers: targetNotifiers
+            );
+        }
+
+        public async Task SendPostNotificationAsync(string message, UserIdentifier[] userIds = null,
+            NotificationSeverity severity = NotificationSeverity.Info,
+            Type[] targetNotifiers = null
+        )
+        {
+            await _notificationPublisher.PublishAsync(
+                AppNotificationNames.NewPost,
                 new MessageNotificationData(message),
                 severity: severity,
                 userIds: userIds,

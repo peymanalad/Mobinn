@@ -2,6 +2,8 @@
     $(function () {
         var _{{entity_Name_Plural_Here}}Service = abp.services.app.{{entity_Name_Plural_Here}};
 
+        {{NP_SELECT2_INIT_HERE}}
+
         var _${{entity_Name_Here}}InformationForm = $('form[name={{Entity_Name_Here}}InformationsForm]');
         _${{entity_Name_Here}}InformationForm.validate();
 

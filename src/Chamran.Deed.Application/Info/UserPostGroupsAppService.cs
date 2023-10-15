@@ -1,7 +1,4 @@
 ﻿using Chamran.Deed.Authorization.Users;
-using Chamran.Deed.Info;
-
-using System;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using Abp.Linq.Extensions;
@@ -13,13 +10,11 @@ using Chamran.Deed.Info.Dtos;
 using Chamran.Deed.Dto;
 using Abp.Application.Services.Dto;
 using Chamran.Deed.Authorization;
-using Abp.Extensions;
 using Abp.Authorization;
 using Abp.Timing;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Chamran.Deed.People;
-using Chamran.Deed.Storage;
 
 namespace Chamran.Deed.Info
 {
@@ -244,11 +239,25 @@ namespace Chamran.Deed.Info
         [AbpAuthorize(AppPermissions.Pages_UserPostGroups)]
         public async Task<PagedResultDto<UserPostGroupPostGroupLookupTableDto>> GetAllPostGroupForLookupTable(GetAllForLookupTableInput input)
         {
+            if (AbpSession.UserId == null) throw new UserFriendlyException("Not Logged In!");
+            var orgQuery =
+                from org in _organizationGroupsRepository.GetAll().Where(x => !x.IsDeleted)
+                join grpMember in _groupMembersRepository.GetAll() on org.Id equals grpMember
+                    .OrganizationId into joined2
+                from grpMember in joined2.DefaultIfEmpty()
+                where grpMember.UserId == AbpSession.UserId
+                select org;
+
+            if (!orgQuery.Any())
+            {
+                throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+            }
+            var orgEntity = orgQuery.First();
             var query = _lookup_postGroupRepository.GetAll().WhereIf(
                    !string.IsNullOrWhiteSpace(input.Filter),
                   e => e.PostGroupDescription != null && e.PostGroupDescription.Contains(input.Filter)
                );
-
+            query = query.Where(x => x.OrganizationId == orgEntity.Id);
             var totalCount = await query.CountAsync();
 
             var postGroupList = await query
@@ -275,38 +284,38 @@ namespace Chamran.Deed.Info
         {
 
             var query = from pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
-                join og in _organizationGroupsRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
-                    equals og.Id into joiner1
-                from og in joiner1.DefaultIfEmpty()
-                join gm in _groupMembersRepository.GetAll() on og.Id equals gm.OrganizationId into joiner2
-                from gm in joiner2.DefaultIfEmpty()
+                        join og in _organizationGroupsRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
+                            equals og.Id into joiner1
+                        from og in joiner1.DefaultIfEmpty()
+                        join gm in _groupMembersRepository.GetAll() on og.Id equals gm.OrganizationId into joiner2
+                        from gm in joiner2.DefaultIfEmpty()
 
-                where gm.UserId == AbpSession.UserId
-                select new
-                {
-                    pg.Id,
-                    pg.PostGroupDescription
-                };
+                        where gm.UserId == AbpSession.UserId
+                        select new
+                        {
+                            pg.Id,
+                            pg.PostGroupDescription
+                        };
 
 
-                        var pagedAndFilteredUserPostGroups = query
-                .OrderBy(input.Sorting ?? "id asc")
-                .PageBy(input);
+            var pagedAndFilteredUserPostGroups = query
+    .OrderBy(input.Sorting ?? "id asc")
+    .PageBy(input);
 
-            var userPostGroups=from pg in pagedAndFilteredUserPostGroups
-                               join upg in _userPostGroupRepository.GetAll() on pg.Id equals upg.PostGroupId into upgJoin
-                from upg in upgJoin.DefaultIfEmpty()
-                
-                select new UserPostGroupSelectDto
-                {
-                    GroupId = pg.Id,
-                    GroupDescription = pg.PostGroupDescription,
-                    IsSelected = upg != null
-                };
+            var userPostGroups = from pg in pagedAndFilteredUserPostGroups
+                                 join upg in _userPostGroupRepository.GetAll() on pg.Id equals upg.PostGroupId into upgJoin
+                                 from upg in upgJoin.DefaultIfEmpty()
+
+                                 select new UserPostGroupSelectDto
+                                 {
+                                     GroupId = pg.Id,
+                                     GroupDescription = pg.PostGroupDescription,
+                                     IsSelected = upg != null
+                                 };
 
             var totalCount = await query.CountAsync();
             var dbList = await userPostGroups.ToListAsync();
-            
+
             return new PagedResultDto<UserPostGroupSelectDto>(
                 totalCount,
                 dbList

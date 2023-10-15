@@ -7,6 +7,7 @@ import { AppComponentBase } from '@shared/common/app-component-base';
 {{Import_DateTime_Service_Here}}{{NP_Looped_Lookup_Component_Import_Here}}
 {{Import_File_Uploader_Here}}
 {{Import_HttpClient}}
+{{NP_Import_PrimeNG_AutoComplete}}
 
 @Component({
     selector: '{{master_Detail_Child_Prefix_Here}}createOrEdit{{Entity_Name_Here}}Modal',
@@ -20,6 +21,7 @@ export class {{Master_Detail_Child_Prefix_Here}}CreateOrEdit{{Entity_Name_Here}}
 
     active = false;
     saving = false;
+    {{NP_TYPEAHEAD_PROPERTIES_HERE}}
 
     {{entity_Name_Here}}: CreateOrEdit{{Entity_Name_Here}}Dto = new CreateOrEdit{{Entity_Name_Here}}Dto();
 {{Property_Nullable_Datetime_Dec_Looped_Template_Here}}
@@ -72,6 +74,10 @@ export class {{Master_Detail_Child_Prefix_Here}}CreateOrEdit{{Entity_Name_Here}}
     }
 
 {{NP_Looped_OpenModal_Here}}
+
+{{NP_Typeahead_Filter_Here}}
+
+{{NP_Typeahead_Get_All_Here}}
 
 {{NP_Looped_SetNull_Here}}
 

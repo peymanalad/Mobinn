@@ -2035,6 +2035,140 @@ namespace Chamran.Deed.Migrations
                     b.ToTable("CommentLikes");
                 });
 
+            modelBuilder.Entity("Chamran.Deed.Info.DeedChart", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Caption")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatorUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("LeafPath")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<int?>("OrganizationId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
+
+                    b.HasIndex("ParentId");
+
+                    b.ToTable("DeedCharts");
+                });
+
+            modelBuilder.Entity("Chamran.Deed.Info.GetEntriesDigest", b =>
+                {
+                    b.Property<string>("Caption")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatorUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("IsSpecial")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("IssuerFirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("IssuerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("IssuerLastName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IssuerMemberPos")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("IssuerProfilePicture")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PostCaption")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("PostCreationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("PostCreatorUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("PostFile")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PostFile2")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PostFile3")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("PostGroupId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PostGroupMemberId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("PostLastModificationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("PostLastModifierUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("PostRefLink")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PostTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReceiverFirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ReceiverId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ReceiverLastName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReceiverMemberPos")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("ReceiverProfilePicture")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SharedTaskId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.ToTable("EntriesDigest");
+                });
+
             modelBuilder.Entity("Chamran.Deed.Info.Hashtag", b =>
                 {
                     b.Property<int>("Id")
@@ -2401,18 +2535,13 @@ namespace Chamran.Deed.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IssuerId")
-                        .IsUnique();
+                    b.HasIndex("IssuerId");
 
-                    b.HasIndex("ParentId")
-                        .IsUnique()
-                        .HasFilter("[ParentId] IS NOT NULL");
+                    b.HasIndex("ParentId");
 
-                    b.HasIndex("PostId")
-                        .IsUnique();
+                    b.HasIndex("PostId");
 
-                    b.HasIndex("ReceiverId")
-                        .IsUnique();
+                    b.HasIndex("ReceiverId");
 
                     b.ToTable("TaskEntries");
                 });
@@ -2771,7 +2900,8 @@ namespace Chamran.Deed.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "OrganizationId")
+                        .IsUnique();
 
                     b.ToTable("GroupMembers");
                 });
@@ -3162,6 +3292,21 @@ namespace Chamran.Deed.Migrations
                     b.Navigation("UserFk");
                 });
 
+            modelBuilder.Entity("Chamran.Deed.Info.DeedChart", b =>
+                {
+                    b.HasOne("Chamran.Deed.People.Organization", "OrganizationFk")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId");
+
+                    b.HasOne("Chamran.Deed.Info.DeedChart", "ParentFk")
+                        .WithMany()
+                        .HasForeignKey("ParentId");
+
+                    b.Navigation("OrganizationFk");
+
+                    b.Navigation("ParentFk");
+                });
+
             modelBuilder.Entity("Chamran.Deed.Info.Hashtag", b =>
                 {
                     b.HasOne("Chamran.Deed.Info.Post", "PostFk")
@@ -3290,26 +3435,25 @@ namespace Chamran.Deed.Migrations
             modelBuilder.Entity("Chamran.Deed.Info.TaskEntry", b =>
                 {
                     b.HasOne("Chamran.Deed.Authorization.Users.User", "IssuerFk")
-                        .WithOne()
-                        .HasForeignKey("Chamran.Deed.Info.TaskEntry", "IssuerId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .WithMany()
+                        .HasForeignKey("IssuerId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Chamran.Deed.Info.TaskEntry", "ParentFk")
-                        .WithOne()
-                        .HasForeignKey("Chamran.Deed.Info.TaskEntry", "ParentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .WithMany()
+                        .HasForeignKey("ParentId");
 
                     b.HasOne("Chamran.Deed.Info.Post", "PostFk")
-                        .WithOne()
-                        .HasForeignKey("Chamran.Deed.Info.TaskEntry", "PostId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Chamran.Deed.Authorization.Users.User", "ReceiverFk")
-                        .WithOne()
-                        .HasForeignKey("Chamran.Deed.Info.TaskEntry", "ReceiverId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .WithMany()
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("IssuerFk");

@@ -234,6 +234,16 @@
 						</select>
 					</div>
 					 "
+					},
+					{
+					"relation" : "single",					
+					"viewType": "Typeahead",
+					"content" : "
+					<div class=\"my-3\">
+						<label class=\"form-label\" for=\"{{NP_Foreign_Entity_Name_Here}}{{NP_Display_Property_Name_Here}}{{NP_Duplication_Number_Here}}\">{{l(\"{{NP_Foreign_Entity_Name_Here}}\")}}</label>
+						<p-autoComplete minLength=\"2\" virtualScroll=\"true\" [virtualScrollItemSize]=\"34\" [ngModelOptions]=\"{standalone: true}\" [(ngModel)]=\"selectedItem\" [style]=\"{'width':'100%'}\" [dropdown]=\"true\" [forceSelection]=\"true\" [suggestions]=\"{{nP_Foreign_Entity_Name_Plural_Here}}\" (completeMethod)=\"filter{{NP_Foreign_Entity_Name_Plural_Here}}($event)\" field=\"displayName\" dataKey=\"id\"></p-autoComplete>
+					</div>
+					 "
 					}
 				]
 		},

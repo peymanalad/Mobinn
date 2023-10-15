@@ -294,7 +294,7 @@ namespace Chamran.Deed.MultiTenancy
         {
             if (tenant.EditionId == null || tenant.HasUnlimitedTimeSubscription())
             {
-                throw new Exception(
+                throw new UserFriendlyException(
                     $"Can not end tenant {tenant.TenancyName} subscription for {edition.DisplayName} tenant has unlimited time subscription!");
             }
 
@@ -309,7 +309,7 @@ namespace Chamran.Deed.MultiTenancy
 
             if (subscriptionEndDateUtc >= nowUtc)
             {
-                throw new Exception(
+                throw new UserFriendlyException(
                     $"Can not end tenant {tenant.TenancyName} subscription for {edition.DisplayName} since subscription has not expired yet!");
             }
 

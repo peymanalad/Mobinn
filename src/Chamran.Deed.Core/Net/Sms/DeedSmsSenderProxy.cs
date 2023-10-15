@@ -178,7 +178,7 @@ namespace SmsBehestan
             var urlBuilder_ = new System.Text.StringBuilder();
             //urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/api/v1/sms/enqueue");
             //urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/services/dashboard/enqueue");
-            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/send");
+            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/sendplus");
 
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -192,7 +192,8 @@ namespace SmsBehestan
 
                     dto.token = msg.Text;
                     dto.phone_number = msg.Recipient;
-
+                    dto.appkey = "QnK0L9NrAB3";//APPKEY
+                    dto.appname = "سامانه دید";
                     var content_ = new System.Net.Http.StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(dto, _settings.Value));
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;

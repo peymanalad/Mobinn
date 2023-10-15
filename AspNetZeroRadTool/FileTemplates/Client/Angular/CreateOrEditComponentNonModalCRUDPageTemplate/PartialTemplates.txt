@@ -260,6 +260,52 @@ import { {{Master_Detail_Child_Prefix_Here}}{{Entity_Name_Here}}{{NP_Foreign_Ent
 				]
 		},
 		{
+			"placeholder" : "{{NP_TYPEAHEAD_PROPERTIES_HERE}}",
+			"templates" : [
+					{
+					"relation" : "single",					
+					"viewType": "Typeahead",
+					"content" : "selectedItem: {{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto;
+                    {{nP_Foreign_Entity_Name_Plural_Here}}: {{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto[];
+                    filterText = '';"
+					}
+				]
+		},
+        {
+			"placeholder" : "{{NP_Typeahead_Get_All_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",					
+					"viewType": "Typeahead",
+					"content" : "    get{{NP_Foreign_Entity_Name_Plural_Here}}(){
+this._{{entity_Name_Plural_Here}}ServiceProxy.getAll{{NP_Foreign_Entity_Name_Here}}ForLookupTable(
+    this.filterText,
+    undefined,
+    undefined,
+    100000
+    ).subscribe((result) => {
+        this.{{nP_Foreign_Entity_Name_Plural_Here}} = result.items;
+    });
+    }
+"
+					}
+				]
+		},
+        {
+			"placeholder" : "{{NP_Typeahead_Filter_Here}}",
+			"templates" : [
+					{
+					"relation" : "single",					
+					"viewType": "Typeahead",
+					"content" : "filter{{NP_Foreign_Entity_Name_Plural_Here}}(event: AutoCompleteCompleteEvent) {
+        this.filterText = event.query.toLowerCase();
+        this.get{{NP_Foreign_Entity_Name_Plural_Here}}();
+    }
+"
+					}
+				]
+		},
+		{
 			"placeholder" : "{{NP_Looped_SetNull_Here}}",
 			"templates" : [
 					{
@@ -321,9 +367,27 @@ import { {{Master_Detail_Child_Prefix_Here}}{{Entity_Name_Here}}{{NP_Foreign_Ent
 					"preventDuplicate":true,
 					"content" : ",{{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto
 					"
+					},
+					{
+					"relation" : "single",
+					"viewType" : "Typeahead",
+					"preventDuplicate":true,
+					"content" : ",{{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto
+					"
 					}
 				]
-		}
+		},
+		{
+             "placeholder" : "{{NP_Import_PrimeNG_AutoComplete}}",
+             "templates": [
+                {
+                    "relation": "single",
+                    "viewType": "Typeahead",
+                    "content": "import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
+                    "
+                }
+             ]
+        },
 	],
 "conditionalTemplates":[
 		{

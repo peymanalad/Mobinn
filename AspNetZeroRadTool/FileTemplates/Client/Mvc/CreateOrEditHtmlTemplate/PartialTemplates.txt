@@ -265,6 +265,22 @@
 							@Html.DropDownList(\"{{nP_Name_Here}}\", new SelectList(Model.{{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}List,\"Id\",\"DisplayName\", (Model.IsEditMode ? Model.{{Entity_Name_Here}}.{{NP_Name_Here}}.ToString() : \"\")),@L(\"SelectA{{NP_Foreign_Entity_Name_Here}}\"), new { @class = \"form-control\"  {{NP_IsNullable_Required_Here_With_Comma_And_At}} })
 						</div>
 "
+					},
+					{
+					"relation" : "single",
+					"Type" : "Modal",
+					"viewType":"Typeahead",
+					"content" : "            
+						<div class=\"my-3\">
+							<label class=\"form-label\" for=\"{{nP_Name_Here}}\">@L(\"{{NP_Foreign_Entity_Name_Here}}\")</label>
+							<select id=\"{{nP_Name_Here}}-typeahead-selector\" name=\"{{nP_Name_Here}}\" class=\"form-select\" style=\"width:100%\"></select>
+						</div>
+
+						@if (Model.IsEditMode)
+						{
+							<input id=\"{{Entity_Name_Here}}_{{NP_Name_Here}}\" value=\"@Model.{{Entity_Name_Here}}.{{NP_Name_Here}}\" type=\"text\" hidden/>
+						}
+"
 					}
 				]
 		}

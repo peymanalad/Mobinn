@@ -47,7 +47,7 @@ namespace Chamran.Deed.Timing
                 return timezoneSettingDefinition.DefaultValue;
             }
 
-            throw new Exception("Unknown scope for default timezone setting.");
+            throw new UserFriendlyException("Unknown scope for default timezone setting.");
         }
 
         public TimeZoneInfo FindTimeZoneById(string timezoneId)

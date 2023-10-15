@@ -50,7 +50,7 @@ namespace Chamran.Deed.Authorization.Delegation
 
             if (delegation == null)
             {
-                throw new Exception("Only source user can delete a user delegation !");
+                throw new UserFriendlyException("Only source user can delete a user delegation !");
             }
 
             await _userDelegationRepository.DeleteAsync(delegation);

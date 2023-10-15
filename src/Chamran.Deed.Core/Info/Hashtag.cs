@@ -1,8 +1,4 @@
-﻿using Chamran.Deed.Info;
-using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Abp.Domain.Entities.Auditing;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using Abp.Domain.Entities;
 
 namespace Chamran.Deed.Info

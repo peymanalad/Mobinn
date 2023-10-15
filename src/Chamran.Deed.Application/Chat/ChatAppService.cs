@@ -14,6 +14,7 @@ using Abp.Timing;
 using Microsoft.EntityFrameworkCore;
 using Chamran.Deed.Friendships.Cache;
 using Chamran.Deed.Friendships.Dto;
+using static NPOI.HSSF.UserModel.HeaderFooter;
 
 namespace Chamran.Deed.Chat
 {
@@ -45,34 +46,44 @@ namespace Chamran.Deed.Chat
             {
                 return new GetUserChatFriendsWithSettingsOutput();
             }
-
-            var cacheItem = _userFriendsCache.GetCacheItem(userIdentifier);
-            var friends = ObjectMapper.Map<List<FriendDto>>(cacheItem.Friends);
-
-            foreach (var friend in friends)
+            //var user = await UserManager.GetUserAsync(AbpSession.ToUserIdentifier());
+            //if (user.IsSuperUser)
+            //{
+            //    return new GetUserChatFriendsWithSettingsOutput
+            //    {
+            //        Friends = friends,
+            //        ServerTime = Clock.Now
+            //    };
+            //}
+            //else
             {
-                friend.IsOnline = _onlineClientManager.IsOnline(
-                    new UserIdentifier(friend.FriendTenantId, friend.FriendUserId)
-                );
-                var query = await _chatMessageRepository.GetAll()
-                    .Where(m => m.UserId == AbpSession.UserId && m.TargetTenantId == AbpSession.TenantId && m.TargetUserId == friend.FriendUserId)
-                    .OrderByDescending(m => m.CreationTime)
-                    .Take(1)
-                    .ToListAsync();
-                if (query.Any())
+
+                var cacheItem = _userFriendsCache.GetCacheItem(userIdentifier);
+                var friends = ObjectMapper.Map<List<FriendDto>>(cacheItem.Friends);
+
+                foreach (var friend in friends)
                 {
+                    friend.IsOnline = _onlineClientManager.IsOnline(
+                        new UserIdentifier(friend.FriendTenantId, friend.FriendUserId)
+                    );
+                    var query = await _chatMessageRepository.GetAll()
+                        .Where(m => m.UserId == AbpSession.UserId && m.TargetTenantId == AbpSession.TenantId && m.TargetUserId == friend.FriendUserId)
+                        .OrderByDescending(m => m.CreationTime)
+                        .Take(1)
+                        .ToListAsync();
+                    if (!query.Any()) continue;
                     var entity = query.First();
                     friend.LatestMessage = entity.Message;
                     friend.LastMessageDateTime = entity.CreationTime;
-
                 }
+
+                return new GetUserChatFriendsWithSettingsOutput
+                {
+                    Friends = friends,
+                    ServerTime = Clock.Now
+                };
             }
 
-            return new GetUserChatFriendsWithSettingsOutput
-            {
-                Friends = friends,
-                ServerTime = Clock.Now
-            };
         }
 
 
@@ -111,7 +122,7 @@ namespace Chamran.Deed.Chat
 
                 }
             }
-            var pagedAndFilteredFriends = friends.OrderByDescending(x=>x.LatestMessage).Skip(input.SkipCount).Take(input.MaxResultCount).ToList();
+            var pagedAndFilteredFriends = friends.OrderByDescending(x => x.LatestMessage).Skip(input.SkipCount).Take(input.MaxResultCount).ToList();
 
             return new GetPagedUserChatFriendsWithSettingsOutput()
             {
@@ -142,7 +153,7 @@ namespace Chamran.Deed.Chat
         public async Task<PagedResultDto<ChatMessageDto>> GetPagedUserChatMessages(GetPagedUserChatMessagesInput input)
         {
             var userId = AbpSession.GetUserId();
-            var countQuery= _chatMessageRepository.GetAll()
+            var countQuery = _chatMessageRepository.GetAll()
                 .WhereIf(input.MinMessageId.HasValue, m => m.Id < input.MinMessageId.Value)
                 .Where(m => m.UserId == userId && m.TargetTenantId == input.TenantId && m.TargetUserId == input.UserId)
                 .OrderByDescending(m => m.CreationTime)
@@ -157,7 +168,7 @@ namespace Chamran.Deed.Chat
 
             messages.Reverse();
 
-            var res= ObjectMapper.Map<List<ChatMessageDto>>(messages);
+            var res = ObjectMapper.Map<List<ChatMessageDto>>(messages);
 
             return new PagedResultDto<ChatMessageDto>(
                 countQuery,
@@ -177,7 +188,7 @@ namespace Chamran.Deed.Chat
                         m.UserId == userId &&
                         m.TargetTenantId == input.TenantId &&
                         m.TargetUserId == input.UserId &&
-                        m.ReadState == ChatMessageReadState.Unread)
+                        m.ReadState == ChatMessageReadState.Unread || m.ReadState == ChatMessageReadState.Received)
                  .ToListAsync();
 
             if (!messages.Any())
@@ -256,6 +267,68 @@ namespace Chamran.Deed.Chat
             {
                 var reverseMessages = await _chatMessageRepository.GetAll()
                     .Where(m => m.UserId == input.UserId && m.TargetTenantId == tenantId && m.TargetUserId == userId)
+                    .ToListAsync();
+
+                if (!reverseMessages.Any())
+                {
+                    return;
+                }
+
+                foreach (var message in reverseMessages)
+                {
+                    message.ChangeReceiverReadState(ChatMessageReadState.Received);
+                }
+            }
+
+            var userIdentifier = AbpSession.ToUserIdentifier();
+            var friendIdentifier = input.ToUserIdentifier();
+
+            _userFriendsCache.ResetUnreadMessageCount(userIdentifier, friendIdentifier);
+
+            var onlineUserClients = _onlineClientManager.GetAllByUserId(userIdentifier);
+            if (onlineUserClients.Any())
+            {
+                await _chatCommunicator.SendAllUnreadMessagesOfUserReadToClients(onlineUserClients, friendIdentifier);
+            }
+
+            var onlineFriendClients = _onlineClientManager.GetAllByUserId(friendIdentifier);
+            if (onlineFriendClients.Any())
+            {
+                await _chatCommunicator.SendReadStateChangeToClients(onlineFriendClients, userIdentifier);
+            }
+        }
+
+        public async Task MarkMessageAsReceived(MarkMessageAsReceivedInput input)
+        {
+            var userId = AbpSession.GetUserId();
+            var tenantId = AbpSession.TenantId;
+
+            // receiver messages
+            var messages = await _chatMessageRepository
+                 .GetAll()
+                 .Where(m =>
+                        m.UserId == userId &&
+                        m.TargetTenantId == input.TenantId &&
+                        m.TargetUserId == input.UserId &&
+                        m.ReadState == ChatMessageReadState.Unread &&
+                        m.SharedMessageId == input.SharedMessageId)
+                 .ToListAsync();
+
+            if (!messages.Any())
+            {
+                return;
+            }
+
+            foreach (var message in messages)
+            {
+                message.ChangeReadState(ChatMessageReadState.Received);
+            }
+
+            // sender messages
+            using (CurrentUnitOfWork.SetTenantId(input.TenantId))
+            {
+                var reverseMessages = await _chatMessageRepository.GetAll()
+                    .Where(m => m.UserId == input.UserId && m.TargetTenantId == tenantId && m.TargetUserId == userId && m.SharedMessageId == input.SharedMessageId)
                     .ToListAsync();
 
                 if (!reverseMessages.Any())

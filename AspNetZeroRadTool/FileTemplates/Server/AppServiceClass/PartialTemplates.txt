@@ -321,6 +321,41 @@
                 lookupTableDtoList
             );
          }"
+		},
+		{
+		"relation" : "single",
+		"preventDuplicate":true,
+		"viewType": "Typeahead",
+		"content" : "
+
+		[AbpAuthorize(AppPermissions.{{Permission_Name_Here}})]
+         public async Task<PagedResultDto<{{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto>> GetAll{{NP_Foreign_Entity_Name_Here}}ForLookupTable(GetAllForLookupTableInput input)
+         {
+             var query = _lookup_{{nP_Foreign_Entity_Name_Here}}Repository.GetAll().WhereIf(
+                    !string.IsNullOrWhiteSpace(input.Filter),
+                   e=> {{NP_Looped_GetAllForLookupTable_Display_Name_Query_Here}}.Contains(input.Filter)
+                );
+
+            var totalCount = await query.CountAsync();
+
+            var {{nP_Foreign_Entity_Name_Here}}List = await query
+                .PageBy(input)
+                .ToListAsync();
+
+			var lookupTableDtoList = new List<{{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto>();
+			foreach(var {{nP_Foreign_Entity_Name_Here}} in {{nP_Foreign_Entity_Name_Here}}List){
+				lookupTableDtoList.Add(new {{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto
+				{
+					Id = {{nP_Foreign_Entity_Name_Here}}.Id{{NP_Id_Type_ToStringIfNeeded_Here}},
+					DisplayName =  {{NP_Looped_GetAllForLookupTable_Display_Name_Definition_For_ViewType_Lookup_Table_Here}}
+				});
+			}
+
+            return new PagedResultDto<{{Entity_Name_Here}}{{NP_Foreign_Entity_Name_Here}}LookupTableDto>(
+                totalCount,
+                lookupTableDtoList
+            );
+         }"
 					},
 					{
 						"relation" : "single",
