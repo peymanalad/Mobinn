@@ -122,6 +122,91 @@ namespace Chamran.Deed.Info
 
         }
 
+        public virtual async Task<List<GetOrganizationChartForViewDto>> GetAllForOrganization(int organizationId)
+        {
+            if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
+            var user = await _userRepository.GetAsync(AbpSession.UserId.Value);
+
+            var filteredOrganizationCharts = _organizationChartRepository.GetAll()
+                        .Include(e => e.ParentFk)
+                        .Include(e => e.OrganizationFk)
+                        .Where(e=>e.OrganizationId==organizationId);
+
+            //if (!user.IsSuperUser)
+            //{
+            //    var orgQuery =
+            //        from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
+            //        join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
+            //            .OrganizationId into joined2
+            //        from grpMember in joined2.DefaultIfEmpty()
+            //        where grpMember.UserId == AbpSession.UserId
+            //        select org;
+
+            //    if (!orgQuery.Any())
+            //    {
+            //        throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+            //    }
+            //    var orgEntity = orgQuery.First();
+            //    //filteredOrganizationCharts = filteredOrganizationCharts.Where(x => x.OrganizationId == orgEntity.Id);
+            //    var headerQuery = from x in _organizationChartRepository.GetAll()
+            //                      where x.OrganizationId == orgEntity.Id
+            //                      select x;
+            //    if (!headerQuery.Any()) throw new UserFriendlyException("شاخه مادر برای سازمان انتخابی یافت نشد");
+            //    var headerEntity = headerQuery.First();
+            //    filteredOrganizationCharts =
+            //        filteredOrganizationCharts.Where(x => x.LeafPath.StartsWith(headerEntity.LeafPath));
+            //}
+
+
+            //var pagedAndFilteredOrganizationCharts = filteredOrganizationCharts
+            //    .OrderBy(input.Sorting ?? "id asc")
+            //    .PageBy(input);
+
+            var organizationCharts = from o in filteredOrganizationCharts
+                                     join o1 in _lookup_organizationChartRepository.GetAll() on o.ParentId equals o1.Id into j1
+                                     from s1 in j1.DefaultIfEmpty()
+
+                                     select new
+                                     {
+
+                                         o.Caption,
+                                         o.LeafPath,
+                                         o.Id,
+                                         OrganizationChartCaption = s1 == null || s1.Caption == null ? "" : s1.Caption.ToString(),
+                                         o.OrganizationFk.OrganizationLogo,
+                                         OrganizationId = (int?)o.OrganizationFk.Id
+                                     };
+
+            //var totalCount = await filteredOrganizationCharts.CountAsync();
+
+            var dbList = await organizationCharts.ToListAsync();
+            var results = new List<GetOrganizationChartForViewDto>();
+
+            foreach (var o in dbList)
+            {
+                var res = new GetOrganizationChartForViewDto()
+                {
+                    OrganizationChart = new OrganizationChartDto
+                    {
+
+                        Caption = o.Caption,
+                        LeafPath = o.LeafPath,
+                        Id = o.Id,
+                        OrganizationLogo = o.OrganizationLogo,
+                        OrganizationId = o.OrganizationId
+
+                    },
+                    OrganizationChartCaption = o.OrganizationChartCaption
+                };
+
+                results.Add(res);
+            }
+
+            return new List<GetOrganizationChartForViewDto>(results
+            );
+
+        }
+
         public virtual async Task<GetOrganizationChartForViewDto> GetOrganizationChartForView(int id)
         {
             var organizationChart = await _organizationChartRepository.GetAsync(id);
@@ -228,17 +313,17 @@ namespace Chamran.Deed.Info
             );
         }
 
-        [AbpAuthorize(AppPermissions.Pages_OrganizationCharts)]
-        public async Task SetOrganizationForChartLeaf(SetOrganizationForChartLeafInput input)
-        {
-            var query = from x in _lookup_organizationChartRepository.GetAll()
-                        where x.Id == input.OrganizationChartId
-                        select x;
-            if (!query.Any()) throw new UserFriendlyException("شاخه مورد نظر یافت نشد");
-            query.First().OrganizationId = input.OrganizationId;
-            await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the edition.
+        //[AbpAuthorize(AppPermissions.Pages_OrganizationCharts)]
+        //public async Task SetOrganizationForChartLeaf(SetOrganizationForChartLeafInput input)
+        //{
+        //    var query = from x in _lookup_organizationChartRepository.GetAll()
+        //                where x.Id == input.OrganizationChartId
+        //                select x;
+        //    if (!query.Any()) throw new UserFriendlyException("شاخه مورد نظر یافت نشد");
+        //    query.First().OrganizationId = input.OrganizationId;
+        //    await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the edition.
 
 
-        }
+        //}
     }
 }

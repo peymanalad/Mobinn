@@ -6,6 +6,8 @@ namespace Chamran.Deed.Info.Dtos
 {
     public class CreateOrEditOrganizationChartDto : EntityDto<int?>
     {
+        [Required]
+        public int OrganizationId { get; set; }
 
         [Required]
         [StringLength(OrganizationChartConsts.MaxCaptionLength, MinimumLength = OrganizationChartConsts.MinCaptionLength)]

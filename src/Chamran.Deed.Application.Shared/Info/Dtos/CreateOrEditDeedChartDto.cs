@@ -11,7 +11,6 @@ namespace Chamran.Deed.Info.Dtos
         [StringLength(DeedChartConsts.MaxCaptionLength, MinimumLength = DeedChartConsts.MinCaptionLength)]
         public string Caption { get; set; }
 
-        [Required]
         [StringLength(DeedChartConsts.MaxLeafPathLength, MinimumLength = DeedChartConsts.MinLeafPathLength)]
         public string LeafPath { get; set; }
 

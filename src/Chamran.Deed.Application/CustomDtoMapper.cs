@@ -57,6 +57,7 @@ namespace Chamran.Deed
             configuration.CreateMap<CreateOrEditDeedChartDto, DeedChart>().ReverseMap();
             configuration.CreateMap<DeedChartDto, DeedChart>().ReverseMap();
             configuration.CreateMap<GetEntriesDigestDto, GetEntriesDigest>().ReverseMap();
+            configuration.CreateMap<GetEntriesDetailDto, GetEntriesDetail>().ReverseMap();
             configuration.CreateMap<CreateOrEditTaskStatDto, TaskStat>().ReverseMap();
             configuration.CreateMap<TaskStatDto, TaskStat>().ReverseMap();
             configuration.CreateMap<CreateOrEditTaskEntryDto, TaskEntry>().ReverseMap();
