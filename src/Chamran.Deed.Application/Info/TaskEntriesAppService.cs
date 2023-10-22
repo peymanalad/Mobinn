@@ -55,105 +55,114 @@ namespace Chamran.Deed.Info
         DECLARE @UserId INT = @UserIdParam;
         DECLARE @captionfilter NVARCHAR(200) = @CaptionFilterParam;
 
-        ;WITH MinIdCTE AS (
-            SELECT
-                MIN(t.[Id]) AS MinId,
-                t.[SharedTaskId]
-            FROM
-                [DeedDb].[dbo].[TaskEntries] t
-            WHERE
-                t.IssuerId = @UserId OR t.ReceiverId = @UserId
-            GROUP BY
-                t.[SharedTaskId]
-        )
+      
+;WITH MinIdCTE AS (
+    SELECT
+        MIN(t.[Id]) AS MinId,
+        t.[SharedTaskId]
+    FROM
+        [DeedDb].[dbo].[TaskEntries] t
+    WHERE
+        t.IssuerId = @UserId OR t.ReceiverId = @UserId
+    GROUP BY
+        t.[SharedTaskId]
+)
 
-        , RankedRows AS (
-            SELECT
-                t.[Id],
-                t.[Caption],
-                t.[SharedTaskId],
-                t.[PostId],
-                t.[IssuerId],
-                t.[ReceiverId],
-                t.[ParentId],
-                t.[CreationTime],
-                t.[CreatorUserId],
-                I.[Name] AS IssuerFirstName,
-                I.[Surname] AS IssuerLastName,
-                I.[ProfilePictureId] AS IssuerProfilePicture,
-                R2.[Name] AS ReceiverFirstName,
-                R2.[Surname] AS ReceiverLastName,
-                R2.[ProfilePictureId] AS ReceiverProfilePicture,
-                IGM.[MemberPosition] AS IssuerMemberPos,
-                RGM.[MemberPosition] AS ReceiverMemberPos,
-                PST.[PostFile],
-                PST.[PostCaption],
-                PST.[GroupMemberId] as PostGroupMemberId,
-                PST.[CreationTime] as PostCreationTime,
-                PST.[CreatorUserId] as PostCreatorUserId,
-                PST.[LastModificationTime] as PostLastModificationTime,
-                PST.[LastModifierUserId] as PostLastModifierUserId,
-                PST.[PostGroupId],
-                PST.[IsSpecial],
-                PST.[PostTitle],
-                PST.[PostFile2],
-                PST.[PostFile3],
-                PST.[PostRefLink],
-                ROW_NUMBER() OVER (PARTITION BY MinIdCTE.[SharedTaskId] ORDER BY t.[Id] DESC) AS RowNum
-            FROM
-                [DeedDb].[dbo].[TaskEntries] t
-            JOIN
-                MinIdCTE ON t.[SharedTaskId] = MinIdCTE.[SharedTaskId] AND t.[Id] >= MinIdCTE.MinId
-            LEFT JOIN
-                [DeedDb].[dbo].[AbpUsers] I ON t.[IssuerId] = I.[Id]
-            LEFT JOIN
-                [DeedDb].[dbo].[AbpUsers] R2 ON t.[ReceiverId] = R2.[Id]
-            LEFT JOIN
-                [DeedDb].[dbo].[GroupMembers] IGM ON t.[IssuerId] = IGM.[UserId]
-            LEFT JOIN
-                [DeedDb].[dbo].[GroupMembers] RGM ON t.[ReceiverId] = RGM.[UserId]
-            LEFT JOIN
-                [DeedDb].[dbo].[Posts] PST ON t.[PostId] = PST.[Id]
-        )
+, RankedRows AS (
+    SELECT
+        t.[Id],
+        t.[Caption],
+        t.[SharedTaskId],
+        t.[PostId],
+        t.[IssuerId],
+        t.[ReceiverId],
+        t.[ParentId],
+        t.[CreationTime],
+        t.[CreatorUserId],
+        I.[Name] AS IssuerFirstName,
+        I.[Surname] AS IssuerLastName,
+        I.[ProfilePictureId] AS IssuerProfilePicture,
+        R2.[Name] AS ReceiverFirstName,
+        R2.[Surname] AS ReceiverLastName,
+        R2.[ProfilePictureId] AS ReceiverProfilePicture,
+        IGM.[MemberPosition] AS IssuerMemberPos,
+        RGM.[MemberPosition] AS ReceiverMemberPos,
+        PST.[PostFile],
+        PST.[PostCaption],
+        PST.[GroupMemberId] as PostGroupMemberId,
+        PST.[CreationTime] as PostCreationTime,
+        PST.[CreatorUserId] as PostCreatorUserId,
+        PST.[LastModificationTime] as PostLastModificationTime,
+        PST.[LastModifierUserId] as PostLastModifierUserId,
+        PST.[PostGroupId],
+        PST.[IsSpecial],
+        PST.[PostTitle],
+        PST.[PostFile2],
+        PST.[PostFile3],
+        PST.[PostRefLink],
+        ROW_NUMBER() OVER (PARTITION BY MinIdCTE.[SharedTaskId] ORDER BY t.[Id] DESC) AS RowNum
+    FROM
+        [DeedDb].[dbo].[TaskEntries] t
+    JOIN
+        MinIdCTE ON t.[SharedTaskId] = MinIdCTE.[SharedTaskId] AND t.[Id] >= MinIdCTE.MinId
+    LEFT JOIN
+        [DeedDb].[dbo].[AbpUsers] I ON t.[IssuerId] = I.[Id]
+    LEFT JOIN
+        [DeedDb].[dbo].[AbpUsers] R2 ON t.[ReceiverId] = R2.[Id]
+    LEFT JOIN
+        [DeedDb].[dbo].[GroupMembers] IGM ON t.[IssuerId] = IGM.[UserId]
+    LEFT JOIN
+        [DeedDb].[dbo].[GroupMembers] RGM ON t.[ReceiverId] = RGM.[UserId]
+    LEFT JOIN
+        [DeedDb].[dbo].[Posts] PST ON t.[PostId] = PST.[Id]
+)
 
-        SELECT
-            [Id],
-            [Caption],
-            [SharedTaskId],
-            [PostId],
-            [IssuerId],
-            [ReceiverId],
-            [ParentId],
-            [CreationTime],
-            [CreatorUserId],
-            IssuerFirstName,
-            IssuerLastName,
-            IssuerProfilePicture,
-            ReceiverFirstName,
-            ReceiverLastName,
-            ReceiverProfilePicture,
-            IssuerMemberPos,
-            ReceiverMemberPos,
-            [PostFile],
-            [PostCaption],
-            [PostGroupMemberId],
-            [PostCreationTime],
-            [PostCreatorUserId],
-            [PostLastModificationTime],
-            [PostLastModifierUserId],
-            [PostGroupId],
-            [IsSpecial],
-            [PostTitle],
-            [PostFile2],
-            [PostFile3],
-            [PostRefLink]
-        FROM
-            RankedRows
-        WHERE
-            RowNum = 1 AND
-            (@captionfilter = '' OR [Caption] LIKE '%' + @captionfilter + '%')
-        ORDER BY
-            [CreationTime];
+SELECT
+    [Id],
+    [Caption],
+    [SharedTaskId],
+    [PostId],
+    [IssuerId],
+    [ReceiverId],
+    [ParentId],
+    [CreationTime],
+    [CreatorUserId],
+    IssuerFirstName,
+    IssuerLastName,
+    IssuerProfilePicture,
+    ReceiverFirstName,
+    ReceiverLastName,
+    ReceiverProfilePicture,
+    IssuerMemberPos,
+    ReceiverMemberPos,
+    [PostFile],
+    [PostCaption],
+    [PostGroupMemberId],
+    [PostCreationTime],
+    [PostCreatorUserId],
+    [PostLastModificationTime],
+    [PostLastModifierUserId],
+    [PostGroupId],
+    [IsSpecial],
+    [PostTitle],
+    [PostFile2],
+    [PostFile3],
+    [PostRefLink]
+FROM (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (ORDER BY [CreationTime]) AS PaginationRowNum
+    FROM
+        RankedRows
+    WHERE
+        RowNum = 1 AND
+        (@captionfilter = '' OR [Caption] LIKE '%' + @captionfilter + '%')
+) AS Subquery
+WHERE
+    PaginationRowNum > @SkipCount
+    AND PaginationRowNum <= @SkipCount + @MaxResultCount
+ORDER BY
+    [CreationTime];
     ";
 
             // Create SqlParameter objects for each parameter
@@ -196,8 +205,7 @@ namespace Chamran.Deed.Info
         DECLARE @UserId INT = @UserIdParam;
         DECLARE @sharedTaskId UNIQUEIDENTIFIER = @SharedTaskIdParam; -- Change data type
         DECLARE @captionfilter NVARCHAR(200) = @CaptionFilterParam;
-
-       ;WITH MinIdCTE AS (
+WITH MinIdCTE AS (
     SELECT
         MIN(t.[Id]) AS MinId,
         t.[SharedTaskId]
@@ -207,9 +215,7 @@ namespace Chamran.Deed.Info
         t.IssuerId = @UserId OR t.ReceiverId = @UserId
     GROUP BY
         t.[SharedTaskId]
-)
-
-, RankedRows AS (
+), RankedRows AS (
     SELECT
         t.[Id],
         t.[Caption],
@@ -227,20 +233,7 @@ namespace Chamran.Deed.Info
         R2.[Surname] AS ReceiverLastName,
         R2.[ProfilePictureId] AS ReceiverProfilePicture,
         IGM.[MemberPosition] AS IssuerMemberPos,
-        RGM.[MemberPosition] AS ReceiverMemberPos ,
-       -- PST.[PostFile],
-       -- PST.[PostCaption],
-       -- PST.[GroupMemberId] as PostGroupMemberId,
-       -- PST.[CreationTime] as PostCreationTime,
-       -- PST.[CreatorUserId] as PostCreatorUserId,
-       -- PST.[LastModificationTime] as PostLastModificationTime,
-       -- PST.[LastModifierUserId] as PostLastModifierUserId,
-      --  PST.[PostGroupId],
-      --  PST.[IsSpecial],
-      --  PST.[PostTitle],
-      --  PST.[PostFile2],
-      --  PST.[PostFile3],
-      --  PST.[PostRefLink],
+        RGM.[MemberPosition] AS ReceiverMemberPos,
         ROW_NUMBER() OVER (PARTITION BY MinIdCTE.[SharedTaskId] ORDER BY t.[Id] DESC) AS RowNum
     FROM
         [DeedDb].[dbo].[TaskEntries] t
@@ -254,10 +247,32 @@ namespace Chamran.Deed.Info
         [DeedDb].[dbo].[GroupMembers] IGM ON t.[IssuerId] = IGM.[UserId]
     LEFT JOIN
         [DeedDb].[dbo].[GroupMembers] RGM ON t.[ReceiverId] = RGM.[UserId]
- --   LEFT JOIN
-   --     [DeedDb].[dbo].[Posts] PST ON t.[PostId] = PST.[Id]
+), PaginatedResults AS (
+    SELECT
+        [Id],
+        [Caption],
+        [SharedTaskId],
+        [PostId],
+        [IssuerId],
+        [ReceiverId],
+        [ParentId],
+        [CreationTime],
+        [CreatorUserId],
+        IssuerFirstName,
+        IssuerLastName,
+        IssuerProfilePicture,
+        ReceiverFirstName,
+        ReceiverLastName,
+        ReceiverProfilePicture,
+        IssuerMemberPos,
+        ReceiverMemberPos,
+        ROW_NUMBER() OVER (ORDER BY [CreationTime] DESC) AS RowNum
+    FROM
+        RankedRows
+    WHERE
+        SharedTaskId = @sharedTaskId
+        AND (@captionfilter = '' OR [Caption] LIKE '%' + @captionfilter + '%')
 )
-
 SELECT
     [Id],
     [Caption],
@@ -275,27 +290,14 @@ SELECT
     ReceiverLastName,
     ReceiverProfilePicture,
     IssuerMemberPos,
-    ReceiverMemberPos --,
-   -- [PostFile],
-   -- [PostCaption],
-  --  [PostGroupMemberId],
-   -- [PostCreationTime],
-   -- [PostCreatorUserId],
-   -- [PostLastModificationTime],
-   -- [PostLastModifierUserId],
-   -- [PostGroupId],
-   -- [IsSpecial],
-  --  [PostTitle],
-   -- [PostFile2],
-   -- [PostFile3],
- --   [PostRefLink]
+    ReceiverMemberPos
 FROM
-    RankedRows
+    PaginatedResults
 WHERE
-    SharedTaskId = @sharedTaskId AND
-    (@captionfilter = '' OR [Caption] LIKE '%' + @captionfilter + '%')
+    RowNum BETWEEN @SkipCount + 1 AND @SkipCount + @MaxResultCount
 ORDER BY
     [CreationTime] DESC;
+
     ";
 
             // Create SqlParameter objects for each parameter

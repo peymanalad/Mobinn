@@ -492,7 +492,6 @@ namespace Chamran.Deed.Info
         }
 
         [AbpAuthorize(AppPermissions.Pages_OrganizationUsers)]
-
         public async Task<PagedResultDto<LeafUserDto>> GetAllUsersForLeaf(GetAllUsersForLeafInput input)
         {
             var chartId = input.OrganizationChartId;
@@ -685,8 +684,52 @@ namespace Chamran.Deed.Info
 
         }
 
+        [AbpAuthorize(AppPermissions.Pages_OrganizationUsers)]
+        public async Task<PagedResultDto<SameLeafDto>> GetAllUsersInLeaf(GetAllUsersInLeafInput input)
+        {
+            var chartId = input.OrganizationChartId;
+            var filterUserId = false;
+            if (input.OrganizationChartId <= 0)
+            {
+                throw new UserFriendlyException("شناسه شاخه می بایست بزرگتر از صفر باشد");
+            }
+
+            var users = _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).Include(x => x.UserFk)
+                .Where(x => x.OrganizationChartId == input.OrganizationChartId);
+            var joindUsers = from x in users
+                             join y in _groupMemberRepository.GetAll() on x.UserId equals y.UserId into joiner
+                             from y in joiner.DefaultIfEmpty()
+                             select new
+                             {
+                                 x.Id,
+                                 x.UserFk,
+                                 y.MemberPos,
+                                 y.MemberPosition,
+                                 x.UserId,
+
+                             };
+
+            var pagedAndFilteredOrganizationUsers = joindUsers
+                .OrderBy(input.Sorting ?? "id asc")
+                .PageBy(input);
+            var ls = new List<SameLeafDto>();
+            foreach (var row in pagedAndFilteredOrganizationUsers)
+            {
+                ls.Add(new SameLeafDto()
+                {
+                    FirstName = row.UserFk.Name,
+                    LastName = row.UserFk.Surname,
+                    MemberPosition = row.MemberPosition,
+                    UserId = row.UserId,
+                    UserName = row.UserFk.UserName
+                });
+            }
 
 
-
+            return new PagedResultDto<SameLeafDto>(
+                users.Count(),
+                ls
+            );
+        }
     }
 }
