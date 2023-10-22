@@ -5,5 +5,6 @@ namespace Chamran.Deed.People.Dtos
     public class GetAllForLookupTableInput : PagedAndSortedResultRequestDto
     {
         public string Filter { get; set; }
+        public int? OrganizationId { get; set; }
     }
 }

@@ -30,6 +30,7 @@ namespace Chamran.Deed.Info
         Task<PagedResultDto<LeafUserDto>> GetUsersInChildrenLeaves(GetLeavesInput input);
         //Task<PagedResultDto<LeafUserDto>> GetAllUsersForLeaf(GetLeavesInput input);
         Task<PagedResultDto<LeafUserDto>> GetAllUsersForLeaf(GetAllUsersForLeafInput input);
+        Task<PagedResultDto<SameLeafDto>> GetAllUsersInLeaf(GetAllUsersInLeafInput input);
 
     }
 }

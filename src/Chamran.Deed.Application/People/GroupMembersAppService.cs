@@ -142,15 +142,23 @@ namespace Chamran.Deed.People
                     x => x.OrganizationId == input.OrganizationId);
 
 
-            if (!user.IsSuperUser)
-            {
-               filteredGroupMembers = filteredGroupMembers.WhereIf(input.OrganizationId.HasValue, x => x.OrganizationId == input.OrganizationId);
-            }
+            //if (!user.IsSuperUser)
+            //{
+            //   filteredGroupMembers = filteredGroupMembers.WhereIf(input.OrganizationId.HasValue, x => x.OrganizationId == input.OrganizationId);
+            //}
 
-            var joinedMembers = from x in _lookup_userRepository.GetAll()
-                                join gm in filteredGroupMembers on x.Id equals gm.UserId into joiner
-                                from gm in joiner.DefaultIfEmpty()
-                                where gm == null
+
+
+            //var joinedMembers = from x in _lookup_userRepository.GetAll()
+            //                    join gm in filteredGroupMembers on x.Id equals gm.UserId into joiner
+            //                    from gm in joiner.DefaultIfEmpty()
+            //                    where gm == null
+            //                    select x;
+
+            var joinedMembers = from x in filteredGroupMembers
+                                join ou in _organizationUsersRepository.GetAll() on x.UserId equals ou.UserId into joiner
+                                from ou in joiner.DefaultIfEmpty()
+                                where ou == null
                                 select x;
 
 
@@ -159,19 +167,27 @@ namespace Chamran.Deed.People
 .PageBy(input);
 
             var groupMembers = from o in pagedAndFilteredGroupMembers
-                               join o1 in _groupMemberRepository.GetAll() on o.Id equals o1.Id into j1
-                               from s1 in j1.DefaultIfEmpty()
-                               join o2 in _lookup_organizationRepository.GetAll() on s1.OrganizationId equals o2.Id into j2
-                               from s2 in j2.DefaultIfEmpty()
+                               //join o1 in _groupMemberRepository.GetAll() on o.Id equals o1.Id into j1
+                               //from s1 in j1.DefaultIfEmpty()
+                               //join o2 in _lookup_organizationRepository.GetAll() on s1.OrganizationId equals o2.Id into j2
+                               //from s2 in j2.DefaultIfEmpty()
                                select new
                                {
-                                   MemberPos=(int?)s1.MemberPos??0,
-                                   MemberPosition=s1.MemberPosition??"",
-                                   UserId = o.Id,
-                                   Name = o.Name ?? "",
-                                   SurName = o.Surname ?? "",
-                                   OrganizationGroupGroupName = s2 == null || s2.OrganizationName == null ? "" : s2.OrganizationName.ToString(),
-                                   NationalId=o.NationalId??""
+                                   o.OrganizationId,
+                                   o.MemberPos,
+                                   o.MemberPosition,
+                                   o.UserId,
+                                   o.UserFk.NationalId,
+                                   o.UserFk.Name,
+                                   o.UserFk.Surname,
+                                   OrganizationGroupGroupName= o.OrganizationFk.OrganizationName
+                                   //MemberPos = (int?)s1.MemberPos ?? 0,
+                                   //MemberPosition = s1.MemberPosition ?? "",
+                                   //UserId = o.Id,
+                                   //Name = o.Name ?? "",
+                                   //SurName = o.Surname ?? "",
+                                   //OrganizationGroupGroupName = s2 == null || s2.OrganizationName == null ? "" : s2.OrganizationName.ToString(),
+                                   //NationalId = o.NationalId ?? ""
                                };
 
             var totalCount = await joinedMembers.CountAsync();
@@ -188,9 +204,9 @@ namespace Chamran.Deed.People
                     MemberPosition = o.MemberPosition,
                     UserId = o.UserId,
                     Name = o.Name,
-                    SurName=o.SurName,
-                    OrganizationGroupName=o.OrganizationGroupGroupName,
-                    NationalId=o.NationalId,
+                    SurName = o.Surname,
+                    OrganizationGroupName = o.OrganizationGroupGroupName,
+                    NationalId = o.NationalId,
                 };
 
                 results.Add(res);
@@ -322,7 +338,7 @@ namespace Chamran.Deed.People
             //if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
             //var currentUser = await _lookup_userRepository.GetAsync(AbpSession.UserId.Value);
             var query = from au in _lookup_userRepository.GetAll()
-                        join gm in _groupMemberRepository.GetAll() on au.Id equals gm.UserId into groupJoin
+                        join gm in _groupMemberRepository.GetAll().WhereIf(input.OrganizationId.HasValue,x=>x.OrganizationId==input.OrganizationId.Value) on au.Id equals gm.UserId into groupJoin
                         from gm in groupJoin.DefaultIfEmpty()
                         where gm == null
                         select au;
