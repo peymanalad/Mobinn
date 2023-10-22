@@ -25,6 +25,7 @@ namespace Chamran.Deed.EntityFrameworkCore
         //modelBuilder.Entity<MixedEntity>().HasNoKey(); // Configure as a shadow property
 
         public virtual DbSet<GetEntriesDigest> EntriesDigest { get; set; }
+        public virtual DbSet<GetEntriesDetail> EntriesDetail { get; set; }
 
         public virtual DbSet<TaskStat> TaskStats { get; set; }
 
@@ -99,6 +100,7 @@ namespace Chamran.Deed.EntityFrameworkCore
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GetEntriesDigest>().HasNoKey();
+            modelBuilder.Entity<GetEntriesDetail>().HasNoKey();
 
             modelBuilder.Entity<OrganizationChart>()
                 .HasOne(node => node.ParentFk)   // Use ParentFk navigation property

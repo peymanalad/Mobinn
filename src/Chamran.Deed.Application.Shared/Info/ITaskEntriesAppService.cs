@@ -11,6 +11,8 @@ namespace Chamran.Deed.Info
     {
         Task<PagedResultDto<GetEntriesDigestDto>> GetEntriesDigest(GetEntriesDigestInputDto input);
 
+        Task<PagedResultDto<GetEntriesDetailDto>> GetEntriesBySharedMessageId(GetEntriesBySharedMessageIdInputDto input);
+
         Task<PagedResultDto<GetTaskEntryForViewDto>> GetAll(GetAllTaskEntriesInput input);
 
         Task<GetTaskEntryForEditOutput> GetTaskEntryForEdit(EntityDto input);
