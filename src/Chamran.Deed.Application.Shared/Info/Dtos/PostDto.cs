@@ -13,6 +13,7 @@ namespace Chamran.Deed.Info.Dtos
         public string PostCaption { get; set; }
 
         public bool IsSpecial { get; set; }
+        public bool IsPublished { get; set; }
 
         public string PostTitle { get; set; }
 

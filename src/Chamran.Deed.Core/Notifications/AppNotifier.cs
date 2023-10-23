@@ -183,5 +183,33 @@ namespace Chamran.Deed.Notifications
                 targetNotifiers: targetNotifiers
             );
         }
+
+        public async Task SendTaskNotificationAsync(string message, UserIdentifier[] userIds = null,
+            NotificationSeverity severity = NotificationSeverity.Info,
+            Type[] targetNotifiers = null
+        )
+        {
+            await _notificationPublisher.PublishAsync(
+                AppNotificationNames.NewTask,
+                new MessageNotificationData(message),
+                severity: severity,
+                userIds: userIds,
+                targetNotifiers: targetNotifiers
+            );
+        }
+
+        public async Task SendChatNotificationAsync(string message, UserIdentifier[] userIds = null,
+            NotificationSeverity severity = NotificationSeverity.Info,
+            Type[] targetNotifiers = null
+        )
+        {
+            await _notificationPublisher.PublishAsync(
+                AppNotificationNames.ChatMessage,
+                new MessageNotificationData(message),
+                severity: severity,
+                userIds: userIds,
+                targetNotifiers: targetNotifiers
+            );
+        }
     }
 }

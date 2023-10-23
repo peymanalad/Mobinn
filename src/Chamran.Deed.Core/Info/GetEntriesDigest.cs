@@ -34,6 +34,7 @@ namespace Chamran.Deed.Info
         public long? PostLastModifierUserId { get; set; }
         public int? PostGroupId { get; set; }
         public bool? IsSpecial { get; set; }
+        public bool? IsPublished { get; set; }
         public string PostTitle { get; set; }
         public Guid? PostFile2 { get; set; }
         public Guid? PostFile3 { get; set; }

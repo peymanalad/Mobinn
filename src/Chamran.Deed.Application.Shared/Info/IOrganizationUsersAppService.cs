@@ -16,7 +16,7 @@ namespace Chamran.Deed.Info
         Task<GetOrganizationUserForEditOutput> GetOrganizationUserForEdit(EntityDto input);
 
         Task CreateOrEdit(CreateOrEditOrganizationUserDto input);
-
+        Task CreateGlobal(CreateOrEditGlobalUserDto input);
         Task Delete(EntityDto input);
 
         Task<FileDto> GetOrganizationUsersToExcel(GetAllOrganizationUsersForExcelInput input);
@@ -26,9 +26,9 @@ namespace Chamran.Deed.Info
         Task<PagedResultDto<OrganizationUserOrganizationChartLookupTableDto>> GetAllOrganizationChartForLookupTable(GetAllForLookupTableInput input);
 
         Task<PagedResultDto<LeafUserDto>> GetUsersInSameLeaf(GetLeavesInput input);
+        Task<PagedResultDto<LeafUserDto>> GetGlobalUserLeaves(GetLeavesInput input);
         Task<PagedResultDto<LeafUserDto>> GetUsersInOneLevelHigherParent(GetLeavesInput input);
         Task<PagedResultDto<LeafUserDto>> GetUsersInChildrenLeaves(GetLeavesInput input);
-        //Task<PagedResultDto<LeafUserDto>> GetAllUsersForLeaf(GetLeavesInput input);
         Task<PagedResultDto<LeafUserDto>> GetAllUsersForLeaf(GetAllUsersForLeafInput input);
         Task<PagedResultDto<SameLeafDto>> GetAllUsersInLeaf(GetAllUsersInLeafInput input);
 

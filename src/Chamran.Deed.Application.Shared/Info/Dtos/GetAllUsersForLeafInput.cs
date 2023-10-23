@@ -6,6 +6,7 @@ namespace Chamran.Deed.Info.Dtos
     {
         public string Filter { get; set; }
         public int OrganizationChartId { get; set; }
+        public int OrganizationId { get; set; }
     }
 
     public class GetAllUsersInLeafInput : PagedAndSortedResultRequestDto

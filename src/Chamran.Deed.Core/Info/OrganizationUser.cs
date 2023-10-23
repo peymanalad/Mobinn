@@ -22,5 +22,6 @@ namespace Chamran.Deed.Info
         [ForeignKey("OrganizationChartId")]
         public OrganizationChart OrganizationChartFk { get; set; }
 
+        public bool IsGlobal { get; set; }
     }
 }

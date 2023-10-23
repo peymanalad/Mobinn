@@ -15,6 +15,8 @@ using Microsoft.EntityFrameworkCore;
 using Chamran.Deed.Friendships.Cache;
 using Chamran.Deed.Friendships.Dto;
 using static NPOI.HSSF.UserModel.HeaderFooter;
+using Chamran.Deed.Authorization.Users;
+using Abp.Domain.Entities;
 
 namespace Chamran.Deed.Chat
 {
@@ -25,17 +27,18 @@ namespace Chamran.Deed.Chat
         private readonly IUserFriendsCache _userFriendsCache;
         private readonly IOnlineClientManager<ChatChannel> _onlineClientManager;
         private readonly IChatCommunicator _chatCommunicator;
+        private readonly IRepository<User, long> _userRepository;
 
-        public ChatAppService(
-            IRepository<ChatMessage, long> chatMessageRepository,
+        public ChatAppService(IRepository<ChatMessage, long> chatMessageRepository,
             IUserFriendsCache userFriendsCache,
             IOnlineClientManager<ChatChannel> onlineClientManager,
-            IChatCommunicator chatCommunicator)
+            IChatCommunicator chatCommunicator, IRepository<User, long> userRepository)
         {
             _chatMessageRepository = chatMessageRepository;
             _userFriendsCache = userFriendsCache;
             _onlineClientManager = onlineClientManager;
             _chatCommunicator = chatCommunicator;
+            _userRepository = userRepository;
         }
 
         [DisableAuditing]
@@ -75,6 +78,7 @@ namespace Chamran.Deed.Chat
                     var entity = query.First();
                     friend.LatestMessage = entity.Message;
                     friend.LastMessageDateTime = entity.CreationTime;
+                    //friend.FriendUserId = entity.;
                 }
 
                 return new GetUserChatFriendsWithSettingsOutput
@@ -113,13 +117,29 @@ namespace Chamran.Deed.Chat
                     .Where(m => m.UserId == AbpSession.UserId && m.TargetTenantId == AbpSession.TenantId && m.TargetUserId == friend.FriendUserId)
                     .OrderByDescending(m => m.CreationTime)
                     .Take(1)
+                    //.Join(_userRepository.GetAll().Where(x=> x.Id==friend.FriendUserId),
+                    //    chatMessage => chatMessage.UserId, // Key selector for the chat message UserId
+                    //    user => user.Id,              // Key selector for the user UserId
+                    //    (chatMessage, user) => new        // Result selector
+                    //        {
+                    //            ChatMessage = chatMessage,
+                    //            User = user
+                    //        })
                     .ToListAsync();
                 if (query.Any())
                 {
                     var entity = query.First();
+                    
                     friend.LatestMessage = entity.Message;
                     friend.LastMessageDateTime = entity.CreationTime;
-
+                
+                }
+                var userResult = await _userRepository.GetAll().FirstOrDefaultAsync(x => x.Id == friend.FriendUserId);
+                if(userResult != null)
+                {
+                    friend.FriendName = userResult.Name;
+                    friend.FriendSurName = userResult.Surname;
+                    friend.FriendProfilePictureId = userResult.ProfilePictureId;
                 }
             }
             var pagedAndFilteredFriends = friends.OrderByDescending(x => x.LatestMessage).Skip(input.SkipCount).Take(input.MaxResultCount).ToList();

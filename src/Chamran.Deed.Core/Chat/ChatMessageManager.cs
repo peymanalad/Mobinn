@@ -7,12 +7,16 @@ using Abp.Authorization;
 using Abp.Domain.Repositories;
 using Abp.Domain.Uow;
 using Abp.MultiTenancy;
+using Abp.Notifications;
 using Abp.RealTime;
 using Abp.UI;
 using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.Friendships;
 using Chamran.Deed.Friendships.Cache;
+using Chamran.Deed.Notifications;
 using Chamran.Deed.Storage;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Chamran.Deed.Chat
 {
@@ -30,9 +34,8 @@ namespace Chamran.Deed.Chat
         private readonly IChatFeatureChecker _chatFeatureChecker;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly IRepository<BinaryObject, Guid> _binaryObjectRepository;
-
-        public ChatMessageManager(
-            IFriendshipManager friendshipManager,
+        private readonly IAppNotifier _appNotifier;
+        public ChatMessageManager(IFriendshipManager friendshipManager,
             IChatCommunicator chatCommunicator,
             IOnlineClientManager<ChatChannel> onlineClientManager,
             UserManager userManager,
@@ -42,7 +45,7 @@ namespace Chamran.Deed.Chat
             IRepository<ChatMessage, long> chatMessageRepository,
             IChatFeatureChecker chatFeatureChecker,
             IUnitOfWorkManager unitOfWorkManager,
-            IRepository<BinaryObject, Guid> binaryObjectRepository)
+            IRepository<BinaryObject, Guid> binaryObjectRepository, IAppNotifier appNotifier)
         {
             _friendshipManager = friendshipManager;
             _chatCommunicator = chatCommunicator;
@@ -55,6 +58,7 @@ namespace Chamran.Deed.Chat
             _chatFeatureChecker = chatFeatureChecker;
             _unitOfWorkManager = unitOfWorkManager;
             _binaryObjectRepository = binaryObjectRepository;
+            _appNotifier = appNotifier;
         }
 
         public async Task DeleteMessageAsync(UserIdentifier sender, Guid sharedMessageId)
@@ -96,6 +100,46 @@ namespace Chamran.Deed.Chat
             await HandleReceiverToSenderAsync(sender, receiver, message, sharedMessageId);
             await HandleSenderUserInfoChangeAsync(sender, receiver, senderTenancyName, senderUserName,
                 senderProfilePictureId);
+        }
+
+        public async Task ForwardMessageAsync(UserIdentifier sender, UserIdentifier receiver, string message, string senderTenancyName,
+            string senderUserName, string forwardedFromName)
+        {
+            CheckReceiverExists(receiver);
+
+            _chatFeatureChecker.CheckChatFeatures(sender.TenantId, receiver.TenantId);
+
+            var friendshipState = (await _friendshipManager.GetFriendshipOrNullAsync(sender, receiver))?.State;
+            if (friendshipState == FriendshipState.Blocked)
+            {
+                throw new UserFriendlyException(L("UserIsBlocked"));
+            }
+
+            var sharedMessageId = Guid.NewGuid();
+
+            await HandleSenderToReceiverForwardAsync(sender, receiver, message, sharedMessageId, forwardedFromName);
+            await HandleReceiverToSenderForwardAsync(sender, receiver, message, sharedMessageId, forwardedFromName);
+            await HandleSenderUserInfoChangeForwardAsync(sender, receiver, senderTenancyName, senderUserName,forwardedFromName);
+        }
+
+        public async Task ReplyMessageAsync(UserIdentifier sender, UserIdentifier receiver, string message, string senderTenancyName,
+            string senderUserName, long replyMessageId)
+        {
+            CheckReceiverExists(receiver);
+
+            _chatFeatureChecker.CheckChatFeatures(sender.TenantId, receiver.TenantId);
+
+            var friendshipState = (await _friendshipManager.GetFriendshipOrNullAsync(sender, receiver))?.State;
+            if (friendshipState == FriendshipState.Blocked)
+            {
+                throw new UserFriendlyException(L("UserIsBlocked"));
+            }
+
+            var sharedMessageId = Guid.NewGuid();
+
+            await HandleSenderToReceiverReplyAsync(sender, receiver, message, sharedMessageId, replyMessageId);
+            await HandleReceiverToSenderReplyAsync(sender, receiver, message, sharedMessageId, replyMessageId);
+            await HandleSenderUserInfoChangeReplyAsync(sender, receiver, senderTenancyName, senderUserName, replyMessageId);
         }
 
         public async Task EditMessageAsync(UserIdentifier sender, UserIdentifier receiver, Guid sharedMessageId,
@@ -271,7 +315,110 @@ namespace Chamran.Deed.Chat
                 _onlineClientManager.GetAllByUserId(senderIdentifier),
                 sentMessage
             );
+
+           
         }
+
+        private async Task HandleSenderToReceiverForwardAsync(UserIdentifier senderIdentifier,
+            UserIdentifier receiverIdentifier, string message, Guid sharedMessageId,string forwardedFromName)
+        {
+            var friendshipState =
+                (await _friendshipManager.GetFriendshipOrNullAsync(senderIdentifier, receiverIdentifier))?.State;
+            if (friendshipState == null)
+            {
+                friendshipState = FriendshipState.Accepted;
+
+                var receiverTenancyName = await GetTenancyNameOrNull(receiverIdentifier.TenantId);
+
+                var receiverUser = await _userManager.GetUserAsync(receiverIdentifier);
+                await _friendshipManager.CreateFriendshipAsync(
+                    new Friendship(
+                        senderIdentifier,
+                        receiverIdentifier,
+                        receiverTenancyName,
+                        receiverUser.UserName,
+                        receiverUser.ProfilePictureId,
+                        friendshipState.Value)
+                );
+            }
+
+            if (friendshipState.Value == FriendshipState.Blocked)
+            {
+                //Do not send message if receiver banned the sender
+                return;
+            }
+
+            var sentMessage = new ChatMessage(
+                senderIdentifier,
+                receiverIdentifier,
+                ChatSide.Sender,
+                message,
+                ChatMessageReadState.Read,
+                sharedMessageId,
+                ChatMessageReadState.Unread,
+                forwardedFromName
+            );
+
+            Save(sentMessage);
+
+            await _chatCommunicator.SendMessageToClient(
+                _onlineClientManager.GetAllByUserId(senderIdentifier),
+                sentMessage
+            );
+
+
+        }
+
+        private async Task HandleSenderToReceiverReplyAsync(UserIdentifier senderIdentifier,
+            UserIdentifier receiverIdentifier, string message, Guid sharedMessageId, long replyMessageId)
+        {
+            var friendshipState =
+                (await _friendshipManager.GetFriendshipOrNullAsync(senderIdentifier, receiverIdentifier))?.State;
+            if (friendshipState == null)
+            {
+                friendshipState = FriendshipState.Accepted;
+
+                var receiverTenancyName = await GetTenancyNameOrNull(receiverIdentifier.TenantId);
+
+                var receiverUser = await _userManager.GetUserAsync(receiverIdentifier);
+                await _friendshipManager.CreateFriendshipAsync(
+                    new Friendship(
+                        senderIdentifier,
+                        receiverIdentifier,
+                        receiverTenancyName,
+                        receiverUser.UserName,
+                        receiverUser.ProfilePictureId,
+                        friendshipState.Value)
+                );
+            }
+
+            if (friendshipState.Value == FriendshipState.Blocked)
+            {
+                //Do not send message if receiver banned the sender
+                return;
+            }
+
+            var sentMessage = new ChatMessage(
+                senderIdentifier,
+                receiverIdentifier,
+                ChatSide.Sender,
+                message,
+                ChatMessageReadState.Read,
+                sharedMessageId,
+                ChatMessageReadState.Unread,
+                "", replyMessageId
+            );
+
+            Save(sentMessage);
+
+            await _chatCommunicator.SendMessageToClient(
+                _onlineClientManager.GetAllByUserId(senderIdentifier),
+                sentMessage
+            );
+
+
+        }
+
 
         //private async Task EditMessageContentAsync(UserIdentifier senderIdentifier, UserIdentifier receiverIdentifier, string message, Guid sharedMessageId)
         //{
@@ -381,7 +528,172 @@ namespace Chamran.Deed.Chat
                       sentMessage
                   );
             }
+
+            await _appNotifier.SendChatNotificationAsync(JsonConvert.SerializeObject(sentMessage, new JsonSerializerSettings
+                {
+                    ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
+                    }
+                }),
+                userIds: new[] { receiverIdentifier },
+                NotificationSeverity.Info
+            );
         }
+
+        private async Task HandleReceiverToSenderForwardAsync(UserIdentifier senderIdentifier, UserIdentifier receiverIdentifier, string message, Guid sharedMessageId, string forwardedFromName)
+        {
+            var friendship = await _friendshipManager.GetFriendshipOrNullAsync(receiverIdentifier, senderIdentifier);
+            var friendshipState = friendship?.State;
+            var clients = _onlineClientManager.GetAllByUserId(receiverIdentifier);
+
+            if (friendshipState == null)
+            {
+                var senderTenancyName = await GetTenancyNameOrNull(senderIdentifier.TenantId);
+                var senderUser = await _userManager.GetUserAsync(senderIdentifier);
+
+                friendship = new Friendship(
+                    receiverIdentifier,
+                    senderIdentifier,
+                    senderTenancyName,
+                    senderUser.UserName,
+                    senderUser.ProfilePictureId,
+                    FriendshipState.Accepted
+                );
+
+                await _friendshipManager.CreateFriendshipAsync(friendship);
+
+                if (clients.Any())
+                {
+                    var isFriendOnline = _onlineClientManager.IsOnline(receiverIdentifier);
+                    await _chatCommunicator.SendFriendshipRequestToClient(clients, friendship, false, isFriendOnline);
+                }
+            }
+
+            if (friendshipState == FriendshipState.Blocked)
+            {
+                //Do not send message if receiver banned the sender
+                return;
+            }
+
+            var sentMessage = new ChatMessage(
+                    receiverIdentifier,
+                    senderIdentifier,
+                    ChatSide.Receiver,
+                    message,
+                    ChatMessageReadState.Unread,
+                    sharedMessageId,
+                    ChatMessageReadState.Read,
+                    forwardedFromName
+                );
+
+            Save(sentMessage);
+
+            if (clients.Any())
+            {
+                await _chatCommunicator.SendMessageToClient(clients, sentMessage);
+            }
+            else if (GetUnreadMessageCount(senderIdentifier, receiverIdentifier) == 1)
+            {
+                var senderTenancyName = await GetTenancyNameOrNull(senderIdentifier.TenantId);
+
+                await _userEmailer.TryToSendChatMessageMail(
+                      await _userManager.GetUserAsync(receiverIdentifier),
+                      (await _userManager.GetUserAsync(senderIdentifier)).UserName,
+                      senderTenancyName,
+                      sentMessage
+                  );
+            }
+
+            await _appNotifier.SendChatNotificationAsync(JsonConvert.SerializeObject(sentMessage, new JsonSerializerSettings
+            {
+                ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
+                }
+            }),
+                userIds: new[] { receiverIdentifier },
+                NotificationSeverity.Info
+            );
+        }
+
+        private async Task HandleReceiverToSenderReplyAsync(UserIdentifier senderIdentifier, UserIdentifier receiverIdentifier, string message, Guid sharedMessageId, long replyMessageId)
+        {
+            var friendship = await _friendshipManager.GetFriendshipOrNullAsync(receiverIdentifier, senderIdentifier);
+            var friendshipState = friendship?.State;
+            var clients = _onlineClientManager.GetAllByUserId(receiverIdentifier);
+
+            if (friendshipState == null)
+            {
+                var senderTenancyName = await GetTenancyNameOrNull(senderIdentifier.TenantId);
+                var senderUser = await _userManager.GetUserAsync(senderIdentifier);
+
+                friendship = new Friendship(
+                    receiverIdentifier,
+                    senderIdentifier,
+                    senderTenancyName,
+                    senderUser.UserName,
+                    senderUser.ProfilePictureId,
+                    FriendshipState.Accepted
+                );
+
+                await _friendshipManager.CreateFriendshipAsync(friendship);
+
+                if (clients.Any())
+                {
+                    var isFriendOnline = _onlineClientManager.IsOnline(receiverIdentifier);
+                    await _chatCommunicator.SendFriendshipRequestToClient(clients, friendship, false, isFriendOnline);
+                }
+            }
+
+            if (friendshipState == FriendshipState.Blocked)
+            {
+                //Do not send message if receiver banned the sender
+                return;
+            }
+
+            var sentMessage = new ChatMessage(
+                    receiverIdentifier,
+                    senderIdentifier,
+                    ChatSide.Receiver,
+                    message,
+                    ChatMessageReadState.Unread,
+                    sharedMessageId,
+                    ChatMessageReadState.Read,
+                    "",
+                    replyMessageId
+                );
+
+            Save(sentMessage);
+
+            if (clients.Any())
+            {
+                await _chatCommunicator.SendMessageToClient(clients, sentMessage);
+            }
+            else if (GetUnreadMessageCount(senderIdentifier, receiverIdentifier) == 1)
+            {
+                var senderTenancyName = await GetTenancyNameOrNull(senderIdentifier.TenantId);
+
+                await _userEmailer.TryToSendChatMessageMail(
+                      await _userManager.GetUserAsync(receiverIdentifier),
+                      (await _userManager.GetUserAsync(senderIdentifier)).UserName,
+                      senderTenancyName,
+                      sentMessage
+                  );
+            }
+
+            await _appNotifier.SendChatNotificationAsync(JsonConvert.SerializeObject(sentMessage, new JsonSerializerSettings
+            {
+                ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
+                }
+            }),
+                userIds: new[] { receiverIdentifier },
+                NotificationSeverity.Info
+            );
+        }
+
 
         private async Task HandleSenderUserInfoChangeAsync(UserIdentifier sender, UserIdentifier receiver, string senderTenancyName, string senderUserName, Guid? senderProfilePictureId)
         {
@@ -412,6 +724,64 @@ namespace Chamran.Deed.Chat
 
             await _friendshipManager.UpdateFriendshipAsync(friendship);
         }
+        private async Task HandleSenderUserInfoChangeForwardAsync(UserIdentifier sender, UserIdentifier receiver, string senderTenancyName, string senderUserName, string forwardedFromName)
+        {
+            var receiverCacheItem = _userFriendsCache.GetCacheItemOrNull(receiver);
+
+            var senderAsFriend = receiverCacheItem?.Friends.FirstOrDefault(f => f.FriendTenantId == sender.TenantId && f.FriendUserId == sender.UserId);
+            if (senderAsFriend == null)
+            {
+                return;
+            }
+
+            if (senderAsFriend.FriendTenancyName == senderTenancyName &&
+                senderAsFriend.FriendUserName == senderUserName)
+            {
+                return;
+            }
+
+            var friendship = (await _friendshipManager.GetFriendshipOrNullAsync(receiver, sender));
+            if (friendship == null)
+            {
+                return;
+            }
+
+            friendship.FriendTenancyName = senderTenancyName;
+            friendship.FriendUserName = senderUserName;
+            
+
+            await _friendshipManager.UpdateFriendshipAsync(friendship);
+        }
+
+        private async Task HandleSenderUserInfoChangeReplyAsync(UserIdentifier sender, UserIdentifier receiver, string senderTenancyName, string senderUserName, long replyMessageId)
+        {
+            var receiverCacheItem = _userFriendsCache.GetCacheItemOrNull(receiver);
+
+            var senderAsFriend = receiverCacheItem?.Friends.FirstOrDefault(f => f.FriendTenantId == sender.TenantId && f.FriendUserId == sender.UserId);
+            if (senderAsFriend == null)
+            {
+                return;
+            }
+
+            if (senderAsFriend.FriendTenancyName == senderTenancyName &&
+                senderAsFriend.FriendUserName == senderUserName)
+            {
+                return;
+            }
+
+            var friendship = (await _friendshipManager.GetFriendshipOrNullAsync(receiver, sender));
+            if (friendship == null)
+            {
+                return;
+            }
+
+            friendship.FriendTenancyName = senderTenancyName;
+            friendship.FriendUserName = senderUserName;
+
+
+            await _friendshipManager.UpdateFriendshipAsync(friendship);
+        }
+
 
         private async Task<string> GetTenancyNameOrNull(int? tenantId)
         {

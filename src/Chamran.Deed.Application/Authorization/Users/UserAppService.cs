@@ -326,15 +326,15 @@ namespace Chamran.Deed.Authorization.Users
             await UserManager.SetGrantedPermissionsAsync(user, grantedPermissions);
         }
 
-        public async Task CreateOrUpdateUser(CreateOrUpdateUserInput input)
+        public async Task<long> CreateOrUpdateUser(CreateOrUpdateUserInput input)
         {
             if (input.User.Id.HasValue)
             {
-                await UpdateUserAsync(input);
+                return await UpdateUserAsync(input);
             }
             else
             {
-                await CreateUserAsync(input);
+                return await CreateUserAsync(input);
             }
         }
 
@@ -358,7 +358,7 @@ namespace Chamran.Deed.Authorization.Users
         }
 
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Edit)]
-        protected virtual async Task UpdateUserAsync(CreateOrUpdateUserInput input)
+        protected virtual async Task<long> UpdateUserAsync(CreateOrUpdateUserInput input)
         {
             Debug.Assert(input.User.Id != null, "input.User.Id should be set.");
 
@@ -396,10 +396,13 @@ namespace Chamran.Deed.Authorization.Users
                     input.User.Password
                 );
             }
+            await _notificationSubscriptionManager.SubscribeToAllAvailableNotificationsAsync(user.ToUserIdentifier());
+            return user.Id;
         }
 
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Create)]
-        protected virtual async Task CreateUserAsync(CreateOrUpdateUserInput input)
+        [ItemCanBeNull]
+        protected virtual async Task<long> CreateUserAsync(CreateOrUpdateUserInput input)
         {
             if (AbpSession.TenantId.HasValue)
             {
@@ -488,6 +491,8 @@ namespace Chamran.Deed.Authorization.Users
                 await _groupMemberRepository.InsertAsync(groupMember);
                 //await CurrentUnitOfWork.SaveChangesAsync(); //To get new user's Id.
             }
+
+            return user.Id;
         }
 
         private async Task FillRoleNames(IReadOnlyCollection<UserListDto> userListDtos)

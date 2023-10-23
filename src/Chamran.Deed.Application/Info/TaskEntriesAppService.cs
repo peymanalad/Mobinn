@@ -4,6 +4,7 @@ using System.Linq.Dynamic.Core;
 using Abp.Linq.Extensions;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Abp;
 using Abp.Domain.Repositories;
 using Chamran.Deed.Info.Dtos;
 using Abp.Application.Services.Dto;
@@ -14,7 +15,11 @@ using Abp.UI;
 using Abp.EntityFrameworkCore;
 using Chamran.Deed.EntityFrameworkCore;
 using Abp.Domain.Uow;
+using Abp.Notifications;
 using Microsoft.Data.SqlClient;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using Chamran.Deed.Notifications;
 
 namespace Chamran.Deed.Info
 {
@@ -27,7 +32,11 @@ namespace Chamran.Deed.Info
         private readonly IRepository<TaskEntry, int> _lookup_taskEntryRepository;
         private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
-        public TaskEntriesAppService(IRepository<TaskEntry> taskEntryRepository, IRepository<Post, int> lookup_postRepository, IRepository<User, long> lookup_userRepository, IRepository<TaskEntry, int> lookup_taskEntryRepository, IDbContextProvider<DeedDbContext> dbContextProvider, IUnitOfWorkManager unitOfWorkManager)
+        private readonly IAppNotifier _appNotifier;
+        public TaskEntriesAppService(IRepository<TaskEntry> taskEntryRepository,
+            IRepository<Post, int> lookup_postRepository, IRepository<User, long> lookup_userRepository,
+            IRepository<TaskEntry, int> lookup_taskEntryRepository, IDbContextProvider<DeedDbContext> dbContextProvider,
+            IUnitOfWorkManager unitOfWorkManager, IAppNotifier appNotifier)
         {
             _taskEntryRepository = taskEntryRepository;
             _lookup_postRepository = lookup_postRepository;
@@ -35,6 +44,7 @@ namespace Chamran.Deed.Info
             _lookup_taskEntryRepository = lookup_taskEntryRepository;
             _dbContextProvider = dbContextProvider;
             _unitOfWorkManager = unitOfWorkManager;
+            _appNotifier = appNotifier;
         }
 
         public virtual async Task<PagedResultDto<GetEntriesDigestDto>> GetEntriesDigest(GetEntriesDigestInputDto input)
@@ -96,6 +106,7 @@ namespace Chamran.Deed.Info
         PST.[LastModifierUserId] as PostLastModifierUserId,
         PST.[PostGroupId],
         PST.[IsSpecial],
+        PST.[IsPublished],
         PST.[PostTitle],
         PST.[PostFile2],
         PST.[PostFile3],
@@ -144,6 +155,7 @@ SELECT
     [PostLastModifierUserId],
     [PostGroupId],
     [IsSpecial],
+    [IsPublished],
     [PostTitle],
     [PostFile2],
     [PostFile3],
@@ -162,7 +174,7 @@ WHERE
     PaginationRowNum > @SkipCount
     AND PaginationRowNum <= @SkipCount + @MaxResultCount
 ORDER BY
-    [CreationTime];
+    [CreationTime] DESC;
     ";
 
             // Create SqlParameter objects for each parameter
@@ -452,9 +464,18 @@ ORDER BY
         protected virtual async Task Create(CreateOrEditTaskEntryDto input)
         {
             var taskEntry = ObjectMapper.Map<TaskEntry>(input);
-
             await _taskEntryRepository.InsertAsync(taskEntry);
-
+            
+            await _appNotifier.SendTaskNotificationAsync(JsonConvert.SerializeObject(taskEntry, new JsonSerializerSettings
+                {
+                    ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
+                    }
+                }),
+                userIds: new[] { new UserIdentifier(AbpSession.TenantId, input.ReceiverId) },
+                NotificationSeverity.Info
+            );
         }
 
         [AbpAuthorize(AppPermissions.Pages_TaskEntries_Edit)]

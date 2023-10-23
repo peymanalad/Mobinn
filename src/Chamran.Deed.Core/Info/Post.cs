@@ -24,6 +24,7 @@ namespace Chamran.Deed.Info
         public virtual string PostCaption { get; set; }
 
         public virtual bool IsSpecial { get; set; }
+        public virtual bool IsPublished { get; set; }
 
         public virtual string PostTitle { get; set; }
 
