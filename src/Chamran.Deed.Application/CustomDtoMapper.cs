@@ -54,6 +54,7 @@ namespace Chamran.Deed
     {
         public static void CreateMappings(IMapperConfigurationExpression configuration)
         {
+            configuration.CreateMap<NodeUserDto, User>().ReverseMap();
             configuration.CreateMap<CreateOrEditDeedChartDto, DeedChart>().ReverseMap();
             configuration.CreateMap<DeedChartDto, DeedChart>().ReverseMap();
             configuration.CreateMap<GetEntriesDigestDto, GetEntriesDigest>().ReverseMap();

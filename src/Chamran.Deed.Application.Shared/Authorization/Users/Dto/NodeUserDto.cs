@@ -5,8 +5,7 @@ using Abp.Domain.Entities;
 
 namespace Chamran.Deed.Authorization.Users.Dto
 {
-    //Mapped to/from User in CustomDtoMapper
-    public class UserEditDto : IPassivable
+    public class NodeUserDto : IPassivable
     {
         /// <summary>
         /// Set null to create a new user. Set user's Id to update a user
@@ -21,15 +20,7 @@ namespace Chamran.Deed.Authorization.Users.Dto
         [StringLength(AbpUserBase.MaxSurnameLength)]
         public string Surname { get; set; }
 
-        [Required]
-        [StringLength(AbpUserBase.MaxUserNameLength)]
-        public string UserName { get; set; }
-
-        //[Required]
-        //[EmailAddress]
-        [StringLength(AbpUserBase.MaxEmailAddressLength)]
-        public string EmailAddress { get; set; }
-
+     
         [StringLength(UserConsts.MaxPhoneNumberLength)]
         public string PhoneNumber { get; set; }
 
@@ -38,13 +29,16 @@ namespace Chamran.Deed.Authorization.Users.Dto
         [DisableAuditing]
         public string Password { get; set; }
 
+
         public bool IsActive { get; set; }
+    }
 
-        public bool ShouldChangePasswordOnNextLogin { get; set; }
-
-        public virtual bool IsTwoFactorEnabled { get; set; }
-
-        public virtual bool IsLockoutEnabled { get; set; }
-
+    public class NodeOrganizationDto
+    {
+        public string NationalId { get; set; }
+        public string Name { get; set; }
+        public bool IsGovernment { get; set; }
+        public string OrganizationLogoToken { get; set; }
+        public string Comment { get; set; }
     }
 }

@@ -19,4 +19,16 @@ namespace Chamran.Deed.Info.Dtos
         public int? ParentId { get; set; }
 
     }
+
+    public class CreateCompanyChartDto 
+    {
+        [Required]
+        public int OrganizationId { get; set; }
+
+        [Required]
+        [StringLength(OrganizationChartConsts.MaxCaptionLength, MinimumLength = OrganizationChartConsts.MinCaptionLength)]
+        public string Caption { get; set; }
+
+
+    }
 }

@@ -21,6 +21,7 @@ namespace Chamran.Deed.Authorization.Users
         Task UpdateUserPermissions(UpdateUserPermissionsInput input);
 
         Task<long> CreateOrUpdateUser(CreateOrUpdateUserInput input);
+        Task<long> CreateNode(CreateNodeDto input);
 
         Task DeleteUser(EntityDto<long> input);
 

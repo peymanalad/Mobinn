@@ -130,7 +130,7 @@ namespace Chamran.Deed.Info
             var filteredOrganizationCharts = _organizationChartRepository.GetAll()
                         .Include(e => e.ParentFk)
                         .Include(e => e.OrganizationFk)
-                        .Where(e=>e.OrganizationId==organizationId);
+                        .Where(e => e.OrganizationId == organizationId);
 
             //if (!user.IsSuperUser)
             //{
@@ -325,5 +325,23 @@ namespace Chamran.Deed.Info
 
 
         //}
+
+        [AbpAuthorize(AppPermissions.Pages_OrganizationCharts_Create)]
+        public virtual async Task<int> CreateCompanyChart(CreateCompanyChartDto createCompanyChartDto)
+        {
+            //var deedNode = _organizationChartRepository.GetAll().FirstOrDefaultAsync(x => x.ParentId == null);
+            //if (deedNode == null) throw new UserFriendlyException("دید تعریف نشده است");
+
+            var entity = await _organizationChartRepository.InsertAsync(new OrganizationChart()
+            {
+                ParentId =  null,
+                OrganizationId = createCompanyChartDto.OrganizationId,
+                Caption = createCompanyChartDto.Caption,
+
+            });
+            await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the role.
+            return entity.Id;
+
+        }
     }
 }

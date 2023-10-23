@@ -18,6 +18,9 @@ using Abp.Domain.Uow;
 using Abp.Localization;
 using Abp.UI;
 using Chamran.Deed.Features;
+using Chamran.Deed.UiCustomization.Dto;
+using Abp.Domain.Repositories;
+using Chamran.Deed.People;
 
 namespace Chamran.Deed.Sessions
 {
@@ -29,13 +32,13 @@ namespace Chamran.Deed.Sessions
         private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly EditionManager _editionManager;
         private readonly ILocalizationContext _localizationContext;
-        
-        public SessionAppService(
-            IUiThemeCustomizerFactory uiThemeCustomizerFactory,
+        private readonly IRepository<GroupMember> _groupMemberRepository;
+        public SessionAppService(IUiThemeCustomizerFactory uiThemeCustomizerFactory,
             ISubscriptionPaymentRepository subscriptionPaymentRepository,
             IUserDelegationConfiguration userDelegationConfiguration,
             IUnitOfWorkManager unitOfWorkManager,
-            EditionManager editionManager, ILocalizationContext localizationContext)
+            EditionManager editionManager, ILocalizationContext localizationContext,
+            IRepository<GroupMember> groupMemberRepository)
         {
             _uiThemeCustomizerFactory = uiThemeCustomizerFactory;
             _subscriptionPaymentRepository = subscriptionPaymentRepository;
@@ -43,6 +46,7 @@ namespace Chamran.Deed.Sessions
             _unitOfWorkManager = unitOfWorkManager;
             _editionManager = editionManager;
             _localizationContext = localizationContext;
+            _groupMemberRepository = groupMemberRepository;
         }
 
         [DisableAuditing]
@@ -107,7 +111,21 @@ namespace Chamran.Deed.Sessions
 
                 output.Tenant.SubscriptionDateString = GetTenantSubscriptionDateString(output);
                 output.Tenant.CreationTimeString = output.Tenant.CreationTime.ToString("d");
-
+                if (AbpSession.UserId.HasValue)
+                {
+                    output.JoinedOrganizations = new List<CurrentOrganizationDto>();
+                    var query = _groupMemberRepository.GetAll().Include(x => x.UserFk).Include(x => x.OrganizationFk).Where(x => x.UserId == AbpSession.UserId.Value);
+                    foreach (var groupMember in query)
+                    {
+                        output.JoinedOrganizations.Add(new CurrentOrganizationDto()
+                        {
+                            OrganizationId = groupMember.OrganizationId,
+                            OrganizationName = groupMember.OrganizationFk?.OrganizationName ?? "",
+                            OrganizationPicture = groupMember.OrganizationFk?.OrganizationLogo
+                        });
+                    }
+                }
+                    
                 return output;
             });
         }

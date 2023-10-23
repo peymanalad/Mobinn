@@ -42,5 +42,7 @@ namespace Chamran.Deed.Info
         [ForeignKey("ParentId")]
         public TaskEntry ParentFk { get; set; }
 
+        public bool IsPrivate { get; set; }
+
     }
 }

@@ -128,7 +128,7 @@ namespace Chamran.Deed.Info
         [DeedDb].[dbo].[Posts] PST ON t.[PostId] = PST.[Id]
 )
 
-SELECT
+SELECT DISTINCT
     [Id],
     [Caption],
     [SharedTaskId],
@@ -228,7 +228,7 @@ WITH MinIdCTE AS (
     GROUP BY
         t.[SharedTaskId]
 ), RankedRows AS (
-    SELECT
+    SELECT DISTINCT
         t.[Id],
         t.[Caption],
         t.[SharedTaskId],
@@ -238,14 +238,15 @@ WITH MinIdCTE AS (
         t.[ParentId],
         t.[CreationTime],
         t.[CreatorUserId],
+		t.[IsPrivate],
         I.[Name] AS IssuerFirstName,
         I.[Surname] AS IssuerLastName,
         I.[ProfilePictureId] AS IssuerProfilePicture,
         R2.[Name] AS ReceiverFirstName,
         R2.[Surname] AS ReceiverLastName,
         R2.[ProfilePictureId] AS ReceiverProfilePicture,
-        IGM.[MemberPosition] AS IssuerMemberPos,
-        RGM.[MemberPosition] AS ReceiverMemberPos,
+        --IGM.[MemberPosition] AS IssuerMemberPos,
+        --RGM.[MemberPosition] AS ReceiverMemberPos,
         ROW_NUMBER() OVER (PARTITION BY MinIdCTE.[SharedTaskId] ORDER BY t.[Id] DESC) AS RowNum
     FROM
         [DeedDb].[dbo].[TaskEntries] t
@@ -255,12 +256,12 @@ WITH MinIdCTE AS (
         [DeedDb].[dbo].[AbpUsers] I ON t.[IssuerId] = I.[Id]
     LEFT JOIN
         [DeedDb].[dbo].[AbpUsers] R2 ON t.[ReceiverId] = R2.[Id]
-    LEFT JOIN
-        [DeedDb].[dbo].[GroupMembers] IGM ON t.[IssuerId] = IGM.[UserId]
-    LEFT JOIN
-        [DeedDb].[dbo].[GroupMembers] RGM ON t.[ReceiverId] = RGM.[UserId]
+    --LEFT JOIN
+    --    [DeedDb].[dbo].[GroupMembers] IGM ON t.[IssuerId] = IGM.[UserId]
+    --LEFT JOIN
+    --    [DeedDb].[dbo].[GroupMembers] RGM ON t.[ReceiverId] = RGM.[UserId]
 ), PaginatedResults AS (
-    SELECT
+    SELECT DISTINCT
         [Id],
         [Caption],
         [SharedTaskId],
@@ -276,14 +277,15 @@ WITH MinIdCTE AS (
         ReceiverFirstName,
         ReceiverLastName,
         ReceiverProfilePicture,
-        IssuerMemberPos,
-        ReceiverMemberPos,
+       -- IssuerMemberPos,
+       -- ReceiverMemberPos,
+        IsPrivate,
         ROW_NUMBER() OVER (ORDER BY [CreationTime] DESC) AS RowNum
     FROM
         RankedRows
     WHERE
-        SharedTaskId = @sharedTaskId
-        AND (@captionfilter = '' OR [Caption] LIKE '%' + @captionfilter + '%')
+        SharedTaskId = @sharedTaskId and
+        (@captionfilter = '' OR [Caption] LIKE '%' + @captionfilter + '%')
 )
 SELECT
     [Id],
@@ -301,8 +303,9 @@ SELECT
     ReceiverFirstName,
     ReceiverLastName,
     ReceiverProfilePicture,
-    IssuerMemberPos,
-    ReceiverMemberPos
+   -- IssuerMemberPos,
+   -- ReceiverMemberPos,
+    IsPrivate
 FROM
     PaginatedResults
 WHERE
