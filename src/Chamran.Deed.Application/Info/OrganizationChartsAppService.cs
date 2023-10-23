@@ -168,7 +168,7 @@ namespace Chamran.Deed.Info
 
                                      select new
                                      {
-
+                                         o.ParentId,
                                          o.Caption,
                                          o.LeafPath,
                                          o.Id,
@@ -188,7 +188,7 @@ namespace Chamran.Deed.Info
                 {
                     OrganizationChart = new OrganizationChartDto
                     {
-
+                        ParentId = o.ParentId,
                         Caption = o.Caption,
                         LeafPath = o.LeafPath,
                         Id = o.Id,

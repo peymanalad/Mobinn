@@ -11,5 +11,16 @@ namespace Chamran.Deed.Info.Dtos
 
         public int OrganizationChartId { get; set; }
 
+        public bool IsGlobal { get; set; }
+
+    }
+    public class CreateOrEditGlobalUserDto : EntityDto<int?>
+    {
+
+        public long UserId { get; set; }
+
+        public int OrganizationId { get; set; }
+
+
     }
 }

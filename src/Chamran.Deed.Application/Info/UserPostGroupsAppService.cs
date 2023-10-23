@@ -280,45 +280,58 @@ namespace Chamran.Deed.Info
             );
         }
 
+        [AbpAuthorize(AppPermissions.Pages_UserPostGroups)]
         public async Task<PagedResultDto<UserPostGroupSelectDto>> GetUserPostGroupSelection(GetUserPostGroupSelectInput input)
         {
 
-            var query = from pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
-                        join og in _organizationGroupsRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
-                            equals og.Id into joiner1
-                        from og in joiner1.DefaultIfEmpty()
-                        join gm in _groupMembersRepository.GetAll() on og.Id equals gm.OrganizationId into joiner2
-                        from gm in joiner2.DefaultIfEmpty()
+            var query = from x in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted && x.OrganizationId==input.OrganizationId)
+                join ug in _userPostGroupRepository.GetAll().Where(x => x.UserId == AbpSession.UserId) on x.Id equals
+                    ug.PostGroupId into joiner1
+                from ug in joiner1.DefaultIfEmpty()
+                select new UserPostGroupSelectDto
+                {
 
-                        where gm.UserId == AbpSession.UserId
-                        select new
-                        {
-                            pg.Id,
-                            pg.PostGroupDescription
-                        };
+                    IsSelected = ug != null,
+                    GroupDescription = x.PostGroupDescription,
+                    GroupId = x.Id
+                };
+
+                  //var query = from pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
+                  //            join og in _organizationGroupsRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
+                  //                equals og.Id into joiner1
+                  //            from og in joiner1.DefaultIfEmpty()
+                  //            join gm in _groupMembersRepository.GetAll() on og.Id equals gm.OrganizationId into joiner2
+                  //            from gm in joiner2.DefaultIfEmpty()
+
+                  //            where gm.UserId == AbpSession.UserId
+                  //            select new
+                  //            {
+                  //                pg.Id,
+                  //                pg.PostGroupDescription
+                  //            };
 
 
-            var pagedAndFilteredUserPostGroups = query
-    .OrderBy(input.Sorting ?? "id asc")
+                  var pagedAndFilteredUserPostGroups = query
+    .OrderBy(input.Sorting ?? "GroupId asc")
     .PageBy(input);
 
-            var userPostGroups = from pg in pagedAndFilteredUserPostGroups
-                                 join upg in _userPostGroupRepository.GetAll() on pg.Id equals upg.PostGroupId into upgJoin
-                                 from upg in upgJoin.DefaultIfEmpty()
+            //var userPostGroups = from pg in pagedAndFilteredUserPostGroups
+            //                     join upg in _userPostGroupRepository.GetAll() on pg.Id equals upg.PostGroupId into upgJoin
+            //                     from upg in upgJoin.DefaultIfEmpty()
 
-                                 select new UserPostGroupSelectDto
-                                 {
-                                     GroupId = pg.Id,
-                                     GroupDescription = pg.PostGroupDescription,
-                                     IsSelected = upg != null
-                                 };
+            //                     select new UserPostGroupSelectDto
+            //                     {
+            //                         GroupId = pg.Id,
+            //                         GroupDescription = pg.PostGroupDescription,
+            //                         IsSelected = upg != null
+            //                     };
 
             var totalCount = await query.CountAsync();
-            var dbList = await userPostGroups.ToListAsync();
+            //var dbList = await userPostGroups.ToListAsync();
 
             return new PagedResultDto<UserPostGroupSelectDto>(
                 totalCount,
-                dbList
+                await pagedAndFilteredUserPostGroups.ToListAsync()
             );
 
 
