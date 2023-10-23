@@ -151,19 +151,19 @@ namespace Chamran.Deed.Info
                 await Update(input);
             }
         }
-        
+
         [AbpAuthorize(AppPermissions.Pages_OrganizationUsers_Create)]
         public virtual async Task CreateGlobal(CreateOrEditGlobalUserDto input)
         {
             //var organizationUser = ObjectMapper.Map<OrganizationUser>(input);
             var query = from x in _lookup_organizationChartRepository.GetAll()
-                where x.OrganizationId == input.OrganizationId && x.ParentId == null
-                select x;
+                        where x.OrganizationId == input.OrganizationId && x.ParentId == null
+                        select x;
             var headEntity = await query.FirstOrDefaultAsync();
             if (headEntity == null) throw new UserFriendlyException("سرشاخه در سازمان انتخابی ایجاد نشده است");
             var query2 = from x in _lookup_organizationChartRepository.GetAll()
-                where x.ParentId == headEntity.Id
-                select x;
+                         where x.ParentId == headEntity.Id
+                         select x;
             var targetChart = query2.FirstOrDefault();
             if (targetChart == null) throw new UserFriendlyException("مدیریت در سازمان انتخابی ایجاد نشده است");
             var organizationUser = new OrganizationUser()
@@ -185,7 +185,7 @@ namespace Chamran.Deed.Info
 
         }
 
-       
+
         [AbpAuthorize(AppPermissions.Pages_OrganizationUsers_Edit)]
         protected virtual async Task Update(CreateOrEditOrganizationUserDto input)
         {
@@ -377,29 +377,24 @@ namespace Chamran.Deed.Info
 
             var leafPath = targetChart.LeafPath;
 
-            var usersInSameLeaf = _userRepository.GetAll()
-                    .Join(_organizationUserRepository.GetAll(),
-                        user => user.Id,
-                        orgUser => orgUser.UserId,
-                        (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
-                    .Join(_lookup_organizationChartRepository.GetAll(),
-                        join => join.OrganizationChartId,
-                        chart => chart.Id,
-                        (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
-                    .Join(_groupMemberRepository.GetAll(),
-                        join2 => join2.User.Id,
-                        grp => grp.UserId,
-                        (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
-                    )
-                    .Where(join => join.LeafPath == leafPath && join.User.Id != AbpSession.UserId)
-                    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
-                    .Select(x => new
-                    {
-                        x.User,
-                        x.LeafPath,
-                        x.MemberPosition
-                    });
-            ;
+            var usersInSameLeaf =
+                (from user in _userRepository.GetAll()
+                 join orgUser in _organizationUserRepository.GetAll()
+                     on user.Id equals orgUser.UserId
+                 join chart in _lookup_organizationChartRepository.GetAll()
+                     on orgUser.OrganizationChartId equals chart.Id
+                 join grp in _groupMemberRepository.GetAll()
+                     on user.Id equals grp.UserId
+                 where chart.LeafPath == leafPath && user.Id != AbpSession.UserId
+                 where !orgUser.IsGlobal
+                 where string.IsNullOrWhiteSpace(input.Filter) ||
+                       user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
+                 select new
+                 {
+                     User = user,
+                     LeafPath = chart.LeafPath,
+                     MemberPosition = grp.MemberPosition
+                 });
 
             //return usersInSameLeaf;
             var outputList = await usersInSameLeaf
@@ -444,29 +439,21 @@ namespace Chamran.Deed.Info
             }
 
             var leafPath = targetChart.LeafPath;
-
-            var usersInChildrenLeaves = _userRepository.GetAll()
-                .Join(_organizationUserRepository.GetAll(),
-                    user => user.Id,
-                    orgUser => orgUser.UserId,
-                    (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
-                .Join(_lookup_organizationChartRepository.GetAll(),
-                    join => join.OrganizationChartId,
-                    chart => chart.Id,
-                    (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
-                .Join(_groupMemberRepository.GetAll(),
-                    join2 => join2.User.Id,
-                    grp => grp.UserId,
-                    (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
-                )
-                .Where(join => join.LeafPath.StartsWith(leafPath) && join.LeafPath != leafPath)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
-                .Select(x => new
-                {
-                    x.User,
-                    x.LeafPath,
-                    x.MemberPosition
-                });
+            var usersInChildrenLeaves = (from user in _userRepository.GetAll()
+                                         join orgUser in _organizationUserRepository.GetAll() on user.Id equals orgUser.UserId
+                                         join chart in _lookup_organizationChartRepository.GetAll() on orgUser.OrganizationChartId equals chart
+                                             .Id
+                                         join grp in _groupMemberRepository.GetAll() on user.Id equals grp.UserId
+                                         where chart.LeafPath.StartsWith(leafPath) && chart.LeafPath != leafPath
+                                         where !orgUser.IsGlobal
+                                         where string.IsNullOrWhiteSpace(input.Filter) ||
+                                               user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
+                                         select new
+                                         {
+                                             user,
+                                             chart.LeafPath,
+                                             grp.MemberPosition
+                                         });
 
             //return usersInChildrenLeaves;
             var outputList = await usersInChildrenLeaves
@@ -478,12 +465,12 @@ namespace Chamran.Deed.Info
             {
                 leafUserDtoList.Add(new LeafUserDto()
                 {
-                    UserId = row.User.Id,
-                    UserName = row.User.UserName,
-                    FirstName = row.User.Name,
-                    LastName = row.User.Surname,
+                    UserId = row.user.Id,
+                    UserName = row.user.UserName,
+                    FirstName = row.user.Name,
+                    LastName = row.user.Surname,
                     TenantId = 1,
-                    ProfilePictureId = row.User.ProfilePictureId,
+                    ProfilePictureId = row.user.ProfilePictureId,
                     LevelType = 2,
                     MemberPosition = row.MemberPosition,
 
@@ -515,27 +502,20 @@ namespace Chamran.Deed.Info
             var leafPath = targetChart.LeafPath;
             var parentLeafPathWithoutLastPart = GetParentPath(leafPath);
 
-            var usersInOneLevelHigherParent = _userRepository.GetAll()
-                .Join(_organizationUserRepository.GetAll(),
-                    user => user.Id,
-                    orgUser => orgUser.UserId,
-                    (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
-                .Join(_lookup_organizationChartRepository.GetAll(),
-                    join => join.OrganizationChartId,
-                    chart => chart.Id,
-                    (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
-                .Join(_groupMemberRepository.GetAll(),
-                    join2 => join2.User.Id,
-                    grp => grp.UserId,
-                    (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
-                )
-                .Where(join => join.LeafPath == parentLeafPathWithoutLastPart)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
-                .Select(x => new
+            var usersInOneLevelHigherParent = (from user in _userRepository.GetAll()
+                join orgUser in _organizationUserRepository.GetAll() on user.Id equals orgUser.UserId
+                join chart in _lookup_organizationChartRepository.GetAll() on orgUser.OrganizationChartId equals chart
+                    .Id
+                join grp in _groupMemberRepository.GetAll() on user.Id equals grp.UserId
+                where chart.LeafPath == parentLeafPathWithoutLastPart
+                                               where !orgUser.IsGlobal
+                where string.IsNullOrWhiteSpace(input.Filter) ||
+                      user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
+                select new
                 {
-                    x.User,
-                    x.LeafPath,
-                    x.MemberPosition
+                    user,
+                    chart.LeafPath,
+                    grp.MemberPosition
                 });
 
             //return usersInOneLevelHigherParent;
@@ -547,12 +527,12 @@ namespace Chamran.Deed.Info
             {
                 leafUserDtoList.Add(new LeafUserDto()
                 {
-                    UserId = row.User.Id,
-                    UserName = row.User.UserName,
-                    FirstName = row.User.Name,
-                    LastName = row.User.Surname,
+                    UserId = row.user.Id,
+                    UserName = row.user.UserName,
+                    FirstName = row.user.Name,
+                    LastName = row.user.Surname,
                     TenantId = 1,
-                    ProfilePictureId = row.User.ProfilePictureId,
+                    ProfilePictureId = row.user.ProfilePictureId,
                     LevelType = 1,
                     MemberPosition = row.MemberPosition,
 
@@ -697,6 +677,7 @@ namespace Chamran.Deed.Info
                                   join grp in _groupMemberRepository.GetAll()
                                   on user.Id equals grp.UserId
                                   where chart.LeafPath == leafPath
+                                  where !orgUser.IsGlobal
                                   where !filterUserId || user.Id != AbpSession.UserId
                                   where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
                                   select new
@@ -715,6 +696,7 @@ namespace Chamran.Deed.Info
                                         on orgUser.OrganizationChartId equals chart.Id
                                         join grp in _groupMemberRepository.GetAll()
                                         on user.Id equals grp.UserId
+                                        where !orgUser.IsGlobal
                                         where chart.LeafPath.StartsWith(leafPath) && chart.LeafPath != leafPath
                                         where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
                                         select new
@@ -735,6 +717,7 @@ namespace Chamran.Deed.Info
                                               on orgUser.OrganizationChartId equals chart.Id
                                               join grp in _groupMemberRepository.GetAll()
                                               on user.Id equals grp.UserId
+                                              where !orgUser.IsGlobal
                                               where chart.LeafPath == parentLeafPathWithoutLastPart
                                               where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
                                               select new
@@ -791,7 +774,7 @@ namespace Chamran.Deed.Info
             }
 
             var users = _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).Include(x => x.UserFk)
-                .Where(x => x.OrganizationChartId == input.OrganizationChartId);
+                .Where(x => x.OrganizationChartId == input.OrganizationChartId && !x.IsGlobal);
             var joindUsers = from x in users
                              join y in _groupMemberRepository.GetAll() on x.UserId equals y.UserId into joiner
                              from y in joiner.DefaultIfEmpty()
