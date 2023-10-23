@@ -1,4 +1,5 @@
-﻿using Chamran.Deed.UiCustomization.Dto;
+﻿using System.Collections.Generic;
+using Chamran.Deed.UiCustomization.Dto;
 
 namespace Chamran.Deed.Sessions.Dto
 {
@@ -15,5 +16,6 @@ namespace Chamran.Deed.Sessions.Dto
         public ApplicationInfoDto Application { get; set; }
 
         public UiCustomizationSettingsDto Theme { get; set; }
+        public List<CurrentOrganizationDto> JoinedOrganizations { get; set; }
     }
 }

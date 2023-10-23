@@ -56,5 +56,6 @@ namespace Chamran.Deed.Info.Dtos
         public Guid? ReceiverProfilePicture { get; set; }
         public string IssuerMemberPos { get; set; }
         public string ReceiverMemberPos { get; set; }
+        public bool IsPrivate { get; set; }
     }
 }

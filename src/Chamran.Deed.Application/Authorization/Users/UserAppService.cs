@@ -29,11 +29,14 @@ using Chamran.Deed.Authorization.Roles;
 using Chamran.Deed.Authorization.Users.Dto;
 using Chamran.Deed.Authorization.Users.Exporting;
 using Chamran.Deed.Dto;
+using Chamran.Deed.Info;
+using Chamran.Deed.Info.Dtos;
 using Chamran.Deed.Net.Emailing;
 using Chamran.Deed.Notifications;
 using Chamran.Deed.Url;
 using Chamran.Deed.Organizations.Dto;
 using Chamran.Deed.People;
+using Chamran.Deed.People.Dtos;
 
 namespace Chamran.Deed.Authorization.Users
 {
@@ -64,6 +67,11 @@ namespace Chamran.Deed.Authorization.Users
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<Organization, int> _lookup_organizationRepository;
         private readonly IRepository<GroupMember> _groupMemberRepository;
+        private readonly IOrganizationsAppService _organizationAppService;
+        private readonly IGroupMembersAppService _groupMembersAppService;
+        private readonly IOrganizationChartsAppService _organizationChartsAppService;
+        private readonly IDeedChartsAppService _deedChartsAppService;
+        private readonly IOrganizationUsersAppService _organizationUsersAppService;
         public UserAppService(
             RoleManager roleManager,
             IUserEmailer userEmailer,
@@ -82,7 +90,8 @@ namespace Chamran.Deed.Authorization.Users
             UserManager userManager,
             IRepository<UserOrganizationUnit, long> userOrganizationUnitRepository,
             IRepository<OrganizationUnitRole, long> organizationUnitRoleRepository,
-            IOptions<UserOptions> userOptions, IEmailSettingsChecker emailSettingsChecker, IRepository<User, long> userRepository, IRepository<Organization, int> lookupOrganizationRepository, IRepository<GroupMember> groupMemberRepository)
+            IOptions<UserOptions> userOptions, IEmailSettingsChecker emailSettingsChecker,
+            IRepository<User, long> userRepository, IRepository<Organization, int> lookupOrganizationRepository, IRepository<GroupMember> groupMemberRepository, IOrganizationsAppService organizationsAppService, IGroupMembersAppService groupMembersAppService, IOrganizationChartsAppService organizationChartsAppService, IOrganizationUsersAppService organizationUsersAppService)
         {
             _roleManager = roleManager;
             _userEmailer = userEmailer;
@@ -106,7 +115,10 @@ namespace Chamran.Deed.Authorization.Users
             _lookup_organizationRepository = lookupOrganizationRepository;
             _groupMemberRepository = groupMemberRepository;
             _roleRepository = roleRepository;
-
+            _organizationAppService = organizationsAppService;
+            _groupMembersAppService = groupMembersAppService;
+            _organizationChartsAppService = organizationChartsAppService;
+            _organizationUsersAppService = organizationUsersAppService;
             AppUrlService = NullAppUrlService.Instance;
         }
 
@@ -337,6 +349,153 @@ namespace Chamran.Deed.Authorization.Users
                 return await CreateUserAsync(input);
             }
         }
+        public async Task<long> CreateNode(CreateNodeDto input)
+        {
+            if (AbpSession.TenantId.HasValue)
+            {
+                await _userPolicy.CheckMaxUserCountAsync(AbpSession.GetTenantId());
+            }
+
+            var user = ObjectMapper.Map<User>(input.User); //Passwords is not mapped (see mapping configuration)
+            user.UserName = input.User.PhoneNumber;
+            user.TenantId = AbpSession.TenantId;
+
+            //Set password
+            if (!input.User.Password.IsNullOrEmpty())
+            {
+                await UserManager.InitializeOptionsAsync(AbpSession.TenantId);
+                foreach (var validator in _passwordValidators)
+                {
+                    CheckErrors(await validator.ValidateAsync(UserManager, user, input.User.Password));
+                }
+
+                user.Password = _passwordHasher.HashPassword(user, input.User.Password);
+            }
+
+            //Assign roles
+            user.Roles = new Collection<UserRole>();
+            //foreach (var roleName in input.AssignedRoleNames)
+            //{
+            //    var role = await _roleManager.GetRoleByNameAsync(roleName);
+            //    user.Roles.Add(new UserRole(AbpSession.TenantId, user.Id, role.Id));
+            //}
+            string[] emailDomains = { "gmail.com", "yahoo.com", "outlook.com", "example.com" };
+
+            string randomUsername = GenerateRandomUsername();
+            string randomDomain = emailDomains[new Random().Next(emailDomains.Length)];
+
+            string randomEmail = randomUsername + "@" + randomDomain;
+            user.EmailAddress = randomEmail;
+            user.IsSuperUser = false;
+            var role = await _roleManager.GetRoleByNameAsync("Admin");
+            user.Roles.Add(new UserRole(AbpSession.TenantId, user.Id, role.Id));
+            CheckErrors(await UserManager.CreateAsync(user));
+            await CurrentUnitOfWork.SaveChangesAsync(); //To get new user's Id.
+            //Notifications
+            await _notificationSubscriptionManager.SubscribeToAllAvailableNotificationsAsync(user.ToUserIdentifier());
+            //await _appNotifier.WelcomeToTheApplicationAsync(user);
+            //Organization Units
+            await UserManager.SetOrganizationUnitsAsync(user, new long[] { 1 });
+
+            ////Send activation email
+            //if (input.SendActivationEmail)
+            //{
+            //    user.SetNewEmailConfirmationCode();
+            //    await _userEmailer.SendEmailActivationLinkAsync(
+            //        user,
+            //        AppUrlService.CreateEmailActivationUrlFormat(AbpSession.TenantId),
+            //        input.User.Password
+            //    );
+            //}
+
+            //if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
+            //var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+
+            //if (!currentUser.IsSuperUser)
+            //{
+            //    var orgQuery =
+            //       from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
+            //       join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
+            //           .OrganizationId into joined2
+            //       from grpMember in joined2.DefaultIfEmpty()
+            //       where grpMember.UserId == AbpSession.UserId
+            //       select org;
+
+            //    if (!orgQuery.Any())
+            //    {
+            //        throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+            //    }
+            //    var orgEntity = orgQuery.First();
+
+            //    var groupMember = new GroupMember()
+            //    {
+            //        MemberPos = 0,
+            //        MemberPosition = "",
+            //        UserId = user.Id,
+            //        OrganizationId = orgEntity.Id,
+
+            //    };
+            //    await _groupMemberRepository.InsertAsync(groupMember);
+            //    //await CurrentUnitOfWork.SaveChangesAsync(); //To get new user's Id.
+            //}
+            //return user.Id;
+
+            var organizationId = await _organizationAppService.CreateOrEdit(new CreateOrEditOrganizationDto()
+            {
+                IsGovernmental = input.Organization.IsGovernment,
+                NationalId = input.Organization.NationalId,
+                OrganizationContactPerson = input.User.Name + " " + input.User.Surname,
+                OrganizationLogoToken = input.Organization.OrganizationLogoToken,
+                OrganizationName = input.Organization.Name,
+                Comment = input.Organization.Comment
+
+            });
+            await _groupMembersAppService.CreateOrEdit(new CreateOrEditGroupMemberDto()
+            {
+                UserId = user.Id,
+                OrganizationId = organizationId,
+                MemberPos = 0,
+                MemberPosition = "",
+            });
+
+            await _deedChartsAppService.SetOrganizationForChartLeaf(new SetOrganizationForChartLeafInput()
+            {
+                OrganizationId = organizationId,
+                OrganizationChartId = input.OrganizationChartId
+            });
+
+
+            var organizationChartId=await _organizationChartsAppService.CreateCompanyChart(new CreateCompanyChartDto()
+            {
+                Caption = input.Organization.Name,
+                OrganizationId = organizationId
+            });
+
+            await _organizationUsersAppService.CreateOrEdit(new CreateOrEditOrganizationUserDto()
+            {
+                IsGlobal = false,
+                OrganizationChartId = organizationChartId,
+                UserId = user.Id,
+
+            });
+
+
+            return user.Id;
+
+
+        }
+
+        static string GenerateRandomUsername()
+        {
+            // You can define rules for generating a random username here.
+            // For simplicity, we'll use a random combination of letters and numbers.
+            int length = 10;
+            const string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+            Random random = new Random();
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
 
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Delete)]
         public async Task DeleteUser(EntityDto<long> input)
