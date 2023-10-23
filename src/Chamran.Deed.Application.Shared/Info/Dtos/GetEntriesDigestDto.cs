@@ -19,8 +19,8 @@ namespace Chamran.Deed.Info.Dtos
         public string ReceiverFirstName { get; set; }
         public string ReceiverLastName { get; set; }
         public Guid? ReceiverProfilePicture { get; set; }
-        public string IssuerMemberPos { get; set; }
-        public string ReceiverMemberPos { get; set; }
+        //public string IssuerMemberPos { get; set; }
+        //public string ReceiverMemberPos { get; set; }
         public Guid? PostFile { get; set; }
         public string PostCaption { get; set; }
         public int? PostGroupMemberId { get; set; }
@@ -54,8 +54,8 @@ namespace Chamran.Deed.Info.Dtos
         public string ReceiverFirstName { get; set; }
         public string ReceiverLastName { get; set; }
         public Guid? ReceiverProfilePicture { get; set; }
-        public string IssuerMemberPos { get; set; }
-        public string ReceiverMemberPos { get; set; }
+        //public string IssuerMemberPos { get; set; }
+        //public string ReceiverMemberPos { get; set; }
         public bool IsPrivate { get; set; }
     }
 }
