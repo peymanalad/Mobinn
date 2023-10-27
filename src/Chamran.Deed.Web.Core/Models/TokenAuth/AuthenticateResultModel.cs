@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Chamran.Deed.Web.Models.TokenAuth
 {
@@ -28,5 +29,14 @@ namespace Chamran.Deed.Web.Models.TokenAuth
 
         public int RefreshTokenExpireInSeconds { get; set; }
         public string c { get; set; }
+
+        public List<JoinedOrganizationDto> JoinedOrganizations { get; set; }
+    }
+
+    public class JoinedOrganizationDto
+    {
+        public string OrganizationName { get; set; }
+        public Guid? OrganizationPicture { get; set; }
+        public int? OrganizationId { get; set; }
     }
 }

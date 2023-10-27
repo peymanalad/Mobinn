@@ -20,6 +20,7 @@ namespace Chamran.Deed.Info.Dtos
         public long ReceiverId { get; set; }
 
         public int? ParentId { get; set; }
+        public bool IsPrivate{ get; set; }
 
     }
 }

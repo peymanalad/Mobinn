@@ -16,5 +16,6 @@
         public const string MassNotification = "App.MassNotification";
         public const string ChatMessage = "App.ChatMessage";
         public const string NewPost = "App.NewPost";
+        public const string NewTask = "App.NewTask";
     }
 }

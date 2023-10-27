@@ -4,6 +4,7 @@ using System.Linq.Dynamic.Core;
 using Abp.Linq.Extensions;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Abp;
 using Abp.Domain.Repositories;
 using Chamran.Deed.Info.Dtos;
 using Abp.Application.Services.Dto;
@@ -14,6 +15,11 @@ using Abp.UI;
 using Abp.EntityFrameworkCore;
 using Chamran.Deed.EntityFrameworkCore;
 using Abp.Domain.Uow;
+using Abp.Notifications;
+using Microsoft.Data.SqlClient;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using Chamran.Deed.Notifications;
 
 namespace Chamran.Deed.Info
 {
@@ -26,7 +32,11 @@ namespace Chamran.Deed.Info
         private readonly IRepository<TaskEntry, int> _lookup_taskEntryRepository;
         private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
-        public TaskEntriesAppService(IRepository<TaskEntry> taskEntryRepository, IRepository<Post, int> lookup_postRepository, IRepository<User, long> lookup_userRepository, IRepository<TaskEntry, int> lookup_taskEntryRepository, IDbContextProvider<DeedDbContext> dbContextProvider, IUnitOfWorkManager unitOfWorkManager)
+        private readonly IAppNotifier _appNotifier;
+        public TaskEntriesAppService(IRepository<TaskEntry> taskEntryRepository,
+            IRepository<Post, int> lookup_postRepository, IRepository<User, long> lookup_userRepository,
+            IRepository<TaskEntry, int> lookup_taskEntryRepository, IDbContextProvider<DeedDbContext> dbContextProvider,
+            IUnitOfWorkManager unitOfWorkManager, IAppNotifier appNotifier)
         {
             _taskEntryRepository = taskEntryRepository;
             _lookup_postRepository = lookup_postRepository;
@@ -34,6 +44,7 @@ namespace Chamran.Deed.Info
             _lookup_taskEntryRepository = lookup_taskEntryRepository;
             _dbContextProvider = dbContextProvider;
             _unitOfWorkManager = unitOfWorkManager;
+            _appNotifier = appNotifier;
         }
 
         public virtual async Task<PagedResultDto<GetEntriesDigestDto>> GetEntriesDigest(GetEntriesDigestInputDto input)
@@ -46,12 +57,15 @@ namespace Chamran.Deed.Info
             var dbContext = await _dbContextProvider.GetDbContextAsync();
 
             // Define your custom SQL query with parameters for SkipCount and MaxResultCount
-            
-            var sqlQuery = $@"-- Previous SQL statement here;
+            var sqlQuery = @"
+        -- Previous SQL statement here;
 
-DECLARE @SkipCount INT = {input.SkipCount}
-DECLARE @MaxResultCount INT = {input.MaxResultCount}
-DECLARE @UserId INT = {AbpSession.UserId.Value}
+        DECLARE @SkipCount INT = @SkipCountParam;
+        DECLARE @MaxResultCount INT = @MaxResultCountParam;
+        DECLARE @UserId INT = @UserIdParam;
+        DECLARE @captionfilter NVARCHAR(200) = @CaptionFilterParam;
+
+      
 ;WITH MinIdCTE AS (
     SELECT
         MIN(t.[Id]) AS MinId,
@@ -81,8 +95,8 @@ DECLARE @UserId INT = {AbpSession.UserId.Value}
         R2.[Name] AS ReceiverFirstName,
         R2.[Surname] AS ReceiverLastName,
         R2.[ProfilePictureId] AS ReceiverProfilePicture,
-        IGM.[MemberPosition] AS IssuerMemberPos,
-        RGM.[MemberPosition] AS ReceiverMemberPos,
+        --IGM.[MemberPosition] AS IssuerMemberPos,
+        --RGM.[MemberPosition] AS ReceiverMemberPos,
         PST.[PostFile],
         PST.[PostCaption],
         PST.[GroupMemberId] as PostGroupMemberId,
@@ -92,11 +106,12 @@ DECLARE @UserId INT = {AbpSession.UserId.Value}
         PST.[LastModifierUserId] as PostLastModifierUserId,
         PST.[PostGroupId],
         PST.[IsSpecial],
+        PST.[IsPublished],
         PST.[PostTitle],
         PST.[PostFile2],
         PST.[PostFile3],
         PST.[PostRefLink],
-        ROW_NUMBER() OVER (PARTITION BY MinIdCTE.[SharedTaskId] ORDER BY t.[Id]) AS RowNum
+        ROW_NUMBER() OVER (PARTITION BY MinIdCTE.[SharedTaskId] ORDER BY t.[Id] DESC) AS RowNum
     FROM
         [DeedDb].[dbo].[TaskEntries] t
     JOIN
@@ -113,6 +128,165 @@ DECLARE @UserId INT = {AbpSession.UserId.Value}
         [DeedDb].[dbo].[Posts] PST ON t.[PostId] = PST.[Id]
 )
 
+SELECT DISTINCT
+    [Id],
+    [Caption],
+    [SharedTaskId],
+    [PostId],
+    [IssuerId],
+    [ReceiverId],
+    [ParentId],
+    [CreationTime],
+    [CreatorUserId],
+    IssuerFirstName,
+    IssuerLastName,
+    IssuerProfilePicture,
+    ReceiverFirstName,
+    ReceiverLastName,
+    ReceiverProfilePicture,
+    --IssuerMemberPos,
+    --ReceiverMemberPos,
+    [PostFile],
+    [PostCaption],
+    [PostGroupMemberId],
+    [PostCreationTime],
+    [PostCreatorUserId],
+    [PostLastModificationTime],
+    [PostLastModifierUserId],
+    [PostGroupId],
+    [IsSpecial],
+    [IsPublished],
+    [PostTitle],
+    [PostFile2],
+    [PostFile3],
+    [PostRefLink]
+FROM (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (ORDER BY [CreationTime]) AS PaginationRowNum
+    FROM
+        RankedRows
+    WHERE
+        RowNum = 1 AND
+        (@captionfilter = '' OR [Caption] LIKE '%' + @captionfilter + '%')
+) AS Subquery
+WHERE
+    PaginationRowNum > @SkipCount
+    AND PaginationRowNum <= @SkipCount + @MaxResultCount
+ORDER BY
+    [CreationTime] DESC;
+    ";
+
+            // Create SqlParameter objects for each parameter
+            object[] parameters = {
+        new SqlParameter("@SkipCountParam", input.SkipCount),
+        new SqlParameter("@MaxResultCountParam", input.MaxResultCount),
+        new SqlParameter("@UserIdParam", AbpSession.UserId.Value),
+        new SqlParameter("@CaptionFilterParam", input.CaptionFilter ?? string.Empty)
+    };
+
+            // Execute the query
+            var result = await dbContext.Set<GetEntriesDigest>()
+                .FromSqlRaw(sqlQuery, parameters)
+                .ToListAsync();
+
+            await uow.CompleteAsync();
+
+            // Return the mapped result
+            return new PagedResultDto<GetEntriesDigestDto>
+            {
+                TotalCount = result.Count,
+                Items = ObjectMapper.Map<List<GetEntriesDigestDto>>(result)
+            };
+        }
+        public virtual async Task<PagedResultDto<GetEntriesDetailDto>> GetEntriesBySharedMessageId(GetEntriesBySharedMessageIdInputDto input)
+        {
+            if (AbpSession.UserId == null) throw new UserFriendlyException("Not Logged In!");
+
+            using var uow = _unitOfWorkManager.Begin();
+
+            // Get the DbContext
+            var dbContext = await _dbContextProvider.GetDbContextAsync();
+
+            // Define your custom SQL query with parameters
+            var sqlQuery = @"
+        -- Previous SQL statement here;
+
+        DECLARE @SkipCount INT = @SkipCountParam;
+        DECLARE @MaxResultCount INT = @MaxResultCountParam;
+        DECLARE @UserId INT = @UserIdParam;
+        DECLARE @sharedTaskId UNIQUEIDENTIFIER = @SharedTaskIdParam; -- Change data type
+        DECLARE @captionfilter NVARCHAR(200) = @CaptionFilterParam;
+WITH MinIdCTE AS (
+    SELECT
+        MIN(t.[Id]) AS MinId,
+        t.[SharedTaskId]
+    FROM
+        [DeedDb].[dbo].[TaskEntries] t
+    WHERE
+        t.IssuerId = @UserId OR t.ReceiverId = @UserId
+    GROUP BY
+        t.[SharedTaskId]
+), RankedRows AS (
+    SELECT DISTINCT
+        t.[Id],
+        t.[Caption],
+        t.[SharedTaskId],
+        t.[PostId],
+        t.[IssuerId],
+        t.[ReceiverId],
+        t.[ParentId],
+        t.[CreationTime],
+        t.[CreatorUserId],
+		t.[IsPrivate],
+        I.[Name] AS IssuerFirstName,
+        I.[Surname] AS IssuerLastName,
+        I.[ProfilePictureId] AS IssuerProfilePicture,
+        R2.[Name] AS ReceiverFirstName,
+        R2.[Surname] AS ReceiverLastName,
+        R2.[ProfilePictureId] AS ReceiverProfilePicture,
+        --IGM.[MemberPosition] AS IssuerMemberPos,
+        --RGM.[MemberPosition] AS ReceiverMemberPos,
+        ROW_NUMBER() OVER (PARTITION BY MinIdCTE.[SharedTaskId] ORDER BY t.[Id] DESC) AS RowNum
+    FROM
+        [DeedDb].[dbo].[TaskEntries] t
+    JOIN
+        MinIdCTE ON t.[SharedTaskId] = MinIdCTE.[SharedTaskId] AND t.[Id] >= MinIdCTE.MinId
+    LEFT JOIN
+        [DeedDb].[dbo].[AbpUsers] I ON t.[IssuerId] = I.[Id]
+    LEFT JOIN
+        [DeedDb].[dbo].[AbpUsers] R2 ON t.[ReceiverId] = R2.[Id]
+    --LEFT JOIN
+    --    [DeedDb].[dbo].[GroupMembers] IGM ON t.[IssuerId] = IGM.[UserId]
+    --LEFT JOIN
+    --    [DeedDb].[dbo].[GroupMembers] RGM ON t.[ReceiverId] = RGM.[UserId]
+), PaginatedResults AS (
+    SELECT DISTINCT
+        [Id],
+        [Caption],
+        [SharedTaskId],
+        [PostId],
+        [IssuerId],
+        [ReceiverId],
+        [ParentId],
+        [CreationTime],
+        [CreatorUserId],
+        IssuerFirstName,
+        IssuerLastName,
+        IssuerProfilePicture,
+        ReceiverFirstName,
+        ReceiverLastName,
+        ReceiverProfilePicture,
+       -- IssuerMemberPos,
+       -- ReceiverMemberPos,
+        IsPrivate,
+        ROW_NUMBER() OVER (ORDER BY [CreationTime] DESC) AS RowNum
+    FROM
+        RankedRows
+    WHERE
+        SharedTaskId = @sharedTaskId and
+        (@captionfilter = '' OR [Caption] LIKE '%' + @captionfilter + '%')
+)
 SELECT
     [Id],
     [Caption],
@@ -129,45 +303,42 @@ SELECT
     ReceiverFirstName,
     ReceiverLastName,
     ReceiverProfilePicture,
-    IssuerMemberPos,
-    ReceiverMemberPos,
-    [PostFile],
-    [PostCaption],
-    [PostGroupMemberId],
-    [PostCreationTime],
-    [PostCreatorUserId],
-    [PostLastModificationTime],
-    [PostLastModifierUserId],
-    [PostGroupId],
-    [IsSpecial],
-    [PostTitle],
-    [PostFile2],
-    [PostFile3],
-    [PostRefLink]
+   -- IssuerMemberPos,
+   -- ReceiverMemberPos,
+    IsPrivate
 FROM
-    RankedRows
+    PaginatedResults
 WHERE
-    RowNum = 1
+    RowNum BETWEEN @SkipCount + 1 AND @SkipCount + @MaxResultCount
 ORDER BY
     [CreationTime] DESC;
- ";
-            
+
+    ";
+
+            // Create SqlParameter objects for each parameter
+            var parameters = new[]
+            {
+        new SqlParameter("@SkipCountParam", input.SkipCount),
+        new SqlParameter("@MaxResultCountParam", input.MaxResultCount),
+        new SqlParameter("@UserIdParam", AbpSession.UserId.Value),
+        new SqlParameter("@SharedTaskIdParam", input.SharedTaskId.ToString()), // Convert to string
+        new SqlParameter("@CaptionFilterParam", input.CaptionFilter ?? string.Empty)
+    };
 
             // Execute the query
-            var result = await dbContext.Set<GetEntriesDigest>()
-                .FromSqlRaw(sqlQuery)
+            var result = await dbContext.Set<GetEntriesDetail>()
+                .FromSqlRaw(sqlQuery, parameters)
                 .ToListAsync();
 
             await uow.CompleteAsync();
 
             // Return the mapped result
-            return new PagedResultDto<GetEntriesDigestDto>
+            return new PagedResultDto<GetEntriesDetailDto>
             {
                 TotalCount = result.Count,
-                Items = ObjectMapper.Map<List<GetEntriesDigestDto>>(result)
+                Items = ObjectMapper.Map<List<GetEntriesDetailDto>>(result)
             };
         }
-
 
         public virtual async Task<PagedResultDto<GetTaskEntryForViewDto>> GetAll(GetAllTaskEntriesInput input)
         {
@@ -296,9 +467,18 @@ ORDER BY
         protected virtual async Task Create(CreateOrEditTaskEntryDto input)
         {
             var taskEntry = ObjectMapper.Map<TaskEntry>(input);
-
             await _taskEntryRepository.InsertAsync(taskEntry);
-
+            
+            await _appNotifier.SendTaskNotificationAsync(JsonConvert.SerializeObject(taskEntry, new JsonSerializerSettings
+                {
+                    ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
+                    }
+                }),
+                userIds: new[] { new UserIdentifier(AbpSession.TenantId, input.ReceiverId) },
+                NotificationSeverity.Info
+            );
         }
 
         [AbpAuthorize(AppPermissions.Pages_TaskEntries_Edit)]

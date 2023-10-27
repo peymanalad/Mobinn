@@ -153,6 +153,30 @@ namespace Chamran.Deed.Info
         }
 
         [AbpAuthorize(AppPermissions.Pages_OrganizationUsers_Create)]
+        public virtual async Task CreateGlobal(CreateOrEditGlobalUserDto input)
+        {
+            //var organizationUser = ObjectMapper.Map<OrganizationUser>(input);
+            var query = from x in _lookup_organizationChartRepository.GetAll()
+                        where x.OrganizationId == input.OrganizationId && x.ParentId == null
+                        select x;
+            var headEntity = await query.FirstOrDefaultAsync();
+            if (headEntity == null) throw new UserFriendlyException("سرشاخه در سازمان انتخابی ایجاد نشده است");
+            var query2 = from x in _lookup_organizationChartRepository.GetAll()
+                         where x.ParentId == headEntity.Id
+                         select x;
+            var targetChart = query2.FirstOrDefault();
+            if (targetChart == null) throw new UserFriendlyException("مدیریت در سازمان انتخابی ایجاد نشده است");
+            var organizationUser = new OrganizationUser()
+            {
+                IsGlobal = true,
+                OrganizationChartId = targetChart.Id,
+                UserId = input.UserId,
+
+            };
+            await _organizationUserRepository.InsertAsync(organizationUser);
+
+        }
+
         protected virtual async Task Create(CreateOrEditOrganizationUserDto input)
         {
             var organizationUser = ObjectMapper.Map<OrganizationUser>(input);
@@ -161,6 +185,7 @@ namespace Chamran.Deed.Info
 
         }
 
+
         [AbpAuthorize(AppPermissions.Pages_OrganizationUsers_Edit)]
         protected virtual async Task Update(CreateOrEditOrganizationUserDto input)
         {
@@ -168,6 +193,7 @@ namespace Chamran.Deed.Info
             ObjectMapper.Map(input, organizationUser);
 
         }
+
 
         [AbpAuthorize(AppPermissions.Pages_OrganizationUsers_Delete)]
         public virtual async Task Delete(EntityDto input)
@@ -268,11 +294,80 @@ namespace Chamran.Deed.Info
         }
 
         [AbpAuthorize(AppPermissions.Pages_OrganizationUsers)]
+        public async Task<PagedResultDto<LeafUserDto>> GetGlobalUserLeaves(GetLeavesInput input)
+        {
+            if (AbpSession.UserId == null) throw new UserFriendlyException("User is not logged in!");
+            //var userposition = await _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId && x.OrganizationChartFk.OrganizationId == input.OrganizationId);
+            var headerEntity = await _lookup_organizationChartRepository.GetAll()
+                .FirstOrDefaultAsync(x => x.OrganizationId == input.OrganizationId && x.ParentId == null);
+            if (headerEntity == null)
+            {
+                throw new UserFriendlyException("سرشاخه در چارت سازمانی ایجاد نشده است");
+            }
 
+            var targetChart = _lookup_organizationChartRepository.GetAll()
+                .FirstOrDefault(x => x.OrganizationId == input.OrganizationId && x.ParentId == headerEntity.Id);
+            if (targetChart == null)
+            {
+                throw new UserFriendlyException("مدیریت در چارت سازمانی ایجاد نشده است");
+            }
+            //var targetChart = await _lookup_organizationChartRepository.GetAsync(userposition.Id);
+            //if (targetChart == null)
+            //{
+            //    throw new UserFriendlyException("Organization chart not found.");
+            //}
+            var leafPath = targetChart.LeafPath;
+
+            var globalUsers = from user in _userRepository.GetAll()
+                              join orgUser in _organizationUserRepository.GetAll()
+                                  on user.Id equals orgUser.UserId
+                              join chart in _lookup_organizationChartRepository.GetAll()
+                                  on orgUser.OrganizationChartId equals chart.Id
+                              join grp in _groupMemberRepository.GetAll()
+                                  on user.Id equals grp.UserId
+                              where chart.LeafPath == leafPath && orgUser.IsGlobal
+                              where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
+                              select new
+                              {
+                                  User = user,
+                                  LeafPath = chart.LeafPath,
+                                  MemberPosition = grp.MemberPosition
+                              };
+
+
+            //return usersInSameLeaf;
+            var outputList = await globalUsers
+                .PageBy(input)
+                .ToListAsync();
+            var leafUserDtoList = new List<LeafUserDto>();
+            foreach (var row in outputList)
+            {
+                leafUserDtoList.Add(new LeafUserDto()
+                {
+                    UserId = row.User.Id,
+                    UserName = row.User.UserName,
+                    FirstName = row.User.Name,
+                    LastName = row.User.Surname,
+                    TenantId = 1,
+                    ProfilePictureId = row.User.ProfilePictureId,
+                    LevelType = 0,
+                    MemberPosition = row.MemberPosition,
+
+                });
+
+
+            }
+            return new PagedResultDto<LeafUserDto>(
+                globalUsers.Count(),
+                leafUserDtoList
+            );
+        }
+
+        [AbpAuthorize(AppPermissions.Pages_OrganizationUsers)]
         public async Task<PagedResultDto<LeafUserDto>> GetUsersInSameLeaf(GetLeavesInput input)
         {
             if (AbpSession.UserId == null) throw new UserFriendlyException("User is not logged in!");
-            var userposition = await _organizationUserRepository.GetAll().FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId);
+            var userposition = await _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId && x.OrganizationChartFk.OrganizationId == input.OrganizationId);
             if (userposition == null) throw new UserFriendlyException("کاربر در درخت سطوح دسترسی حضور ندارد");
             var targetChart = await _lookup_organizationChartRepository.GetAsync(userposition.OrganizationChartId);
             if (targetChart == null)
@@ -282,29 +377,24 @@ namespace Chamran.Deed.Info
 
             var leafPath = targetChart.LeafPath;
 
-            var usersInSameLeaf = _userRepository.GetAll()
-                    .Join(_organizationUserRepository.GetAll(),
-                        user => user.Id,
-                        orgUser => orgUser.UserId,
-                        (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
-                    .Join(_lookup_organizationChartRepository.GetAll(),
-                        join => join.OrganizationChartId,
-                        chart => chart.Id,
-                        (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
-                    .Join(_groupMemberRepository.GetAll(),
-                        join2 => join2.User.Id,
-                        grp => grp.UserId,
-                        (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
-                    )
-                    .Where(join => join.LeafPath == leafPath && join.User.Id != AbpSession.UserId)
-                    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
-                    .Select(x => new
-                    {
-                        x.User,
-                        x.LeafPath,
-                        x.MemberPosition
-                    });
-            ;
+            var usersInSameLeaf =
+                (from user in _userRepository.GetAll()
+                 join orgUser in _organizationUserRepository.GetAll()
+                     on user.Id equals orgUser.UserId
+                 join chart in _lookup_organizationChartRepository.GetAll()
+                     on orgUser.OrganizationChartId equals chart.Id
+                 join grp in _groupMemberRepository.GetAll()
+                     on user.Id equals grp.UserId
+                 where chart.LeafPath == leafPath && user.Id != AbpSession.UserId
+                 where !orgUser.IsGlobal
+                 where string.IsNullOrWhiteSpace(input.Filter) ||
+                       user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
+                 select new
+                 {
+                     User = user,
+                     LeafPath = chart.LeafPath,
+                     MemberPosition = grp.MemberPosition
+                 });
 
             //return usersInSameLeaf;
             var outputList = await usersInSameLeaf
@@ -339,7 +429,7 @@ namespace Chamran.Deed.Info
         public async Task<PagedResultDto<LeafUserDto>> GetUsersInChildrenLeaves(GetLeavesInput input)
         {
             if (AbpSession.UserId == null) throw new UserFriendlyException("User is not logged in!");
-            var userposition = await _organizationUserRepository.GetAll().FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId);
+            var userposition = await _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId && x.OrganizationChartFk.OrganizationId == input.OrganizationId);
             if (userposition == null) throw new UserFriendlyException("کاربر در درخت سطوح دسترسی حضور ندارد");
 
             var targetChart = await _lookup_organizationChartRepository.GetAsync(userposition.OrganizationChartId);
@@ -349,29 +439,21 @@ namespace Chamran.Deed.Info
             }
 
             var leafPath = targetChart.LeafPath;
-
-            var usersInChildrenLeaves = _userRepository.GetAll()
-                .Join(_organizationUserRepository.GetAll(),
-                    user => user.Id,
-                    orgUser => orgUser.UserId,
-                    (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
-                .Join(_lookup_organizationChartRepository.GetAll(),
-                    join => join.OrganizationChartId,
-                    chart => chart.Id,
-                    (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
-                .Join(_groupMemberRepository.GetAll(),
-                    join2 => join2.User.Id,
-                    grp => grp.UserId,
-                    (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
-                )
-                .Where(join => join.LeafPath.StartsWith(leafPath) && join.LeafPath != leafPath)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
-                .Select(x => new
-                {
-                    x.User,
-                    x.LeafPath,
-                    x.MemberPosition
-                });
+            var usersInChildrenLeaves = (from user in _userRepository.GetAll()
+                                         join orgUser in _organizationUserRepository.GetAll() on user.Id equals orgUser.UserId
+                                         join chart in _lookup_organizationChartRepository.GetAll() on orgUser.OrganizationChartId equals chart
+                                             .Id
+                                         join grp in _groupMemberRepository.GetAll() on user.Id equals grp.UserId
+                                         where chart.LeafPath.StartsWith(leafPath) && chart.LeafPath != leafPath
+                                         where !orgUser.IsGlobal
+                                         where string.IsNullOrWhiteSpace(input.Filter) ||
+                                               user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
+                                         select new
+                                         {
+                                             user,
+                                             chart.LeafPath,
+                                             grp.MemberPosition
+                                         });
 
             //return usersInChildrenLeaves;
             var outputList = await usersInChildrenLeaves
@@ -383,12 +465,12 @@ namespace Chamran.Deed.Info
             {
                 leafUserDtoList.Add(new LeafUserDto()
                 {
-                    UserId = row.User.Id,
-                    UserName = row.User.UserName,
-                    FirstName = row.User.Name,
-                    LastName = row.User.Surname,
+                    UserId = row.user.Id,
+                    UserName = row.user.UserName,
+                    FirstName = row.user.Name,
+                    LastName = row.user.Surname,
                     TenantId = 1,
-                    ProfilePictureId = row.User.ProfilePictureId,
+                    ProfilePictureId = row.user.ProfilePictureId,
                     LevelType = 2,
                     MemberPosition = row.MemberPosition,
 
@@ -408,7 +490,7 @@ namespace Chamran.Deed.Info
         public async Task<PagedResultDto<LeafUserDto>> GetUsersInOneLevelHigherParent(GetLeavesInput input)
         {
             if (AbpSession.UserId == null) throw new UserFriendlyException("User is not logged in!");
-            var userposition = await _organizationUserRepository.GetAll().FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId);
+            var userposition = await _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId && x.OrganizationChartFk.OrganizationId == input.OrganizationId);
             if (userposition == null) throw new UserFriendlyException("کاربر در درخت سطوح دسترسی حضور ندارد");
 
             var targetChart = await _lookup_organizationChartRepository.GetAsync(userposition.OrganizationChartId);
@@ -420,27 +502,20 @@ namespace Chamran.Deed.Info
             var leafPath = targetChart.LeafPath;
             var parentLeafPathWithoutLastPart = GetParentPath(leafPath);
 
-            var usersInOneLevelHigherParent = _userRepository.GetAll()
-                .Join(_organizationUserRepository.GetAll(),
-                    user => user.Id,
-                    orgUser => orgUser.UserId,
-                    (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
-                .Join(_lookup_organizationChartRepository.GetAll(),
-                    join => join.OrganizationChartId,
-                    chart => chart.Id,
-                    (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
-                .Join(_groupMemberRepository.GetAll(),
-                    join2 => join2.User.Id,
-                    grp => grp.UserId,
-                    (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
-                )
-                .Where(join => join.LeafPath == parentLeafPathWithoutLastPart)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
-                .Select(x => new
+            var usersInOneLevelHigherParent = (from user in _userRepository.GetAll()
+                join orgUser in _organizationUserRepository.GetAll() on user.Id equals orgUser.UserId
+                join chart in _lookup_organizationChartRepository.GetAll() on orgUser.OrganizationChartId equals chart
+                    .Id
+                join grp in _groupMemberRepository.GetAll() on user.Id equals grp.UserId
+                where chart.LeafPath == parentLeafPathWithoutLastPart
+                                               where !orgUser.IsGlobal
+                where string.IsNullOrWhiteSpace(input.Filter) ||
+                      user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
+                select new
                 {
-                    x.User,
-                    x.LeafPath,
-                    x.MemberPosition
+                    user,
+                    chart.LeafPath,
+                    grp.MemberPosition
                 });
 
             //return usersInOneLevelHigherParent;
@@ -452,12 +527,12 @@ namespace Chamran.Deed.Info
             {
                 leafUserDtoList.Add(new LeafUserDto()
                 {
-                    UserId = row.User.Id,
-                    UserName = row.User.UserName,
-                    FirstName = row.User.Name,
-                    LastName = row.User.Surname,
+                    UserId = row.user.Id,
+                    UserName = row.user.UserName,
+                    FirstName = row.user.Name,
+                    LastName = row.user.Surname,
                     TenantId = 1,
-                    ProfilePictureId = row.User.ProfilePictureId,
+                    ProfilePictureId = row.user.ProfilePictureId,
                     LevelType = 1,
                     MemberPosition = row.MemberPosition,
 
@@ -492,7 +567,6 @@ namespace Chamran.Deed.Info
         }
 
         [AbpAuthorize(AppPermissions.Pages_OrganizationUsers)]
-
         public async Task<PagedResultDto<LeafUserDto>> GetAllUsersForLeaf(GetAllUsersForLeafInput input)
         {
             var chartId = input.OrganizationChartId;
@@ -500,7 +574,8 @@ namespace Chamran.Deed.Info
             if (input.OrganizationChartId <= 0)
             {
                 if (AbpSession.UserId == null) throw new UserFriendlyException("User is not logged in!");
-                var userposition = await _organizationUserRepository.GetAll().FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId);
+                var userposition = await _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId && x.OrganizationChartFk.OrganizationId == input.OrganizationId);
+                //var userposition = await _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId && x.OrganizationChartFk.OrganizationId == input.OrganizationId);
                 if (userposition == null) throw new UserFriendlyException("کاربر در درخت سطوح دسترسی حضور ندارد");
                 chartId = userposition.OrganizationChartId;
                 filterUserId = true;
@@ -602,6 +677,7 @@ namespace Chamran.Deed.Info
                                   join grp in _groupMemberRepository.GetAll()
                                   on user.Id equals grp.UserId
                                   where chart.LeafPath == leafPath
+                                  where !orgUser.IsGlobal
                                   where !filterUserId || user.Id != AbpSession.UserId
                                   where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
                                   select new
@@ -620,6 +696,7 @@ namespace Chamran.Deed.Info
                                         on orgUser.OrganizationChartId equals chart.Id
                                         join grp in _groupMemberRepository.GetAll()
                                         on user.Id equals grp.UserId
+                                        where !orgUser.IsGlobal
                                         where chart.LeafPath.StartsWith(leafPath) && chart.LeafPath != leafPath
                                         where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
                                         select new
@@ -640,6 +717,7 @@ namespace Chamran.Deed.Info
                                               on orgUser.OrganizationChartId equals chart.Id
                                               join grp in _groupMemberRepository.GetAll()
                                               on user.Id equals grp.UserId
+                                              where !orgUser.IsGlobal
                                               where chart.LeafPath == parentLeafPathWithoutLastPart
                                               where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
                                               select new
@@ -685,8 +763,52 @@ namespace Chamran.Deed.Info
 
         }
 
+        [AbpAuthorize(AppPermissions.Pages_OrganizationUsers)]
+        public async Task<PagedResultDto<SameLeafDto>> GetAllUsersInLeaf(GetAllUsersInLeafInput input)
+        {
+            var chartId = input.OrganizationChartId;
+            var filterUserId = false;
+            if (input.OrganizationChartId <= 0)
+            {
+                throw new UserFriendlyException("شناسه شاخه می بایست بزرگتر از صفر باشد");
+            }
+
+            var users = _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).Include(x => x.UserFk)
+                .Where(x => x.OrganizationChartId == input.OrganizationChartId && !x.IsGlobal);
+            var joindUsers = from x in users
+                             join y in _groupMemberRepository.GetAll() on x.UserId equals y.UserId into joiner
+                             from y in joiner.DefaultIfEmpty()
+                             select new
+                             {
+                                 x.Id,
+                                 x.UserFk,
+                                 y.MemberPos,
+                                 y.MemberPosition,
+                                 x.UserId,
+
+                             };
+
+            var pagedAndFilteredOrganizationUsers = joindUsers
+                .OrderBy(input.Sorting ?? "id asc")
+                .PageBy(input);
+            var ls = new List<SameLeafDto>();
+            foreach (var row in pagedAndFilteredOrganizationUsers)
+            {
+                ls.Add(new SameLeafDto()
+                {
+                    FirstName = row.UserFk.Name,
+                    LastName = row.UserFk.Surname,
+                    MemberPosition = row.MemberPosition,
+                    UserId = row.UserId,
+                    UserName = row.UserFk.UserName
+                });
+            }
 
 
-
+            return new PagedResultDto<SameLeafDto>(
+                users.Count(),
+                ls
+            );
+        }
     }
 }
