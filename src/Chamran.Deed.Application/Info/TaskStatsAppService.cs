@@ -32,6 +32,8 @@ namespace Chamran.Deed.Info
 
         }
 
+
+
         public virtual async Task<PagedResultDto<GetTaskStatForViewDto>> GetAll(GetAllTaskStatsInput input)
         {
 
@@ -173,5 +175,33 @@ namespace Chamran.Deed.Info
             );
         }
 
+        public async Task<GetTaskStatDto> GetTaskStat(Guid sharedTaskId)
+        {
+            var entity = await _taskStatRepository.GetAll().Include(x => x.DoneByFk)
+                .FirstOrDefaultAsync(x => x.SharedTaskId == sharedTaskId);
+            if (entity != null)
+            {
+
+                return new GetTaskStatDto
+                {
+                    DoneBy = entity.DoneBy,
+                    DoneByName = entity.DoneByFk.Name,
+                    DoneByLastName = entity.DoneByFk.Surname,
+                    SharedTaskId = entity.SharedTaskId,
+                    Caption = entity.Caption,
+                    CreationTime = entity.CreationTime,
+                    DoneByProfilePicture = entity.DoneByFk.ProfilePictureId,
+                    Status = entity.Status,
+                    
+                };
+            }
+            else
+            {
+                return null;
+            }
+            
+
+
+        }
     }
 }

@@ -15,6 +15,8 @@ namespace Chamran.Deed.Info.Dtos
 
         public bool IsSpecial { get; set; }
 
+        public bool IsPublished { get; set; }
+
         public string PostTitle { get; set; }
 
         public int? GroupMemberId { get; set; }

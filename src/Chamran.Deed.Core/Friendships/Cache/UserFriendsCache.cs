@@ -7,6 +7,7 @@ using Abp.Dependency;
 using Abp.Domain.Uow;
 using Abp.MultiTenancy;
 using Chamran.Deed.Authorization.Users;
+using Microsoft.EntityFrameworkCore;
 
 namespace Chamran.Deed.Friendships.Cache
 {

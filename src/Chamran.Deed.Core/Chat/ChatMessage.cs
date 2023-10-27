@@ -35,15 +35,17 @@ namespace Chamran.Deed.Chat
 
         public Guid? SharedMessageId { get; set; }
 
+        public string  ForwardedFromName { get; set; }
+        public long ReplyMessageId { get; set; }
 
-        public ChatMessage(
-            UserIdentifier user,
+
+        public ChatMessage(UserIdentifier user,
             UserIdentifier targetUser,
             ChatSide side,
             string message,
             ChatMessageReadState readState,
             Guid sharedMessageId,
-            ChatMessageReadState receiverReadState)
+            ChatMessageReadState receiverReadState, string forwardedFromName="",long? replyMessageId=null)
         {
             UserId = user.UserId;
             TenantId = user.TenantId;
@@ -54,8 +56,9 @@ namespace Chamran.Deed.Chat
             ReadState = readState;
             SharedMessageId = sharedMessageId;
             ReceiverReadState = receiverReadState;
-
             CreationTime = Clock.Now;
+            ForwardedFromName = forwardedFromName;
+            replyMessageId = replyMessageId;
         }
 
         public void ChangeReadState(ChatMessageReadState newState)

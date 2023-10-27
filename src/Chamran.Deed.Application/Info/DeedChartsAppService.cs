@@ -17,6 +17,7 @@ using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Chamran.Deed.Storage;
+using Chamran.Deed.Authorization.Users;
 
 namespace Chamran.Deed.Info
 {
@@ -26,17 +27,26 @@ namespace Chamran.Deed.Info
         private readonly IRepository<DeedChart> _deedChartRepository;
         private readonly IRepository<Organization, int> _lookup_organizationRepository;
         private readonly IRepository<DeedChart, int> _lookup_deedChartRepository;
+        private readonly IRepository<User, long> _userRepository;
+        private readonly IRepository<GroupMember> _groupMemberRepository;
 
-        public DeedChartsAppService(IRepository<DeedChart> deedChartRepository, IRepository<Organization, int> lookup_organizationRepository, IRepository<DeedChart, int> lookup_deedChartRepository)
+
+        public DeedChartsAppService(IRepository<DeedChart> deedChartRepository,
+            IRepository<Organization, int> lookup_organizationRepository,
+            IRepository<DeedChart, int> lookup_deedChartRepository, IRepository<User, long> userRepository,
+            IRepository<GroupMember> groupMemberRepository)
         {
             _deedChartRepository = deedChartRepository;
             _lookup_organizationRepository = lookup_organizationRepository;
             _lookup_deedChartRepository = lookup_deedChartRepository;
-
+            _userRepository = userRepository;
+            _groupMemberRepository = groupMemberRepository;
         }
 
         public virtual async Task<PagedResultDto<GetDeedChartForViewDto>> GetAll(GetAllDeedChartsInput input)
         {
+            if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
+            var user = await _userRepository.GetAsync(AbpSession.UserId.Value);
 
             var filteredDeedCharts = _deedChartRepository.GetAll()
                         .Include(e => e.OrganizationFk)
@@ -46,6 +56,32 @@ namespace Chamran.Deed.Info
                         .WhereIf(!string.IsNullOrWhiteSpace(input.LeafPathFilter), e => e.LeafPath.Contains(input.LeafPathFilter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationOrganizationNameFilter), e => e.OrganizationFk != null && e.OrganizationFk.OrganizationName == input.OrganizationOrganizationNameFilter)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.DeedChartCaptionFilter), e => e.ParentFk != null && e.ParentFk.Caption == input.DeedChartCaptionFilter);
+
+
+            if (!user.IsSuperUser)
+            {
+                var orgQuery =
+                    from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
+                    join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
+                        .OrganizationId into joined2
+                    from grpMember in joined2.DefaultIfEmpty()
+                    where grpMember.UserId == AbpSession.UserId
+                    select org;
+
+                if (!orgQuery.Any())
+                {
+                    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+                }
+                var orgEntity = orgQuery.First();
+                //filteredOrganizationCharts = filteredOrganizationCharts.Where(x => x.OrganizationId == orgEntity.Id);
+                var headerQuery = from x in _deedChartRepository.GetAll()
+                    where x.OrganizationId == orgEntity.Id
+                    select x;
+                if (!headerQuery.Any()) throw new UserFriendlyException("شاخه مادر برای سازمان انتخابی یافت نشد");
+                var headerEntity = headerQuery.First();
+                filteredDeedCharts =
+                    filteredDeedCharts.Where(x => x.LeafPath.StartsWith(headerEntity.LeafPath));
+            }
 
             var pagedAndFilteredDeedCharts = filteredDeedCharts
                 .OrderBy(input.Sorting ?? "id asc")
@@ -60,7 +96,8 @@ namespace Chamran.Deed.Info
 
                              select new
                              {
-
+                                 o.OrganizationId,
+                                 o.ParentId,
                                  o.Caption,
                                  o.LeafPath,
                                  Id = o.Id,
@@ -79,7 +116,8 @@ namespace Chamran.Deed.Info
                 {
                     DeedChart = new DeedChartDto
                     {
-
+                        ParentId = o.ParentId,
+                        OrganizationId = o.OrganizationId,
                         Caption = o.Caption,
                         LeafPath = o.LeafPath,
                         Id = o.Id,
@@ -158,7 +196,14 @@ namespace Chamran.Deed.Info
         {
             var deedChart = ObjectMapper.Map<DeedChart>(input);
 
+            // Fetch the parent organization chart using the ParentId from the input
+            if (input.ParentId.HasValue)
+            {
+                deedChart.ParentFk = await _deedChartRepository.GetAsync(input.ParentId.Value);
+            }
             await _deedChartRepository.InsertAsync(deedChart);
+            await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the role.
+            deedChart.GenerateLeafPath();
 
         }
 
@@ -167,6 +212,7 @@ namespace Chamran.Deed.Info
         {
             var deedChart = await _deedChartRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, deedChart);
+            deedChart.GenerateLeafPath();
 
         }
 
@@ -236,5 +282,17 @@ namespace Chamran.Deed.Info
             );
         }
 
+        [AbpAuthorize(AppPermissions.Pages_DeedCharts)]
+        public async Task SetOrganizationForChartLeaf(SetOrganizationForChartLeafInput input)
+        {
+            var query = from x in _lookup_deedChartRepository.GetAll()
+                where x.Id == input.OrganizationChartId
+                select x;
+            if (!query.Any()) throw new UserFriendlyException("شاخه مورد نظر یافت نشد");
+            query.First().OrganizationId = input.OrganizationId;
+            await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the edition.
+
+
+        }
     }
 }

@@ -4,6 +4,7 @@ using Chamran.Deed.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Chamran.Deed.Migrations
 {
     [DbContext(typeof(DeedDbContext))]
-    partial class DeedDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231022070647_leafPathNotReq")]
+    partial class leafPathNotReq
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1747,9 +1750,6 @@ namespace Chamran.Deed.Migrations
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ForwardedFromName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasMaxLength(4096)
@@ -1760,9 +1760,6 @@ namespace Chamran.Deed.Migrations
 
                     b.Property<int>("ReceiverReadState")
                         .HasColumnType("int");
-
-                    b.Property<long>("ReplyMessageId")
-                        .HasColumnType("bigint");
 
                     b.Property<Guid?>("SharedMessageId")
                         .HasColumnType("uniqueidentifier");
@@ -2082,62 +2079,6 @@ namespace Chamran.Deed.Migrations
                     b.ToTable("DeedCharts");
                 });
 
-            modelBuilder.Entity("Chamran.Deed.Info.GetEntriesDetail", b =>
-                {
-                    b.Property<string>("Caption")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.Property<string>("IssuerFirstName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("IssuerId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("IssuerLastName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IssuerMemberPos")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("IssuerProfilePicture")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int?>("ParentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PostId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ReceiverFirstName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("ReceiverId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ReceiverLastName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ReceiverMemberPos")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid?>("ReceiverProfilePicture")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("SharedTaskId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.ToTable("EntriesDetail");
-                });
-
             modelBuilder.Entity("Chamran.Deed.Info.GetEntriesDigest", b =>
                 {
                     b.Property<string>("Caption")
@@ -2151,9 +2092,6 @@ namespace Chamran.Deed.Migrations
 
                     b.Property<int>("Id")
                         .HasColumnType("int");
-
-                    b.Property<bool?>("IsPublished")
-                        .HasColumnType("bit");
 
                     b.Property<bool?>("IsSpecial")
                         .HasColumnType("bit");
@@ -2309,9 +2247,6 @@ namespace Chamran.Deed.Migrations
                     b.Property<long?>("CreatorUserId")
                         .HasColumnType("bigint");
 
-                    b.Property<bool>("IsGlobal")
-                        .HasColumnType("bit");
-
                     b.Property<int>("OrganizationChartId")
                         .HasColumnType("int");
 
@@ -2352,9 +2287,6 @@ namespace Chamran.Deed.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsPublished")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsSpecial")
@@ -2595,9 +2527,6 @@ namespace Chamran.Deed.Migrations
 
                     b.Property<long?>("CreatorUserId")
                         .HasColumnType("bigint");
-
-                    b.Property<bool>("IsPrivate")
-                        .HasColumnType("bit");
 
                     b.Property<long>("IssuerId")
                         .HasColumnType("bigint");

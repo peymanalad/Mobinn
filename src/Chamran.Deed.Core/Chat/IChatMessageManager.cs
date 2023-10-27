@@ -11,6 +11,11 @@ namespace Chamran.Deed.Chat
 
         Task SendMessageAsync(UserIdentifier sender, UserIdentifier receiver, string message, string senderTenancyName, string senderUserName, Guid? senderProfilePictureId);
 
+        Task ForwardMessageAsync(UserIdentifier sender, UserIdentifier receiver, string message, string senderTenancyName, string senderUserName, string forwardedFromName);
+
+        Task ReplyMessageAsync(UserIdentifier sender, UserIdentifier receiver, string message, string senderTenancyName, string senderUserName, long replyMessageId);
+
+
         Task EditMessageAsync(UserIdentifier sender, UserIdentifier receiver, Guid sharedMessageId, string message, string senderTenancyName, string senderUserName, Guid? senderProfilePictureId);
 
         long Save(ChatMessage message);

@@ -128,35 +128,37 @@ namespace Chamran.Deed.People
             return output;
         }
 
-        public virtual async Task CreateOrEdit(CreateOrEditOrganizationDto input)
+        public virtual async Task<int> CreateOrEdit(CreateOrEditOrganizationDto input)
         {
             if (input.Id == null)
             {
-                await Create(input);
+              return  await Create(input);
             }
             else
             {
-                await Update(input);
+               return await Update(input);
             }
         }
 
         [AbpAuthorize(AppPermissions.Pages_Organizations_Create)]
-        protected virtual async Task Create(CreateOrEditOrganizationDto input)
+        protected virtual async Task<int> Create(CreateOrEditOrganizationDto input)
         {
             var organization = ObjectMapper.Map<Organization>(input);
 
             await _organizationRepository.InsertAsync(organization);
             organization.OrganizationLogo = await GetBinaryObjectFromCache(input.OrganizationLogoToken);
-
+            await CurrentUnitOfWork.SaveChangesAsync(); //To get new user's Id.
+            return organization.Id;
         }
 
         [AbpAuthorize(AppPermissions.Pages_Organizations_Edit)]
-        protected virtual async Task Update(CreateOrEditOrganizationDto input)
+        protected virtual async Task<int> Update(CreateOrEditOrganizationDto input)
         {
             var organization = await _organizationRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, organization);
             organization.OrganizationLogo = await GetBinaryObjectFromCache(input.OrganizationLogoToken);
-
+            await CurrentUnitOfWork.SaveChangesAsync(); //To get new user's Id.
+            return organization.Id;
         }
 
         [AbpAuthorize(AppPermissions.Pages_Organizations_Delete)]

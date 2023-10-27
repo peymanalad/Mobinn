@@ -29,7 +29,7 @@ namespace Chamran.Deed.Info
 
         Task RemovePostFileFile(EntityDto input);
 
-        Task<PagedResultDto<GetPostCategoriesForViewDto>> GetPostCategoriesForView();
+        Task<PagedResultDto<GetPostCategoriesForViewDto>> GetPostCategoriesForView(int organizationId);
 
         Task<PagedResultDto<GetPostsForViewDto>> GetPostsForView(int postGroupId);
        

@@ -19,5 +19,6 @@ namespace Chamran.Deed.Info
 
         Task<PagedResultDto<TaskStatUserLookupTableDto>> GetAllUserForLookupTable(GetAllForLookupTableInput input);
 
+        Task<GetTaskStatDto> GetTaskStat(Guid sharedTaskId);
     }
 }

@@ -49,6 +49,8 @@ using Chamran.Deed.Web.Authentication.External;
 using Chamran.Deed.Web.Common;
 using Chamran.Deed.Authorization.Delegation;
 using Chamran.Deed.Authorization.Users.Profile.Cache;
+using Chamran.Deed.People;
+using Microsoft.EntityFrameworkCore;
 
 namespace Chamran.Deed.Web.Controllers
 {
@@ -80,9 +82,9 @@ namespace Chamran.Deed.Web.Controllers
         public IRecaptchaValidator RecaptchaValidator { get; set; }
         private readonly IUserDelegationManager _userDelegationManager;
         private readonly IRepository<User, long> _userRepository;
+        private readonly IRepository<GroupMember> _groupMemberRepository;
         private readonly UserClaimsPrincipalFactory _principalFactory;
-        public TokenAuthController(
-            LogInManager logInManager,
+        public TokenAuthController(LogInManager logInManager,
             ITenantCache tenantCache,
             AbpLoginResultTypeHelper abpLoginResultTypeHelper,
             TokenAuthConfiguration configuration,
@@ -105,7 +107,7 @@ namespace Chamran.Deed.Web.Controllers
             AbpUserClaimsPrincipalFactory<User, Role> claimsPrincipalFactory,
             IUserDelegationManager userDelegationManager,
             IRepository<User, long> userRepository,
-            UserClaimsPrincipalFactory principalFactory)
+            UserClaimsPrincipalFactory principalFactory, IRepository<GroupMember> groupMember)
         {
             _logInManager = logInManager;
             _tenantCache = tenantCache;
@@ -132,6 +134,7 @@ namespace Chamran.Deed.Web.Controllers
             _userDelegationManager = userDelegationManager;
             _userRepository = userRepository;
             _principalFactory = principalFactory;
+            _groupMemberRepository = groupMember;
 
         }
 
@@ -288,7 +291,7 @@ namespace Chamran.Deed.Web.Controllers
                 ), TimeSpan.FromDays(model.ExpireDays)
             );
 
-            return new AuthenticateResultModel
+            var result = new AuthenticateResultModel
             {
                 AccessToken = accessToken,
                 ExpireInSeconds = Convert.ToInt32(TimeSpan.FromDays(model.ExpireDays).TotalSeconds),
@@ -297,8 +300,20 @@ namespace Chamran.Deed.Web.Controllers
                 EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
                 TwoFactorRememberClientToken = null,//twoFactorRememberClientToken,
                 UserId = loginResult.Id,
-                ReturnUrl = returnUrl
+                ReturnUrl = returnUrl,
+                JoinedOrganizations = new List<JoinedOrganizationDto>()
             };
+            var query = _groupMemberRepository.GetAll().Include(x => x.UserFk).Include(x=>x.OrganizationFk).Where(x => x.UserId == loginResult.Id);
+            foreach (var groupMember in query)
+            {
+                result.JoinedOrganizations.Add(new JoinedOrganizationDto()
+                {
+                    OrganizationId = groupMember.OrganizationId,
+                    OrganizationName = groupMember.OrganizationFk?.OrganizationName??"",
+                    OrganizationPicture = groupMember.OrganizationFk?.OrganizationLogo
+                });
+            }
+            return result;
             //(int)_configuration.AccessTokenExpiration.TotalSeconds,
         }
 

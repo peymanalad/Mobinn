@@ -15,7 +15,7 @@ namespace Chamran.Deed.People
 
         Task<GetOrganizationForEditOutput> GetOrganizationForEdit(EntityDto input);
 
-        Task CreateOrEdit(CreateOrEditOrganizationDto input);
+        Task<int> CreateOrEdit(CreateOrEditOrganizationDto input);
 
         Task Delete(EntityDto input);
 

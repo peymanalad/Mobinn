@@ -66,19 +66,7 @@ namespace Chamran.Deed.Web.Chat.SignalR
                     return;
                 }
                 await signalRClient.SendAsync("getChatMessage", _objectMapper.Map<ChatMessageDto>(message));
-                if (client.UserId.HasValue)
-                    await _notificationPublisher.PublishAsync(
-                        AppNotificationNames.ChatMessage,
-                        new MessageNotificationData(JsonConvert.SerializeObject(message, new JsonSerializerSettings
-                        {
-                            ContractResolver = new DefaultContractResolver
-                            {
-                                NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
-                            }
-                        })),
-                        severity: NotificationSeverity.Info,
-                        userIds: new UserIdentifier[] { new(client.TenantId, client.UserId.Value) }
-                    );
+              
             }
         }
 
