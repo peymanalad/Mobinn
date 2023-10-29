@@ -24,90 +24,24 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
 {
     public class DashboardHelper
     {
-        /*public static StiReport CreateTemplate(string appPath)
-        {
-            var report = StiReport.CreateNewDashboard();
-            var dashboard = report.Pages[0] as StiDashboard;
-
-            //var dataPath = Path.Combine(appPath, "Data/Demo.xml");
-            //var data = new DataSet();
-            //data.ReadXml(dataPath);
-
-            //report.RegData(data);
-            report.Dictionary.Synchronize();
-
-            var tableElement = new StiTableElement
-            {
-                Left = 0,
-                Top = 0,
-                Width = 700,
-                Height = 500,
-                Border =
-                {
-                    Side = StiBorderSides.All
-                },
-                BackColor = Color.LightGray,
-                Name = "Example"
-            };
-
-            var dataBase = new StiDimensionColumn
-            {
-                Expression = "Products.ProductID"
-            };
-            tableElement.Columns.Add(dataBase);
-
-            var dataBase1 = new StiDimensionColumn
-            {
-                Expression = "Products.ProductName"
-            };
-            tableElement.Columns.Add(dataBase1);
-
-            var dataBase2 = new StiDimensionColumn
-            {
-                Expression = "Products.UnitPrice"
-            };
-            tableElement.Columns.Add(dataBase2);
-
-            var filter1 = new StiDataFilterRule
-            {
-                Condition = StiDataFilterCondition.BeginningWith,
-                Path = "Products.ProductID",
-                Value = "1"
-            };
-            tableElement.DataFilters.Add(filter1);
-
-            var filter2 = new StiDataFilterRule
-            {
-                Condition = StiDataFilterCondition.EndingWith,
-                Path = "Products.UnitPrice",
-                Value = "1"
-            };
-            tableElement.DataFilters.Add(filter2);
-
-            dashboard?.Components.Add(tableElement);
-
-            return report;
-        }*/
-
         public static async Task<StiReport> GetCurrentOrganizationDashboard(IRepository<Report> reportRepository,
-            IRepository<Organization> organizationRepository, IRepository<GroupMember> groupMemberRepository,
-            long userId, bool isSuperUser)
+              IRepository<Organization> organizationRepository, IRepository<GroupMember> groupMemberRepository,
+              long userId, bool isSuperUser)
         {
             if (isSuperUser)
             {
                 var query = reportRepository.GetAll().Where(x => x.IsDashboard && !x.IsDeleted && x.IsSuperUser);
-                string reportContent = null;
                 if (query.Any())
                 {
                     var result = await query.FirstAsync();
-                    reportContent = result.ReportContent;
-
+                    var reportContent = result.ReportContent;
+                    return GetReportFromContent(reportContent);
                 }
 
-                var emptyReport = GetReportFromContent(reportContent);
+                var emptyReport = GetTemplateDashboard();
                 await reportRepository.InsertAsync(new Report()
                 {
-                
+
                     IsSuperUser = true,
                     IsDashboard = true,
                     ReportContent = emptyReport.SaveEncryptedReportToString("DrM@s"),
@@ -118,19 +52,6 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
 
                 return emptyReport;
 
-                //var orgQuery =
-                //    from org in organizationRepository.GetAll().Where(x => !x.IsDeleted)
-                //    join grpMember in groupMemberRepository.GetAll() on org.Id equals grpMember
-                //        .OrganizationId into joined2
-                //    from grpMember in joined2.DefaultIfEmpty()
-                //    where grpMember.UserId == userId
-                //    select org;
-
-                //if (!orgQuery.Any())
-                //{
-                //    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
-                //}
-                //return CreateEmptyReport(userId, null, "کلی", reportRepository);
             }
             else
             {
@@ -143,15 +64,15 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
                              {
                                  report.ReportContent
                              };
-                string reportContent = null;
                 if (query2.Any())
                 {
                     var result = await query2.FirstAsync();
-                    reportContent = result.ReportContent;
-
+                    var reportContent = result.ReportContent;
+                    return GetReportFromContent(reportContent);
+                   
                 }
 
-                if (!string.IsNullOrEmpty(reportContent)) return GetReportFromContent(reportContent);
+                
                 var orgQuery =
                     from org in organizationRepository.GetAll().Where(x => !x.IsDeleted)
                     join grpMember in groupMemberRepository.GetAll() on org.Id equals grpMember
@@ -324,11 +245,10 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
             var sqlconbuilder = new SqlConnectionStringBuilder(cn)
             {
                 ConnectTimeout = 180,
-                //UserID = "",
-                //Password = ""
+
             };
             dashboard.Dictionary.Databases.Add(new StiSqlDatabase("DeedDb", "DeedDb", sqlconbuilder.ConnectionString, false));
-            //dashboard.Dictionary.Synchronize();
+
         }
 
         public static void MapDataToReportWithPassword(StiReport dashboard, IConfigurationRoot _appConfiguration)
@@ -344,27 +264,9 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
                 ConnectTimeout = 180,
             };
             dashboard.Dictionary.Databases.Add(new StiSqlDatabase("DeedDb", "DeedDb", sqlconbuilder.ConnectionString, false));
-            //dashboard.Dictionary.Synchronize();
+
         }
 
-        //public static void BundleDataToReport(StiReport dashboard, IConfigurationRoot configuration)
-        //{
-        //foreach (var stiDatabase in dashboard.Dictionary.Databases.Items)
-        //{
-        //    if (stiDatabase.ConnectionType == StiConnectionType.Rest &&
-        //        stiDatabase.ConnectionOrder == StiConnectionOrder.GraphQLDataSource)
-        //    {
-        //        Console.WriteLine(stiDatabase);
-
-        //        var endpoint = ((StiGraphQLDatabase)stiDatabase).EndPoint;
-        //        var query= ((StiGraphQLDatabase)stiDatabase).EndPoint;
-        //        var enc=StiEncryption.Decrypt(((StiGraphQLDatabase)stiDatabase).ConnectionStringEncrypted, "8pTP5X15uKADcSw7");
-        //        Console.WriteLine(enc);
-
-        //    }
-        //}
-        //dashboard.Dictionary.Databases.Add(new StiSqlDatabase("DeedDb", sqlconbuilder.ConnectionString));
-        //}
 
 
 
