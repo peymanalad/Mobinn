@@ -98,7 +98,7 @@ namespace Chamran.Deed.Web.Controllers
                 .OrderByDescending(m => m.CreationTime)
                 .FirstOrDefault();
 
-            if (latestUpdate == null || latestUpdate.UpdateFile == null)
+            if (latestUpdate?.UpdateFile == null)
             {
                 return NotFound("File not found");
             }
@@ -113,12 +113,24 @@ namespace Chamran.Deed.Web.Controllers
             var contentType = "application/octet-stream";
             var fileName = "Deed" + latestUpdate.BuildNo + ".apk";
 
-            // Create a stream from the byte array
             var stream = new MemoryStream(fileObject.Bytes);
 
-            // Return the stream as a FileStreamResult
-            return File(stream, contentType, fileName);
+            // Create a FileStreamResult to stream the file
+            var result = new FileStreamResult(stream, contentType)
+            {
+                FileDownloadName = fileName
+            };
+
+            // Set the response headers to enable streaming
+            Response.Headers.Add("Content-Disposition", "inline; filename=" + fileName);
+
+            // Important: Clear the response content, so it's not stuck with previous content
+            await Response.Body.FlushAsync();
+            Response.Body.Close();
+
+            return result;
         }
+
 
 
         [DisableAuditing]

@@ -272,7 +272,7 @@ namespace Chamran.Deed.Info
         {
             var organizationChart = await _organizationChartRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, organizationChart);
-            organizationChart.GenerateLeafPath();
+            //organizationChart.GenerateLeafPath();
 
 
         }

@@ -1,4 +1,5 @@
-﻿using Chamran.Deed.Authorization.Users;
+﻿using System;
+using Chamran.Deed.Authorization.Users;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using Abp.Linq.Extensions;
@@ -167,10 +168,10 @@ namespace Chamran.Deed.People
 .PageBy(input);
 
             var groupMembers = from o in pagedAndFilteredGroupMembers
-                               //join o1 in _groupMemberRepository.GetAll() on o.Id equals o1.Id into j1
-                               //from s1 in j1.DefaultIfEmpty()
-                               //join o2 in _lookup_organizationRepository.GetAll() on s1.OrganizationId equals o2.Id into j2
-                               //from s2 in j2.DefaultIfEmpty()
+                                   //join o1 in _groupMemberRepository.GetAll() on o.Id equals o1.Id into j1
+                                   //from s1 in j1.DefaultIfEmpty()
+                                   //join o2 in _lookup_organizationRepository.GetAll() on s1.OrganizationId equals o2.Id into j2
+                                   //from s2 in j2.DefaultIfEmpty()
                                select new
                                {
                                    o.OrganizationId,
@@ -180,7 +181,7 @@ namespace Chamran.Deed.People
                                    o.UserFk.NationalId,
                                    o.UserFk.Name,
                                    o.UserFk.Surname,
-                                   OrganizationGroupGroupName= o.OrganizationFk.OrganizationName
+                                   OrganizationGroupGroupName = o.OrganizationFk.OrganizationName
                                    //MemberPos = (int?)s1.MemberPos ?? 0,
                                    //MemberPosition = s1.MemberPosition ?? "",
                                    //UserId = o.Id,
@@ -338,7 +339,7 @@ namespace Chamran.Deed.People
             //if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
             //var currentUser = await _lookup_userRepository.GetAsync(AbpSession.UserId.Value);
             var query = from au in _lookup_userRepository.GetAll()
-                        join gm in _groupMemberRepository.GetAll().WhereIf(input.OrganizationId.HasValue,x=>x.OrganizationId==input.OrganizationId.Value) on au.Id equals gm.UserId into groupJoin
+                        join gm in _groupMemberRepository.GetAll().WhereIf(input.OrganizationId.HasValue, x => x.OrganizationId == input.OrganizationId.Value) on au.Id equals gm.UserId into groupJoin
                         from gm in groupJoin.DefaultIfEmpty()
                         where gm == null
                         select au;
@@ -430,6 +431,32 @@ namespace Chamran.Deed.People
                 lookupTableDtoList
             );
         }
+        [AbpAuthorize(AppPermissions.Pages_GroupMembers)]
+        public Task<AdminInformationDto> GetAdminInformationByOrganization(int organizationId)
+        {
+            if (!_groupMemberRepository.GetAll().Any(x => x.OrganizationId == organizationId))
+                throw new UserFriendlyException("سازمان مورد نظر کاربری ندارد");
+            var query = _groupMemberRepository.GetAll().Include(x => x.UserFk).Include(x=>x.UserFk.Roles)
+                .Where(x => x.OrganizationId == organizationId);
+            foreach (var groupMember in query)
+            {
+                if (groupMember.UserFk.Roles.Where(userFkRole => userFkRole != null).Any(userFkRole => userFkRole.RoleId == 2))
+                {
+                    return Task.FromResult(new AdminInformationDto()
+                    {
+                        UserId = groupMember.UserId ?? 0,
+                        NationalId = groupMember.UserFk.NationalId,
+                        EmailAddress = groupMember.UserFk.EmailAddress,
+                        IsActive = groupMember.UserFk.IsActive,
+                        Name = groupMember.UserFk.Name,
+                        UserName = groupMember.UserFk.UserName,
+                        SurName = groupMember.UserFk.Surname
 
+                    });
+                }
+            }
+
+            throw new UserFriendlyException("کاربر ادمین در سازمان انتخابی یافت نشد");
+        }
     }
 }

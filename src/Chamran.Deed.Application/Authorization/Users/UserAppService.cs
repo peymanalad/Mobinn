@@ -91,7 +91,7 @@ namespace Chamran.Deed.Authorization.Users
             IRepository<UserOrganizationUnit, long> userOrganizationUnitRepository,
             IRepository<OrganizationUnitRole, long> organizationUnitRoleRepository,
             IOptions<UserOptions> userOptions, IEmailSettingsChecker emailSettingsChecker,
-            IRepository<User, long> userRepository, IRepository<Organization, int> lookupOrganizationRepository, IRepository<GroupMember> groupMemberRepository, IOrganizationsAppService organizationsAppService, IGroupMembersAppService groupMembersAppService, IOrganizationChartsAppService organizationChartsAppService, IOrganizationUsersAppService organizationUsersAppService)
+            IRepository<User, long> userRepository, IRepository<Organization, int> lookupOrganizationRepository, IRepository<GroupMember> groupMemberRepository, IOrganizationsAppService organizationsAppService, IGroupMembersAppService groupMembersAppService, IOrganizationChartsAppService organizationChartsAppService, IOrganizationUsersAppService organizationUsersAppService, IDeedChartsAppService deedChartsAppService)
         {
             _roleManager = roleManager;
             _userEmailer = userEmailer;
@@ -119,6 +119,7 @@ namespace Chamran.Deed.Authorization.Users
             _groupMembersAppService = groupMembersAppService;
             _organizationChartsAppService = organizationChartsAppService;
             _organizationUsersAppService = organizationUsersAppService;
+            _deedChartsAppService = deedChartsAppService;
             AppUrlService = NullAppUrlService.Instance;
         }
 
@@ -359,7 +360,8 @@ namespace Chamran.Deed.Authorization.Users
             var user = ObjectMapper.Map<User>(input.User); //Passwords is not mapped (see mapping configuration)
             user.UserName = input.User.PhoneNumber;
             user.TenantId = AbpSession.TenantId;
-
+            user.NationalId = input.User.NationalId;
+            user.PhoneNumber = input.User.PhoneNumber;
             //Set password
             if (!input.User.Password.IsNullOrEmpty())
             {
@@ -397,48 +399,7 @@ namespace Chamran.Deed.Authorization.Users
             //Organization Units
             await UserManager.SetOrganizationUnitsAsync(user, new long[] { 1 });
 
-            ////Send activation email
-            //if (input.SendActivationEmail)
-            //{
-            //    user.SetNewEmailConfirmationCode();
-            //    await _userEmailer.SendEmailActivationLinkAsync(
-            //        user,
-            //        AppUrlService.CreateEmailActivationUrlFormat(AbpSession.TenantId),
-            //        input.User.Password
-            //    );
-            //}
-
-            //if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
-            //var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
-
-            //if (!currentUser.IsSuperUser)
-            //{
-            //    var orgQuery =
-            //       from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
-            //       join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
-            //           .OrganizationId into joined2
-            //       from grpMember in joined2.DefaultIfEmpty()
-            //       where grpMember.UserId == AbpSession.UserId
-            //       select org;
-
-            //    if (!orgQuery.Any())
-            //    {
-            //        throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
-            //    }
-            //    var orgEntity = orgQuery.First();
-
-            //    var groupMember = new GroupMember()
-            //    {
-            //        MemberPos = 0,
-            //        MemberPosition = "",
-            //        UserId = user.Id,
-            //        OrganizationId = orgEntity.Id,
-
-            //    };
-            //    await _groupMemberRepository.InsertAsync(groupMember);
-            //    //await CurrentUnitOfWork.SaveChangesAsync(); //To get new user's Id.
-            //}
-            //return user.Id;
+           
 
             var organizationId = await _organizationAppService.CreateOrEdit(new CreateOrEditOrganizationDto()
             {

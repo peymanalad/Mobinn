@@ -212,7 +212,7 @@ namespace Chamran.Deed.Info
         {
             var deedChart = await _deedChartRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, deedChart);
-            deedChart.GenerateLeafPath();
+            //deedChart.GenerateLeafPath();
 
         }
 

@@ -23,7 +23,8 @@ namespace SmsBehestan
             _httpClient = new HttpClient();
             _settings = new Lazy<JsonSerializerSettings>();
             //_baseUrl = "https://payamak.isikato.ir/";
-            _baseUrl = "http://www.mspos.ir:50001";
+            //_baseUrl = "http://www.mspos.ir:50001";
+            _baseUrl = "https://sms.ideed.ir";
         }
 
 
