@@ -131,8 +131,16 @@ namespace Chamran.Deed.Common
             var softwareUpdate = ObjectMapper.Map<SoftwareUpdate>(input);
 
             await _softwareUpdateRepository.InsertAsync(softwareUpdate);
-            softwareUpdate.UpdateFile = await GetBinaryObjectFromCache(input.UpdateFileToken,softwareUpdate.Id);
+            try
+            {
+                if (!string.IsNullOrEmpty(input.UpdateFileToken))
+                    softwareUpdate.UpdateFile = await GetBinaryObjectFromCache(input.UpdateFileToken, softwareUpdate.Id);
 
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
         }
 
         [AbpAuthorize(AppPermissions.Pages_SoftwareUpdates_Edit)]
@@ -140,7 +148,17 @@ namespace Chamran.Deed.Common
         {
             var softwareUpdate = await _softwareUpdateRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, softwareUpdate);
-            softwareUpdate.UpdateFile = await GetBinaryObjectFromCache(input.UpdateFileToken, softwareUpdate.Id);
+            try
+            {
+                if (!string.IsNullOrEmpty(input.UpdateFileToken))
+                    softwareUpdate.UpdateFile = await GetBinaryObjectFromCache(input.UpdateFileToken, softwareUpdate.Id);
+
+
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
 
         }
 
@@ -150,7 +168,7 @@ namespace Chamran.Deed.Common
             await _softwareUpdateRepository.DeleteAsync(input.Id);
         }
 
-        private async Task<Guid?> GetBinaryObjectFromCache(string fileToken,int? refId)
+        private async Task<Guid?> GetBinaryObjectFromCache(string fileToken, int? refId)
         {
             if (fileToken.IsNullOrWhiteSpace())
             {
@@ -164,7 +182,7 @@ namespace Chamran.Deed.Common
                 throw new UserFriendlyException("There is no such file with the token: " + fileToken);
             }
 
-            var storedFile = new BinaryObject(AbpSession.TenantId, fileCache.File,BinarySourceType.SoftwareUpdate, fileCache.FileName);
+            var storedFile = new BinaryObject(AbpSession.TenantId, fileCache.File, BinarySourceType.SoftwareUpdate, fileCache.FileName);
             await _binaryObjectManager.SaveAsync(storedFile);
             if (refId != null) storedFile.SourceId = refId;
             return storedFile.Id;

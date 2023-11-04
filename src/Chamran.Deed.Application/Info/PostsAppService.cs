@@ -207,6 +207,15 @@ namespace Chamran.Deed.Info
             }
 
             output.PostFileFileName = await GetBinaryFileName(post.PostFile);
+            output.PostFile2FileName = await GetBinaryFileName(post.PostFile2);
+            output.PostFile3FileName = await GetBinaryFileName(post.PostFile3);
+            output.PostFile4FileName = await GetBinaryFileName(post.PostFile4);
+            output.PostFile5FileName = await GetBinaryFileName(post.PostFile5);
+            output.PostFile6FileName = await GetBinaryFileName(post.PostFile6);
+            output.PostFile7FileName = await GetBinaryFileName(post.PostFile7);
+            output.PostFile8FileName = await GetBinaryFileName(post.PostFile8);
+            output.PostFile9FileName = await GetBinaryFileName(post.PostFile9);
+            output.PostFile10FileName = await GetBinaryFileName(post.PostFile10);
 
             return output;
         }
@@ -244,6 +253,13 @@ namespace Chamran.Deed.Info
             post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken, post.Id);
             post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2, post.Id);
             post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3, post.Id);
+            post.PostFile4 = await GetBinaryObjectFromCache(input.PostFileToken4, post.Id);
+            post.PostFile5 = await GetBinaryObjectFromCache(input.PostFileToken5, post.Id);
+            post.PostFile6 = await GetBinaryObjectFromCache(input.PostFileToken6, post.Id);
+            post.PostFile7 = await GetBinaryObjectFromCache(input.PostFileToken7, post.Id);
+            post.PostFile8 = await GetBinaryObjectFromCache(input.PostFileToken8, post.Id);
+            post.PostFile9 = await GetBinaryObjectFromCache(input.PostFileToken9, post.Id);
+            post.PostFile10 = await GetBinaryObjectFromCache(input.PostFileToken10, post.Id);
 
             await _unitOfWorkManager.Current.SaveChangesAsync();
             await unitOfWork.CompleteAsync();
@@ -302,6 +318,76 @@ namespace Chamran.Deed.Info
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken3))
                     post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3, post.Id);
+
+            }
+            catch (UserFriendlyException ex)
+            {
+                //ignore
+            }
+            try
+            {
+                if (!string.IsNullOrEmpty(input.PostFileToken4))
+                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken4, post.Id);
+
+            }
+            catch (UserFriendlyException ex)
+            {
+                //ignore
+            }
+            try
+            {
+                if (!string.IsNullOrEmpty(input.PostFileToken5))
+                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken5, post.Id);
+
+            }
+            catch (UserFriendlyException ex)
+            {
+                //ignore
+            }
+            try
+            {
+                if (!string.IsNullOrEmpty(input.PostFileToken6))
+                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken6, post.Id);
+
+            }
+            catch (UserFriendlyException ex)
+            {
+                //ignore
+            }
+            try
+            {
+                if (!string.IsNullOrEmpty(input.PostFileToken7))
+                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken7, post.Id);
+
+            }
+            catch (UserFriendlyException ex)
+            {
+                //ignore
+            }
+            try
+            {
+                if (!string.IsNullOrEmpty(input.PostFileToken8))
+                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken8, post.Id);
+
+            }
+            catch (UserFriendlyException ex)
+            {
+                //ignore
+            }
+            try
+            {
+                if (!string.IsNullOrEmpty(input.PostFileToken9))
+                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken9, post.Id);
+
+            }
+            catch (UserFriendlyException ex)
+            {
+                //ignore
+            }
+            try
+            {
+                if (!string.IsNullOrEmpty(input.PostFileToken10))
+                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken10, post.Id);
 
             }
             catch (UserFriendlyException ex)

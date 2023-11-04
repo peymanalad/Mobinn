@@ -20,6 +20,13 @@ namespace Chamran.Deed.Info
         public virtual Guid? PostFile { get; set; } //File, (BinaryObjectId)
         public virtual Guid? PostFile2 { get; set; } //File, (BinaryObjectId)
         public virtual Guid? PostFile3 { get; set; } //File, (BinaryObjectId)
+        public virtual Guid? PostFile4 { get; set; } //File, (BinaryObjectId)
+        public virtual Guid? PostFile5 { get; set; } //File, (BinaryObjectId)
+        public virtual Guid? PostFile6 { get; set; } //File, (BinaryObjectId)
+        public virtual Guid? PostFile7 { get; set; } //File, (BinaryObjectId)
+        public virtual Guid? PostFile8 { get; set; } //File, (BinaryObjectId)
+        public virtual Guid? PostFile9 { get; set; } //File, (BinaryObjectId)
+        public virtual Guid? PostFile10 { get; set; } //File, (BinaryObjectId)
 
         public virtual string PostCaption { get; set; }
 

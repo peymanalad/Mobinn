@@ -29,7 +29,35 @@ namespace Chamran.Deed.Info.Dtos
 
         public Guid? PostFile3 { get; set; }
 
-        public string PostFileToken3 { get; set; }
+        public string PostFileToken3 { get; set; }  
+        
+        public Guid? PostFile4 { get; set; }
+
+        public string PostFileToken4 { get; set; }   
+        
+        public Guid? PostFile5 { get; set; }
+
+        public string PostFileToken5 { get; set; } 
+        
+        public Guid? PostFile6 { get; set; }
+
+        public string PostFileToken6 { get; set; }
+        
+        public Guid? PostFile7 { get; set; }
+
+        public string PostFileToken7 { get; set; } 
+        
+        public Guid? PostFile8 { get; set; }
+
+        public string PostFileToken8 { get; set; }   
+        
+        public Guid? PostFile9 { get; set; }
+
+        public string PostFileToken9 { get; set; }
+        
+        public Guid? PostFile10 { get; set; }
+
+        public string PostFileToken10 { get; set; }
 
         public string PostRefLink { get; set; }
 

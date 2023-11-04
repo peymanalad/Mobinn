@@ -25,5 +25,7 @@ namespace Chamran.Deed.People
 
         Task<PagedResultDto<GroupMemberOrganizationGroupLookupTableDto>> GetAllOrganizationGroupForLookupTable(GetAllForLookupTableInput input);
 
+        Task<AdminInformationDto> GetAdminInformationByOrganization(int organizationId);
+
     }
 }
