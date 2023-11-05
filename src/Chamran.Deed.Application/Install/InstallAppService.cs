@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Abp;
@@ -23,8 +22,6 @@ using Chamran.Deed.Identity;
 using Chamran.Deed.Install.Dto;
 using Chamran.Deed.Migrations.Seed;
 using Chamran.Deed.Migrations.Seed.Host;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Chamran.Deed.Install
 {

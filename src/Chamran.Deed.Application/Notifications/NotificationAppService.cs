@@ -6,7 +6,6 @@ using Abp;
 using Abp.Application.Services.Dto;
 using Abp.Auditing;
 using Abp.Authorization;
-using Abp.Authorization.Users;
 using Abp.BackgroundJobs;
 using Abp.Collections.Extensions;
 using Abp.Configuration;

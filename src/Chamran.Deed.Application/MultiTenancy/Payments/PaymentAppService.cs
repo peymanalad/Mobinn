@@ -16,7 +16,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Dynamic.Core;
 using Abp.Collections.Extensions;
 using Abp.Linq.Extensions;
-using Microsoft.AspNetCore.Authorization;
 
 namespace Chamran.Deed.MultiTenancy.Payments
 {

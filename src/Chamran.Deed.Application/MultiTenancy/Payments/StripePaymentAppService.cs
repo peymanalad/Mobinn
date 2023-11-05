@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp.Application.Services;
 using Abp.UI;
-using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.Editions;
 using Chamran.Deed.MultiTenancy.Payments.Dto;
 using Chamran.Deed.MultiTenancy.Payments.Stripe;
 using Chamran.Deed.MultiTenancy.Payments.Stripe.Dto;
-using Stripe;
 using Stripe.Checkout;
 
 namespace Chamran.Deed.MultiTenancy.Payments

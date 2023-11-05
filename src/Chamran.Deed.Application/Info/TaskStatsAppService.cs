@@ -8,14 +8,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
 using Chamran.Deed.Info.Dtos;
-using Chamran.Deed.Dto;
 using Abp.Application.Services.Dto;
 using Chamran.Deed.Authorization;
-using Abp.Extensions;
 using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Abp.UI;
-using Chamran.Deed.Storage;
 
 namespace Chamran.Deed.Info
 {

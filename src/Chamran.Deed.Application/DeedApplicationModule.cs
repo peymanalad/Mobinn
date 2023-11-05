@@ -1,9 +1,7 @@
 ﻿using Abp.AutoMapper;
-using Abp.Dependency;
 using Abp.Modules;
 using Abp.Reflection.Extensions;
 using Chamran.Deed.Authorization;
-using Chamran.Deed.People;
 
 namespace Chamran.Deed
 {
