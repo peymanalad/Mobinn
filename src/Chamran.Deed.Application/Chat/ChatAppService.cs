@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Abp.Domain.Repositories;
 using Chamran.Deed.Chat.Dto;
 using System.Linq;
@@ -11,10 +12,12 @@ using Abp.Linq.Extensions;
 using Abp.RealTime;
 using Abp.Runtime.Session;
 using Abp.Timing;
+using AutoMapper.Internal.Mappers;
 using Microsoft.EntityFrameworkCore;
 using Chamran.Deed.Friendships.Cache;
 using Chamran.Deed.Friendships.Dto;
 using Chamran.Deed.Authorization.Users;
+using Chamran.Deed.Chat;
 
 namespace Chamran.Deed.Chat
 {
@@ -156,16 +159,33 @@ namespace Chamran.Deed.Chat
         public async Task<ListResultDto<ChatMessageDto>> GetUserChatMessages(GetUserChatMessagesInput input)
         {
             var userId = AbpSession.GetUserId();
-            var messages = await _chatMessageRepository.GetAll()
-                    .WhereIf(input.MinMessageId.HasValue, m => m.Id < input.MinMessageId.Value)
+            var query = from x in _chatMessageRepository.GetAll().WhereIf(input.MinMessageId.HasValue, m => m.Id < input.MinMessageId.Value)
                     .Where(m => m.UserId == userId && m.TargetTenantId == input.TenantId && m.TargetUserId == input.UserId)
                     .OrderByDescending(m => m.CreationTime)
                     .Take(50)
-                    .ToListAsync();
-
+                        join r in _chatMessageRepository.GetAll() on x.ReplyMessageId equals r.Id into joiner
+                        from r in joiner.DefaultIfEmpty()
+                        select new ChatMessageDto
+                        {
+                            UserId = x.UserId,
+                            CreationTime = x.CreationTime,
+                            ReplyMessage = r.Message,
+                            ReplyMessageId = x.ReplyMessageId,
+                            ForwardedFromName = x.ForwardedFromName,
+                            TenantId=x.TenantId,
+                            TargetUserId=x.TargetUserId,
+                            TargetTenantId=x.TargetTenantId,
+                            Side = x.Side,
+                            ReadState=x.ReadState,
+                            ReceiverReadState=x.ReceiverReadState,
+                            Message=x.Message,
+                            SharedMessageId=x.SharedMessageId,
+                            };
+            
+            var messages =await query.ToListAsync();
             messages.Reverse();
 
-            return new ListResultDto<ChatMessageDto>(ObjectMapper.Map<List<ChatMessageDto>>(messages));
+            return new ListResultDto<ChatMessageDto>(messages);
         }
 
         public async Task<PagedResultDto<ChatMessageDto>> GetPagedUserChatMessages(GetPagedUserChatMessagesInput input)

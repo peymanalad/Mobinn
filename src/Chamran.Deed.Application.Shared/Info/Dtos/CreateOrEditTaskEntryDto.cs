@@ -21,6 +21,7 @@ namespace Chamran.Deed.Info.Dtos
 
         public int? ParentId { get; set; }
         public bool IsPrivate{ get; set; }
+        public bool ReturnedToParent  { get; set; }
 
     }
 }

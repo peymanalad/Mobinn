@@ -272,7 +272,8 @@ namespace Chamran.Deed.Info
         {
             var organizationChart = await _organizationChartRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, organizationChart);
-            //organizationChart.GenerateLeafPath();
+            if (string.IsNullOrEmpty(input.LeafPath))
+                organizationChart.GenerateLeafPath();
 
 
         }
@@ -334,11 +335,12 @@ namespace Chamran.Deed.Info
 
             var entity = await _organizationChartRepository.InsertAsync(new OrganizationChart()
             {
-                ParentId =  null,
+                ParentId = null,
                 OrganizationId = createCompanyChartDto.OrganizationId,
                 Caption = createCompanyChartDto.Caption,
-
+                
             });
+            entity.GenerateLeafPath();
             await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the role.
             return entity.Id;
 

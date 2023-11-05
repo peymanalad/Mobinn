@@ -27,5 +27,7 @@ namespace Chamran.Deed.Info
 
         Task<PagedResultDto<TaskEntryTaskEntryLookupTableDto>> GetAllTaskEntryForLookupTable(GetAllForLookupTableInput input);
 
+        Task<TaskEntryDto?> GetPreviousTaskById(int id);
+
     }
 }
