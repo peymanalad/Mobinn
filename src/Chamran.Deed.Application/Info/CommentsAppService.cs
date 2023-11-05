@@ -44,6 +44,8 @@ namespace Chamran.Deed.Info
                         .Include(e => e.PostFk)
                         .Include(e => e.UserFk)
                         .Include(e => e.CommentFk)
+                        .Include(x=>x.CommentFk.PostFk.PostGroupFk)
+                        .Where(x => x.CommentFk.PostFk.PostGroupFk.OrganizationId== input.OrganizationId)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.CommentCaption.Contains(input.Filter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.CommentCaptionFilter), e => e.CommentCaption.Contains(input.CommentCaptionFilter))
                         .WhereIf(input.MinInsertDateFilter != null, e => e.InsertDate >= input.MinInsertDateFilter)

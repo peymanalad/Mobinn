@@ -6,6 +6,7 @@ namespace Chamran.Deed.Info.Dtos
     public class GetAllPostLikesInput : PagedAndSortedResultRequestDto
     {
         public string Filter { get; set; }
+        public int OrganizationId { get; set; }
 
         public DateTime? MaxLikeTimeFilter { get; set; }
         public DateTime? MinLikeTimeFilter { get; set; }

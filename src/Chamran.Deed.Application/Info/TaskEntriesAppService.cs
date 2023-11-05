@@ -110,6 +110,13 @@ namespace Chamran.Deed.Info
         PST.[PostTitle],
         PST.[PostFile2],
         PST.[PostFile3],
+        PST.[PostFile4],
+        PST.[PostFile5],
+        PST.[PostFile6],
+        PST.[PostFile7],
+        PST.[PostFile8],
+        PST.[PostFile9],
+        PST.[PostFile10],
         PST.[PostRefLink],
         ROW_NUMBER() OVER (PARTITION BY MinIdCTE.[SharedTaskId] ORDER BY t.[Id] DESC) AS RowNum
     FROM
@@ -159,6 +166,13 @@ SELECT DISTINCT
     [PostTitle],
     [PostFile2],
     [PostFile3],
+    [PostFile4],
+    [PostFile5],
+    [PostFile6],
+    [PostFile7],
+    [PostFile8],
+    [PostFile9],
+    [PostFile10],
     [PostRefLink]
 FROM (
     SELECT

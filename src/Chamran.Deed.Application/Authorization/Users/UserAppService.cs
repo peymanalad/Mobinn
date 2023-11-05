@@ -150,27 +150,28 @@ namespace Chamran.Deed.Authorization.Users
             if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
             var user = await _userRepository.GetAsync(AbpSession.UserId.Value);
 
-            if (!user.IsSuperUser)
+            //if (!user.IsSuperUser)
             {
-                var orgQuery =
-                    from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
-                    join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
-                        .OrganizationId into joined2
-                    from grpMember in joined2.DefaultIfEmpty()
-                    where grpMember.UserId == AbpSession.UserId
-                    select org;
+                //var orgQuery =
+                //    from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
+                //    join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
+                //        .OrganizationId into joined2
+                //    from grpMember in joined2.DefaultIfEmpty()
+                //    where grpMember.UserId == AbpSession.UserId
+                //    select org;
 
-                if (!orgQuery.Any())
-                {
-                    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
-                }
-                var orgEntity = orgQuery.First();
+                //if (!orgQuery.Any())
+                //{
+                //    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+                //}
+                //var orgEntity = orgQuery.First();
+
                 //filteredOrganizationCharts = filteredOrganizationCharts.Where(x => x.OrganizationId == orgEntity.Id);
                 var query = GetUsersFilteredQuery(input);
                 var joinQuery = from x in query
-                                join y in _groupMemberRepository.GetAll() on x.Id equals y.UserId into joiner
-                                from y in joiner.DefaultIfEmpty()
-                                where y.OrganizationId == orgEntity.Id
+                                join y in _groupMemberRepository.GetAll() on x.Id equals y.UserId //into joiner
+                                //from y in joiner.DefaultIfEmpty()
+                                where y.OrganizationId == input.OrganizationId
                                 select x;
                 var userCount = await joinQuery.CountAsync();
 
@@ -187,26 +188,26 @@ namespace Chamran.Deed.Authorization.Users
                     userListDtos
                 );
             }
-            else
-            {
+            //else
+            //{
 
-                var query = GetUsersFilteredQuery(input);
+            //    var query = GetUsersFilteredQuery(input);
 
-                var userCount = await query.CountAsync();
+            //    var userCount = await query.CountAsync();
 
-                var users = await query
-                    .OrderBy(input.Sorting)
-                    .PageBy(input)
-                    .ToListAsync();
+            //    var users = await query
+            //        .OrderBy(input.Sorting)
+            //        .PageBy(input)
+            //        .ToListAsync();
 
-                var userListDtos = ObjectMapper.Map<List<UserListDto>>(users);
-                await FillRoleNames(userListDtos);
+            //    var userListDtos = ObjectMapper.Map<List<UserListDto>>(users);
+            //    await FillRoleNames(userListDtos);
 
-                return new PagedResultDto<UserListDto>(
-                    userCount,
-                    userListDtos
-                );
-            }
+            //    return new PagedResultDto<UserListDto>(
+            //        userCount,
+            //        userListDtos
+            //    );
+            //}
 
 
         }
@@ -502,8 +503,15 @@ namespace Chamran.Deed.Authorization.Users
             }
 
             //Update roles
-            CheckErrors(await UserManager.SetRolesAsync(user, input.AssignedRoleNames));
+            try
+            {
+                CheckErrors(await UserManager.SetRolesAsync(user, input.AssignedRoleNames));
 
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
             //update organization units
             await UserManager.SetOrganizationUnitsAsync(user, input.OrganizationUnits.ToArray());
 

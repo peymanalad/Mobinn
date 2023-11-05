@@ -6,7 +6,7 @@ namespace Chamran.Deed.Info.Dtos
     public class GetAllCommentsInput : PagedAndSortedResultRequestDto
     {
         public string Filter { get; set; }
-
+        public int OrganizationId { get; set; }
         public string CommentCaptionFilter { get; set; }
 
         public DateTime? MaxInsertDateFilter { get; set; }

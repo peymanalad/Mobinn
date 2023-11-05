@@ -37,6 +37,7 @@ namespace Chamran.Deed.Authorization.Users
         private readonly IPasswordHasher<User> _passwordHasher;
         private readonly IRepository<RecentPassword, Guid> _recentPasswords;
         private readonly IRepository<UserToken, long> _userTokenRepository;
+        private readonly IRepository<UserRole, long> _userRoleRepository;
 
         public UserManager(
             UserStore userStore,
@@ -59,7 +60,7 @@ namespace Chamran.Deed.Authorization.Users
             ILocalizationManager localizationManager,
             IRepository<RecentPassword, Guid> recentPasswords,
             IRepository<UserToken,long> userTokenRepository,
-            IRepository<UserLogin, long> userLoginRepository)
+            IRepository<UserLogin, long> userLoginRepository, IRepository<UserRole, long> userRoleRepository)
             : base(
                 roleManager,
                 userStore,
@@ -86,6 +87,7 @@ namespace Chamran.Deed.Authorization.Users
             _localizationManager = localizationManager;
             _recentPasswords = recentPasswords;
             _userTokenRepository = userTokenRepository;
+            _userRoleRepository = userRoleRepository;
         }
 
         public virtual async Task<User> GetUserOrNullAsync(UserIdentifier userIdentifier)
@@ -122,9 +124,10 @@ namespace Chamran.Deed.Authorization.Users
 
         public override Task<IdentityResult> SetRolesAsync(User user, string[] roleNames)
         {
-            if (user.UserName != AbpUserBase.AdminUserName)
+            if (user.UserName != AbpUserBase.AdminUserName && !user.IsSuperUser)
             {
-                return base.SetRolesAsync(user, roleNames);
+                //return base.SetRolesAsync(user, roleNames);
+                return InternalSetRolesAsync(user, roleNames);
             }
 
             // Always keep admin role for admin user
@@ -133,6 +136,50 @@ namespace Chamran.Deed.Authorization.Users
             roleNames = roles.ToArray();
 
             return base.SetRolesAsync(user, roleNames);
+        }
+
+        private async Task<IdentityResult> InternalSetRolesAsync(User user, string[] roleNames)
+        {
+            await AbpUserStore.UserRepository.EnsureCollectionLoadedAsync(user, u => u.Roles);
+
+            //Remove from removed roles
+            foreach (var userRole in user.Roles.ToList())
+            {
+                var role = await RoleManager.FindByIdAsync(userRole.RoleId.ToString());
+                if (role != null && roleNames.All(roleName => role.Name != roleName))
+                {
+                    var result = await RemoveFromRoleAsync(user, role.Name);
+                    if (!result.Succeeded)
+                    {
+                        return result;
+                    }
+                }
+            }
+
+            //Add to added roles
+            foreach (var roleName in roleNames)
+            {
+                var role = await RoleManager.GetRoleByNameAsync(roleName);
+                if (user.Roles == null) user.Roles = new List<UserRole>();
+                if (user.Roles==null || user.Roles.All(ur => ur.RoleId != role.Id))
+                {
+                    await _userRoleRepository.InsertAsync(new UserRole()
+                    {
+                        UserId = user.Id,
+                        RoleId = role.Id,
+                        TenantId = AbpSession.TenantId
+                    });
+                    //return IdentityResult.Success;
+                    
+                    //var result = await AddToRoleAsync(user, roleName);
+                    //if (!result.Succeeded)
+                    //{
+                    //    return result;
+                    //}
+                }
+            }
+
+            return IdentityResult.Success;
         }
 
         public override async Task SetGrantedPermissionsAsync(User user, IEnumerable<Permission> permissions)
@@ -227,7 +274,6 @@ namespace Chamran.Deed.Authorization.Users
                 throw new UserFriendlyException(L("YouCannotRemoveUserRolePermissionsFromAdminUser"));
             }
         }
-
         private new string L(string name)
         {
             return _localizationManager.GetString(DeedConsts.LocalizationSourceName, name);
