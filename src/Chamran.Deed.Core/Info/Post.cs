@@ -54,9 +54,36 @@ namespace Chamran.Deed.Info
         [ForeignKey("PostFile3")]
         public BinaryObject AppBinaryObjectFk3 { get; set; }
 
+        [ForeignKey("PostFile4")]
+        public BinaryObject AppBinaryObjectFk4 { get; set; }
+
+
+        [ForeignKey("PostFile5")]
+        public BinaryObject AppBinaryObjectFk5 { get; set; }
+
+
+        [ForeignKey("PostFile6")]
+        public BinaryObject AppBinaryObjectFk6 { get; set; }
+
+
+        [ForeignKey("PostFile7")]
+        public BinaryObject AppBinaryObjectFk7 { get; set; }
+
+
+        [ForeignKey("PostFile8")]
+        public BinaryObject AppBinaryObjectFk8 { get; set; }
+
+
+        [ForeignKey("PostFile9")]
+        public BinaryObject AppBinaryObjectFk9 { get; set; }
+
+
+        [ForeignKey("PostFile10")]
+        public BinaryObject AppBinaryObjectFk10 { get; set; }
+
         public virtual string PostRefLink { get; set; }
 
         public virtual ICollection<PostLike> PostLikes { get; set; } // Collection of PostLikes
-        
+
     }
 }

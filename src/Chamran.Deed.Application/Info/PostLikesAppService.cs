@@ -42,6 +42,8 @@ namespace Chamran.Deed.Info
             var filteredPostLikes = _postLikeRepository.GetAll()
                         .Include(e => e.PostFk)
                         .Include(e => e.UserFk)
+                        .Include(x=>x.PostFk.PostGroupFk)
+                        .Where(x => x.PostFk.PostGroupFk.OrganizationId== input.OrganizationId)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false)
                         .WhereIf(input.MinLikeTimeFilter != null, e => e.LikeTime >= input.MinLikeTimeFilter)
                         .WhereIf(input.MaxLikeTimeFilter != null, e => e.LikeTime <= input.MaxLikeTimeFilter)

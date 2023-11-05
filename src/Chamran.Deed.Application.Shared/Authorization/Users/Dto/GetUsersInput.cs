@@ -14,6 +14,8 @@ namespace Chamran.Deed.Authorization.Users.Dto
 
         public bool OnlyLockedUsers { get; set; }
 
+        public int OrganizationId { get; set; }
+
         public void Normalize()
         {
             if (string.IsNullOrEmpty(Sorting))

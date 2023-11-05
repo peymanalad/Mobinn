@@ -73,7 +73,7 @@ namespace Chamran.Deed.Info
                 var filteredPosts = _postRepository.GetAll()
                     .Include(e => e.GroupMemberFk)
                     .Include(e => e.PostGroupFk)
-                    .Where(x=>x.PostGroupFk.OrganizationId== input.OrganizationId)
+                    .Where(x => x.PostGroupFk.OrganizationId == input.OrganizationId)
                     .WhereIf(!string.IsNullOrWhiteSpace(input.Filter),
                         e => false || e.PostCaption.Contains(input.Filter) || e.PostTitle.Contains(input.Filter))
                     .WhereIf(!string.IsNullOrWhiteSpace(input.PostCaptionFilter),
@@ -327,7 +327,7 @@ namespace Chamran.Deed.Info
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken4))
-                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken4, post.Id);
+                    post.PostFile4 = await GetBinaryObjectFromCache(input.PostFileToken4, post.Id);
 
             }
             catch (UserFriendlyException ex)
@@ -337,7 +337,7 @@ namespace Chamran.Deed.Info
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken5))
-                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken5, post.Id);
+                    post.PostFile5 = await GetBinaryObjectFromCache(input.PostFileToken5, post.Id);
 
             }
             catch (UserFriendlyException ex)
@@ -347,7 +347,7 @@ namespace Chamran.Deed.Info
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken6))
-                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken6, post.Id);
+                    post.PostFile6 = await GetBinaryObjectFromCache(input.PostFileToken6, post.Id);
 
             }
             catch (UserFriendlyException ex)
@@ -357,7 +357,7 @@ namespace Chamran.Deed.Info
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken7))
-                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken7, post.Id);
+                    post.PostFile7 = await GetBinaryObjectFromCache(input.PostFileToken7, post.Id);
 
             }
             catch (UserFriendlyException ex)
@@ -367,7 +367,7 @@ namespace Chamran.Deed.Info
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken8))
-                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken8, post.Id);
+                    post.PostFile8 = await GetBinaryObjectFromCache(input.PostFileToken8, post.Id);
 
             }
             catch (UserFriendlyException ex)
@@ -377,7 +377,7 @@ namespace Chamran.Deed.Info
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken9))
-                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken9, post.Id);
+                    post.PostFile9 = await GetBinaryObjectFromCache(input.PostFileToken9, post.Id);
 
             }
             catch (UserFriendlyException ex)
@@ -387,7 +387,7 @@ namespace Chamran.Deed.Info
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken10))
-                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken10, post.Id);
+                    post.PostFile10 = await GetBinaryObjectFromCache(input.PostFileToken10, post.Id);
 
             }
             catch (UserFriendlyException ex)
@@ -563,7 +563,7 @@ namespace Chamran.Deed.Info
                                        //join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
                                        //from gm in joiner2.DefaultIfEmpty()
                                        //where gm.UserId == AbpSession.UserId
-                                   where pc.OrganizationId==organizationId
+                                   where pc.OrganizationId == organizationId
                                    orderby pc.Ordering
                                    select new
                                    {
@@ -611,7 +611,7 @@ namespace Chamran.Deed.Info
                         Id = post.Id,
                         GroupMemberId = post.GroupMemberId ?? 0,
                         IsSpecial = post.IsSpecial,
-                        IsPublished =post.IsPublished,
+                        IsPublished = post.IsPublished,
                         PostCaption = post.PostCaption,
                         PostFile = post.PostFile,
                         PostTitle = post.PostTitle
@@ -669,6 +669,13 @@ namespace Chamran.Deed.Info
                                         p.PostFile,
                                         p.PostFile2,
                                         p.PostFile3,
+                                        p.PostFile4,
+                                        p.PostFile5,
+                                        p.PostFile6,
+                                        p.PostFile7,
+                                        p.PostFile8,
+                                        p.PostFile9,
+                                        p.PostFile10,
                                         p.PostTitle,
                                         p.PostRefLink,
                                         p.PostGroupId,
@@ -677,6 +684,13 @@ namespace Chamran.Deed.Info
                                         p.AppBinaryObjectFk,
                                         p.AppBinaryObjectFk2,
                                         p.AppBinaryObjectFk3,
+                                        p.AppBinaryObjectFk4,
+                                        p.AppBinaryObjectFk5,
+                                        p.AppBinaryObjectFk6,
+                                        p.AppBinaryObjectFk7,
+                                        p.AppBinaryObjectFk8,
+                                        p.AppBinaryObjectFk9,
+                                        p.AppBinaryObjectFk10,
 
                                     };
 
@@ -697,6 +711,13 @@ namespace Chamran.Deed.Info
                         PostFile = post.PostFile,
                         PostFile2 = post.PostFile2,
                         PostFile3 = post.PostFile3,
+                        PostFile4 = post.PostFile4,
+                        PostFile5 = post.PostFile5,
+                        PostFile6 = post.PostFile6,
+                        PostFile7 = post.PostFile7,
+                        PostFile8 = post.PostFile8,
+                        PostFile9 = post.PostFile9,
+                        PostFile10 = post.PostFile10,
                         PostTitle = post.PostTitle,
                         PostGroupId = post.PostGroupId,
                         PostRefLink = post.PostRefLink,
@@ -730,6 +751,34 @@ namespace Chamran.Deed.Info
                     {
                         datam.Attachment3 = post.AppBinaryObjectFk3.Description;
                     }
+                    if (post.AppBinaryObjectFk4 != null)
+                    {
+                        datam.Attachment4 = post.AppBinaryObjectFk4.Description;
+                    }
+                    if (post.AppBinaryObjectFk5 != null)
+                    {
+                        datam.Attachment5 = post.AppBinaryObjectFk5.Description;
+                    }
+                    if (post.AppBinaryObjectFk6 != null)
+                    {
+                        datam.Attachment6 = post.AppBinaryObjectFk6.Description;
+                    }
+                    if (post.AppBinaryObjectFk7 != null)
+                    {
+                        datam.Attachment7 = post.AppBinaryObjectFk7.Description;
+                    }
+                    if (post.AppBinaryObjectFk8 != null)
+                    {
+                        datam.Attachment8 = post.AppBinaryObjectFk8.Description;
+                    }
+                    if (post.AppBinaryObjectFk9 != null)
+                    {
+                        datam.Attachment9 = post.AppBinaryObjectFk9.Description;
+                    }
+                    if (post.AppBinaryObjectFk10 != null)
+                    {
+                        datam.Attachment10 = post.AppBinaryObjectFk10.Description;
+                    }
 
                     posts.Add(datam);
 
@@ -749,6 +798,6 @@ namespace Chamran.Deed.Info
             }
         }
 
-       
+
     }
 }

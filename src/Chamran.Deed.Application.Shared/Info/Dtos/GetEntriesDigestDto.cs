@@ -34,6 +34,13 @@ namespace Chamran.Deed.Info.Dtos
         public string PostTitle { get; set; }
         public Guid? PostFile2 { get; set; }
         public Guid? PostFile3 { get; set; }
+        public Guid? PostFile4 { get; set; }
+        public Guid? PostFile5 { get; set; }
+        public Guid? PostFile6 { get; set; }
+        public Guid? PostFile7 { get; set; }
+        public Guid? PostFile8 { get; set; }
+        public Guid? PostFile9 { get; set; }
+        public Guid? PostFile10 { get; set; }
         public string PostRefLink { get; set; }
     } 
     
