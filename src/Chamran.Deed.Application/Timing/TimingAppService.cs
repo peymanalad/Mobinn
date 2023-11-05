@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Abp.Application.Services.Dto;
 using Abp.Configuration;
 using Chamran.Deed.Timing.Dto;
-using TimeZoneConverter;
 
 namespace Chamran.Deed.Timing
 {

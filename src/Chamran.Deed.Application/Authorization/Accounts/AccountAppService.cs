@@ -13,12 +13,10 @@ using Chamran.Deed.Authorization.Accounts.Dto;
 using Chamran.Deed.Authorization.Impersonation;
 using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.Configuration;
-using Chamran.Deed.Debugging;
 using Chamran.Deed.MultiTenancy;
 using Chamran.Deed.Security.Recaptcha;
 using Chamran.Deed.Url;
 using Chamran.Deed.Authorization.Delegation;
-using Abp.Domain.Repositories;
 using Abp.Timing;
 
 

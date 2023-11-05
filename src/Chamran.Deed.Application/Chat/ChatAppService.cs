@@ -14,9 +14,7 @@ using Abp.Timing;
 using Microsoft.EntityFrameworkCore;
 using Chamran.Deed.Friendships.Cache;
 using Chamran.Deed.Friendships.Dto;
-using static NPOI.HSSF.UserModel.HeaderFooter;
 using Chamran.Deed.Authorization.Users;
-using Abp.Domain.Entities;
 
 namespace Chamran.Deed.Chat
 {

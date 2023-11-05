@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Identity;
 using Chamran.Deed.Authorization.Roles;
 using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.MultiTenancy;
-using Microsoft.Identity.Client;
 
 namespace Chamran.Deed.Authorization
 {

@@ -6,7 +6,6 @@ using Abp;
 using Abp.Application.Features;
 using Abp.Application.Services.Dto;
 using Abp.Authorization;
-using Abp.Authorization.Users;
 using Abp.Domain.Uow;
 using Abp.Events.Bus;
 using Abp.Extensions;
