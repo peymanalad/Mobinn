@@ -188,7 +188,6 @@ namespace Chamran.Deed.Info
                     CreationTime = entity.CreationTime,
                     DoneByProfilePicture = entity.DoneByFk.ProfilePictureId,
                     Status = entity.Status,
-                    
                 };
             }
             else

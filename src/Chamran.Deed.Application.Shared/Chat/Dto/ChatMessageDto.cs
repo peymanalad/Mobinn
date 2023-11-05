@@ -23,6 +23,11 @@ namespace Chamran.Deed.Chat.Dto
         
         public DateTime CreationTime { get; set; }
 
-        public string SharedMessageId { get; set; }
+        public Guid? SharedMessageId { get; set; }
+
+        public string  ForwardedFromName { get; set; }
+        public long ReplyMessageId { get; set; }
+        public string ReplyMessage { get; set; }
+
     }
 }

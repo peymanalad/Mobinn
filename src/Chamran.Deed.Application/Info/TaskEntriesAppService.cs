@@ -64,8 +64,6 @@ namespace Chamran.Deed.Info
         DECLARE @MaxResultCount INT = @MaxResultCountParam;
         DECLARE @UserId INT = @UserIdParam;
         DECLARE @captionfilter NVARCHAR(200) = @CaptionFilterParam;
-
-      
 ;WITH MinIdCTE AS (
     SELECT
         MIN(t.[Id]) AS MinId,
@@ -118,12 +116,16 @@ namespace Chamran.Deed.Info
         PST.[PostFile9],
         PST.[PostFile10],
         PST.[PostRefLink],
+		PG.PostGroupDescription,
+		PG.GroupFile,
+		t.[IsPrivate],
+		(SELECT COUNT(*) FROM dbo.TaskEntries WHERE SharedTaskId = MinIdCTE.SharedTaskId) AS WorkFlowCount,
         ROW_NUMBER() OVER (PARTITION BY MinIdCTE.[SharedTaskId] ORDER BY t.[Id] DESC) AS RowNum
     FROM
         [DeedDb].[dbo].[TaskEntries] t
     JOIN
         MinIdCTE ON t.[SharedTaskId] = MinIdCTE.[SharedTaskId] AND t.[Id] >= MinIdCTE.MinId
-    LEFT JOIN
+	LEFT JOIN
         [DeedDb].[dbo].[AbpUsers] I ON t.[IssuerId] = I.[Id]
     LEFT JOIN
         [DeedDb].[dbo].[AbpUsers] R2 ON t.[ReceiverId] = R2.[Id]
@@ -133,6 +135,9 @@ namespace Chamran.Deed.Info
         [DeedDb].[dbo].[GroupMembers] RGM ON t.[ReceiverId] = RGM.[UserId]
     LEFT JOIN
         [DeedDb].[dbo].[Posts] PST ON t.[PostId] = PST.[Id]
+	LEFT JOIN
+        [DeedDb].[dbo].[PostGroups] PG ON PST.[PostGroupId] = PG.[Id]
+    
 )
 
 SELECT DISTINCT
@@ -173,7 +178,11 @@ SELECT DISTINCT
     [PostFile8],
     [PostFile9],
     [PostFile10],
-    [PostRefLink]
+    [PostRefLink],
+	[IsPrivate],
+	[PostGroupDescription],
+	[GroupFile],
+	WorkFlowCount
 FROM (
     SELECT
         *,
@@ -181,7 +190,8 @@ FROM (
     FROM
         RankedRows
     WHERE
-        RowNum = 1 AND
+        RowNum = 1 
+		AND
         (@captionfilter = '' OR [Caption] LIKE '%' + @captionfilter + '%')
 ) AS Subquery
 WHERE
@@ -230,8 +240,8 @@ ORDER BY
         DECLARE @MaxResultCount INT = @MaxResultCountParam;
         DECLARE @UserId INT = @UserIdParam;
         DECLARE @sharedTaskId UNIQUEIDENTIFIER = @SharedTaskIdParam; -- Change data type
-        DECLARE @captionfilter NVARCHAR(200) = @CaptionFilterParam;
-WITH MinIdCTE AS (
+        DECLARE @captionfilter NVARCHAR(200) = @CaptionFilterParam
+;WITH MinIdCTE AS (
     SELECT
         MIN(t.[Id]) AS MinId,
         t.[SharedTaskId]
@@ -259,6 +269,7 @@ WITH MinIdCTE AS (
         R2.[Name] AS ReceiverFirstName,
         R2.[Surname] AS ReceiverLastName,
         R2.[ProfilePictureId] AS ReceiverProfilePicture,
+		t.[ReturnedToParent],
         --IGM.[MemberPosition] AS IssuerMemberPos,
         --RGM.[MemberPosition] AS ReceiverMemberPos,
         ROW_NUMBER() OVER (PARTITION BY MinIdCTE.[SharedTaskId] ORDER BY t.[Id] DESC) AS RowNum
@@ -291,6 +302,7 @@ WITH MinIdCTE AS (
         ReceiverFirstName,
         ReceiverLastName,
         ReceiverProfilePicture,
+		ReturnedToParent,
        -- IssuerMemberPos,
        -- ReceiverMemberPos,
         IsPrivate,
@@ -319,15 +331,14 @@ SELECT
     ReceiverProfilePicture,
    -- IssuerMemberPos,
    -- ReceiverMemberPos,
-    IsPrivate
+    IsPrivate,
+	ReturnedToParent
 FROM
     PaginatedResults
 WHERE
     RowNum BETWEEN @SkipCount + 1 AND @SkipCount + @MaxResultCount
 ORDER BY
-    [CreationTime] DESC;
-
-    ";
+    [CreationTime] DESC;    ";
 
             // Create SqlParameter objects for each parameter
             var parameters = new[]
@@ -599,5 +610,48 @@ ORDER BY
             );
         }
 
+        public async Task<TaskEntryDto?> GetPreviousTaskById(int id)
+        {
+            try
+            {
+
+                var entry = await _taskEntryRepository.GetAsync(id);
+                var sharedId = entry.SharedTaskId;
+                var lsGo = await _taskEntryRepository.GetAll().Where(x => x.SharedTaskId == sharedId && x.ReturnedToParent == false).OrderByDescending(x => x.Id).ToListAsync();
+                var lsReturn = await _taskEntryRepository.GetAll().Where(x => x.SharedTaskId == sharedId && x.ReturnedToParent == true).OrderBy(x => x.Id).ToListAsync();
+                var queryGo = from x in lsGo
+                              where x.Id == id
+                              select x;
+                var taskEntries = queryGo.ToList();
+                if (taskEntries.Any())
+                {
+                    return ObjectMapper.Map<TaskEntryDto>(lsGo.First());
+                }
+
+                var queryReturn = from x in lsReturn
+                                  where x.Id == id
+                                  select x;
+
+                if (queryReturn.Any())
+                {
+                    var index = -1;
+                    foreach (var row in lsReturn)
+                    {
+                        index++;
+                        if (row.Id == id)
+                        {
+                            return ObjectMapper.Map<TaskEntryDto>(lsGo.ElementAt(index+1));
+                        }
+                    }
+                }
+
+
+                return null;
+            }
+            catch (System.Exception)
+            {
+                return null;
+            }
+        }
     }
 }

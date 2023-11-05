@@ -42,6 +42,11 @@ namespace Chamran.Deed.Info.Dtos
         public Guid? PostFile9 { get; set; }
         public Guid? PostFile10 { get; set; }
         public string PostRefLink { get; set; }
+        public string PostGroupDescription { get; set; }
+        public Guid? GroupFile{ get; set; }
+        public bool IsPrivate { get; set; }
+        public int WorkFlowCount { get; set; }
+
     } 
     
     public class GetEntriesDetailDto
@@ -64,5 +69,6 @@ namespace Chamran.Deed.Info.Dtos
         //public string IssuerMemberPos { get; set; }
         //public string ReceiverMemberPos { get; set; }
         public bool IsPrivate { get; set; }
+        public bool ReturnedToParent { get; set; }
     }
 }

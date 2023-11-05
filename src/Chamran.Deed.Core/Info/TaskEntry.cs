@@ -43,6 +43,7 @@ namespace Chamran.Deed.Info
         public TaskEntry ParentFk { get; set; }
 
         public bool IsPrivate { get; set; }
+        public bool ReturnedToParent { get; set; }
 
     }
 }
