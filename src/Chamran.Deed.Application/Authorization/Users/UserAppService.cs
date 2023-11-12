@@ -226,6 +226,23 @@ namespace Chamran.Deed.Authorization.Users
             return _userListExcelExporter.ExportToFile(userListDtos);
         }
 
+        public Task<List<OrganizationDto>> GetListOfOrganizations(int userId)
+        {
+            var result=new List<OrganizationDto>();
+            var query = from x in _groupMemberRepository.GetAll().Include(x=>x.OrganizationFk)
+                //join o1 in _lookup_organizationRepository.GetAll().Where(x=>!x.IsDeleted) on x.OrganizationId equals o1.Id into j1
+                //from s1 in j1.DefaultIfEmpty()
+                where x.UserId == userId
+                select x;
+            foreach (var row in query)
+            {
+                if(row.OrganizationFk!=null)
+                    result.Add(ObjectMapper.Map<OrganizationDto>(row.OrganizationFk));
+            }
+
+            return Task.FromResult(result);
+        }
+
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Create, AppPermissions.Pages_Administration_Users_Edit)]
         public async Task<GetUserForEditOutput> GetUserForEdit(NullableIdDto<long> input)
         {

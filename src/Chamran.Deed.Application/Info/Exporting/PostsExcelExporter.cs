@@ -33,31 +33,44 @@ namespace Chamran.Deed.Info.Exporting
 
                     var sheet = excelPackage.CreateSheet(L("Posts"));
 
+                    //AddHeader(
+                    //    sheet,
+                    //    L("PostFile"),
+                    //    L("PostCaption"),
+                    //    L("IsSpecial"),
+                    //    L("PostTitle"),
+                    //    (L("GroupMember")) + L("MemberPosition"),
+                    //    (L("PostGroup")) + L("PostGroupDescription")
+                    //    );
                     AddHeader(
                         sheet,
-                        L("PostFile"),
-                        L("PostCaption"),
-                        L("IsSpecial"),
-                        L("PostTitle"),
-                        (L("GroupMember")) + L("MemberPosition"),
-                        (L("PostGroup")) + L("PostGroupDescription")
-                        );
+                        "شرح خبر",
+                        "عنوان خبر",
+                        "گروه خبر",
+                        "تاریخ",
+                        "تاریخ میلادی",
+                        "منتشر شده",
+                        "لینک خبر");
 
                     AddObjects(
                         sheet, posts,
-                        _ => _.Post.PostFileFileName,
                         _ => _.Post.PostCaption,
-                        _ => _.Post.IsSpecial,
                         _ => _.Post.PostTitle,
-                        _ => _.GroupMemberMemberPosition,
-                        _ => _.PostGroupPostGroupDescription
+                        _ => _.PostGroupPostGroupDescription,
+                        _=>_.PersianCreationTime,
+                        _=>_.Post.CreationTime,
+                        _ => _.Post.IsPublished,
+                        _=>_.Post.PostRefLink
                         );
 
                     for (var i = 1; i <= posts.Count; i++)
                     {
-                        SetCellDataFormat(sheet.GetRow(i).Cells[3], "yyyy-mm-dd");
+                        SetCellDataFormat(sheet.GetRow(i).Cells[4], "yyyy-mm-dd");
                     }
+                    sheet.AutoSizeColumn(1);
+                    sheet.AutoSizeColumn(2);
                     sheet.AutoSizeColumn(3);
+                    sheet.AutoSizeColumn(4);
                 });
         }
     }

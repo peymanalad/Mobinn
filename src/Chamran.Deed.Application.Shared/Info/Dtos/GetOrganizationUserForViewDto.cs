@@ -7,6 +7,6 @@
         public string UserName { get; set; }
 
         public string OrganizationChartCaption { get; set; }
-
+        public int? OrganizationId { get; set; }
     }
 }
