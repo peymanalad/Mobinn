@@ -1,5 +1,9 @@
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
 
+# Clear the package cache
+RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get clean
+
 # Install necessary packages for SkiaSharp
 RUN apt-get update && \
     apt-get install -y libgdiplus libfontconfig1 libc6-dev libgl1-mesa-glx libegl1-mesa libgles2-mesa-dev libgbm-dev mesa-utils
@@ -11,7 +15,7 @@ ENV LD_LIBRARY_PATH=/usr/local/lib
 RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/usr-local-lib.conf && ldconfig
 
 # Install nano, sudo, and openssh-server if needed
-RUN apt-get update && \
+RUN apt-get -o Acquire::Check-Valid-Until=false update && \
     apt-get install -y sudo nano
 
 # Install tzdata package
