@@ -782,9 +782,9 @@ namespace Chamran.Deed.Info
             }
 
             var users = _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).Include(x => x.UserFk)
-                .Where(x => x.OrganizationChartId == input.OrganizationChartId && !x.IsGlobal);
+                .Where(x => x.OrganizationChartId == input.OrganizationChartId && x.OrganizationChartFk.OrganizationId==input.OrganizationId && !x.IsGlobal);
             var joindUsers = from x in users
-                             join y in _groupMemberRepository.GetAll() on x.UserId equals y.UserId into joiner
+                             join y in _groupMemberRepository.GetAll().Where(x=>x.OrganizationId==input.OrganizationId) on x.UserId equals y.UserId into joiner
                              from y in joiner.DefaultIfEmpty()
                              select new
                              {
@@ -804,6 +804,7 @@ namespace Chamran.Deed.Info
             {
                 ls.Add(new SameLeafDto()
                 {
+                    OrganizationUserId=row.Id,
                     FirstName = row.UserFk.Name,
                     LastName = row.UserFk.Surname,
                     MemberPosition = row.MemberPosition,
@@ -814,7 +815,7 @@ namespace Chamran.Deed.Info
 
 
             return new PagedResultDto<SameLeafDto>(
-                users.Count(),
+                joindUsers.Count(),
                 ls
             );
         }
