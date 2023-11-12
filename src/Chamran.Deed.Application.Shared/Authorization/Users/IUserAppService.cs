@@ -30,5 +30,6 @@ namespace Chamran.Deed.Authorization.Users
         Task DeleteUser(EntityDto<long> input);
 
         Task UnlockUser(EntityDto<long> input);
+        Task RemoveProfilePicture(long userId);
     }
 }

@@ -138,6 +138,8 @@ namespace Chamran.Deed.Authorization.Users
             return base.SetRolesAsync(user, roleNames);
         }
 
+        
+
         private async Task<IdentityResult> InternalSetRolesAsync(User user, string[] roleNames)
         {
             await AbpUserStore.UserRepository.EnsureCollectionLoadedAsync(user, u => u.Roles);
@@ -400,6 +402,14 @@ namespace Chamran.Deed.Authorization.Users
         public async Task RemoveTokens(int? tenantId, long userId)
         {
             await _userTokenRepository.DeleteAsync(x => x.TenantId == tenantId && x.UserId == userId);
+        }
+
+        public async Task<bool> IsInRoleInternalAsync(User user, string roleName)
+        {
+            await AbpUserStore.UserRepository.EnsureCollectionLoadedAsync(user, u => u.Roles);
+            var role = await RoleManager.GetRoleByNameAsync(roleName);
+            return await _userRoleRepository.GetAll().AnyAsync(x => x.RoleId == role.Id && x.UserId == user.Id);
+
         }
     }
 }

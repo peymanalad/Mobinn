@@ -54,6 +54,7 @@ namespace Chamran.Deed.Authorization.Users
         private readonly IRepository<UserPermissionSetting, long> _userPermissionRepository;
         private readonly IRepository<UserRole, long> _userRoleRepository;
         private readonly IRepository<Role> _roleRepository;
+
         private readonly IUserPolicy _userPolicy;
         private readonly IEnumerable<IPasswordValidator<User>> _passwordValidators;
         private readonly IPasswordHasher<User> _passwordHasher;
@@ -307,7 +308,8 @@ namespace Chamran.Deed.Authorization.Users
 
                 foreach (var userRoleDto in userRoleDtos)
                 {
-                    userRoleDto.IsAssigned = await UserManager.IsInRoleAsync(user, userRoleDto.RoleName);
+                    //userRoleDto.IsAssigned = await UserManager.IsInRoleAsync(user, userRoleDto.RoleName);
+                    userRoleDto.IsAssigned = await UserManager.IsInRoleInternalAsync(user, userRoleDto.RoleName);
                     userRoleDto.InheritedFromOrganizationUnit =
                         allRolesOfUsersOrganizationUnits.Contains(userRoleDto.RoleName);
                 }
@@ -493,6 +495,15 @@ namespace Chamran.Deed.Authorization.Users
         {
             var user = await UserManager.GetUserByIdAsync(input.Id);
             user.Unlock();
+        }
+
+        public async Task RemoveProfilePicture(long userId)
+        {
+            var entity=await _userRepository.GetAsync(userId);
+            entity.ProfilePictureId = null;
+            await _userRepository.UpdateAsync(entity);
+            await CurrentUnitOfWork.SaveChangesAsync(); //To get new user's Id.
+
         }
 
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Edit)]

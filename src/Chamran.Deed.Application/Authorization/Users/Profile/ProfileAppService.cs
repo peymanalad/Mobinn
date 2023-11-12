@@ -41,6 +41,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
         private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IBackgroundJobManager _backgroundJobManager;
         private readonly ProfileImageServiceFactory _profileImageServiceFactory;
+        private readonly IUserAppService _userAppService;
 
         public ProfileAppService(
             IBinaryObjectManager binaryObjectManager,
@@ -51,7 +52,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
             ICacheManager cacheManager,
             ITempFileCacheManager tempFileCacheManager,
             IBackgroundJobManager backgroundJobManager,
-            ProfileImageServiceFactory profileImageServiceFactory)
+            ProfileImageServiceFactory profileImageServiceFactory, IUserAppService userAppService)
         {
             _binaryObjectManager = binaryObjectManager;
             _timeZoneService = timezoneService;
@@ -62,6 +63,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
             _tempFileCacheManager = tempFileCacheManager;
             _backgroundJobManager = backgroundJobManager;
             _profileImageServiceFactory = profileImageServiceFactory;
+            _userAppService = userAppService;
         }
 
         [DisableAuditing]
@@ -354,12 +356,12 @@ namespace Chamran.Deed.Authorization.Users.Profile
 
             if (imageBytes == null)
             {
-                throw new UserFriendlyException("There is no such image file with the token: " + input.FileToken);
+                //throw new UserFriendlyException("There is no such image file with the token: " + input.FileToken);
             }
 
             var byteArray = imageBytes;
 
-            if (byteArray.Length > MaxProfilePictureBytes)
+            if (byteArray?.Length > MaxProfilePictureBytes)
             {
                 throw new UserFriendlyException(L("ResizedProfilePicture_Warn_SizeLimit",
                     AppConsts.ResizedMaxProfilePictureBytesUserFriendlyValue));
@@ -372,14 +374,23 @@ namespace Chamran.Deed.Authorization.Users.Profile
                 await _binaryObjectManager.DeleteAsync(user.ProfilePictureId.Value);
             }
 
-            var storedFile = new BinaryObject(userIdentifier.TenantId, byteArray,
-                BinarySourceType.ProfilePicture,
-                //$"Profile picture of user {userIdentifier.UserId}. {DateTime.UtcNow}");
-                $"{userIdentifier.UserId}.png");
-            await _binaryObjectManager.SaveAsync(storedFile);
-            storedFile.SourceId = (int?)user.Id;
+            if (byteArray != null)
+            {
+                var storedFile = new BinaryObject(userIdentifier.TenantId, byteArray,
+                    BinarySourceType.ProfilePicture,
+                    //$"Profile picture of user {userIdentifier.UserId}. {DateTime.UtcNow}");
+                    $"{userIdentifier.UserId}.png");
+                await _binaryObjectManager.SaveAsync(storedFile);
+                storedFile.SourceId = (int?)user.Id;
+                user.ProfilePictureId = storedFile.Id;
 
-            user.ProfilePictureId = storedFile.Id;
+            }
+            else
+            {
+                await _userAppService.RemoveProfilePicture(user.Id);
+
+            }
+          
         }
 
 

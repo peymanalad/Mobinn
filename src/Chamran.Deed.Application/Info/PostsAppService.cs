@@ -484,7 +484,7 @@ namespace Chamran.Deed.Info
         [AbpAuthorize(AppPermissions.Pages_Posts)]
         public async Task<PagedResultDto<PostPostGroupLookupTableDto>> GetAllPostGroupForLookupTable(GetAllForLookupTableInput input)
         {
-            var query = _lookup_postGroupRepository.GetAll().WhereIf(
+            var query = _lookup_postGroupRepository.GetAll().Where(x=>x.OrganizationId==input.OrganizationId).WhereIf(
                    !string.IsNullOrWhiteSpace(input.Filter),
                   e => e.PostGroupDescription != null && e.PostGroupDescription.Contains(input.Filter)
                );
