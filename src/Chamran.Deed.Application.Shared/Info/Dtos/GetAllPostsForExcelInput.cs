@@ -17,5 +17,7 @@ namespace Chamran.Deed.Info.Dtos
 
         public string PostGroupPostGroupDescriptionFilter { get; set; }
 
+        public int? OrganizationId { get; set; }
+
     }
 }

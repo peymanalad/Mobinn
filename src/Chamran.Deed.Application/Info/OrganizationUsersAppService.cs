@@ -26,8 +26,9 @@ namespace Chamran.Deed.Info
         private readonly IRepository<OrganizationChart, int> _lookup_organizationChartRepository;
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<GroupMember> _groupMemberRepository;
+        private readonly IRepository<DeedChart> _deedchartRepository;
 
-        public OrganizationUsersAppService(IRepository<OrganizationUser> organizationUserRepository, IOrganizationUsersExcelExporter organizationUsersExcelExporter, IRepository<User, long> lookup_userRepository, IRepository<OrganizationChart, int> lookup_organizationChartRepository, IRepository<User, long> userRepository, IRepository<GroupMember> groupMemberRepository)
+        public OrganizationUsersAppService(IRepository<OrganizationUser> organizationUserRepository, IOrganizationUsersExcelExporter organizationUsersExcelExporter, IRepository<User, long> lookup_userRepository, IRepository<OrganizationChart, int> lookup_organizationChartRepository, IRepository<User, long> userRepository, IRepository<GroupMember> groupMemberRepository, IRepository<DeedChart> deedchartRepository)
         {
             _organizationUserRepository = organizationUserRepository;
             _organizationUsersExcelExporter = organizationUsersExcelExporter;
@@ -35,6 +36,7 @@ namespace Chamran.Deed.Info
             _lookup_organizationChartRepository = lookup_organizationChartRepository;
             _userRepository = userRepository;
             _groupMemberRepository = groupMemberRepository;
+            _deedchartRepository = deedchartRepository;
         }
 
         public virtual async Task<PagedResultDto<GetOrganizationUserForViewDto>> GetAll(GetAllOrganizationUsersInput input)
@@ -58,13 +60,18 @@ namespace Chamran.Deed.Info
                                     join o2 in _lookup_organizationChartRepository.GetAll() on o.OrganizationChartId equals o2.Id into j2
                                     from s2 in j2.DefaultIfEmpty()
 
+                                    join dc in _deedchartRepository.GetAll() on s2.OrganizationId equals dc.OrganizationId into j3
+                                    from s3 in j3.DefaultIfEmpty()
+
                                     select new
                                     {
                                         UserId = s1 == null || s1.Name == null ? 0 : s1.Id,
                                         Id = o.Id,
+                                        OrganizationId=s2.OrganizationId,
                                         UserName = s1 == null || s1.Name == null ? "" : s1.Name.ToString(),
                                         OrganizationChartCaption = s2 == null || s2.Caption == null ? "" : s2.Caption.ToString(),
-                                        OrganizationChartId = s2 == null || s2.Caption == null ? 0 : s2.Id
+                                        OrganizationChartId = s2 == null || s2.Caption == null ? 0 : s2.Id,
+                                        DeedChartCaption=s3.Caption
                                     };
 
             var totalCount = await filteredOrganizationUsers.CountAsync();
@@ -81,7 +88,9 @@ namespace Chamran.Deed.Info
                         OrganizationChartId = o.OrganizationChartId,
                         UserId = o.UserId,
                         Id = o.Id,
+                        
                     },
+                    OrganizationId=o.OrganizationId,
                     UserName = o.UserName,
                     OrganizationChartCaption = o.OrganizationChartCaption
                 };

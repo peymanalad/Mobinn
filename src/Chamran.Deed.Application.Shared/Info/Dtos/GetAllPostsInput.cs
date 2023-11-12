@@ -9,6 +9,9 @@ namespace Chamran.Deed.Info.Dtos
 
         public string Filter { get; set; }
 
+        public DateTime? FromDate { get; set; }
+        public DateTime? ToDate { get; set; }
+
         public string PostCaptionFilter { get; set; }
 
         public int? IsSpecialFilter { get; set; }

@@ -11,5 +11,6 @@ namespace Chamran.Deed.Info.Dtos
         public string PostGroupPostGroupDescription { get; set; }
 
         public Guid? GroupFile { get; set; }
+        public string PersianCreationTime { get; set; }
     }
 }
