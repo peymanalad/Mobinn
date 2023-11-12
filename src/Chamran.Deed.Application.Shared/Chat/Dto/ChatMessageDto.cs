@@ -1,5 +1,6 @@
 ﻿using System;
 using Abp.Application.Services.Dto;
+using JetBrains.Annotations;
 
 namespace Chamran.Deed.Chat.Dto
 {
@@ -25,7 +26,7 @@ namespace Chamran.Deed.Chat.Dto
 
         public Guid? SharedMessageId { get; set; }
 
-        public string  ForwardedFromName { get; set; }
+        [CanBeNull] public string  ForwardedFromName { get; set; }
         public long ReplyMessageId { get; set; }
         public string ReplyMessage { get; set; }
 

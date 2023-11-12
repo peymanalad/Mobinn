@@ -14,5 +14,7 @@ namespace Chamran.Deed.People.Dtos
 
         public string OrganizationGroupGroupNameFilter { get; set; }
 
+        public int? OrganizationId { get; set; }
+
     }
 }

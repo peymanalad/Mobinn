@@ -340,6 +340,7 @@ namespace Chamran.Deed.Info
                 Caption = createCompanyChartDto.Caption,
                 
             });
+            await CurrentUnitOfWork.SaveChangesAsync(); 
             entity.GenerateLeafPath();
             await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the role.
             return entity.Id;
