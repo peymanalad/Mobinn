@@ -15,7 +15,7 @@ namespace Chamran.Deed.Info
 
         Task<GetDeedChartForEditOutput> GetDeedChartForEdit(EntityDto input);
 
-        Task CreateOrEdit(CreateOrEditDeedChartDto input);
+        Task<int> CreateOrEdit(CreateOrEditDeedChartDto input);
 
         Task Delete(EntityDto input);
 

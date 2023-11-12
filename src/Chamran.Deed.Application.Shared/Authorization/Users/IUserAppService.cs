@@ -1,8 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Chamran.Deed.Authorization.Users.Dto;
 using Chamran.Deed.Dto;
+using Chamran.Deed.People.Dtos;
 
 namespace Chamran.Deed.Authorization.Users
 {
@@ -11,6 +13,8 @@ namespace Chamran.Deed.Authorization.Users
         Task<PagedResultDto<UserListDto>> GetUsers(GetUsersInput input);
 
         Task<FileDto> GetUsersToExcel(GetUsersToExcelInput input);
+
+        Task<List<OrganizationDto>> GetListOfOrganizations(int userId);
 
         Task<GetUserForEditOutput> GetUserForEdit(NullableIdDto<long> input);
 

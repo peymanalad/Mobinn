@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using Abp.Linq.Extensions;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Abp;
 using Abp.Domain.Repositories;
@@ -23,6 +24,7 @@ using Chamran.Deed.Storage;
 using Abp.Domain.Uow;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using System.Globalization;
 
 namespace Chamran.Deed.Info
 {
@@ -88,7 +90,11 @@ namespace Chamran.Deed.Info
                              e.GroupMemberFk.MemberPosition == input.GroupMemberMemberPositionFilter)
                     .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter),
                         e => e.PostGroupFk != null && e.PostGroupFk.PostGroupDescription ==
-                            input.PostGroupPostGroupDescriptionFilter);
+                            input.PostGroupPostGroupDescriptionFilter)
+                    .WhereIf(input.FromDate.HasValue,
+                        e => e.CreationTime >= input.FromDate.Value)
+                    .WhereIf(input.ToDate.HasValue,
+                        e => e.CreationTime <= input.ToDate.Value);
 
                 var pagedAndFilteredPosts = filteredPosts
                     .OrderBy(input.Sorting ?? "id asc")
@@ -414,8 +420,9 @@ namespace Chamran.Deed.Info
                         .WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.PostTitleFilter), e => e.PostTitle.Contains(input.PostTitleFilter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter), e => e.GroupMemberFk != null && e.GroupMemberFk.MemberPosition == input.GroupMemberMemberPositionFilter)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter), e => e.PostGroupFk != null && e.PostGroupFk.PostGroupDescription == input.PostGroupPostGroupDescriptionFilter);
-
+                        .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter), e => e.PostGroupFk != null && e.PostGroupFk.PostGroupDescription == input.PostGroupPostGroupDescriptionFilter)
+                        .WhereIf(input.OrganizationId.HasValue, e => e.PostGroupFk.OrganizationId == input.OrganizationId);
+            var persianCalendar = new PersianCalendar();
             var query = (from o in filteredPosts
                          join o1 in _lookup_groupMemberRepository.GetAll() on o.GroupMemberId equals o1.Id into j1
                          from s1 in j1.DefaultIfEmpty()
@@ -432,17 +439,18 @@ namespace Chamran.Deed.Info
                                  IsSpecial = o.IsSpecial,
                                  IsPublished = o.IsPublished,
                                  PostTitle = o.PostTitle,
-                                 Id = o.Id
+                                 Id = o.Id,
+                                 CreationTime = o.CreationTime,
+                                 PostRefLink = o.PostRefLink
+
                              },
                              GroupMemberMemberPosition = s1 == null || s1.MemberPosition == null ? "" : s1.MemberPosition,
-                             PostGroupPostGroupDescription = s2 == null || s2.PostGroupDescription == null ? "" : s2.PostGroupDescription.ToString()
+                             PostGroupPostGroupDescription = s2 == null || s2.PostGroupDescription == null ? "" : s2.PostGroupDescription.ToString(),
+                             PersianCreationTime = o.CreationTime != null ? persianCalendar.GetYear(o.CreationTime).ToString("D4") + "/" + persianCalendar.GetMonth(o.CreationTime).ToString("D2") + "/" + persianCalendar.GetDayOfMonth(o.CreationTime).ToString("D2") : null
                          });
-
             var postListDtos = await query.ToListAsync();
-
             return _postsExcelExporter.ExportToFile(postListDtos);
         }
-
         [AbpAuthorize(AppPermissions.Pages_Posts)]
         public async Task<PagedResultDto<PostGroupMemberLookupTableDto>> GetAllGroupMemberForLookupTable(GetAllForLookupTableInput input)
         {
@@ -647,7 +655,7 @@ namespace Chamran.Deed.Info
                         .Include(e => e.AppBinaryObjectFk)
                         .Include(e => e.AppBinaryObjectFk2)
                         .Include(e => e.AppBinaryObjectFk3)
-                        .Where(x=>x.PostGroupFk.OrganizationId==input.OrganizationId)
+                        .Where(x => x.PostGroupFk.OrganizationId == input.OrganizationId)
                         .WhereIf(input.PostGroupId > 0, p => p.PostGroupId == input.PostGroupId)
                                     join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
                                         pg.Id into joiner1

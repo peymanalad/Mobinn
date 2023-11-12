@@ -42,13 +42,18 @@ namespace Chamran.Deed.People
 
 
             var filteredGroupMembers = _groupMemberRepository.GetAll()
-                        .Include(e => e.UserFk)
-                        .Include(e => e.OrganizationFk)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.MemberPosition.Contains(input.Filter))
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.MemberPositionFilter), e => e.MemberPosition.Contains(input.MemberPositionFilter))
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter), e => e.UserFk != null && e.UserFk.Name == input.UserNameFilter)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationGroupGroupNameFilter), e => e.OrganizationFk != null && e.OrganizationFk.OrganizationName == input.OrganizationGroupGroupNameFilter);
-
+                .Include(e => e.UserFk)
+                .Include(e => e.OrganizationFk)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter),
+                    e => false || e.MemberPosition.Contains(input.Filter))
+                .WhereIf(!string.IsNullOrWhiteSpace(input.MemberPositionFilter),
+                    e => e.MemberPosition.Contains(input.MemberPositionFilter))
+                .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter),
+                    e => e.UserFk != null && e.UserFk.Name == input.UserNameFilter)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationGroupGroupNameFilter),
+                    e => e.OrganizationFk != null &&
+                         e.OrganizationFk.OrganizationName == input.OrganizationGroupGroupNameFilter)
+                .WhereIf(input.OrganizationId.HasValue, e => e.OrganizationId == input.OrganizationId.Value);
 
             if (!user.IsSuperUser)
             {
@@ -90,6 +95,7 @@ namespace Chamran.Deed.People
                                    NationalId = s1.NationalId,
                                    s1.UserName,
                                    UserId = s1.Id,
+                                   OrganizationId = s2.Id,
                                    OrganizationGroupGroupName = s2 == null || s2.OrganizationName == null ? "" : s2.OrganizationName.ToString(),
                                };
 
@@ -109,7 +115,7 @@ namespace Chamran.Deed.People
                         Id = o.Id,
                         UserId = o.UserId,
                         NationalId = o.NationalId,
-
+                        OrganizationId = o.OrganizationId
                     },
                     UserName = o.UserName,
                     FirstName = o.FirstName,
@@ -433,7 +439,7 @@ namespace Chamran.Deed.People
         {
             if (!_groupMemberRepository.GetAll().Any(x => x.OrganizationId == organizationId))
                 throw new UserFriendlyException("سازمان مورد نظر کاربری ندارد");
-            var query = _groupMemberRepository.GetAll().Include(x => x.UserFk).Include(x=>x.UserFk.Roles)
+            var query = _groupMemberRepository.GetAll().Include(x => x.UserFk).Include(x => x.UserFk.Roles)
                 .Where(x => x.OrganizationId == organizationId);
             foreach (var groupMember in query)
             {

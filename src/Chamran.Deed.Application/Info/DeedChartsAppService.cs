@@ -173,20 +173,20 @@ namespace Chamran.Deed.Info
             return output;
         }
 
-        public virtual async Task CreateOrEdit(CreateOrEditDeedChartDto input)
+        public virtual async Task<int> CreateOrEdit(CreateOrEditDeedChartDto input)
         {
             if (input.Id == null)
             {
-                await Create(input);
+                return await Create(input);
             }
             else
             {
-                await Update(input);
+                return await Update(input);
             }
         }
 
         [AbpAuthorize(AppPermissions.Pages_DeedCharts_Create)]
-        protected virtual async Task Create(CreateOrEditDeedChartDto input)
+        protected virtual async Task<int> Create(CreateOrEditDeedChartDto input)
         {
             var deedChart = ObjectMapper.Map<DeedChart>(input);
 
@@ -198,14 +198,16 @@ namespace Chamran.Deed.Info
             await _deedChartRepository.InsertAsync(deedChart);
             await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the role.
             deedChart.GenerateLeafPath();
+            return deedChart.Id;
 
         }
 
         [AbpAuthorize(AppPermissions.Pages_DeedCharts_Edit)]
-        protected virtual async Task Update(CreateOrEditDeedChartDto input)
+        protected virtual async Task<int> Update(CreateOrEditDeedChartDto input)
         {
             var deedChart = await _deedChartRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, deedChart);
+            return deedChart.Id;
             //deedChart.GenerateLeafPath();
 
         }

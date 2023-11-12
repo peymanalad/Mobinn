@@ -39,6 +39,6 @@ namespace Chamran.Deed.Info.Dtos
         public string LastName { get; set; }
 
         public string MemberPosition { get; set; }
-
+        public int OrganizationUserId { get; set; }
     }
 }

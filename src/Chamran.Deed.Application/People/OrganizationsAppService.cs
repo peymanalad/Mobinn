@@ -15,6 +15,7 @@ using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Chamran.Deed.Common;
+using Chamran.Deed.Info;
 using Chamran.Deed.Storage;
 
 namespace Chamran.Deed.People
@@ -23,19 +24,20 @@ namespace Chamran.Deed.People
     public class OrganizationsAppService : DeedAppServiceBase, IOrganizationsAppService
     {
         private readonly IRepository<Organization> _organizationRepository;
+        private readonly IRepository<DeedChart> _deedChartRepository;
         private readonly IOrganizationsExcelExporter _organizationsExcelExporter;
 
         private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IBinaryObjectManager _binaryObjectManager;
 
-        public OrganizationsAppService(IRepository<Organization> organizationRepository, IOrganizationsExcelExporter organizationsExcelExporter, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager)
+        public OrganizationsAppService(IRepository<Organization> organizationRepository, IOrganizationsExcelExporter organizationsExcelExporter, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager, IRepository<DeedChart> deedChartRepository)
         {
             _organizationRepository = organizationRepository;
             _organizationsExcelExporter = organizationsExcelExporter;
 
             _tempFileCacheManager = tempFileCacheManager;
             _binaryObjectManager = binaryObjectManager;
-
+            _deedChartRepository = deedChartRepository;
         }
 
         public virtual async Task<PagedResultDto<GetOrganizationForViewDto>> GetAll(GetAllOrganizationsInput input)
@@ -56,6 +58,9 @@ namespace Chamran.Deed.People
                 .PageBy(input);
 
             var organizations = from o in pagedAndFilteredOrganizations
+                join o1 in _deedChartRepository.GetAll().Include(x=>x.ParentFk) on o.Id equals o1.OrganizationId into j1
+                from s1 in j1.DefaultIfEmpty()
+                
                                 select new
                                 {
 
@@ -67,7 +72,9 @@ namespace Chamran.Deed.People
                                     o.OrganizationContactPerson,
                                     o.Comment,
                                     o.OrganizationLogo,
-                                    Id = o.Id
+                                    Id = o.Id,
+                                    DeedChartCaption=s1.Caption,
+                                    DeedChartParentCaption=s1.ParentFk.Caption
                                 };
 
             var totalCount = await filteredOrganizations.CountAsync();
@@ -91,7 +98,9 @@ namespace Chamran.Deed.People
                         Comment = o.Comment,
                         OrganizationLogo = o.OrganizationLogo,
                         Id = o.Id,
-                    }
+                    },
+                    DeedChartCaption=o.DeedChartCaption,
+                    DeedChartParentCaption=o.DeedChartParentCaption
                 };
                 res.Organization.OrganizationLogoFileName = await GetBinaryFileName(o.OrganizationLogo);
 

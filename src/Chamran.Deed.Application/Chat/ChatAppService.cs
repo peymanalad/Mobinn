@@ -184,7 +184,11 @@ namespace Chamran.Deed.Chat
             
             var messages =await query.ToListAsync();
             messages.Reverse();
-
+            foreach (var chatMessageDto in messages)
+            {
+                if (string.IsNullOrWhiteSpace(chatMessageDto.ForwardedFromName))
+                    chatMessageDto.ForwardedFromName = null;
+            }
             return new ListResultDto<ChatMessageDto>(messages);
         }
 
