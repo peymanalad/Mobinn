@@ -18,6 +18,7 @@ public class BriefLikedPostsDto
     public string PostTitle { get; set; }
     public Guid? PostFile { get; set; }
     public DateTime PostTime { get; set; }
+    public DateTime LikeTime { get; set; }
 }
 public class BriefCommentsDto
 {

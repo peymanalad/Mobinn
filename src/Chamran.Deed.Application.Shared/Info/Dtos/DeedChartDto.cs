@@ -8,6 +8,7 @@ namespace Chamran.Deed.Info.Dtos
         public string Caption { get; set; }
 
         public string LeafPath { get; set; }
+        public string LeafCationPath { get; set; }
 
         public int? OrganizationId { get; set; }
 

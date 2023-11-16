@@ -35,14 +35,14 @@ namespace Chamran.Deed.People.Exporting
 
                         AddHeader(
                             sheet,
-                        L("OrganizationName"),
-                        L("IsGovernmental"),
-                        L("NationalId"),
-                        L("OrganizationLocation"),
-                        L("OrganizationPhone"),
-                        L("OrganizationContactPerson"),
-                        L("Comment"),
-                        L("OrganizationLogo")
+                        "نام سازمان",
+                        "دولتی؟",
+                        "شناسه ملی",
+                        "مکان سازمان",
+                        "تلفن",
+                        "ادمین",
+                        "توضیحات",
+                        "سلسله مراتب"
                             );
 
                         AddObjects(
@@ -54,7 +54,7 @@ namespace Chamran.Deed.People.Exporting
                         _ => _.Organization.OrganizationPhone,
                         _ => _.Organization.OrganizationContactPerson,
                         _ => _.Organization.Comment,
-                        _ => _.Organization.OrganizationLogoFileName
+                        _ => _.LeafCationPath
                             );
 
                     });

@@ -20,6 +20,10 @@ namespace Chamran.Deed.Info
         [StringLength(OrganizationChartConsts.MaxLeafPathLength, MinimumLength = OrganizationChartConsts.MinLeafPathLength)]
         public virtual string LeafPath { get; set; }
 
+
+        [StringLength(OrganizationChartConsts.MaxLeafPathLength, MinimumLength = OrganizationChartConsts.MinLeafPathLength)]
+        public string LeafCationPath { get; set; }
+
         public virtual int? ParentId { get; set; }
 
         public int? OrganizationId { get; set; }
@@ -38,11 +42,15 @@ namespace Chamran.Deed.Info
             if (ParentFk == null)
             {
                 LeafPath = Id + "\\";
+                //LeafCationPath = Caption + "\\";
             }
             else
             {
                 var parentPath = ParentFk.LeafPath;
                 LeafPath = $"{parentPath}{Id}\\";
+                //var parentCaptionPath = ParentFk.LeafCationPath;
+                //LeafCationPath = $"{parentCaptionPath}{Caption}\\";
+                
             }
 
             foreach (var child in Children)
