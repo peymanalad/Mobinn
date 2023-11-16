@@ -12,6 +12,6 @@ namespace Chamran.Deed.Info.Dtos
         public int? OrganizationId { get; set; }
 
         public int? ParentId { get; set; }
-
+        public Guid? OrganizationLogo { get; set; }
     }
 }
