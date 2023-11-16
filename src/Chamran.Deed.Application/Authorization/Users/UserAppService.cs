@@ -248,7 +248,7 @@ namespace Chamran.Deed.Authorization.Users
         {
             var query = _userLoginAttemptRepository.GetAll().Where(x => x.UserId == input.UserId);
             var pagedSorted = await query
-                .OrderBy(input.Sorting)
+                .OrderBy(input.Sorting?? "CreationTime Desc")
                 .PageBy(input)
                 .ToListAsync();
             var totalCount = await query.CountAsync();
@@ -283,7 +283,7 @@ namespace Chamran.Deed.Authorization.Users
                             PostTime=p.CreationTime
                         };
             var pagedSorted = await query
-            .OrderBy(input.Sorting)
+            .OrderBy(input.Sorting?? "SeenTime Desc")
             .PageBy(input)
             .ToListAsync();
             var totalCount = await query.CountAsync();
@@ -324,7 +324,7 @@ namespace Chamran.Deed.Authorization.Users
                     PostTime = p.CreationTime
                 };
             var pagedSorted = await query
-                .OrderBy(input.Sorting)
+                .OrderBy(input.Sorting?? "CreationTime Desc")
                 .PageBy(input)
                 .ToListAsync();
             var totalCount = await query.CountAsync();
@@ -359,13 +359,14 @@ namespace Chamran.Deed.Authorization.Users
                 join p in _postRepository.GetAll() on l.PostId equals p.Id
                 select new
                 {
+                    l.LikeTime,
                     p.Id,
                     p.PostTitle,
                     p.PostFile,
                     PostTime = p.CreationTime
                 };
             var pagedSorted = await query
-                .OrderBy(input.Sorting)
+                .OrderBy(input.Sorting??"LikeTime Desc")
                 .PageBy(input)
                 .ToListAsync();
             var totalCount = await query.CountAsync();
@@ -375,6 +376,7 @@ namespace Chamran.Deed.Authorization.Users
             {
                 data.Add(new BriefLikedPostsDto()
                 {
+                    LikeTime=row.LikeTime,
                     PostId = row.Id,
                     PostTitle = row.PostTitle,
                     PostFile = row.PostFile,
@@ -405,7 +407,7 @@ namespace Chamran.Deed.Authorization.Users
                     PostTime = p.CreationTime
                 };
             var pagedSorted = await query
-                .OrderBy(input.Sorting)
+                .OrderBy(input.Sorting ?? "CreationTime Desc")
                 .PageBy(input)
                 .ToListAsync();
             var totalCount = await query.CountAsync();
@@ -446,7 +448,7 @@ namespace Chamran.Deed.Authorization.Users
                     PostTime = p.CreationTime
                 };
             var pagedSorted = await query
-                .OrderBy(input.Sorting)
+                .OrderBy(input.Sorting ?? "CreationTime Desc")
                 .PageBy(input)
                 .ToListAsync();
             var totalCount = await query.CountAsync();
