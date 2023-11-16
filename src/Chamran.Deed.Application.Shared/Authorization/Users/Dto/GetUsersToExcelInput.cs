@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Abp.Runtime.Validation;
 
 namespace Chamran.Deed.Authorization.Users.Dto
@@ -6,6 +7,10 @@ namespace Chamran.Deed.Authorization.Users.Dto
     public class GetUsersToExcelInput: IShouldNormalize, IGetUsersInput
     {
         public string Filter { get; set; }
+        public DateTime? FromCreationDate { get; set; }
+        public DateTime? ToCreationDate { get; set; }
+        public DateTime? FromLastLoginDate { get; set; }
+        public DateTime? ToLastLoginDate { get; set; }
 
         public List<string> Permissions { get; set; }
 

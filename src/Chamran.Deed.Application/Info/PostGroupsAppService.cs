@@ -55,6 +55,7 @@ namespace Chamran.Deed.Info
 
             var filteredPostGroups = _postGroupRepository.GetAll()
                 .Include(e => e.OrganizationFk)
+                .WhereIf(input.OrganizationId.HasValue,x=>x.OrganizationId==input.OrganizationId.Value)
                 .WhereIf(!string.IsNullOrWhiteSpace(input.Filter),
                     e => false || e.PostGroupDescription.Contains(input.Filter))
                 .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupDescriptionFilter),

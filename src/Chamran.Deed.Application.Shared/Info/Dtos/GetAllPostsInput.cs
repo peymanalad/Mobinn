@@ -5,7 +5,7 @@ namespace Chamran.Deed.Info.Dtos
 {
     public class GetAllPostsInput : PagedAndSortedResultRequestDto
     {
-        public int OrganizationId { get; set; }
+        public int? OrganizationId { get; set; }
 
         public string Filter { get; set; }
 

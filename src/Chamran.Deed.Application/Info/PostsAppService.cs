@@ -36,6 +36,8 @@ namespace Chamran.Deed.Info
         private readonly IRepository<GroupMember, int> _lookup_groupMemberRepository;
         private readonly IRepository<PostGroup, int> _lookup_postGroupRepository;
         private readonly IRepository<UserPostGroup, int> _userPostGroupRepository;
+        private readonly IRepository<Seen, int> _seenRepository;
+        private readonly IRepository<PostLike, int> _postLikeRepository;
 
         private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IBinaryObjectManager _binaryObjectManager;
@@ -48,7 +50,7 @@ namespace Chamran.Deed.Info
         //private CultureInfo _originalCulture;
         //private readonly CultureInfo _targetCulture=new CultureInfo("fa-IR");
 
-        public PostsAppService(IRepository<Post> postRepository, IPostsExcelExporter postsExcelExporter, IRepository<GroupMember, int> lookup_groupMemberRepository, IRepository<PostGroup, int> lookup_postGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager, IRepository<Organization> organization, IAppNotifier appNotifier, IRepository<UserPostGroup, int> userPostGroupRepository, IUnitOfWorkManager unitOfWorkManager)
+        public PostsAppService(IRepository<Post> postRepository, IPostsExcelExporter postsExcelExporter, IRepository<GroupMember, int> lookup_groupMemberRepository, IRepository<PostGroup, int> lookup_postGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager, IRepository<Organization> organization, IAppNotifier appNotifier, IRepository<UserPostGroup, int> userPostGroupRepository, IUnitOfWorkManager unitOfWorkManager, IRepository<PostLike, int> postLikeRepository, IRepository<Seen, int> seenRepository)
         {
             _postRepository = postRepository;
             _postsExcelExporter = postsExcelExporter;
@@ -60,114 +62,112 @@ namespace Chamran.Deed.Info
             _appNotifier = appNotifier;
             _userPostGroupRepository = userPostGroupRepository;
             _unitOfWorkManager = unitOfWorkManager;
+            _postLikeRepository = postLikeRepository;
+            _seenRepository = seenRepository;
             //_postCategoryRepository = postCategoryRepository;
             //_dbContextProvider= dbContextProvider;
         }
 
         public async Task<PagedResultDto<GetPostForViewDto>> GetAll(GetAllPostsInput input)
         {
-            try
-            {
-                //_originalCulture = Thread.CurrentThread.CurrentCulture;
+            var filteredPosts = _postRepository.GetAll()
+                .Include(e => e.GroupMemberFk)
+                .Include(e => e.PostGroupFk)
+                .WhereIf(input.OrganizationId.HasValue,x => x.PostGroupFk.OrganizationId == input.OrganizationId.Value)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter),
+                    e => false || e.PostCaption.Contains(input.Filter) || e.PostTitle.Contains(input.Filter))
+                .WhereIf(!string.IsNullOrWhiteSpace(input.PostCaptionFilter),
+                    e => e.PostCaption.Contains(input.PostCaptionFilter))
+                .WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1,
+                    e => (input.IsSpecialFilter == 1 && e.IsSpecial) ||
+                         (input.IsSpecialFilter == 0 && !e.IsSpecial))
+                .WhereIf(!string.IsNullOrWhiteSpace(input.PostTitleFilter),
+                    e => e.PostTitle.Contains(input.PostTitleFilter))
+                .WhereIf(!string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter),
+                    e => e.GroupMemberFk != null &&
+                         e.GroupMemberFk.MemberPosition == input.GroupMemberMemberPositionFilter)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter),
+                    e => e.PostGroupFk != null && e.PostGroupFk.PostGroupDescription ==
+                        input.PostGroupPostGroupDescriptionFilter)
+                .WhereIf(input.FromDate.HasValue,
+                    e => e.CreationTime >= input.FromDate.Value)
+                .WhereIf(input.ToDate.HasValue,
+                    e => e.CreationTime <= input.ToDate.Value);
 
-                //Thread.CurrentThread.CurrentCulture = _targetCulture;
-                //Thread.CurrentThread.CurrentUICulture = _targetCulture;
-                var filteredPosts = _postRepository.GetAll()
-                    .Include(e => e.GroupMemberFk)
-                    .Include(e => e.PostGroupFk)
-                    .Where(x => x.PostGroupFk.OrganizationId == input.OrganizationId)
-                    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter),
-                        e => false || e.PostCaption.Contains(input.Filter) || e.PostTitle.Contains(input.Filter))
-                    .WhereIf(!string.IsNullOrWhiteSpace(input.PostCaptionFilter),
-                        e => e.PostCaption.Contains(input.PostCaptionFilter))
-                    .WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1,
-                        e => (input.IsSpecialFilter == 1 && e.IsSpecial) ||
-                             (input.IsSpecialFilter == 0 && !e.IsSpecial))
-                    .WhereIf(!string.IsNullOrWhiteSpace(input.PostTitleFilter),
-                        e => e.PostTitle.Contains(input.PostTitleFilter))
-                    .WhereIf(!string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter),
-                        e => e.GroupMemberFk != null &&
-                             e.GroupMemberFk.MemberPosition == input.GroupMemberMemberPositionFilter)
-                    .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter),
-                        e => e.PostGroupFk != null && e.PostGroupFk.PostGroupDescription ==
-                            input.PostGroupPostGroupDescriptionFilter)
-                    .WhereIf(input.FromDate.HasValue,
-                        e => e.CreationTime >= input.FromDate.Value)
-                    .WhereIf(input.ToDate.HasValue,
-                        e => e.CreationTime <= input.ToDate.Value);
+            var pagedAndFilteredPosts = filteredPosts
+                .OrderBy(input.Sorting ?? "id asc")
+                .PageBy(input);
 
-                var pagedAndFilteredPosts = filteredPosts
-                    .OrderBy(input.Sorting ?? "id asc")
-                    .PageBy(input);
+            var posts = from o in pagedAndFilteredPosts
+                join o1 in _lookup_groupMemberRepository.GetAll() on o.GroupMemberId equals o1.Id into j1
+                from s1 in j1.DefaultIfEmpty()
 
-                var posts = from o in pagedAndFilteredPosts
-                            join o1 in _lookup_groupMemberRepository.GetAll() on o.GroupMemberId equals o1.Id into j1
-                            from s1 in j1.DefaultIfEmpty()
-
-                            join o2 in _lookup_postGroupRepository.GetAll() on o.PostGroupId equals o2.Id into j2
-                            from s2 in j2.DefaultIfEmpty()
-
-                            select new
-                            {
-                                o.PostFile,
-                                o.PostCaption,
-                                o.IsSpecial,
-                                o.IsPublished,
-                                o.PostTitle,
-                                o.PostRefLink,
-                                s2.GroupFile,
-                                o.Id,
-                                GroupMemberMemberPosition =
-                                    s1 == null || s1.MemberPosition == null ? "" : s1.MemberPosition,
-                                PostGroupPostGroupDescription = s2 == null || s2.PostGroupDescription == null
-                                    ? ""
-                                    : s2.PostGroupDescription.ToString(),
-                                o.CreationTime,
-                                o.LastModificationTime
-
-                            };
-
-                var totalCount = await filteredPosts.CountAsync();
-
-                var dbList = await posts.ToListAsync();
-                var results = new List<GetPostForViewDto>();
-
-                foreach (var o in dbList)
+                join o2 in _lookup_postGroupRepository.GetAll().Include(x=>x.OrganizationFk) on o.PostGroupId equals o2.Id into j2
+                from s2 in j2.DefaultIfEmpty()
+                join seen in _seenRepository.GetAll() on o.Id equals seen.PostId into seenGroup
+                join postLike in _postLikeRepository.GetAll() on o.Id equals postLike.PostId into likeGroup
+                        select new
                 {
-                    var res = new GetPostForViewDto()
-                    {
-                        Post = new PostDto
-                        {
-                            PostFile = o.PostFile,
-                            PostCaption = o.PostCaption,
-                            IsSpecial = o.IsSpecial,
-                            IsPublished = o.IsPublished,
-                            PostTitle = o.PostTitle,
-                            Id = o.Id,
-                            PostRefLink = o.PostRefLink,
-                            CreationTime = o.CreationTime,
-                            LastModificationTime = o.LastModificationTime
-                        },
-                        GroupMemberMemberPosition = o.GroupMemberMemberPosition,
-                        PostGroupPostGroupDescription = o.PostGroupPostGroupDescription,
-                        GroupFile = o.GroupFile
-                    };
-                    res.Post.PostFileFileName = await GetBinaryFileName(o.PostFile);
+                    o.PostFile,
+                    o.PostCaption,
+                    o.IsSpecial,
+                    o.IsPublished,
+                    o.PostTitle,
+                    o.PostRefLink,
+                    s2.OrganizationId,
+                    s2.OrganizationFk.OrganizationName,
+                    s2.GroupFile,
+                    o.Id,
+                    GroupMemberMemberPosition =
+                        s1 == null || s1.MemberPosition == null ? "" : s1.MemberPosition,
+                    PostGroupPostGroupDescription = s2 == null || s2.PostGroupDescription == null
+                        ? ""
+                        : s2.PostGroupDescription.ToString(),
+                    o.CreationTime,
+                    o.LastModificationTime,
+                    TotalVisits = seenGroup.Count(),
+                    TotalLikes = likeGroup.Count()
+                        };
 
-                    results.Add(res);
-                }
+            var totalCount = await filteredPosts.CountAsync();
 
-                return new PagedResultDto<GetPostForViewDto>(
-                    totalCount,
-                    results
-                );
-            }
-            finally
+            var dbList = await posts.ToListAsync();
+            var results = new List<GetPostForViewDto>();
+
+            foreach (var o in dbList)
             {
-                //Thread.CurrentThread.CurrentCulture = _originalCulture;
-                //Thread.CurrentThread.CurrentUICulture = _originalCulture;
+                var res = new GetPostForViewDto()
+                {
+                    Post = new PostDto
+                    {
+                        PostFile = o.PostFile,
+                        PostCaption = o.PostCaption,
+                        IsSpecial = o.IsSpecial,
+                        IsPublished = o.IsPublished,
+                        PostTitle = o.PostTitle,
+                        Id = o.Id,
+                        PostRefLink = o.PostRefLink,
+                        CreationTime = o.CreationTime,
+                        LastModificationTime = o.LastModificationTime
+                    },
+                    GroupMemberMemberPosition = o.GroupMemberMemberPosition,
+                    PostGroupPostGroupDescription = o.PostGroupPostGroupDescription,
+                    GroupFile = o.GroupFile,
+                    TotalVisits = o.TotalVisits,
+                    TotalLikes = o.TotalLikes,
+                    OrganizationId = o.OrganizationId,
+                    OrganizationName = o.OrganizationName
+
+                };
+                res.Post.PostFileFileName = await GetBinaryFileName(o.PostFile);
+
+                results.Add(res);
             }
 
+            return new PagedResultDto<GetPostForViewDto>(
+                totalCount,
+                results
+            );
         }
 
         public async Task<GetPostForViewDto> GetPostForView(int id)

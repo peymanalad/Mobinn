@@ -11,6 +11,15 @@ namespace Chamran.Deed.Authorization.Users
     public interface IUserAppService : IApplicationService
     {
         Task<PagedResultDto<UserListDto>> GetUsers(GetUsersInput input);
+        Task<PagedResultDto<UserListDto>> GetListOfUsers(GetUsersInput input);
+
+        Task<PagedResultDto<LoginInfosDto>> GetUserLoginAttempts(GetUserInformationDto input);
+        Task<PagedResultDto<BriefSeenPostsDto>> GetUserSeenPosts(GetUserInformationDto input);
+        Task<PagedResultDto<BriefCommentsDto>> GetUserComments(GetUserInformationDto input);
+        Task<PagedResultDto<BriefLikedPostsDto>> GetUserPostLikes(GetUserInformationDto input);
+        Task<PagedResultDto<BriefCommentsDto>> GetUserCommentLikes(GetUserInformationDto input);
+        Task<PagedResultDto<BriefCreatedPostsDto>> GetUserPosts(GetUserInformationDto input);
+
 
         Task<FileDto> GetUsersToExcel(GetUsersToExcelInput input);
 

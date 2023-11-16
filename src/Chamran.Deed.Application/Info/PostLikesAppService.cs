@@ -42,37 +42,38 @@ namespace Chamran.Deed.Info
             var filteredPostLikes = _postLikeRepository.GetAll()
                         .Include(e => e.PostFk)
                         .Include(e => e.UserFk)
-                        .Include(x=>x.PostFk.PostGroupFk)
-                        .Where(x => x.PostFk.PostGroupFk.OrganizationId== input.OrganizationId)
+                        .Include(x => x.PostFk.PostGroupFk)
+                        .Where(x => x.PostFk.PostGroupFk.OrganizationId == input.OrganizationId)
+                        .WhereIf(input.UserId.HasValue, e => e.UserId == input.UserId.Value)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false)
                         .WhereIf(input.MinLikeTimeFilter != null, e => e.LikeTime >= input.MinLikeTimeFilter)
                         .WhereIf(input.MaxLikeTimeFilter != null, e => e.LikeTime <= input.MaxLikeTimeFilter)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.PostPostTitleFilter), e => e.PostFk != null && e.PostFk.PostTitle == input.PostPostTitleFilter)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter), e => e.UserFk != null && e.UserFk.Name == input.UserNameFilter);
+            var filtered = from o in filteredPostLikes
+                join o1 in _lookup_postRepository.GetAll() on o.PostId equals o1.Id into j1
+                           from s1 in j1.DefaultIfEmpty()
+                           join o2 in _lookup_userRepository.GetAll() on o.UserId equals o2.Id into j2
+                           from s2 in j2.DefaultIfEmpty()
+                           select new
+                {
+                    o.UserId,
+                    o.PostId,
+                    o.LikeTime,
+                    o.Id,
+                    PostPostTitle = s1 == null || s1.PostTitle == null ? "" : s1.PostTitle,
+                    UserName = s2 == null || s2.Name == null ? "" : s2.Name
+                };
 
-            var pagedAndFilteredPostLikes = filteredPostLikes
+            var pagedAndFilteredPostLikes = filtered
                 .OrderBy(input.Sorting ?? "id asc")
                 .PageBy(input);
 
-            var postLikes = from o in pagedAndFilteredPostLikes
-                            join o1 in _lookup_postRepository.GetAll() on o.PostId equals o1.Id into j1
-                            from s1 in j1.DefaultIfEmpty()
+         
 
-                            join o2 in _lookup_userRepository.GetAll() on o.UserId equals o2.Id into j2
-                            from s2 in j2.DefaultIfEmpty()
+            var totalCount = await filtered.CountAsync();
 
-                            select new
-                            {
-
-                                o.LikeTime,
-                                Id = o.Id,
-                                PostPostTitle = s1 == null || s1.PostTitle == null ? "" : s1.PostTitle.ToString(),
-                                UserName = s2 == null || s2.Name == null ? "" : s2.Name.ToString()
-                            };
-
-            var totalCount = await filteredPostLikes.CountAsync();
-
-            var dbList = await postLikes.ToListAsync();
+            var dbList = await pagedAndFilteredPostLikes.ToListAsync();
             var results = new List<GetPostLikeForViewDto>();
 
             foreach (var o in dbList)
@@ -81,7 +82,7 @@ namespace Chamran.Deed.Info
                 {
                     PostLike = new PostLikeDto
                     {
-
+                        PostId = o.PostId,
                         LikeTime = o.LikeTime,
                         Id = o.Id,
                     },
@@ -282,7 +283,7 @@ namespace Chamran.Deed.Info
         public async Task<bool> IsPostLiked(int postId)
         {
             if (postId <= 0) throw new UserFriendlyException("PostId should be greater than zero");
-            if(!AbpSession.UserId.HasValue) throw new UserFriendlyException("Not Logged In!");
+            if (!AbpSession.UserId.HasValue) throw new UserFriendlyException("Not Logged In!");
             return await _postLikeRepository.GetAll()
                 .Where(e => e.PostId == postId && e.UserId == AbpSession.UserId.Value).AnyAsync();
 
@@ -293,7 +294,7 @@ namespace Chamran.Deed.Info
             if (postId <= 0) throw new UserFriendlyException("PostId should be greater than zero");
             if (!AbpSession.UserId.HasValue) throw new UserFriendlyException("Not Logged In!");
             return await _postLikeRepository.GetAll()
-                .Where(e => e.PostId == postId && e.UserId == AbpSession.UserId.Value).ExecuteDeleteAsync()>0;
+                .Where(e => e.PostId == postId && e.UserId == AbpSession.UserId.Value).ExecuteDeleteAsync() > 0;
 
 
         }
