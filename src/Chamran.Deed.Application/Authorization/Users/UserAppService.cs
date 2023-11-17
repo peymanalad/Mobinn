@@ -164,86 +164,45 @@ namespace Chamran.Deed.Authorization.Users
         public async Task<PagedResultDto<UserListDto>> GetListOfUsers(GetUsersInput input)
         {
             if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
-            //var user = await _userRepository.GetAsync(AbpSession.UserId.Value);
 
             var query = GetUsersFilteredQuery(input);
-            if (input.OrganizationId.HasValue)
+
+            var joinQuery = from x in query
+                join y in _groupMemberRepository.GetAll() on x.Id equals y.UserId into joiner
+                where !input.OrganizationId.HasValue || (joiner.Any() && joiner.Any(y => y.OrganizationId == input.OrganizationId))
+                select x;
+
+            var userCount = await joinQuery.CountAsync();
+
+            var usersWithLatestLoginAttempts = await joinQuery
+                .OrderBy(input.Sorting)
+                .PageBy(input)
+                .ToListAsync();
+
+            var final = from x in usersWithLatestLoginAttempts
+                join z in _userLoginAttemptRepository.GetAll() on x.Id equals z.UserId
+                    into loginAttempts
+                let latestAttempt = loginAttempts.OrderByDescending(la => la.CreationTime).FirstOrDefault()
+                select new { User = x, LatestLoginAttempt = latestAttempt };
+
+            var distinctFinal = final.GroupBy(x => x.User.Id).Select(group => group.OrderByDescending(x => x.LatestLoginAttempt?.CreationTime).First());
+
+            var userListDtos = distinctFinal.Select(result =>
             {
+                var userDto = ObjectMapper.Map<UserListDto>(result.User);
+                userDto.LastLoginAttemptTime = result.LatestLoginAttempt?.CreationTime;
+                // You can include other properties from UserListDto as needed
+                return userDto;
+            }).ToList();
 
-                var joinQuery = from x in query
-                                join y in _groupMemberRepository.GetAll() on x.Id equals y.UserId //into joiner
-                                where y.OrganizationId == input.OrganizationId
-                                select x;
+            await FillRoleNames(userListDtos);
 
-                var userCount = await joinQuery.CountAsync();
-
-                var usersWithLatestLoginAttempts = await joinQuery
-                    .OrderBy(input.Sorting)
-                    .PageBy(input)
-                    .ToListAsync();
-
-                var final = from x in usersWithLatestLoginAttempts
-                            join z in _userLoginAttemptRepository.GetAll() on x.Id equals z.UserId
-                                into loginAttempts
-                            let latestAttempt = loginAttempts.OrderByDescending(la => la.CreationTime)
-                                .Select((la, index) => new { la, RowNum = index + 1 })
-                                .FirstOrDefault()
-                            select new { User = x, LatestLoginAttempt = latestAttempt?.la };
-
-                var userListDtos = final.Select(result =>
-                {
-                    var userDto = ObjectMapper.Map<UserListDto>(result.User);
-                    userDto.LastLoginAttemptTime = result.LatestLoginAttempt?.CreationTime;
-                    // You can include other properties from UserListDto as needed
-                    return userDto;
-                }).ToList();
-
-                await FillRoleNames(userListDtos);
-                return new PagedResultDto<UserListDto>(
-                    userCount,
-                    userListDtos
-                );
-            }
-            else
-            {
-                var joinQuery = from x in query
-                                join y in _groupMemberRepository.GetAll() on x.Id equals y.UserId into joiner
-                                from y2 in joiner.DefaultIfEmpty()
-                                select x;
-
-                var userCount = await joinQuery.CountAsync();
-
-                var usersWithLatestLoginAttempts = await joinQuery
-                    .OrderBy(input.Sorting)
-                    .PageBy(input)
-                    .ToListAsync();
-
-                var final = from x in usersWithLatestLoginAttempts
-                            join z in _userLoginAttemptRepository.GetAll() on x.Id equals z.UserId
-                                into loginAttempts
-                            let latestAttempt = loginAttempts.OrderByDescending(la => la.CreationTime)
-                                .Select((la, index) => new { la, RowNum = index + 1 })
-                                .FirstOrDefault()
-                            select new { User = x, LatestLoginAttempt = latestAttempt?.la };
-
-                var userListDtos = final.Select(result =>
-                {
-                    var userDto = ObjectMapper.Map<UserListDto>(result.User);
-                    userDto.LastLoginAttemptTime = result.LatestLoginAttempt?.CreationTime;
-                    // You can include other properties from UserListDto as needed
-                    return userDto;
-                }).ToList();
-
-                await FillRoleNames(userListDtos);
-                return new PagedResultDto<UserListDto>(
-                    userCount,
-                    userListDtos
-                );
-
-            }
-
-
+            return new PagedResultDto<UserListDto>(
+                userCount,
+                userListDtos
+            );
         }
+
 
         public async Task<PagedResultDto<LoginInfosDto>> GetUserLoginAttempts(GetUserInformationDto input)
         {
