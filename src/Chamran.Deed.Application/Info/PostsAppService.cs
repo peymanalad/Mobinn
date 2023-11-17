@@ -25,6 +25,7 @@ using Abp.Domain.Uow;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Globalization;
+using Chamran.Deed.Authorization.Users.Dto;
 
 namespace Chamran.Deed.Info
 {
@@ -73,102 +74,61 @@ namespace Chamran.Deed.Info
             var filteredPosts = _postRepository.GetAll()
                 .Include(e => e.GroupMemberFk)
                 .Include(e => e.PostGroupFk)
-                .WhereIf(input.OrganizationId.HasValue,x => x.PostGroupFk.OrganizationId == input.OrganizationId.Value)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter),
-                    e => false || e.PostCaption.Contains(input.Filter) || e.PostTitle.Contains(input.Filter))
-                .WhereIf(!string.IsNullOrWhiteSpace(input.PostCaptionFilter),
-                    e => e.PostCaption.Contains(input.PostCaptionFilter))
-                .WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1,
-                    e => (input.IsSpecialFilter == 1 && e.IsSpecial) ||
-                         (input.IsSpecialFilter == 0 && !e.IsSpecial))
-                .WhereIf(!string.IsNullOrWhiteSpace(input.PostTitleFilter),
-                    e => e.PostTitle.Contains(input.PostTitleFilter))
-                .WhereIf(!string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter),
-                    e => e.GroupMemberFk != null &&
-                         e.GroupMemberFk.MemberPosition == input.GroupMemberMemberPositionFilter)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter),
-                    e => e.PostGroupFk != null && e.PostGroupFk.PostGroupDescription ==
-                        input.PostGroupPostGroupDescriptionFilter)
-                .WhereIf(input.FromDate.HasValue,
-                    e => e.CreationTime >= input.FromDate.Value)
-                .WhereIf(input.ToDate.HasValue,
-                    e => e.CreationTime <= input.ToDate.Value);
+                .WhereIf(input.OrganizationId.HasValue, x => x.PostGroupFk.OrganizationId == input.OrganizationId.Value)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.PostCaption.Contains(input.Filter) || e.PostTitle.Contains(input.Filter))
+                .WhereIf(!string.IsNullOrWhiteSpace(input.PostCaptionFilter), e => e.PostCaption.Contains(input.PostCaptionFilter))
+                .WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
+                .WhereIf(!string.IsNullOrWhiteSpace(input.PostTitleFilter), e => e.PostTitle.Contains(input.PostTitleFilter))
+                .WhereIf(!string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter), e => e.GroupMemberFk != null && e.GroupMemberFk.MemberPosition == input.GroupMemberMemberPositionFilter)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter), e => e.PostGroupFk != null && e.PostGroupFk.PostGroupDescription == input.PostGroupPostGroupDescriptionFilter)
+                .WhereIf(input.FromDate.HasValue, e => e.CreationTime >= input.FromDate.Value)
+                .WhereIf(input.ToDate.HasValue, e => e.CreationTime <= input.ToDate.Value);
 
-            var pagedAndFilteredPosts = filteredPosts
-                .OrderBy(input.Sorting ?? "id asc")
-                .PageBy(input);
+            var pagedAndFilteredPosts = await filteredPosts
+                .OrderBy(input.Sorting ?? "Id asc")
+                .PageBy(input)
+                .ToListAsync();
 
-            var posts = from o in pagedAndFilteredPosts
-                join o1 in _lookup_groupMemberRepository.GetAll() on o.GroupMemberId equals o1.Id into j1
-                from s1 in j1.DefaultIfEmpty()
-
-                join o2 in _lookup_postGroupRepository.GetAll().Include(x=>x.OrganizationFk) on o.PostGroupId equals o2.Id into j2
-                from s2 in j2.DefaultIfEmpty()
-                join seen in _seenRepository.GetAll() on o.Id equals seen.PostId into seenGroup
-                join postLike in _postLikeRepository.GetAll() on o.Id equals postLike.PostId into likeGroup
-                        select new
-                {
-                    o.PostFile,
-                    o.PostCaption,
-                    o.IsSpecial,
-                    o.IsPublished,
-                    o.PostTitle,
-                    o.PostRefLink,
-                    s2.OrganizationId,
-                    s2.OrganizationFk.OrganizationName,
-                    s2.GroupFile,
-                    o.Id,
-                    GroupMemberMemberPosition =
-                        s1 == null || s1.MemberPosition == null ? "" : s1.MemberPosition,
-                    PostGroupPostGroupDescription = s2 == null || s2.PostGroupDescription == null
-                        ? ""
-                        : s2.PostGroupDescription.ToString(),
-                    o.CreationTime,
-                    o.LastModificationTime,
-                    TotalVisits = seenGroup.Count(),
-                    TotalLikes = likeGroup.Count()
-                        };
-
-            var totalCount = await filteredPosts.CountAsync();
-
-            var dbList = await posts.ToListAsync();
             var results = new List<GetPostForViewDto>();
 
-            foreach (var o in dbList)
+            foreach (var post in pagedAndFilteredPosts)
             {
-                var res = new GetPostForViewDto()
+                var seenGroup = await _seenRepository.GetAll().Where(seen => seen.PostId == post.Id).ToListAsync();
+                var likeGroup = await _postLikeRepository.GetAll().Where(postLike => postLike.PostId == post.Id).ToListAsync();
+
+                var resultDto = new GetPostForViewDto
                 {
                     Post = new PostDto
                     {
-                        PostFile = o.PostFile,
-                        PostCaption = o.PostCaption,
-                        IsSpecial = o.IsSpecial,
-                        IsPublished = o.IsPublished,
-                        PostTitle = o.PostTitle,
-                        Id = o.Id,
-                        PostRefLink = o.PostRefLink,
-                        CreationTime = o.CreationTime,
-                        LastModificationTime = o.LastModificationTime
+                        PostFile = post.PostFile,
+                        PostCaption = post.PostCaption,
+                        IsSpecial = post.IsSpecial,
+                        IsPublished = post.IsPublished,
+                        PostTitle = post.PostTitle,
+                        PostRefLink = post.PostRefLink,
+                        Id = post.Id,
+                        CreationTime = post.CreationTime,
+                        LastModificationTime = post.LastModificationTime
                     },
-                    GroupMemberMemberPosition = o.GroupMemberMemberPosition,
-                    PostGroupPostGroupDescription = o.PostGroupPostGroupDescription,
-                    GroupFile = o.GroupFile,
-                    TotalVisits = o.TotalVisits,
-                    TotalLikes = o.TotalLikes,
-                    OrganizationId = o.OrganizationId,
-                    OrganizationName = o.OrganizationName
-
+                    GroupMemberMemberPosition = post.GroupMemberFk?.MemberPosition ?? "",
+                    PostGroupPostGroupDescription = post.PostGroupFk?.PostGroupDescription ?? "",
+                    GroupFile = post.PostGroupFk.GroupFile,
+                    TotalVisits = seenGroup.Count,
+                    TotalLikes = likeGroup.Count,
+                    OrganizationId = post.PostGroupFk?.OrganizationFk?.Id ?? 0,
+                    OrganizationName = post.PostGroupFk?.OrganizationFk?.OrganizationName ?? ""
                 };
-                res.Post.PostFileFileName = await GetBinaryFileName(o.PostFile);
 
-                results.Add(res);
+                resultDto.Post.PostFileFileName = await GetBinaryFileName(post.PostFile);
+
+                results.Add(resultDto);
             }
 
-            return new PagedResultDto<GetPostForViewDto>(
-                totalCount,
-                results
-            );
+            var totalCount = await filteredPosts.CountAsync();
+
+            return new PagedResultDto<GetPostForViewDto>(totalCount, results);
         }
+
 
         public async Task<GetPostForViewDto> GetPostForView(int id)
         {
@@ -282,7 +242,7 @@ namespace Chamran.Deed.Info
                 ids.Add(new UserIdentifier(AbpSession.TenantId, row.UserId));
             }
 
-            await _appNotifier.SendPostNotificationAsync(JsonConvert.SerializeObject(post, new JsonSerializerSettings
+            await _appNotifier.SendPostNotificationAsync(JsonConvert.SerializeObject(ObjectMapper.Map<PostDto>(post), new JsonSerializerSettings
             {
                 ContractResolver = new DefaultContractResolver
                 {
@@ -800,13 +760,97 @@ namespace Chamran.Deed.Info
             {
                 throw new UserFriendlyException(ex.Message);
             }
-            finally
-            {
-                //Thread.CurrentThread.CurrentCulture = _originalCulture;
-                //Thread.CurrentThread.CurrentUICulture = _originalCulture;
-            }
         }
 
+        public Task<PagedResultDto<GetLikedUsersDto>> GetLikedUsers(GetLikedUsersInput input)
+        {
+            var query = from pl in _postLikeRepository.GetAll().Include(x => x.UserFk)
 
+                        where pl.PostId == input.PostId
+                        select new
+                        {
+                            UserId = pl.UserFk.Id,
+                            pl.UserFk.NationalId,
+                            pl.UserFk.IsSuperUser,
+                            pl.UserFk.UserName,
+                            pl.UserFk.Name,
+                            pl.UserFk.Surname,
+                            pl.UserFk.PhoneNumber,
+                            pl.UserFk.ProfilePictureId,
+                            pl.LikeTime
+                        };
+            var queryCount = query.Count();
+            var pagedAndFiltered = query
+                .OrderBy(input.Sorting ?? "UserId desc")
+                .PageBy(input);
+            List<GetLikedUsersDto> users = new List<GetLikedUsersDto>();
+            foreach (var row in pagedAndFiltered)
+            {
+                var datam = new GetLikedUsersDto()
+                {
+                    UserId = row.UserId,
+                    Surname = row.Surname,
+                    PhoneNumber = row.PhoneNumber,
+                    UserName = row.UserName,
+                    LikeTime = row.LikeTime,
+                    IsSuperUser= row.IsSuperUser,
+                    Name = row.Name,
+                    NationalId = row.NationalId,
+                    ProfilePictureId = row.ProfilePictureId,
+                };
+
+                users.Add(datam);
+
+
+            }
+            return Task.FromResult(new PagedResultDto<GetLikedUsersDto>(queryCount, users));
+
+        }
+
+        public Task<PagedResultDto<GetSeenUsersDto>> GetSeenUsers(GetSeenUsersInput input)
+        {
+            var query = from pl in _seenRepository.GetAll().Include(x => x.UserFk)
+
+                where pl.PostId == input.PostId
+                select new
+                {
+                    UserId = pl.UserFk.Id,
+                    pl.UserFk.NationalId,
+                    pl.UserFk.IsSuperUser,
+                    pl.UserFk.UserName,
+                    pl.UserFk.Name,
+                    pl.UserFk.Surname,
+                    pl.UserFk.PhoneNumber,
+                    pl.UserFk.ProfilePictureId,
+                    pl.SeenTime
+                };
+            var queryCount = query.Count();
+            var pagedAndFiltered = query
+                .OrderBy(input.Sorting ?? "UserId desc")
+                .PageBy(input);
+            List<GetSeenUsersDto> users = new List<GetSeenUsersDto>();
+            foreach (var row in pagedAndFiltered)
+            {
+                var datam = new GetSeenUsersDto()
+                {
+                    UserId = row.UserId,
+                    Surname = row.Surname,
+                    PhoneNumber = row.PhoneNumber,
+                    UserName = row.UserName,
+                    SeenTime = row.SeenTime,
+                    IsSuperUser = row.IsSuperUser,
+                    Name = row.Name,
+                    NationalId = row.NationalId,
+                    ProfilePictureId = row.ProfilePictureId,
+                    
+                };
+
+                users.Add(datam);
+
+
+            }
+            return Task.FromResult(new PagedResultDto<GetSeenUsersDto>(queryCount, users));
+
+        }
     }
 }

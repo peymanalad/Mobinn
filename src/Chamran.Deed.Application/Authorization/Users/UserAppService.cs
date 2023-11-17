@@ -39,6 +39,7 @@ using Chamran.Deed.People;
 using Chamran.Deed.People.Dtos;
 using Chamran.Deed.Authorization.Delegation;
 using Chamran.Deed.Authorization.Users.Delegation.Dto;
+using NUglify.Helpers;
 
 namespace Chamran.Deed.Authorization.Users
 {
@@ -445,10 +446,10 @@ namespace Chamran.Deed.Authorization.Users
                     p.Id,
                     p.PostTitle,
                     p.PostFile,
-                    PostTime = p.CreationTime
+                    PostTime = p.CreationTime,
                 };
             var pagedSorted = await query
-                .OrderBy(input.Sorting ?? "CreationTime Desc")
+                .OrderBy(input.Sorting ?? "PostTime Desc")
                 .PageBy(input)
                 .ToListAsync();
             var totalCount = await query.CountAsync();
@@ -941,6 +942,12 @@ namespace Chamran.Deed.Authorization.Users
         private IQueryable<User> GetUsersFilteredQuery(IGetUsersInput input)
         {
             var query = UserManager.Users
+                .WhereIf(!string.IsNullOrWhiteSpace(input.NationalIdFilter),n=>n.NationalId==input.NationalIdFilter)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.NameFilter),n=>n.Name==input.NameFilter)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.SurNameFilter),n=>n.Surname==input.SurNameFilter)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter),n=>n.UserName==input.UserNameFilter)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.PhoneNumberFilter),n=>n.PhoneNumber==input.PhoneNumberFilter)
+                .WhereIf(input.IsActiveFilter.HasValue,n=>n.IsActive==input.IsActiveFilter.Value)
                 .WhereIf(input.FromCreationDate.HasValue, u => u.CreationTime >= input.FromCreationDate.Value)
                 .WhereIf(input.ToCreationDate.HasValue, u => u.CreationTime <= input.ToCreationDate.Value)
                 .WhereIf(
@@ -955,7 +962,7 @@ namespace Chamran.Deed.Authorization.Users
                 .WhereIf(input.OnlyLockedUsers,
                     u => u.LockoutEndDateUtc.HasValue && u.LockoutEndDateUtc.Value > DateTime.UtcNow)
                 .WhereIf(
-                    !input.Filter.IsNullOrWhiteSpace(),
+                    !string.IsNullOrWhiteSpace(input.Filter),
                     u =>
                         u.Name.Contains(input.Filter) ||
                         u.Surname.Contains(input.Filter) ||
@@ -963,7 +970,7 @@ namespace Chamran.Deed.Authorization.Users
                         u.EmailAddress.Contains(input.Filter)
                 );
 
-            if (input.Permissions != null && input.Permissions.Any(p => !p.IsNullOrWhiteSpace()))
+            if (input.Permissions != null && input.Permissions.Any(p =>!string.IsNullOrWhiteSpace(p)))
             {
                 var staticRoleNames = _roleManagementConfig.StaticRoles.Where(
                     r => r.GrantAllPermissionsByDefault &&
