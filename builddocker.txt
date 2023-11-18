@@ -1,18 +1,18 @@
 docker build -t ideed:13.3 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 
-docker build -t ideedreact:4.1 C:\ZProjects\ideed\deed-dashboard
+docker build -t ideedreact:4.4 C:\ZProjects\ideed\deed-dashboard
 
 
 docker login docker.ideed.ir
 
 docker images
-docker tag  af15f6a59e71 docker.ideed.ir/ideed:13.3
+docker tag  210e9547dd3c docker.ideed.ir/ideed:13.3
 docker push docker.ideed.ir/ideed:13.3
 
 
 docker images
-docker tag aabba8d91158 docker.ideed.ir/ideedreact:4.1
-docker push docker.ideed.ir/ideedreact:4.1
+docker tag fcca5d3eefd6 docker.ideed.ir/ideedreact:4.4
+docker push docker.ideed.ir/ideedreact:4.4
 
 docker-compose down -v
 
