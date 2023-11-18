@@ -9,9 +9,19 @@ namespace Chamran.Deed.Notifications.Dto
         public int UnreadCount { get; set; }
 
         public GetNotificationsOutput(int totalCount, int unreadCount, List<UserNotification> notifications)
-            :base(totalCount, notifications)
+            : base(totalCount, notifications)
         {
             UnreadCount = unreadCount;
         }
     }
+    //public class GetNotificationsOutput : PagedResultDto<UserNotificationDto>
+    //{
+    //    public int UnreadCount { get; set; }
+
+    //    public GetNotificationsOutput(int totalCount, int unreadCount, List<UserNotificationDto> notifications)
+    //        : base(totalCount, notifications)
+    //    {
+    //        UnreadCount = unreadCount;
+    //    }
+    //}
 }

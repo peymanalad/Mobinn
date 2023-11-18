@@ -90,13 +90,15 @@ namespace Chamran.Deed.Info
 
                              select new
                              {
+                                 s1.OrganizationLogo,
                                  o.OrganizationId,
                                  o.ParentId,
                                  o.Caption,
                                  o.LeafPath,
                                  Id = o.Id,
                                  OrganizationOrganizationName = s1 == null || s1.OrganizationName == null ? "" : s1.OrganizationName.ToString(),
-                                 DeedChartCaption = s2 == null || s2.Caption == null ? "" : s2.Caption.ToString()
+                                 DeedChartCaption = s2 == null || s2.Caption == null ? "" : s2.Caption.ToString(),
+                                 LeafCaptionPath=o.LeafCationPath
                              };
 
             var totalCount = await filteredDeedCharts.CountAsync();
@@ -110,14 +112,17 @@ namespace Chamran.Deed.Info
                 {
                     DeedChart = new DeedChartDto
                     {
+                        OrganizationLogo=o.OrganizationLogo,
                         ParentId = o.ParentId,
                         OrganizationId = o.OrganizationId,
                         Caption = o.Caption,
                         LeafPath = o.LeafPath,
+                        LeafCationPath = o.LeafCaptionPath,
                         Id = o.Id,
                     },
                     OrganizationOrganizationName = o.OrganizationOrganizationName,
-                    DeedChartCaption = o.DeedChartCaption
+                    DeedChartCaption = o.DeedChartCaption,
+
                 };
 
                 results.Add(res);

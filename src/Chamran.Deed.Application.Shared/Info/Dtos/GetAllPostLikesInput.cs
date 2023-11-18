@@ -7,6 +7,7 @@ namespace Chamran.Deed.Info.Dtos
     {
         public string Filter { get; set; }
         public int OrganizationId { get; set; }
+        public int? UserId { get; set; }
 
         public DateTime? MaxLikeTimeFilter { get; set; }
         public DateTime? MinLikeTimeFilter { get; set; }

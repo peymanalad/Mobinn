@@ -31,5 +31,6 @@ namespace Chamran.Deed.Authorization.Users.Dto
         public bool IsActive { get; set; }
 
         public DateTime CreationTime { get; set; }
+        public DateTime? LastLoginAttemptTime { get; set; }
     }
 }

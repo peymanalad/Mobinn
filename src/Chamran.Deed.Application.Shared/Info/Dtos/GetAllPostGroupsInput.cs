@@ -6,7 +6,7 @@ namespace Chamran.Deed.Info.Dtos
     public class GetAllPostGroupsInput : PagedAndSortedResultRequestDto
     {
         public string Filter { get; set; }
-
+        public int? OrganizationId { get; set; }
         public string PostGroupDescriptionFilter { get; set; }
 
         public int? MaxOrderingFilter { get; set; }
