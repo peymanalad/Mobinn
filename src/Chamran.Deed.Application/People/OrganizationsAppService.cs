@@ -53,12 +53,9 @@ namespace Chamran.Deed.People
                         .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationContactPersonFilter), e => e.OrganizationContactPerson.Contains(input.OrganizationContactPersonFilter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.CommentFilter), e => e.Comment.Contains(input.CommentFilter));
 
-            var pagedAndFilteredOrganizations = filteredOrganizations
-                .OrderBy(input.Sorting ?? "id asc")
-                .PageBy(input);
-
-            var organizations = from o in pagedAndFilteredOrganizations
-                join o1 in _deedChartRepository.GetAll().Include(x=>x.ParentFk) on o.Id equals o1.OrganizationId into j1
+          
+            var organizations = from o in filteredOrganizations
+                                join o1 in _deedChartRepository.GetAll().Include(x=>x.ParentFk) on o.Id equals o1.OrganizationId into j1
                 from s1 in j1.DefaultIfEmpty()
                 
                                 select new
@@ -74,12 +71,17 @@ namespace Chamran.Deed.People
                                     o.OrganizationLogo,
                                     Id = o.Id,
                                     DeedChartCaption=s1.Caption,
-                                    DeedChartParentCaption=s1.ParentFk.Caption
+                                    DeedChartParentCaption=s1.ParentFk.Caption,
+                                    LeafCationPath=s1.LeafCationPath
                                 };
 
-            var totalCount = await filteredOrganizations.CountAsync();
+            var pagedAndFilteredOrganizations = organizations
+                .OrderBy(input.Sorting ?? "id asc")
+                .PageBy(input);
 
-            var dbList = await organizations.ToListAsync();
+            var totalCount = await organizations.CountAsync();
+
+            var dbList = await pagedAndFilteredOrganizations.ToListAsync();
             var results = new List<GetOrganizationForViewDto>();
 
             foreach (var o in dbList)
@@ -100,7 +102,8 @@ namespace Chamran.Deed.People
                         Id = o.Id,
                     },
                     DeedChartCaption=o.DeedChartCaption,
-                    DeedChartParentCaption=o.DeedChartParentCaption
+                    DeedChartParentCaption=o.DeedChartParentCaption,
+                    LeafCationPath=o.LeafCationPath
                 };
                 res.Organization.OrganizationLogoFileName = await GetBinaryFileName(o.OrganizationLogo);
 
@@ -189,7 +192,27 @@ namespace Chamran.Deed.People
                         .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationContactPersonFilter), e => e.OrganizationContactPerson.Contains(input.OrganizationContactPersonFilter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.CommentFilter), e => e.Comment.Contains(input.CommentFilter));
 
-            var query = (from o in filteredOrganizations
+            var organizations = from o in filteredOrganizations
+                join o1 in _deedChartRepository.GetAll().Include(x => x.ParentFk) on o.Id equals o1.OrganizationId into j1
+                from s1 in j1.DefaultIfEmpty()
+
+                select new
+                {
+
+                    o.OrganizationName,
+                    o.IsGovernmental,
+                    o.NationalId,
+                    o.OrganizationLocation,
+                    o.OrganizationPhone,
+                    o.OrganizationContactPerson,
+                    o.Comment,
+                    o.OrganizationLogo,
+                    Id = o.Id,
+                    DeedChartCaption = s1.Caption,
+                    DeedChartParentCaption = s1.ParentFk.Caption,
+                    LeafCationPath = s1.LeafCationPath
+                };
+            var query = (from o in organizations
                          select new GetOrganizationForViewDto()
                          {
                              Organization = new OrganizationDto
@@ -203,7 +226,10 @@ namespace Chamran.Deed.People
                                  Comment = o.Comment,
                                  OrganizationLogo = o.OrganizationLogo,
                                  Id = o.Id
-                             }
+                             },
+                             DeedChartCaption = o.DeedChartCaption,
+                             DeedChartParentCaption = o.DeedChartParentCaption,
+                             LeafCationPath = o.LeafCationPath
                          });
 
             var organizationListDtos = await query.ToListAsync();

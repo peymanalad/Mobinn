@@ -6,6 +6,7 @@ using Abp.Application.Services.Dto;
 using Chamran.Deed.AttributeHelper;
 using Chamran.Deed.Info.Dtos;
 using Chamran.Deed.Dto;
+using Chamran.Deed.Authorization.Users.Dto;
 
 namespace Chamran.Deed.Info
 {
@@ -35,6 +36,8 @@ namespace Chamran.Deed.Info
        
         Task<PagedResultDto<GetPostsForViewDto>> GetPostsByGroupIdForView(GetPostsByGroupIdInput input);
 
-        //Task<GetExploreForViewDto> GetExploreForView(GetExploreForViewInput input);
+        Task<PagedResultDto<GetLikedUsersDto>> GetLikedUsers(GetLikedUsersInput input);
+        Task<PagedResultDto<GetSeenUsersDto>> GetSeenUsers(GetSeenUsersInput input);
+
     }
 }
