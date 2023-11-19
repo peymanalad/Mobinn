@@ -40,7 +40,7 @@ namespace Chamran.Deed.Info
             if (ParentFk == null)
             {
                 LeafPath = Id + "\\";
-                LeafCationPath = Caption + "\\";
+                LeafCationPath = Caption + "/";
 
             }
             else
@@ -48,7 +48,7 @@ namespace Chamran.Deed.Info
                 var parentPath = ParentFk.LeafPath;
                 LeafPath = $"{parentPath}{Id}\\";
                 var parentCaptionPath = ParentFk.LeafCationPath;
-                LeafCationPath = $"{parentCaptionPath}{Caption}\\";
+                LeafCationPath = $"{parentCaptionPath}{Caption}/";
 
             }
 
