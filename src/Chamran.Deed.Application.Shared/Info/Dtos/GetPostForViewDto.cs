@@ -5,9 +5,7 @@ namespace Chamran.Deed.Info.Dtos
     public class GetPostForViewDto
     {
         public PostDto Post { get; set; }
-
         public string GroupMemberMemberPosition { get; set; }
-
         public string PostGroupPostGroupDescription { get; set; }
         public int TotalVisits { get; set; }
         public int TotalLikes { get; set; }
@@ -16,4 +14,6 @@ namespace Chamran.Deed.Info.Dtos
         public int? OrganizationId { get; set; }
         public string OrganizationName { get; set; }
     }
+
+   
 }
