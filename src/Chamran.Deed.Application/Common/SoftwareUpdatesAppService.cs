@@ -3,6 +3,8 @@ using System.Linq;
 using System.Linq.Dynamic.Core;
 using Abp.Linq.Extensions;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
 using Chamran.Deed.Common.Dtos;
@@ -12,8 +14,10 @@ using Abp.Extensions;
 using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
+using Abp.Web.Models;
 using Chamran.Deed.Storage;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Chamran.Deed.Common
 {
@@ -226,5 +230,18 @@ namespace Chamran.Deed.Common
             return output;
         }
 
+        [AllowAnonymous]
+        [DontWrapResult]
+        [HttpGet] // Specify that this action should handle HTTP GET requests
+        public IActionResult LatestAndroid()
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.Redirect);
+            response.Headers.Location = new System.Uri("https://d.yasnasystem.ir/wl/?id=RncerIbHO92V9Niz7vVwhRauCVHKXQpi&fmode=download");
+
+            return new ObjectResult(response)
+            {
+                StatusCode = (int)HttpStatusCode.Redirect,
+            };
+        }
     }
 }

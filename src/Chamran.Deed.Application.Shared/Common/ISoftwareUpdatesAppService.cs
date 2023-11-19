@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Abp.Application.Services;
 using Abp.Application.Services.Dto;
 using Chamran.Deed.Common.Dtos;
 using Chamran.Deed.Dto;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Chamran.Deed.Common
 {
@@ -22,6 +24,8 @@ namespace Chamran.Deed.Common
         Task RemoveUpdateFileFile(EntityDto input);
 
         Task<GetSoftwareUpdateForViewDto> GetLatestUpdateInformation();
+
+        IActionResult LatestAndroid();
 
     }
 }

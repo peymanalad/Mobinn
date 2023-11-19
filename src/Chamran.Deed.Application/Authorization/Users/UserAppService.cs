@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Dynamic.Core;
@@ -170,8 +171,14 @@ namespace Chamran.Deed.Authorization.Users
         public async Task<PagedResultDto<UserListDto>> GetListOfUsers(GetUsersInput input)
         {
             if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
+            //var totalCountParameter = new SqlParameter("@TotalCount", SqlDbType.Int)
+            //{
+            //    Direction = ParameterDirection.Output
+            //};
+
             var parameters = new SqlParameter[]
    {
+
         new SqlParameter("@NationalIdFilter", input.NationalIdFilter ?? (object)DBNull.Value),
         new SqlParameter("@NameFilter", string.IsNullOrWhiteSpace(input.NameFilter) ? (object)DBNull.Value : (object)input.NameFilter),
         new SqlParameter("@SurNameFilter", string.IsNullOrWhiteSpace(input.SurNameFilter) ? (object)DBNull.Value : (object)input.SurNameFilter),
@@ -190,10 +197,11 @@ namespace Chamran.Deed.Authorization.Users
         new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
         new SqlParameter("@Sorting", input.Sorting ?? "CreationTime DESC"),
         new SqlParameter("@MaxResultCount", input.MaxResultCount),
-           new SqlParameter("@SkipCount", input.SkipCount)
+           new SqlParameter("@SkipCount", input.SkipCount),
    };
 
             var dbContext = await _dbContextProvider.GetDbContextAsync();
+
             var queryResult = await dbContext.Set<GetListOfUsers>()
                 .FromSqlRaw("EXEC GetListOfUsers @NationalIdFilter, @NameFilter, @SurNameFilter, @UserNameFilter, @PhoneNumberFilter, @IsActiveFilter, @FromCreationDate, @ToCreationDate, @FromLastLoginDate, @ToLastLoginDate, @Role, @OnlyLockedUsers, @Filter, @Permissions, @OrganizationId, @Sorting, @MaxResultCount, @SkipCount", parameters)
                 .ToListAsync();
@@ -217,7 +225,36 @@ namespace Chamran.Deed.Authorization.Users
                     LastLoginAttemptTime = user.LastLoginAttemptTime
                 });
             }
-            return new PagedResultDto<UserListDto>(result.Count, result);
+            var countParameters = new SqlParameter[]
+{
+
+                new SqlParameter("@NationalIdFilter", input.NationalIdFilter ?? (object)DBNull.Value),
+                new SqlParameter("@NameFilter", string.IsNullOrWhiteSpace(input.NameFilter) ? (object)DBNull.Value : (object)input.NameFilter),
+                new SqlParameter("@SurNameFilter", string.IsNullOrWhiteSpace(input.SurNameFilter) ? (object)DBNull.Value : (object)input.SurNameFilter),
+                new SqlParameter("@UserNameFilter", string.IsNullOrWhiteSpace(input.UserNameFilter) ? (object)DBNull.Value : (object)input.UserNameFilter),
+                new SqlParameter("@PhoneNumberFilter", string.IsNullOrWhiteSpace(input.PhoneNumberFilter) ? (object)DBNull.Value : (object)input.PhoneNumberFilter),
+                new SqlParameter("@IsActiveFilter", input.IsActiveFilter ?? (object)DBNull.Value),
+                new SqlParameter("@FromCreationDate", input.FromCreationDate ?? (object)DBNull.Value),
+                new SqlParameter("@ToCreationDate", input.ToCreationDate ?? (object)DBNull.Value),
+                new SqlParameter("@FromLastLoginDate", input.FromLastLoginDate ?? (object)DBNull.Value),
+                new SqlParameter("@ToLastLoginDate", input.ToLastLoginDate ?? (object)DBNull.Value),
+                new SqlParameter("@Role", (object)DBNull.Value ),//string.IsNullOrWhiteSpace(input.Role) ? (object)DBNull.Value : (object)input.Role),
+                new SqlParameter("@OnlyLockedUsers", input.OnlyLockedUsers),
+                new SqlParameter("@Filter", string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
+                //string.IsNullOrWhiteSpace(input.Permissions) ? (object)DBNull.Value : (object)input.Permissions),
+                new SqlParameter("@Permissions",(object)DBNull.Value ),
+                new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
+                new SqlParameter("@Sorting", input.Sorting ?? "CreationTime DESC"),
+                new SqlParameter("@MaxResultCount",9999999),
+                new SqlParameter("@SkipCount", (object)0),
+};
+            var countQueryResult = await dbContext.Set<GetListOfUsers>()
+                    .FromSqlRaw(
+                        "EXEC GetListOfUsers @NationalIdFilter, @NameFilter, @SurNameFilter, @UserNameFilter, @PhoneNumberFilter, @IsActiveFilter, @FromCreationDate, @ToCreationDate, @FromLastLoginDate, @ToLastLoginDate, @Role, @OnlyLockedUsers, @Filter, @Permissions, @OrganizationId, @Sorting, @MaxResultCount, @SkipCount",
+                        countParameters)
+                    .ToListAsync()
+                ;
+            return new PagedResultDto<UserListDto>(countQueryResult.Count, result);
             //var query = UserManager.Users
             //    .WhereIf(!string.IsNullOrWhiteSpace(input.NationalIdFilter), n => n.NationalId == input.NationalIdFilter)
             //    .WhereIf(!string.IsNullOrWhiteSpace(input.NameFilter), n => n.Name == input.NameFilter)
@@ -826,11 +863,39 @@ namespace Chamran.Deed.Authorization.Users
 
         public async Task RemoveProfilePicture(long userId)
         {
-            var entity=await _userRepository.GetAsync(userId);
+            var entity = await _userRepository.GetAsync(userId);
             entity.ProfilePictureId = null;
             await _userRepository.UpdateAsync(entity);
             await CurrentUnitOfWork.SaveChangesAsync(); //To get new user's Id.
 
+        }
+
+        public async Task UpdateProfilePictureId(long userId, Guid? profilePictureId)
+        {
+            using var uow = UnitOfWorkManager.Begin();
+            try
+            {
+                var entity = await _userRepository.GetAsync(userId);
+                entity.ProfilePictureId = profilePictureId;
+
+                // Log the current state of the entity before the update
+                // This can help identify if the entity is being modified correctly
+                Console.WriteLine($"Before Update - UserId: {userId}, ProfilePictureId: {entity.ProfilePictureId}");
+
+                await _userRepository.UpdateAsync(entity);
+
+                // Log the current state of the entity after the update
+                Console.WriteLine(($"After Update - UserId: {userId}, ProfilePictureId: {entity.ProfilePictureId}"));
+
+                await uow.CompleteAsync();
+            }
+            catch (Exception ex)
+            {
+                // Log or handle the exception
+                Console.WriteLine(($"Error updating profile picture for UserId {userId}: {ex.Message}"));
+                // Optionally, rethrow the exception if needed
+                throw;
+            }
         }
 
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Edit)]

@@ -61,7 +61,7 @@ namespace Chamran.Deed.Migrations
                         AbpUsers u
                     LEFT JOIN
                         AbpUserLoginAttempts la ON u.Id = la.UserId
-                    WHERE 1 = 1'
+                    WHERE IsDeleted=0'
 
                 -- Example: Add a condition based on @NationalIdFilter
                 IF @NationalIdFilter IS NOT NULL

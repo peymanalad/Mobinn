@@ -25,6 +25,7 @@ using Chamran.Deed.Net.Sms;
 using Chamran.Deed.Security;
 using Chamran.Deed.Storage;
 using Chamran.Deed.Timing;
+using Abp.Domain.Repositories;
 
 namespace Chamran.Deed.Authorization.Users.Profile
 {
@@ -42,6 +43,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
         private readonly IBackgroundJobManager _backgroundJobManager;
         private readonly ProfileImageServiceFactory _profileImageServiceFactory;
         private readonly IUserAppService _userAppService;
+        private readonly IRepository<User, long> _userRepository;
 
         public ProfileAppService(
             IBinaryObjectManager binaryObjectManager,
@@ -52,7 +54,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
             ICacheManager cacheManager,
             ITempFileCacheManager tempFileCacheManager,
             IBackgroundJobManager backgroundJobManager,
-            ProfileImageServiceFactory profileImageServiceFactory, IUserAppService userAppService)
+            ProfileImageServiceFactory profileImageServiceFactory, IUserAppService userAppService, IRepository<User, long> userRepository)
         {
             _binaryObjectManager = binaryObjectManager;
             _timeZoneService = timezoneService;
@@ -64,6 +66,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
             _backgroundJobManager = backgroundJobManager;
             _profileImageServiceFactory = profileImageServiceFactory;
             _userAppService = userAppService;
+            _userRepository = userRepository;
         }
 
         [DisableAuditing]
@@ -382,7 +385,9 @@ namespace Chamran.Deed.Authorization.Users.Profile
                     $"{userIdentifier.UserId}.png");
                 await _binaryObjectManager.SaveAsync(storedFile);
                 storedFile.SourceId = (int?)user.Id;
-                user.ProfilePictureId = storedFile.Id;
+                await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the role.
+                await _userAppService.UpdateProfilePictureId(user.Id,storedFile.Id);
+
 
             }
             else
