@@ -341,14 +341,12 @@ namespace Chamran.Deed.People
         {
             //if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
             //var currentUser = await _lookup_userRepository.GetAsync(AbpSession.UserId.Value);
-            var query = from au in _lookup_userRepository.GetAll()
+            var query = from au in _lookup_userRepository.GetAll().WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => e.UserName.Contains(input.Filter) || e.NationalId.Contains(input.Filter) || e.Name.Contains(input.Filter) || e.Surname.Contains(input.Filter))
                         join gm in _groupMemberRepository.GetAll().WhereIf(input.OrganizationId.HasValue, x => x.OrganizationId == input.OrganizationId.Value) on au.Id equals gm.UserId into groupJoin
                         from gm in groupJoin.DefaultIfEmpty()
                         where gm == null
                         select au;
-
-
-
+            //
 
             //var query = _lookup_userRepository.GetAll()
             //    .WhereIf(

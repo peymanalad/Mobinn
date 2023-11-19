@@ -26,6 +26,8 @@ namespace Chamran.Deed.EntityFrameworkCore
 
         public virtual DbSet<GetEntriesDigest> EntriesDigest { get; set; }
         public virtual DbSet<GetEntriesDetail> EntriesDetail { get; set; }
+        public virtual DbSet<GetPostsForView> PostsForView { get; set; }
+        public virtual DbSet<GetListOfUsers> ListOfUsers { get; set; }
 
         public virtual DbSet<TaskStat> TaskStats { get; set; }
 
@@ -101,6 +103,8 @@ namespace Chamran.Deed.EntityFrameworkCore
         {
             modelBuilder.Entity<GetEntriesDigest>().HasNoKey();
             modelBuilder.Entity<GetEntriesDetail>().HasNoKey();
+            modelBuilder.Entity<GetPostsForView>().HasNoKey();
+            modelBuilder.Entity<GetListOfUsers>().HasNoKey();
 
             modelBuilder.Entity<OrganizationChart>()
                 .HasOne(node => node.ParentFk)   // Use ParentFk navigation property

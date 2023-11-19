@@ -42,14 +42,14 @@ namespace Chamran.Deed.Info
             if (ParentFk == null)
             {
                 LeafPath = Id + "\\";
-                //LeafCationPath = Caption + "\\";
+                LeafCationPath = Caption + "/";
             }
             else
             {
                 var parentPath = ParentFk.LeafPath;
                 LeafPath = $"{parentPath}{Id}\\";
-                //var parentCaptionPath = ParentFk.LeafCationPath;
-                //LeafCationPath = $"{parentCaptionPath}{Caption}\\";
+                var parentCaptionPath = ParentFk.LeafCationPath;
+                LeafCationPath = $"{parentCaptionPath}{Caption}/";
                 
             }
 

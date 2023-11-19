@@ -40,6 +40,9 @@ using Chamran.Deed.People.Dtos;
 using Chamran.Deed.Authorization.Delegation;
 using Chamran.Deed.Authorization.Users.Delegation.Dto;
 using NUglify.Helpers;
+using Abp.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
+using Chamran.Deed.EntityFrameworkCore;
 
 namespace Chamran.Deed.Authorization.Users
 {
@@ -75,6 +78,7 @@ namespace Chamran.Deed.Authorization.Users
         private readonly IRepository<PostLike, int> _postLikeRepository;
         private readonly IRepository<CommentLike, int> _commentLikeRepository;
         private readonly IRepository<Comment, int> _commentRepository;
+        private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
 
         private readonly IRepository<GroupMember> _groupMemberRepository;
         private readonly IOrganizationsAppService _organizationAppService;
@@ -101,7 +105,7 @@ namespace Chamran.Deed.Authorization.Users
             IRepository<UserOrganizationUnit, long> userOrganizationUnitRepository,
             IRepository<OrganizationUnitRole, long> organizationUnitRoleRepository,
             IOptions<UserOptions> userOptions, IEmailSettingsChecker emailSettingsChecker,
-            IRepository<User, long> userRepository, IRepository<Organization, int> lookupOrganizationRepository, IRepository<GroupMember> groupMemberRepository, IOrganizationsAppService organizationsAppService, IGroupMembersAppService groupMembersAppService, IOrganizationChartsAppService organizationChartsAppService, IOrganizationUsersAppService organizationUsersAppService, IDeedChartsAppService deedChartsAppService, IRepository<UserLoginAttempt, long> userLoginAttemptRepository, IRepository<Seen, int> seenRepository, IRepository<Post, int> postRepository, IRepository<PostLike, int> postLikeRepository, IRepository<CommentLike, int> commentLikeRepository, IRepository<Comment, int> commentRepository)
+            IRepository<User, long> userRepository, IRepository<Organization, int> lookupOrganizationRepository, IRepository<GroupMember> groupMemberRepository, IOrganizationsAppService organizationsAppService, IGroupMembersAppService groupMembersAppService, IOrganizationChartsAppService organizationChartsAppService, IOrganizationUsersAppService organizationUsersAppService, IDeedChartsAppService deedChartsAppService, IRepository<UserLoginAttempt, long> userLoginAttemptRepository, IRepository<Seen, int> seenRepository, IRepository<Post, int> postRepository, IRepository<PostLike, int> postLikeRepository, IRepository<CommentLike, int> commentLikeRepository, IRepository<Comment, int> commentRepository, IDbContextProvider<DeedDbContext> dbContextProvider)
         {
             _roleManager = roleManager;
             _userEmailer = userEmailer;
@@ -136,6 +140,7 @@ namespace Chamran.Deed.Authorization.Users
             _postLikeRepository = postLikeRepository;
             _commentLikeRepository = commentLikeRepository;
             _commentRepository = commentRepository;
+            _dbContextProvider = dbContextProvider;
             AppUrlService = NullAppUrlService.Instance;
         }
 
@@ -164,43 +169,147 @@ namespace Chamran.Deed.Authorization.Users
         public async Task<PagedResultDto<UserListDto>> GetListOfUsers(GetUsersInput input)
         {
             if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
+            var parameters = new SqlParameter[]
+   {
+        new SqlParameter("@NationalIdFilter", input.NationalIdFilter ?? (object)DBNull.Value),
+        new SqlParameter("@NameFilter", string.IsNullOrWhiteSpace(input.NameFilter) ? (object)DBNull.Value : (object)input.NameFilter),
+        new SqlParameter("@SurNameFilter", string.IsNullOrWhiteSpace(input.SurNameFilter) ? (object)DBNull.Value : (object)input.SurNameFilter),
+        new SqlParameter("@UserNameFilter", string.IsNullOrWhiteSpace(input.UserNameFilter) ? (object)DBNull.Value : (object)input.UserNameFilter),
+        new SqlParameter("@PhoneNumberFilter", string.IsNullOrWhiteSpace(input.PhoneNumberFilter) ? (object)DBNull.Value : (object)input.PhoneNumberFilter),
+        new SqlParameter("@IsActiveFilter", input.IsActiveFilter ?? (object)DBNull.Value),
+        new SqlParameter("@FromCreationDate", input.FromCreationDate ?? (object)DBNull.Value),
+        new SqlParameter("@ToCreationDate", input.ToCreationDate ?? (object)DBNull.Value),
+        new SqlParameter("@FromLastLoginDate", input.FromLastLoginDate ?? (object)DBNull.Value),
+        new SqlParameter("@ToLastLoginDate", input.ToLastLoginDate ?? (object)DBNull.Value),
+        new SqlParameter("@Role", (object)DBNull.Value ),//string.IsNullOrWhiteSpace(input.Role) ? (object)DBNull.Value : (object)input.Role),
+        new SqlParameter("@OnlyLockedUsers", input.OnlyLockedUsers),
+        new SqlParameter("@Filter", string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
+        //string.IsNullOrWhiteSpace(input.Permissions) ? (object)DBNull.Value : (object)input.Permissions),
+        new SqlParameter("@Permissions",(object)DBNull.Value ),
+        new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
+        new SqlParameter("@Sorting", input.Sorting ?? "CreationTime DESC"),
+        new SqlParameter("@MaxResultCount", input.MaxResultCount),
+           new SqlParameter("@SkipCount", input.SkipCount)
+   };
 
-            var query = GetUsersFilteredQuery(input);
-
-            var joinQuery = from x in query
-                join y in _groupMemberRepository.GetAll() on x.Id equals y.UserId into joiner
-                where !input.OrganizationId.HasValue || (joiner.Any() && joiner.Any(y => y.OrganizationId == input.OrganizationId))
-                select x;
-
-            var userCount = await joinQuery.CountAsync();
-
-            var usersWithLatestLoginAttempts = await joinQuery
-                .OrderBy(input.Sorting)
-                .PageBy(input)
+            var dbContext = await _dbContextProvider.GetDbContextAsync();
+            var queryResult = await dbContext.Set<GetListOfUsers>()
+                .FromSqlRaw("EXEC GetListOfUsers @NationalIdFilter, @NameFilter, @SurNameFilter, @UserNameFilter, @PhoneNumberFilter, @IsActiveFilter, @FromCreationDate, @ToCreationDate, @FromLastLoginDate, @ToLastLoginDate, @Role, @OnlyLockedUsers, @Filter, @Permissions, @OrganizationId, @Sorting, @MaxResultCount, @SkipCount", parameters)
                 .ToListAsync();
 
-            var final = from x in usersWithLatestLoginAttempts
-                join z in _userLoginAttemptRepository.GetAll() on x.Id equals z.UserId
-                    into loginAttempts
-                let latestAttempt = loginAttempts.OrderByDescending(la => la.CreationTime).FirstOrDefault()
-                select new { User = x, LatestLoginAttempt = latestAttempt };
-
-            var distinctFinal = final.GroupBy(x => x.User.Id).Select(group => group.OrderByDescending(x => x.LatestLoginAttempt?.CreationTime).First());
-
-            var userListDtos = distinctFinal.Select(result =>
+            var result = new List<UserListDto>();
+            foreach (var user in queryResult)
             {
-                var userDto = ObjectMapper.Map<UserListDto>(result.User);
-                userDto.LastLoginAttemptTime = result.LatestLoginAttempt?.CreationTime;
-                // You can include other properties from UserListDto as needed
-                return userDto;
-            }).ToList();
+                result.Add(new UserListDto
+                {
+                    NationalId = user.NationalId,
+                    Name = user.Name,
+                    Surname = user.Surname,
+                    UserName = user.UserName,
+                    EmailAddress = user.EmailAddress,
+                    PhoneNumber = user.PhoneNumber,
+                    ProfilePictureId = user.ProfilePictureId,
+                    // Roles = user.Roles, // You may need to map roles separately based on your structure
+                    IsActive = user.IsActive,
+                    CreationTime = user.CreationTime,
+                    LastLoginAttemptTime = user.LastLoginAttemptTime
+                });
+            }
+            return new PagedResultDto<UserListDto>(result.Count, result);
+            //var query = UserManager.Users
+            //    .WhereIf(!string.IsNullOrWhiteSpace(input.NationalIdFilter), n => n.NationalId == input.NationalIdFilter)
+            //    .WhereIf(!string.IsNullOrWhiteSpace(input.NameFilter), n => n.Name == input.NameFilter)
+            //    .WhereIf(!string.IsNullOrWhiteSpace(input.SurNameFilter), n => n.Surname == input.SurNameFilter)
+            //    .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter), n => n.UserName == input.UserNameFilter)
+            //    .WhereIf(!string.IsNullOrWhiteSpace(input.PhoneNumberFilter), n => n.PhoneNumber == input.PhoneNumberFilter)
+            //    .WhereIf(input.IsActiveFilter.HasValue, n => n.IsActive == input.IsActiveFilter.Value)
+            //    .WhereIf(input.FromCreationDate.HasValue, u => u.CreationTime >= input.FromCreationDate.Value)
+            //    .WhereIf(input.ToCreationDate.HasValue, u => u.CreationTime <= input.ToCreationDate.Value)
+            //    .WhereIf(
+            //        input.FromLastLoginDate.HasValue || input.ToLastLoginDate.HasValue,
+            //        u => _userLoginAttemptRepository
+            //            .GetAll()
+            //            .Any(l =>
+            //                l.UserId == u.Id &&
+            //                (!input.FromLastLoginDate.HasValue || l.CreationTime >= input.FromLastLoginDate.Value) &&
+            //                (!input.ToLastLoginDate.HasValue || l.CreationTime <= input.ToLastLoginDate.Value)))
+            //    .WhereIf(input.Role.HasValue, u => u.Roles.Any(r => r.RoleId == input.Role.Value))
+            //    .WhereIf(input.OnlyLockedUsers,
+            //        u => u.LockoutEndDateUtc.HasValue && u.LockoutEndDateUtc.Value > DateTime.UtcNow)
+            //    .WhereIf(
+            //        !string.IsNullOrWhiteSpace(input.Filter),
+            //        u =>
+            //            u.Name.Contains(input.Filter) ||
+            //            u.Surname.Contains(input.Filter) ||
+            //            u.UserName.Contains(input.Filter) ||
+            //            u.EmailAddress.Contains(input.Filter)
+            //    );
 
-            await FillRoleNames(userListDtos);
+            //if (input.Permissions != null && input.Permissions.Any(p => !string.IsNullOrWhiteSpace(p)))
+            //{
+            //    var staticRoleNames = _roleManagementConfig.StaticRoles.Where(
+            //        r => r.GrantAllPermissionsByDefault &&
+            //             r.Side == AbpSession.MultiTenancySide
+            //    ).Select(r => r.RoleName).ToList();
 
-            return new PagedResultDto<UserListDto>(
-                userCount,
-                userListDtos
-            );
+            //    input.Permissions = input.Permissions.Where(p => !string.IsNullOrEmpty(p)).ToList();
+
+            //    var userIds = from user in query
+            //                  join ur in _userRoleRepository.GetAll() on user.Id equals ur.UserId into urJoined
+            //                  from ur in urJoined.DefaultIfEmpty()
+            //                  join urr in _roleRepository.GetAll() on ur.RoleId equals urr.Id into urrJoined
+            //                  from urr in urrJoined.DefaultIfEmpty()
+            //                  join up in _userPermissionRepository.GetAll()
+            //                      .Where(userPermission => input.Permissions.Contains(userPermission.Name)) on user.Id equals up.UserId into upJoined
+            //                  from up in upJoined.DefaultIfEmpty()
+            //                  join rp in _rolePermissionRepository.GetAll()
+            //                      .Where(rolePermission => input.Permissions.Contains(rolePermission.Name)) on
+            //                      new { RoleId = ur == null ? 0 : ur.RoleId } equals new { rp.RoleId } into rpJoined
+            //                  from rp in rpJoined.DefaultIfEmpty()
+            //                  where (up != null && up.IsGranted) ||
+            //                        (up == null && rp != null && rp.IsGranted) ||
+            //                        (up == null && rp == null && staticRoleNames.Contains(urr.Name))
+            //                  group user by user.Id
+            //        into userGrouped
+            //                  select userGrouped.Key;
+
+            //    query = UserManager.Users.Where(e => userIds.Contains(e.Id));
+            //}
+
+            //var joinQuery = from x in query
+            //    join y in _groupMemberRepository.GetAll() on x.Id equals y.UserId into joiner
+            //    where !input.OrganizationId.HasValue || (joiner.Any() && joiner.Any(y => y.OrganizationId == input.OrganizationId))
+            //    select x;
+
+            //var final = from x in joinQuery
+            //            join z in _userLoginAttemptRepository.GetAll() on x.Id equals z.UserId
+            //        into loginAttempts
+            //    let latestAttempt = loginAttempts.OrderByDescending(la => la.CreationTime).FirstOrDefault()
+            //    select new { User = x, LatestLoginAttempt = latestAttempt };
+
+            //var distinctFinal = final.GroupBy(x => x.User.Id).Select(group => group.OrderByDescending(x => x.LatestLoginAttempt.CreationTime).First());
+
+            //var userCount = await distinctFinal.CountAsync();
+            //var usersWithLatestLoginAttempts = await distinctFinal
+            //    .OrderBy(input.Sorting)
+            //    .PageBy(input)
+            //    .ToListAsync();
+
+
+            //var userListDtos = usersWithLatestLoginAttempts.Select(result =>
+            //{
+            //    var userDto = ObjectMapper.Map<UserListDto>(result.User);
+            //    userDto.LastLoginAttemptTime = result.LatestLoginAttempt?.CreationTime;
+            //    // You can include other properties from UserListDto as needed
+            //    return userDto;
+            //}).ToList();
+
+            //await FillRoleNames(userListDtos);
+
+            //return new PagedResultDto<UserListDto>(
+            //    userCount,
+            //    userListDtos
+            //);
         }
 
 
@@ -208,7 +317,7 @@ namespace Chamran.Deed.Authorization.Users
         {
             var query = _userLoginAttemptRepository.GetAll().Where(x => x.UserId == input.UserId);
             var pagedSorted = await query
-                .OrderBy(input.Sorting?? "CreationTime Desc")
+                .OrderBy(input.Sorting ?? "CreationTime Desc")
                 .PageBy(input)
                 .ToListAsync();
             var totalCount = await query.CountAsync();
@@ -240,10 +349,10 @@ namespace Chamran.Deed.Authorization.Users
                             s.PostId,
                             p.PostTitle,
                             p.PostFile,
-                            PostTime=p.CreationTime
+                            PostTime = p.CreationTime
                         };
             var pagedSorted = await query
-            .OrderBy(input.Sorting?? "SeenTime Desc")
+            .OrderBy(input.Sorting ?? "SeenTime Desc")
             .PageBy(input)
             .ToListAsync();
             var totalCount = await query.CountAsync();
@@ -257,7 +366,7 @@ namespace Chamran.Deed.Authorization.Users
                     PostId = row.PostId,
                     PostTitle = row.PostTitle,
                     PostFile = row.PostFile,
-                    PostTime=row.PostTime
+                    PostTime = row.PostTime
 
                 });
             }
@@ -270,21 +379,21 @@ namespace Chamran.Deed.Authorization.Users
         public async Task<PagedResultDto<BriefCommentsDto>> GetUserComments(GetUserInformationDto input)
         {
             var query = from c in _commentRepository.GetAll()
-                where c.UserId == input.UserId
-                join p in _postRepository.GetAll() on c.PostId equals p.Id
-                select new
-                {
-                    PostId=p.Id,
-                    CommentId=c.Id,
-                    c.CommentCaption,
-                    c.CreationTime,
-                    c.InsertDate,
-                    p.PostTitle,
-                    p.PostFile,
-                    PostTime = p.CreationTime
-                };
+                        where c.UserId == input.UserId
+                        join p in _postRepository.GetAll() on c.PostId equals p.Id
+                        select new
+                        {
+                            PostId = p.Id,
+                            CommentId = c.Id,
+                            c.CommentCaption,
+                            c.CreationTime,
+                            c.InsertDate,
+                            p.PostTitle,
+                            p.PostFile,
+                            PostTime = p.CreationTime
+                        };
             var pagedSorted = await query
-                .OrderBy(input.Sorting?? "CreationTime Desc")
+                .OrderBy(input.Sorting ?? "CreationTime Desc")
                 .PageBy(input)
                 .ToListAsync();
             var totalCount = await query.CountAsync();
@@ -298,10 +407,10 @@ namespace Chamran.Deed.Authorization.Users
                     PostTitle = row.PostTitle,
                     PostFile = row.PostFile,
                     PostTime = row.PostTime,
-                    CommentId=row.CommentId,
-                    CommentCaption=row.CommentCaption,
-                    CreationTime=row.CreationTime,
-                    InsertDate=row.InsertDate,
+                    CommentId = row.CommentId,
+                    CommentCaption = row.CommentCaption,
+                    CreationTime = row.CreationTime,
+                    InsertDate = row.InsertDate,
 
 
                 });
@@ -315,18 +424,18 @@ namespace Chamran.Deed.Authorization.Users
         public async Task<PagedResultDto<BriefLikedPostsDto>> GetUserPostLikes(GetUserInformationDto input)
         {
             var query = from l in _postLikeRepository.GetAll()
-                where l.UserId == input.UserId
-                join p in _postRepository.GetAll() on l.PostId equals p.Id
-                select new
-                {
-                    l.LikeTime,
-                    p.Id,
-                    p.PostTitle,
-                    p.PostFile,
-                    PostTime = p.CreationTime
-                };
+                        where l.UserId == input.UserId
+                        join p in _postRepository.GetAll() on l.PostId equals p.Id
+                        select new
+                        {
+                            l.LikeTime,
+                            p.Id,
+                            p.PostTitle,
+                            p.PostFile,
+                            PostTime = p.CreationTime
+                        };
             var pagedSorted = await query
-                .OrderBy(input.Sorting??"LikeTime Desc")
+                .OrderBy(input.Sorting ?? "LikeTime Desc")
                 .PageBy(input)
                 .ToListAsync();
             var totalCount = await query.CountAsync();
@@ -336,7 +445,7 @@ namespace Chamran.Deed.Authorization.Users
             {
                 data.Add(new BriefLikedPostsDto()
                 {
-                    LikeTime=row.LikeTime,
+                    LikeTime = row.LikeTime,
                     PostId = row.Id,
                     PostTitle = row.PostTitle,
                     PostFile = row.PostFile,
@@ -352,20 +461,20 @@ namespace Chamran.Deed.Authorization.Users
 
         public async Task<PagedResultDto<BriefCommentsDto>> GetUserCommentLikes(GetUserInformationDto input)
         {
-            var query = from c in _commentLikeRepository.GetAll().Include(x=>x.CommentFk)
-                where c.UserId == input.UserId
-                join p in _postRepository.GetAll() on c.CommentFk.PostId equals p.Id
-                select new
-                {
-                    PostId = p.Id,
-                    CommentId = c.Id,
-                    c.CommentFk.CommentCaption,
-                    c.CommentFk.CreationTime,
-                    c.CommentFk.InsertDate,
-                    p.PostTitle,
-                    p.PostFile,
-                    PostTime = p.CreationTime
-                };
+            var query = from c in _commentLikeRepository.GetAll().Include(x => x.CommentFk)
+                        where c.UserId == input.UserId
+                        join p in _postRepository.GetAll() on c.CommentFk.PostId equals p.Id
+                        select new
+                        {
+                            PostId = p.Id,
+                            CommentId = c.Id,
+                            c.CommentFk.CommentCaption,
+                            c.CommentFk.CreationTime,
+                            c.CommentFk.InsertDate,
+                            p.PostTitle,
+                            p.PostFile,
+                            PostTime = p.CreationTime
+                        };
             var pagedSorted = await query
                 .OrderBy(input.Sorting ?? "CreationTime Desc")
                 .PageBy(input)
@@ -398,15 +507,15 @@ namespace Chamran.Deed.Authorization.Users
         public async Task<PagedResultDto<BriefCreatedPostsDto>> GetUserPosts(GetUserInformationDto input)
         {
             var query = from p in _postRepository.GetAll()
-                where p.GroupMemberFk.UserId== input.UserId
-                //join p in _postRepository.GetAll() on s.PostId equals p.Id
-                select new
-                {
-                    p.Id,
-                    p.PostTitle,
-                    p.PostFile,
-                    PostTime = p.CreationTime,
-                };
+                        where p.GroupMemberFk.UserId == input.UserId
+                        //join p in _postRepository.GetAll() on s.PostId equals p.Id
+                        select new
+                        {
+                            p.Id,
+                            p.PostTitle,
+                            p.PostFile,
+                            PostTime = p.CreationTime,
+                        };
             var pagedSorted = await query
                 .OrderBy(input.Sorting ?? "PostTime Desc")
                 .PageBy(input)
@@ -901,12 +1010,12 @@ namespace Chamran.Deed.Authorization.Users
         private IQueryable<User> GetUsersFilteredQuery(IGetUsersInput input)
         {
             var query = UserManager.Users
-                .WhereIf(!string.IsNullOrWhiteSpace(input.NationalIdFilter),n=>n.NationalId==input.NationalIdFilter)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.NameFilter),n=>n.Name==input.NameFilter)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.SurNameFilter),n=>n.Surname==input.SurNameFilter)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter),n=>n.UserName==input.UserNameFilter)
-                .WhereIf(!string.IsNullOrWhiteSpace(input.PhoneNumberFilter),n=>n.PhoneNumber==input.PhoneNumberFilter)
-                .WhereIf(input.IsActiveFilter.HasValue,n=>n.IsActive==input.IsActiveFilter.Value)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.NationalIdFilter), n => n.NationalId == input.NationalIdFilter)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.NameFilter), n => n.Name == input.NameFilter)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.SurNameFilter), n => n.Surname == input.SurNameFilter)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter), n => n.UserName == input.UserNameFilter)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.PhoneNumberFilter), n => n.PhoneNumber == input.PhoneNumberFilter)
+                .WhereIf(input.IsActiveFilter.HasValue, n => n.IsActive == input.IsActiveFilter.Value)
                 .WhereIf(input.FromCreationDate.HasValue, u => u.CreationTime >= input.FromCreationDate.Value)
                 .WhereIf(input.ToCreationDate.HasValue, u => u.CreationTime <= input.ToCreationDate.Value)
                 .WhereIf(
@@ -929,7 +1038,7 @@ namespace Chamran.Deed.Authorization.Users
                         u.EmailAddress.Contains(input.Filter)
                 );
 
-            if (input.Permissions != null && input.Permissions.Any(p =>!string.IsNullOrWhiteSpace(p)))
+            if (input.Permissions != null && input.Permissions.Any(p => !string.IsNullOrWhiteSpace(p)))
             {
                 var staticRoleNames = _roleManagementConfig.StaticRoles.Where(
                     r => r.GrantAllPermissionsByDefault &&
