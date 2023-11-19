@@ -202,6 +202,7 @@ namespace Chamran.Deed.Authorization.Users
             {
                 result.Add(new UserListDto
                 {
+                    Id = user.Id,
                     NationalId = user.NationalId,
                     Name = user.Name,
                     Surname = user.Surname,

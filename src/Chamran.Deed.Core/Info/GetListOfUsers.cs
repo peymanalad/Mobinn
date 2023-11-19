@@ -1,8 +1,11 @@
 ﻿using System;
+using Abp.Application.Services.Dto;
+using Abp.Domain.Entities;
+using Abp.Domain.Entities.Auditing;
 
 namespace Chamran.Deed.Info;
 
-public class GetListOfUsers
+public class GetListOfUsers :EntityDto<long>, IPassivable, IHasCreationTime
 {
     public string NationalId { get; set; }
     public string Name { get; set; }
