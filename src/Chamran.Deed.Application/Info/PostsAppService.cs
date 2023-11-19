@@ -500,7 +500,7 @@ namespace Chamran.Deed.Info
         [AbpAuthorize(AppPermissions.Pages_Posts)]
         public async Task<PagedResultDto<PostPostGroupLookupTableDto>> GetAllPostGroupForLookupTable(GetAllForLookupTableInput input)
         {
-            var query = _lookup_postGroupRepository.GetAll().Where(x=>x.OrganizationId==input.OrganizationId).WhereIf(
+            var query = _lookup_postGroupRepository.GetAll().Include(x=>x.OrganizationFk).Where(x=>x.OrganizationId==input.OrganizationId).WhereIf(
                    !string.IsNullOrWhiteSpace(input.Filter),
                   e => e.PostGroupDescription != null && e.PostGroupDescription.Contains(input.Filter)
                );
@@ -517,7 +517,10 @@ namespace Chamran.Deed.Info
                 lookupTableDtoList.Add(new PostPostGroupLookupTableDto
                 {
                     Id = postGroup.Id,
-                    DisplayName = postGroup.PostGroupDescription
+                    DisplayName = postGroup.PostGroupDescription,
+                    OrganizationId=postGroup.OrganizationId,
+                    OrganizationName=postGroup.OrganizationFk.OrganizationName
+
                 });
             }
 

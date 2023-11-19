@@ -7,5 +7,7 @@ namespace Chamran.Deed.Info.Dtos
         public int Id { get; set; }
 
         public string DisplayName { get; set; }
+        public string OrganizationName { get; set; }
+        public int? OrganizationId { get; set; }
     }
 }
