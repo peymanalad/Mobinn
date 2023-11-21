@@ -54,6 +54,8 @@ namespace Chamran.Deed
     {
         public static void CreateMappings(IMapperConfigurationExpression configuration)
         {
+            configuration.CreateMap<CreateOrEditInstagramCrawlerPostDto, InstagramCrawlerPost>().ReverseMap();
+            configuration.CreateMap<InstagramCrawlerPostDto, InstagramCrawlerPost>().ReverseMap();
             configuration.CreateMap<NodeUserDto, User>().ReverseMap();
             configuration.CreateMap<CreateOrEditDeedChartDto, DeedChart>().ReverseMap();
             configuration.CreateMap<DeedChartDto, DeedChart>().ReverseMap();

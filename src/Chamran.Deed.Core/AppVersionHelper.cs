@@ -13,7 +13,7 @@ namespace Chamran.Deed
         /// Gets current version of the application.
         /// It's also shown in the web page.
         /// </summary>
-        public const string Version = "13.9.0";
+        public const string Version = "14.1.0";
 
         /// <summary>
         /// Gets release (last build) date of the application.
