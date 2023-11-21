@@ -55,23 +55,23 @@ namespace Chamran.Deed.People
                          e.OrganizationFk.OrganizationName == input.OrganizationGroupGroupNameFilter)
                 .WhereIf(input.OrganizationId.HasValue, e => e.OrganizationId == input.OrganizationId.Value);
 
-            if (!user.IsSuperUser)
-            {
-                var orgQuery =
-                    from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
-                    join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
-                        .OrganizationId into joined2
-                    from grpMember in joined2.DefaultIfEmpty()
-                    where grpMember.UserId == AbpSession.UserId
-                    select org;
+            //if (!user.IsSuperUser)
+            //{
+            //    var orgQuery =
+            //        from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
+            //        join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
+            //            .OrganizationId into joined2
+            //        from grpMember in joined2.DefaultIfEmpty()
+            //        where grpMember.UserId == AbpSession.UserId
+            //        select org;
 
-                if (!orgQuery.Any())
-                {
-                    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
-                }
-                var orgEntity = orgQuery.First();
-                filteredGroupMembers = filteredGroupMembers.Where(x => x.OrganizationId == orgEntity.Id);
-            }
+            //    if (!orgQuery.Any())
+            //    {
+            //        throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+            //    }
+            //    var orgEntity = orgQuery.First();
+            //    filteredGroupMembers = filteredGroupMembers.Where(x => x.OrganizationId == orgEntity.Id);
+            //}
 
             var pagedAndFilteredGroupMembers = filteredGroupMembers
                 .OrderBy(input.Sorting ?? "id asc")

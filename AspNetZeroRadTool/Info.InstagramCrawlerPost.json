@@ -1,0 +1,325 @@
+{
+  "IsRegenerate": true,
+  "MenuPosition": "",
+  "RelativeNamespace": "Info",
+  "EntityName": "InstagramCrawlerPost",
+  "EntityNamePlural": "InstagramCrawlerPosts",
+  "TableName": "InstagramCrawlerPosts",
+  "PrimaryKeyType": "int",
+  "BaseClass": "CreationAuditedEntity",
+  "EntityHistory": false,
+  "AutoMigration": true,
+  "UpdateDatabase": false,
+  "CreateUserInterface": false,
+  "CreateViewOnly": true,
+  "CreateExcelExport": false,
+  "IsNonModalCRUDPage": false,
+  "IsMasterDetailPage": false,
+  "GenerateOverridableEntity": false,
+  "GenerateUnitTest": false,
+  "GenerateUiTest": false,
+  "PagePermission": {
+    "Host": false,
+    "Tenant": false
+  },
+  "Properties": [
+    {
+      "Name": "PostCaption",
+      "Type": "string",
+      "MaxLength": 4000,
+      "MinLength": 0,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": false,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": true,
+        "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    },
+    {
+      "Name": "PageId",
+      "Type": "string",
+      "MaxLength": 100,
+      "MinLength": 0,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": false,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": true,
+        "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    },
+    {
+      "Name": "File1Url",
+      "Type": "string",
+      "MaxLength": -1,
+      "MinLength": -1,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": false,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": true,
+        "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    },
+    {
+      "Name": "File2Url",
+      "Type": "string",
+      "MaxLength": -1,
+      "MinLength": -1,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": false,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": true,
+        "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    },
+    {
+      "Name": "File3Url",
+      "Type": "string",
+      "MaxLength": -1,
+      "MinLength": -1,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": false,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": true,
+        "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    },
+    {
+      "Name": "File4Url",
+      "Type": "string",
+      "MaxLength": -1,
+      "MinLength": -1,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": false,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": true,
+        "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    },
+    {
+      "Name": "File5Url",
+      "Type": "string",
+      "MaxLength": -1,
+      "MinLength": -1,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": false,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": true,
+        "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    },
+    {
+      "Name": "File6Url",
+      "Type": "string",
+      "MaxLength": -1,
+      "MinLength": -1,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": false,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": true,
+        "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    },
+    {
+      "Name": "File7Url",
+      "Type": "string",
+      "MaxLength": -1,
+      "MinLength": -1,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": false,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": true,
+        "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    },
+    {
+      "Name": "File8Url",
+      "Type": "string",
+      "MaxLength": -1,
+      "MinLength": -1,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": false,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": true,
+        "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    },
+    {
+      "Name": "File9Url",
+      "Type": "string",
+      "MaxLength": -1,
+      "MinLength": -1,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": false,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": true,
+        "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    },
+    {
+      "Name": "File10Url",
+      "Type": "string",
+      "MaxLength": -1,
+      "MinLength": -1,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": false,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": true,
+        "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    },
+    {
+      "Name": "PostTime",
+      "Type": "DateTime",
+      "MaxLength": -1,
+      "MinLength": -1,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": true,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": true,
+        "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    },
+    {
+      "Name": "MediaId",
+      "Type": "string",
+      "MaxLength": -1,
+      "MinLength": -1,
+      "Range": {
+        "IsRangeSet": false,
+        "MinimumValue": 0.0,
+        "MaximumValue": 0.0
+      },
+      "Required": false,
+      "Nullable": false,
+      "Regex": "",
+      "UserInterface": {
+        "AdvancedFilter": true,
+        "List": true,
+        "CreateOrUpdate": true
+      },
+      "ViewType": null,
+      "AdditionalData": {}
+    }
+  ],
+  "NavigationProperties": [],
+  "NavigationPropertyOneToManyTables": [],
+  "EnumDefinitions": [],
+  "DbContext": null
+}

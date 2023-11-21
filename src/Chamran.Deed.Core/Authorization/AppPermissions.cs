@@ -6,6 +6,11 @@
     /// </summary>
     public static class AppPermissions
     {
+        public const string Pages_InstagramCrawlerPosts = "Pages.InstagramCrawlerPosts";
+        public const string Pages_InstagramCrawlerPosts_Create = "Pages.InstagramCrawlerPosts.Create";
+        public const string Pages_InstagramCrawlerPosts_Edit = "Pages.InstagramCrawlerPosts.Edit";
+        public const string Pages_InstagramCrawlerPosts_Delete = "Pages.InstagramCrawlerPosts.Delete";
+
         public const string Pages_DeedCharts = "Pages.DeedCharts";
         public const string Pages_DeedCharts_Create = "Pages.DeedCharts.Create";
         public const string Pages_DeedCharts_Edit = "Pages.DeedCharts.Edit";
