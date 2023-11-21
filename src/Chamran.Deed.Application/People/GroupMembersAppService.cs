@@ -95,7 +95,7 @@ namespace Chamran.Deed.People
                                    NationalId = s1.NationalId,
                                    s1.UserName,
                                    UserId = s1.Id,
-                                   OrganizationId = s2.Id,
+                                   OrganizationId = (int?)s2.Id,
                                    OrganizationGroupGroupName = s2 == null || s2.OrganizationName == null ? "" : s2.OrganizationName.ToString(),
                                };
 
