@@ -235,13 +235,20 @@ namespace Chamran.Deed.Common
         [HttpGet] // Specify that this action should handle HTTP GET requests
         public IActionResult LatestAndroid()
         {
-            var response = new HttpResponseMessage(HttpStatusCode.Redirect);
-            response.Headers.Location = new System.Uri("https://d.yasnasystem.ir/wl/?id=RncerIbHO92V9Niz7vVwhRauCVHKXQpi&fmode=download");
+            var redirectUrl = "https://d.yasnasystem.ir/wl/?id=RncerIbHO92V9Niz7vVwhRauCVHKXQpi&fmode=download";
 
-            return new ObjectResult(response)
-            {
-                StatusCode = (int)HttpStatusCode.Redirect,
-            };
+            //var response = new HttpResponseMessage(HttpStatusCode.Redirect);
+            //response.Headers.Location = new System.Uri("https://d.yasnasystem.ir/wl/?id=RncerIbHO92V9Niz7vVwhRauCVHKXQpi&fmode=download");
+
+            //return new ObjectResult(response)
+            //{
+            //    StatusCode = (int)HttpStatusCode.Redirect,
+            //};
+            // Option 1: Use RedirectResult
+            // return new RedirectResult(redirectUrl);
+
+            // Option 2: Use Redirect method
+            return new RedirectResult(redirectUrl);
         }
     }
 }

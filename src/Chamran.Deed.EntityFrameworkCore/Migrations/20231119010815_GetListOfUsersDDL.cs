@@ -18,7 +18,7 @@ namespace Chamran.Deed.Migrations
 
             // Create the updated procedure
             migrationBuilder.Sql(@"
-            CREATE PROCEDURE GetListOfUsers
+            ALTER PROCEDURE [dbo].[GetListOfUsers]
                 @NationalIdFilter NVARCHAR(MAX) = NULL,
                 @NameFilter NVARCHAR(MAX) = NULL,
                 @SurNameFilter NVARCHAR(MAX) = NULL,
@@ -67,7 +67,37 @@ namespace Chamran.Deed.Migrations
                 IF @NationalIdFilter IS NOT NULL
                     SET @Sql = @Sql + ' AND u.NationalId = @NationalIdFilter'
 
+                -- Add conditions for other filters
+                IF @NameFilter IS NOT NULL
+                    SET @Sql = @Sql + ' AND u.Name = @NameFilter'
+
+                IF @SurNameFilter IS NOT NULL
+                    SET @Sql = @Sql + ' AND u.Surname = @SurNameFilter'
+
+                IF @UserNameFilter IS NOT NULL
+                    SET @Sql = @Sql + ' AND u.UserName = @UserNameFilter'
+
+                IF @PhoneNumberFilter IS NOT NULL
+                    SET @Sql = @Sql + ' AND u.PhoneNumber = @PhoneNumberFilter'
+
+                IF @IsActiveFilter IS NOT NULL
+                    SET @Sql = @Sql + ' AND u.IsActive = @IsActiveFilter'
+
+                IF @FromCreationDate IS NOT NULL AND @ToCreationDate IS NOT NULL
+                    SET @Sql = @Sql + ' AND u.CreationTime BETWEEN @FromCreationDate AND @ToCreationDate'
+
+                IF @FromLastLoginDate IS NOT NULL AND @ToLastLoginDate IS NOT NULL
+                    SET @Sql = @Sql + ' AND la.CreationTime BETWEEN @FromLastLoginDate AND @ToLastLoginDate'
+
+                IF @Role IS NOT NULL
+                    SET @Sql = @Sql + ' AND u.Role = @Role'
+
+                -- Add a condition based on @Filter
+                IF @Filter IS NOT NULL
+                    SET @Sql = @Sql + ' AND (u.NationalId LIKE ''%'' + @Filter + ''%'' OR u.Name LIKE ''%'' + @Filter + ''%'' OR u.Surname LIKE ''%'' + @Filter + ''%'' OR u.UserName LIKE ''%'' + @Filter + ''%'' OR u.PhoneNumber LIKE ''%'' + @Filter + ''%'')'
+
                 SET @Sql = @Sql + ')
+                
                 SELECT
                     Id,
                     NationalId,

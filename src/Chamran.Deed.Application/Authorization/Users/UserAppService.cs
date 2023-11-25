@@ -830,6 +830,106 @@ namespace Chamran.Deed.Authorization.Users
 
         }
 
+        public async Task<long> CreateFullNode(CreateFullNodeDto input)
+        {
+
+            if (AbpSession.TenantId.HasValue)
+            {
+                await _userPolicy.CheckMaxUserCountAsync(AbpSession.GetTenantId());
+            }
+
+            var user = ObjectMapper.Map<User>(input.User); //Passwords is not mapped (see mapping configuration)
+            user.UserName = input.User.PhoneNumber;
+            user.TenantId = AbpSession.TenantId;
+            user.NationalId = input.User.NationalId;
+            user.PhoneNumber = input.User.PhoneNumber;
+            //Set password
+            if (!input.User.Password.IsNullOrEmpty())
+            {
+                await UserManager.InitializeOptionsAsync(AbpSession.TenantId);
+                foreach (var validator in _passwordValidators)
+                {
+                    CheckErrors(await validator.ValidateAsync(UserManager, user, input.User.Password));
+                }
+
+                user.Password = _passwordHasher.HashPassword(user, input.User.Password);
+            }
+
+            //Assign roles
+            user.Roles = new Collection<UserRole>();
+            //foreach (var roleName in input.AssignedRoleNames)
+            //{
+            //    var role = await _roleManager.GetRoleByNameAsync(roleName);
+            //    user.Roles.Add(new UserRole(AbpSession.TenantId, user.Id, role.Id));
+            //}
+            string[] emailDomains = { "gmail.com", "yahoo.com", "outlook.com", "example.com" };
+
+            string randomUsername = GenerateRandomUsername();
+            string randomDomain = emailDomains[new Random().Next(emailDomains.Length)];
+
+            string randomEmail = randomUsername + "@" + randomDomain;
+            user.EmailAddress = randomEmail;
+            user.IsSuperUser = false;
+            var role = await _roleManager.GetRoleByNameAsync("Admin");
+            user.Roles.Add(new UserRole(AbpSession.TenantId, user.Id, role.Id));
+            CheckErrors(await UserManager.CreateAsync(user));
+            await CurrentUnitOfWork.SaveChangesAsync(); //To get new user's Id.
+            //Notifications
+            await _notificationSubscriptionManager.SubscribeToAllAvailableNotificationsAsync(user.ToUserIdentifier());
+            //await _appNotifier.WelcomeToTheApplicationAsync(user);
+            //Organization Units
+            await UserManager.SetOrganizationUnitsAsync(user, new long[] { 1 });
+
+
+
+            var organizationId = await _organizationAppService.CreateOrEdit(new CreateOrEditOrganizationDto()
+            {
+                IsGovernmental = input.Organization.IsGovernment,
+                NationalId = input.Organization.NationalId,
+                OrganizationContactPerson = input.User.Name + " " + input.User.Surname,
+                OrganizationLogoToken = input.Organization.OrganizationLogoToken,
+                OrganizationName = input.Organization.Name,
+                Comment = input.Organization.Comment
+
+            });
+            await _groupMembersAppService.CreateOrEdit(new CreateOrEditGroupMemberDto()
+            {
+                UserId = user.Id,
+                OrganizationId = organizationId,
+                MemberPos = 0,
+                MemberPosition = "",
+            });
+
+
+
+            await _deedChartsAppService.CreateOrEdit(new CreateOrEditDeedChartDto()
+            {
+                OrganizationId = organizationId,
+                Caption = input.DeedChartCaption,
+                ParentId = input.DeedChartParentId,
+                
+            });
+
+
+            var organizationChartId = await _organizationChartsAppService.CreateCompanyChart(new CreateCompanyChartDto()
+            {
+                Caption = input.Organization.Name,
+                OrganizationId = organizationId
+            });
+
+            await _organizationUsersAppService.CreateOrEdit(new CreateOrEditOrganizationUserDto()
+            {
+                IsGlobal = false,
+                OrganizationChartId = organizationChartId,
+                UserId = user.Id,
+
+            });
+
+
+            return user.Id;
+
+        }
+
         static string GenerateRandomUsername()
         {
             // You can define rules for generating a random username here.
