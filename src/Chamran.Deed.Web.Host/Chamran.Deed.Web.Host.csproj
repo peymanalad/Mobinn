@@ -28,6 +28,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Remove="default.mrt" />
+    </ItemGroup>
+
+    <ItemGroup>
         <None Include="app.config" />
         <None Include="wwwroot\js\site.js" />
         <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css.map" />
@@ -88,6 +92,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Resource Include="default.mrt" />
         <EmbeddedResource Include="wwwroot\swagger\ui\index.html" />
     </ItemGroup>
 

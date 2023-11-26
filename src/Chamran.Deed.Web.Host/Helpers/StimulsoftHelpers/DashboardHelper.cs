@@ -2,6 +2,7 @@
 using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Abp.Domain.Repositories;
 using Abp.Runtime.Session;
@@ -38,7 +39,17 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
                     return GetReportFromContent(reportContent);
                 }
 
-                var emptyReport = GetTemplateDashboard();
+                var template = "";
+                try
+                {
+                    var defaultReport = await reportRepository.GetAll().FirstOrDefaultAsync(x=>x.IsDashboard && x.OrganizationId==null);
+                    template = defaultReport.ReportContent;
+                }
+                catch (Exception)
+                {
+                    //ignored
+                }
+                var emptyReport = GetTemplateDashboard(template);
                 await reportRepository.InsertAsync(new Report()
                 {
 
@@ -69,10 +80,10 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
                     var result = await query2.FirstAsync();
                     var reportContent = result.ReportContent;
                     return GetReportFromContent(reportContent);
-                   
+
                 }
 
-                
+
                 var orgQuery =
                     from org in organizationRepository.GetAll().Where(x => !x.IsDeleted)
                     join grpMember in groupMemberRepository.GetAll() on org.Id equals grpMember
@@ -87,7 +98,7 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
                 }
 
                 var orgEntity = orgQuery.First();
-                return CreateEmptyReport(userId, orgEntity.Id, orgEntity.OrganizationName, reportRepository);
+                return await CreateEmptyReport(userId, orgEntity.Id, orgEntity.OrganizationName, reportRepository);
             }
 
 
@@ -106,14 +117,27 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
             {
                 //ignored
             }
-            return GetTemplateDashboard();
+
+
+            return GetTemplateDashboard("");
 
         }
 
-        private static StiReport CreateEmptyReport(long userId, int? organizationId, string organizationName, IRepository<Report> reportRepository)
+        private static async Task<StiReport> CreateEmptyReport(long userId, int? organizationId, string organizationName, IRepository<Report> reportRepository)
         {
-            var report = GetTemplateDashboard();
-            reportRepository.Insert(new Report()
+            var template = "";
+            try
+            {
+                var defaultReport = await reportRepository.GetAll().FirstOrDefaultAsync(x=>x.IsDashboard && x.OrganizationId==null);
+                template = defaultReport.ReportContent;
+            }
+            catch (Exception)
+            {
+                //ignored
+            }
+            var report = GetTemplateDashboard(template);
+
+            await reportRepository.InsertAsync(new Report()
             {
                 OrganizationId = organizationId,
                 IsDashboard = true,
@@ -127,68 +151,71 @@ namespace Chamran.Deed.Web.Helpers.StimulsoftHelpers
 
         }
 
-        private static StiReport GetTemplateDashboard()
+        private static StiReport GetTemplateDashboard(string template)
         {
 
             var report = StiReport.CreateNewDashboard();
-            var dashboard = report.Pages[0] as StiDashboard;
+            if (!string.IsNullOrEmpty(template))
+                report.LoadEncryptedReportFromString(template, "DrM@s");
+            //report.LoadReportFromResource(Assembly.GetExecutingAssembly(), "default.mrt");
+            //var dashboard = report.Pages[0] as StiDashboard;
 
-            //var dataPath = Path.Combine(appPath, "Data/Demo.xml");
-            //var data = new DataSet();
-            //data.ReadXml(dataPath);
+            ////var dataPath = Path.Combine(appPath, "Data/Demo.xml");
+            ////var data = new DataSet();
+            ////data.ReadXml(dataPath);
 
-            //report.RegData(data);
-            report.Dictionary.Synchronize();
+            ////report.RegData(data);
+            //report.Dictionary.Synchronize();
 
-            var tableElement = new StiTableElement
-            {
-                Left = 0,
-                Top = 0,
-                Width = 700,
-                Height = 500,
-                Border =
-                {
-                    Side = StiBorderSides.All
-                },
-                BackColor = Color.LightGray,
-                Name = "نمونه"
-            };
+            //var tableElement = new StiTableElement
+            //{
+            //    Left = 0,
+            //    Top = 0,
+            //    Width = 700,
+            //    Height = 500,
+            //    Border =
+            //    {
+            //        Side = StiBorderSides.All
+            //    },
+            //    BackColor = Color.LightGray,
+            //    Name = "نمونه"
+            //};
 
-            var dataBase = new StiDimensionColumn
-            {
-                Expression = "Products.ProductID"
-            };
-            tableElement.Columns.Add(dataBase);
+            //var dataBase = new StiDimensionColumn
+            //{
+            //    Expression = "Products.ProductID"
+            //};
+            //tableElement.Columns.Add(dataBase);
 
-            var dataBase1 = new StiDimensionColumn
-            {
-                Expression = "Products.ProductName"
-            };
-            tableElement.Columns.Add(dataBase1);
+            //var dataBase1 = new StiDimensionColumn
+            //{
+            //    Expression = "Products.ProductName"
+            //};
+            //tableElement.Columns.Add(dataBase1);
 
-            var dataBase2 = new StiDimensionColumn
-            {
-                Expression = "Products.UnitPrice"
-            };
-            tableElement.Columns.Add(dataBase2);
+            //var dataBase2 = new StiDimensionColumn
+            //{
+            //    Expression = "Products.UnitPrice"
+            //};
+            //tableElement.Columns.Add(dataBase2);
 
-            var filter1 = new StiDataFilterRule
-            {
-                Condition = StiDataFilterCondition.BeginningWith,
-                Path = "Products.ProductID",
-                Value = "1"
-            };
-            tableElement.DataFilters.Add(filter1);
+            //var filter1 = new StiDataFilterRule
+            //{
+            //    Condition = StiDataFilterCondition.BeginningWith,
+            //    Path = "Products.ProductID",
+            //    Value = "1"
+            //};
+            //tableElement.DataFilters.Add(filter1);
 
-            var filter2 = new StiDataFilterRule
-            {
-                Condition = StiDataFilterCondition.EndingWith,
-                Path = "Products.UnitPrice",
-                Value = "1"
-            };
-            tableElement.DataFilters.Add(filter2);
+            //var filter2 = new StiDataFilterRule
+            //{
+            //    Condition = StiDataFilterCondition.EndingWith,
+            //    Path = "Products.UnitPrice",
+            //    Value = "1"
+            //};
+            //tableElement.DataFilters.Add(filter2);
 
-            dashboard?.Components.Add(tableElement);
+            //dashboard?.Components.Add(tableElement);
 
             return report;
         }

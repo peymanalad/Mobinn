@@ -103,6 +103,10 @@ namespace Chamran.Deed.EntityFrameworkCore
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Report>(entry =>
+            {
+                entry.ToTable("Reports", tb => tb.HasTrigger("trgAfterInsertReports"));
+            });
             modelBuilder.Entity<GetEntriesDigest>().HasNoKey();
             modelBuilder.Entity<GetEntriesDetail>().HasNoKey();
             modelBuilder.Entity<GetPostsForView>().HasNoKey();
