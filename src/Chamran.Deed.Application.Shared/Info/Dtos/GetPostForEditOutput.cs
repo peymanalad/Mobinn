@@ -22,6 +22,8 @@ namespace Chamran.Deed.Info.Dtos
         public string PostFile8FileName { get; set; }
         public string PostFile9FileName { get; set; }
         public string PostFile10FileName { get; set; }
+        public int? OrganizationId { get; set; }
+        public string OrganizationName { get; set; }
 
     }
 }
