@@ -14,6 +14,7 @@ using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Chamran.Deed.Info;
+using Chamran.Deed.Migrations;
 
 namespace Chamran.Deed.People
 {
@@ -55,23 +56,7 @@ namespace Chamran.Deed.People
                          e.OrganizationFk.OrganizationName == input.OrganizationGroupGroupNameFilter)
                 .WhereIf(input.OrganizationId.HasValue, e => e.OrganizationId == input.OrganizationId.Value);
 
-            //if (!user.IsSuperUser)
-            //{
-            //    var orgQuery =
-            //        from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
-            //        join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
-            //            .OrganizationId into joined2
-            //        from grpMember in joined2.DefaultIfEmpty()
-            //        where grpMember.UserId == AbpSession.UserId
-            //        select org;
 
-            //    if (!orgQuery.Any())
-            //    {
-            //        throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
-            //    }
-            //    var orgEntity = orgQuery.First();
-            //    filteredGroupMembers = filteredGroupMembers.Where(x => x.OrganizationId == orgEntity.Id);
-            //}
 
             var pagedAndFilteredGroupMembers = filteredGroupMembers
                 .OrderBy(input.Sorting ?? "id asc")
@@ -137,64 +122,40 @@ namespace Chamran.Deed.People
         public async Task<PagedResultDto<GetAllNoOrganizationForViewDto>> GetAllNoOrganization(GetAllNoOrganizationDto input)
         {
             if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
-            var user = await _lookup_userRepository.GetAsync(AbpSession.UserId.Value);
 
 
             var filteredGroupMembers = _groupMemberRepository.GetAll()
                 .Include(e => e.UserFk)
-                .Include(e => e.OrganizationFk).WhereIf(input.OrganizationId.HasValue,
-                    x => x.OrganizationId == input.OrganizationId);
+                .Include(e => e.OrganizationFk).Where(x => x.OrganizationId == input.OrganizationId);
 
-
-            //if (!user.IsSuperUser)
-            //{
-            //   filteredGroupMembers = filteredGroupMembers.WhereIf(input.OrganizationId.HasValue, x => x.OrganizationId == input.OrganizationId);
-            //}
-
-
-
-            //var joinedMembers = from x in _lookup_userRepository.GetAll()
-            //                    join gm in filteredGroupMembers on x.Id equals gm.UserId into joiner
-            //                    from gm in joiner.DefaultIfEmpty()
-            //                    where gm == null
-            //                    select x;
+            var filteredOrganizationUsers = _organizationUsersRepository.GetAll().Include(e => e.OrganizationChartFk)
+                .Where(x => x.OrganizationChartFk.OrganizationId == input.OrganizationId);
 
             var joinedMembers = from x in filteredGroupMembers
-                                join ou in _organizationUsersRepository.GetAll() on x.UserId equals ou.UserId into joiner
-                                from ou in joiner.DefaultIfEmpty()
-                                where ou == null
-                                select x;
-
-
-            var pagedAndFilteredGroupMembers = joinedMembers
-.OrderBy(input.Sorting ?? "id asc")
-.PageBy(input);
-
-            var groupMembers = from o in pagedAndFilteredGroupMembers
-                                   //join o1 in _groupMemberRepository.GetAll() on o.Id equals o1.Id into j1
-                                   //from s1 in j1.DefaultIfEmpty()
-                                   //join o2 in _lookup_organizationRepository.GetAll() on s1.OrganizationId equals o2.Id into j2
-                                   //from s2 in j2.DefaultIfEmpty()
-                               select new
-                               {
-                                   o.OrganizationId,
-                                   o.MemberPos,
-                                   o.MemberPosition,
-                                   o.UserId,
-                                   o.UserFk.NationalId,
-                                   o.UserFk.Name,
-                                   o.UserFk.Surname,
-                                   OrganizationGroupGroupName = o.OrganizationFk.OrganizationName
-                                   //MemberPos = (int?)s1.MemberPos ?? 0,
-                                   //MemberPosition = s1.MemberPosition ?? "",
-                                   //UserId = o.Id,
-                                   //Name = o.Name ?? "",
-                                   //SurName = o.Surname ?? "",
-                                   //OrganizationGroupGroupName = s2 == null || s2.OrganizationName == null ? "" : s2.OrganizationName.ToString(),
-                                   //NationalId = o.NationalId ?? ""
-                               };
+                                join ou in filteredOrganizationUsers on x.UserId equals ou.UserId into joiner
+                                from j in joiner.DefaultIfEmpty()
+                                where j == null
+                                select new
+                                {
+                                    OrganizationId = x.OrganizationId,
+                                    UserId = x.UserId,
+                                    Name = x.UserFk.Name,
+                                    Surname = x.UserFk.Surname,
+                                    UserName = x.UserFk.UserName,
+                                    NationalId = x.UserFk.NationalId,
+                                    MemberPos = x.MemberPos,
+                                    MemberPosition = x.MemberPosition,
+                                };
 
             var totalCount = await joinedMembers.CountAsync();
+
+            var pagedAndFiltered = joinedMembers
+.OrderBy(input.Sorting ?? "Surname asc")
+.PageBy(input);
+
+            var groupMembers = from o in pagedAndFiltered
+                               select o;
+
 
             var dbList = await groupMembers.ToListAsync();
             var results = new List<GetAllNoOrganizationForViewDto>();
@@ -209,7 +170,6 @@ namespace Chamran.Deed.People
                     UserId = o.UserId,
                     Name = o.Name,
                     SurName = o.Surname,
-                    OrganizationGroupName = o.OrganizationGroupGroupName,
                     NationalId = o.NationalId,
                 };
 
