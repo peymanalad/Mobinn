@@ -298,7 +298,15 @@ namespace Chamran.Deed.Info
                 ids.Add(new UserIdentifier(AbpSession.TenantId, row.UserId));
             }
 
-            await _appNotifier.SendPostNotificationAsync(JsonConvert.SerializeObject(ObjectMapper.Map<PostDto>(post), new JsonSerializerSettings
+            var notifData = ObjectMapper.Map<SendPostNotificationDto>(post);
+            if (post.PostGroupId != null)
+            {
+                var groupDataQuery = await _lookup_postGroupRepository.GetAsync(post.PostGroupId.Value);
+                notifData.GroupDescription = groupDataQuery.PostGroupDescription;
+                notifData.GroupFile = groupDataQuery.GroupFile;
+            }
+
+            await _appNotifier.SendPostNotificationAsync(JsonConvert.SerializeObject(post, new JsonSerializerSettings
             {
                 ContractResolver = new DefaultContractResolver
                 {
@@ -500,7 +508,7 @@ namespace Chamran.Deed.Info
         [AbpAuthorize(AppPermissions.Pages_Posts)]
         public async Task<PagedResultDto<PostPostGroupLookupTableDto>> GetAllPostGroupForLookupTable(GetAllForLookupTableInput input)
         {
-            var query = _lookup_postGroupRepository.GetAll().Include(x=>x.OrganizationFk).Where(x=>x.OrganizationId==input.OrganizationId).WhereIf(
+            var query = _lookup_postGroupRepository.GetAll().Include(x => x.OrganizationFk).Where(x => x.OrganizationId == input.OrganizationId).WhereIf(
                    !string.IsNullOrWhiteSpace(input.Filter),
                   e => e.PostGroupDescription != null && e.PostGroupDescription.Contains(input.Filter)
                );
@@ -518,8 +526,8 @@ namespace Chamran.Deed.Info
                 {
                     Id = postGroup.Id,
                     DisplayName = postGroup.PostGroupDescription,
-                    OrganizationId=postGroup.OrganizationId,
-                    OrganizationName=postGroup.OrganizationFk.OrganizationName
+                    OrganizationId = postGroup.OrganizationId,
+                    OrganizationName = postGroup.OrganizationFk.OrganizationName
 
                 });
             }
