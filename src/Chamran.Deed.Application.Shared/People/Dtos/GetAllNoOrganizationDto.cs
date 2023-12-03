@@ -4,6 +4,6 @@ namespace Chamran.Deed.People.Dtos
 {
     public class GetAllNoOrganizationDto: PagedAndSortedResultRequestDto
     {
-        public int? OrganizationId { get; set; }
+        public int OrganizationId { get; set; }
     }
 }

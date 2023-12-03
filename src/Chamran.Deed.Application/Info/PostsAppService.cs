@@ -218,14 +218,21 @@ namespace Chamran.Deed.Info
 
             if (output.Post.GroupMemberId != null)
             {
-                var _lookupGroupMember = await _lookup_groupMemberRepository.FirstOrDefaultAsync((int)output.Post.GroupMemberId);
+                var _lookupGroupMember = await _lookup_groupMemberRepository.GetAll().Include(x=>x.OrganizationFk).FirstOrDefaultAsync(x=>x.Id==output.Post.GroupMemberId);
                 output.GroupMemberMemberPosition = _lookupGroupMember?.MemberPosition;
+                output.OrganizationId= _lookupGroupMember?.OrganizationId;
+                output.OrganizationName = _lookupGroupMember?.OrganizationFk.OrganizationName;
             }
 
             if (output.Post.PostGroupId != null)
             {
-                var _lookupPostGroup = await _lookup_postGroupRepository.FirstOrDefaultAsync((int)output.Post.PostGroupId);
+                //var _lookupPostGroup = await _lookup_postGroupRepository.FirstOrDefaultAsync((int)output.Post.PostGroupId);
+                //output.PostGroupPostGroupDescription = _lookupPostGroup?.PostGroupDescription;
+                var _lookupPostGroup = await _lookup_postGroupRepository.GetAll().Include(x => x.OrganizationFk)
+                    .FirstOrDefaultAsync(x => x.Id == output.Post.PostGroupId);
                 output.PostGroupPostGroupDescription = _lookupPostGroup?.PostGroupDescription;
+                output.OrganizationId = _lookupPostGroup?.OrganizationId;
+                output.OrganizationName = _lookupPostGroup?.OrganizationFk.OrganizationName;
             }
 
             output.PostFileFileName = await GetBinaryFileName(post.PostFile);
