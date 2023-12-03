@@ -188,7 +188,12 @@ namespace Chamran.Deed.Info
         protected virtual async Task Create(CreateOrEditOrganizationUserDto input)
         {
             var organizationUser = ObjectMapper.Map<OrganizationUser>(input);
-
+            var chart = await _lookup_organizationChartRepository.GetAsync(input.OrganizationChartId);
+            if (!_groupMemberRepository.GetAll().Any(x => x.UserId == input.UserId && x.OrganizationId== chart.OrganizationId))
+            {
+                throw new UserFriendlyException(
+                    "این کاربر در این سازمان عضو نیست لذا نمی تواند در چارت سازمانی قرار گیرد");
+            }
             await _organizationUserRepository.InsertAsync(organizationUser);
 
         }
@@ -198,6 +203,12 @@ namespace Chamran.Deed.Info
         protected virtual async Task Update(CreateOrEditOrganizationUserDto input)
         {
             var organizationUser = await _organizationUserRepository.FirstOrDefaultAsync((int)input.Id);
+            var chart = await _lookup_organizationChartRepository.GetAsync(input.OrganizationChartId);
+            if (!_groupMemberRepository.GetAll().Any(x => x.UserId == input.UserId && x.OrganizationId == chart.OrganizationId))
+            {
+                throw new UserFriendlyException(
+                    "این کاربر در این سازمان عضو نیست لذا نمی تواند در چارت سازمانی قرار گیرد");
+            }
             ObjectMapper.Map(input, organizationUser);
 
         }
@@ -772,10 +783,8 @@ namespace Chamran.Deed.Info
         }
 
         [AbpAuthorize(AppPermissions.Pages_OrganizationUsers)]
-        public async Task<PagedResultDto<SameLeafDto>> GetAllUsersInLeaf(GetAllUsersInLeafInput input)
+        public Task<PagedResultDto<SameLeafDto>> GetAllUsersInLeaf(GetAllUsersInLeafInput input)
         {
-            var chartId = input.OrganizationChartId;
-            var filterUserId = false;
             if (input.OrganizationChartId <= 0)
             {
                 throw new UserFriendlyException("شناسه شاخه می بایست بزرگتر از صفر باشد");
@@ -789,8 +798,10 @@ namespace Chamran.Deed.Info
                              select new
                              {
                                  x.Id,
-                                 x.UserFk,
-                                 y.MemberPos,
+                                 x.UserFk.Name,
+                                 x.UserFk.Surname,
+                                 x.UserFk.UserName,
+                                 MemberPos = (int?)y.MemberPos,
                                  y.MemberPosition,
                                  x.UserId,
 
@@ -805,19 +816,19 @@ namespace Chamran.Deed.Info
                 ls.Add(new SameLeafDto()
                 {
                     OrganizationUserId=row.Id,
-                    FirstName = row.UserFk.Name,
-                    LastName = row.UserFk.Surname,
+                    FirstName = row.Name,
+                    LastName = row.Surname,
                     MemberPosition = row.MemberPosition,
                     UserId = row.UserId,
-                    UserName = row.UserFk.UserName
+                    UserName = row.UserName
                 });
             }
 
 
-            return new PagedResultDto<SameLeafDto>(
+            return Task.FromResult(new PagedResultDto<SameLeafDto>(
                 joindUsers.Count(),
                 ls
-            );
+            ));
         }
     }
 }

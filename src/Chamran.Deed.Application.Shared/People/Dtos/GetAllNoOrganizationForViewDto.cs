@@ -8,6 +8,5 @@
         public string NationalId { get; set; }
         public string Name { get; set; }
         public string SurName { get; set; }
-        public string OrganizationGroupName { get; set; }
     }
 }
