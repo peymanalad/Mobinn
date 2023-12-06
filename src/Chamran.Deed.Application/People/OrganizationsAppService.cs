@@ -24,13 +24,14 @@ namespace Chamran.Deed.People
     public class OrganizationsAppService : DeedAppServiceBase, IOrganizationsAppService
     {
         private readonly IRepository<Organization> _organizationRepository;
+        private readonly IRepository<GroupMember> _groupMemberRepository;
         private readonly IRepository<DeedChart> _deedChartRepository;
         private readonly IOrganizationsExcelExporter _organizationsExcelExporter;
 
         private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IBinaryObjectManager _binaryObjectManager;
 
-        public OrganizationsAppService(IRepository<Organization> organizationRepository, IOrganizationsExcelExporter organizationsExcelExporter, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager, IRepository<DeedChart> deedChartRepository)
+        public OrganizationsAppService(IRepository<Organization> organizationRepository, IOrganizationsExcelExporter organizationsExcelExporter, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager, IRepository<DeedChart> deedChartRepository, IRepository<GroupMember> groupMemberRepository)
         {
             _organizationRepository = organizationRepository;
             _organizationsExcelExporter = organizationsExcelExporter;
@@ -38,12 +39,13 @@ namespace Chamran.Deed.People
             _tempFileCacheManager = tempFileCacheManager;
             _binaryObjectManager = binaryObjectManager;
             _deedChartRepository = deedChartRepository;
+            _groupMemberRepository = groupMemberRepository;
         }
 
         public virtual async Task<PagedResultDto<GetOrganizationForViewDto>> GetAll(GetAllOrganizationsInput input)
         {
 
-            var filteredOrganizations = _organizationRepository.GetAll()
+            var filteredOrganizations = _organizationRepository.GetAll().Where(x=>!x.IsDeleted)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.OrganizationName.Contains(input.Filter) || e.NationalId.Contains(input.Filter) || e.OrganizationLocation.Contains(input.Filter) || e.OrganizationPhone.Contains(input.Filter) || e.OrganizationContactPerson.Contains(input.Filter) || e.Comment.Contains(input.Filter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.OrganizationNameFilter), e => e.OrganizationName.Contains(input.OrganizationNameFilter))
                         .WhereIf(input.IsGovernmentalFilter.HasValue && input.IsGovernmentalFilter > -1, e => (input.IsGovernmentalFilter == 1 && e.IsGovernmental) || (input.IsGovernmentalFilter == 0 && !e.IsGovernmental))
@@ -176,6 +178,11 @@ namespace Chamran.Deed.People
         [AbpAuthorize(AppPermissions.Pages_Organizations_Delete)]
         public virtual async Task Delete(EntityDto input)
         {
+            if (_groupMemberRepository.GetAll().Any(x => x.OrganizationId == input.Id))
+            {
+                throw new UserFriendlyException("پیش از حذف سازمان اعضای آنرا حذف نمایید");
+            }
+
             await _organizationRepository.DeleteAsync(input.Id);
         }
 

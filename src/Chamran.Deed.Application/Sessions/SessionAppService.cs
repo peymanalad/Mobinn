@@ -115,17 +115,19 @@ namespace Chamran.Deed.Sessions
                 {
                     output.JoinedOrganizations = new List<CurrentOrganizationDto>();
                     var query = _groupMemberRepository.GetAll().Include(x => x.UserFk).Include(x => x.OrganizationFk).Where(x => x.UserId == AbpSession.UserId.Value);
+
                     foreach (var groupMember in query)
                     {
-                        output.JoinedOrganizations.Add(new CurrentOrganizationDto()
-                        {
-                            OrganizationId = groupMember.OrganizationId,
-                            OrganizationName = groupMember.OrganizationFk?.OrganizationName ?? "",
-                            OrganizationPicture = groupMember.OrganizationFk?.OrganizationLogo
-                        });
+                        if (groupMember.OrganizationFk?.OrganizationName != "")
+                            output.JoinedOrganizations.Add(new CurrentOrganizationDto()
+                            {
+                                OrganizationId = groupMember.OrganizationId,
+                                OrganizationName = groupMember.OrganizationFk?.OrganizationName ?? "",
+                                OrganizationPicture = groupMember.OrganizationFk?.OrganizationLogo
+                            });
                     }
                 }
-                    
+
                 return output;
             });
         }
@@ -143,13 +145,13 @@ namespace Chamran.Deed.Sessions
             {
                 return tenantLoginInfo;
             }
-            
+
             var features = FeatureManager
                 .GetAll()
                 .Where(feature => (feature[FeatureMetadata.CustomFeatureKey] as FeatureMetadata)?.IsVisibleOnPricingTable ?? false);
-            
+
             var featureDictionary = features.ToDictionary(feature => feature.Name, f => f);
-            
+
             tenantLoginInfo.FeatureValues = (await _editionManager.GetFeatureValuesAsync(tenant.EditionId.Value))
                 .Where(featureValue => featureDictionary.ContainsKey(featureValue.Name))
                 .Select(fv => new NameValueDto(
