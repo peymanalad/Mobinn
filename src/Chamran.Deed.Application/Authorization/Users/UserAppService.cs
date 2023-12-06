@@ -176,7 +176,7 @@ namespace Chamran.Deed.Authorization.Users
             //    Direction = ParameterDirection.Output
             //};
 
-            var parameters = new SqlParameter[]
+            var parameters = new[]
    {
 
         new SqlParameter("@NationalIdFilter", input.NationalIdFilter ?? (object)DBNull.Value),
@@ -219,14 +219,21 @@ namespace Chamran.Deed.Authorization.Users
                     EmailAddress = user.EmailAddress,
                     PhoneNumber = user.PhoneNumber,
                     ProfilePictureId = user.ProfilePictureId,
+                    Roles = new List<UserListRoleDto>()
+                    {
+                        new UserListRoleDto()
+                        {
+                            RoleId = user.AssignedRoleId??3,
+                            RoleName = string.IsNullOrEmpty(user.AssignedRoleName)?"User":user.AssignedRoleName,
+                        }
+                    },
                     // Roles = user.Roles, // You may need to map roles separately based on your structure
                     IsActive = user.IsActive,
                     CreationTime = user.CreationTime,
                     LastLoginAttemptTime = user.LastLoginAttemptTime
                 });
             }
-            var countParameters = new SqlParameter[]
-{
+            object[] countParameters = {
 
                 new SqlParameter("@NationalIdFilter", input.NationalIdFilter ?? (object)DBNull.Value),
                 new SqlParameter("@NameFilter", string.IsNullOrWhiteSpace(input.NameFilter) ? (object)DBNull.Value : (object)input.NameFilter),
@@ -255,100 +262,7 @@ namespace Chamran.Deed.Authorization.Users
                     .ToListAsync()
                 ;
             return new PagedResultDto<UserListDto>(countQueryResult.Count, result);
-            //var query = UserManager.Users
-            //    .WhereIf(!string.IsNullOrWhiteSpace(input.NationalIdFilter), n => n.NationalId == input.NationalIdFilter)
-            //    .WhereIf(!string.IsNullOrWhiteSpace(input.NameFilter), n => n.Name == input.NameFilter)
-            //    .WhereIf(!string.IsNullOrWhiteSpace(input.SurNameFilter), n => n.Surname == input.SurNameFilter)
-            //    .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter), n => n.UserName == input.UserNameFilter)
-            //    .WhereIf(!string.IsNullOrWhiteSpace(input.PhoneNumberFilter), n => n.PhoneNumber == input.PhoneNumberFilter)
-            //    .WhereIf(input.IsActiveFilter.HasValue, n => n.IsActive == input.IsActiveFilter.Value)
-            //    .WhereIf(input.FromCreationDate.HasValue, u => u.CreationTime >= input.FromCreationDate.Value)
-            //    .WhereIf(input.ToCreationDate.HasValue, u => u.CreationTime <= input.ToCreationDate.Value)
-            //    .WhereIf(
-            //        input.FromLastLoginDate.HasValue || input.ToLastLoginDate.HasValue,
-            //        u => _userLoginAttemptRepository
-            //            .GetAll()
-            //            .Any(l =>
-            //                l.UserId == u.Id &&
-            //                (!input.FromLastLoginDate.HasValue || l.CreationTime >= input.FromLastLoginDate.Value) &&
-            //                (!input.ToLastLoginDate.HasValue || l.CreationTime <= input.ToLastLoginDate.Value)))
-            //    .WhereIf(input.Role.HasValue, u => u.Roles.Any(r => r.RoleId == input.Role.Value))
-            //    .WhereIf(input.OnlyLockedUsers,
-            //        u => u.LockoutEndDateUtc.HasValue && u.LockoutEndDateUtc.Value > DateTime.UtcNow)
-            //    .WhereIf(
-            //        !string.IsNullOrWhiteSpace(input.Filter),
-            //        u =>
-            //            u.Name.Contains(input.Filter) ||
-            //            u.Surname.Contains(input.Filter) ||
-            //            u.UserName.Contains(input.Filter) ||
-            //            u.EmailAddress.Contains(input.Filter)
-            //    );
 
-            //if (input.Permissions != null && input.Permissions.Any(p => !string.IsNullOrWhiteSpace(p)))
-            //{
-            //    var staticRoleNames = _roleManagementConfig.StaticRoles.Where(
-            //        r => r.GrantAllPermissionsByDefault &&
-            //             r.Side == AbpSession.MultiTenancySide
-            //    ).Select(r => r.RoleName).ToList();
-
-            //    input.Permissions = input.Permissions.Where(p => !string.IsNullOrEmpty(p)).ToList();
-
-            //    var userIds = from user in query
-            //                  join ur in _userRoleRepository.GetAll() on user.Id equals ur.UserId into urJoined
-            //                  from ur in urJoined.DefaultIfEmpty()
-            //                  join urr in _roleRepository.GetAll() on ur.RoleId equals urr.Id into urrJoined
-            //                  from urr in urrJoined.DefaultIfEmpty()
-            //                  join up in _userPermissionRepository.GetAll()
-            //                      .Where(userPermission => input.Permissions.Contains(userPermission.Name)) on user.Id equals up.UserId into upJoined
-            //                  from up in upJoined.DefaultIfEmpty()
-            //                  join rp in _rolePermissionRepository.GetAll()
-            //                      .Where(rolePermission => input.Permissions.Contains(rolePermission.Name)) on
-            //                      new { RoleId = ur == null ? 0 : ur.RoleId } equals new { rp.RoleId } into rpJoined
-            //                  from rp in rpJoined.DefaultIfEmpty()
-            //                  where (up != null && up.IsGranted) ||
-            //                        (up == null && rp != null && rp.IsGranted) ||
-            //                        (up == null && rp == null && staticRoleNames.Contains(urr.Name))
-            //                  group user by user.Id
-            //        into userGrouped
-            //                  select userGrouped.Key;
-
-            //    query = UserManager.Users.Where(e => userIds.Contains(e.Id));
-            //}
-
-            //var joinQuery = from x in query
-            //    join y in _groupMemberRepository.GetAll() on x.Id equals y.UserId into joiner
-            //    where !input.OrganizationId.HasValue || (joiner.Any() && joiner.Any(y => y.OrganizationId == input.OrganizationId))
-            //    select x;
-
-            //var final = from x in joinQuery
-            //            join z in _userLoginAttemptRepository.GetAll() on x.Id equals z.UserId
-            //        into loginAttempts
-            //    let latestAttempt = loginAttempts.OrderByDescending(la => la.CreationTime).FirstOrDefault()
-            //    select new { User = x, LatestLoginAttempt = latestAttempt };
-
-            //var distinctFinal = final.GroupBy(x => x.User.Id).Select(group => group.OrderByDescending(x => x.LatestLoginAttempt.CreationTime).First());
-
-            //var userCount = await distinctFinal.CountAsync();
-            //var usersWithLatestLoginAttempts = await distinctFinal
-            //    .OrderBy(input.Sorting)
-            //    .PageBy(input)
-            //    .ToListAsync();
-
-
-            //var userListDtos = usersWithLatestLoginAttempts.Select(result =>
-            //{
-            //    var userDto = ObjectMapper.Map<UserListDto>(result.User);
-            //    userDto.LastLoginAttemptTime = result.LatestLoginAttempt?.CreationTime;
-            //    // You can include other properties from UserListDto as needed
-            //    return userDto;
-            //}).ToList();
-
-            //await FillRoleNames(userListDtos);
-
-            //return new PagedResultDto<UserListDto>(
-            //    userCount,
-            //    userListDtos
-            //);
         }
 
 
@@ -907,7 +821,7 @@ namespace Chamran.Deed.Authorization.Users
                 OrganizationId = organizationId,
                 Caption = input.DeedChartCaption,
                 ParentId = input.DeedChartParentId,
-                
+
             });
 
 
@@ -950,8 +864,16 @@ namespace Chamran.Deed.Authorization.Users
                 throw new UserFriendlyException(L("YouCanNotDeleteOwnAccount"));
             }
 
+            var members = _groupMemberRepository.GetAll().Where(x => x.UserId == input.Id);
+            foreach (var groupMember in members)
+            {
+                if (_postRepository.GetAll().Any(x => x.GroupMemberId == groupMember.Id))
+                    throw new UserFriendlyException("پیش از حذف کاربر خبرهای مرتبط با شخص را حذف نمایید");
+            }
+
             var user = await UserManager.GetUserByIdAsync(input.Id);
             CheckErrors(await UserManager.DeleteAsync(user));
+            
         }
 
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Unlock)]
