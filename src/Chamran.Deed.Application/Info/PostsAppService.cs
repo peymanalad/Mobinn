@@ -689,6 +689,13 @@ namespace Chamran.Deed.Info
                         .Include(e => e.AppBinaryObjectFk)
                         .Include(e => e.AppBinaryObjectFk2)
                         .Include(e => e.AppBinaryObjectFk3)
+                        .Include(e => e.AppBinaryObjectFk4)
+                        .Include(e => e.AppBinaryObjectFk5)
+                        .Include(e => e.AppBinaryObjectFk6)
+                        .Include(e => e.AppBinaryObjectFk7)
+                        .Include(e => e.AppBinaryObjectFk8)
+                        .Include(e => e.AppBinaryObjectFk9)
+                        .Include(e => e.AppBinaryObjectFk10)
                         .Where(x => x.PostGroupFk.OrganizationId == input.OrganizationId)
                         .WhereIf(input.PostGroupId > 0, p => p.PostGroupId == input.PostGroupId)
                                     join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
@@ -696,11 +703,11 @@ namespace Chamran.Deed.Info
                                     from pg in joiner1.DefaultIfEmpty()
                                     join og in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
                                         equals og.Id into joiner2
-                                    from og in joiner2.DefaultIfEmpty()
-                                    join gm in _lookup_groupMemberRepository.GetAll() on og.Id equals gm.OrganizationId into
-                                        joiner3
-                                    from gm in joiner3.DefaultIfEmpty()
-                                    where gm.UserId == AbpSession.UserId
+                                    from og2 in joiner2.DefaultIfEmpty()
+                                    //join gm in _lookup_groupMemberRepository.GetAll() on og2.Id equals gm.OrganizationId into
+                                        //joiner3
+                                    //from gm2 in joiner3.DefaultIfEmpty()
+                                    //where gm2.UserId == AbpSession.UserId
                                     select new
                                     {
                                         p.Id,
@@ -736,7 +743,7 @@ namespace Chamran.Deed.Info
                                         p.AppBinaryObjectFk10,
 
                                     };
-
+                var count = filteredPosts.Count();
                 var pagedAndFilteredPosts = filteredPosts
     .OrderBy(input.Sorting ?? "id desc")
     .PageBy(input);
@@ -766,69 +773,76 @@ namespace Chamran.Deed.Info
                         PostRefLink = post.PostRefLink,
                         CreationTime = post.CreationTime,
                     };
-                    if (post.GroupMemberFk != null)
+                    try
                     {
-                        datam.MemberFullName = post.GroupMemberFk.UserFk.FullName;
-                        datam.MemberPosition = post.GroupMemberFk.MemberPosition;
-                        datam.MemberUserName = post.GroupMemberFk.UserFk.UserName;
-                    }
+                        if (post.GroupMemberFk != null)
+                        {
+                            datam.MemberFullName = post.GroupMemberFk.UserFk.FullName;
+                            datam.MemberPosition = post.GroupMemberFk.MemberPosition;
+                            datam.MemberUserName = post.GroupMemberFk.UserFk.UserName;
+                        }
 
-                    if (post.PostGroupFk != null)
-                    {
-                        datam.GroupFile = post.PostGroupFk.GroupFile;
-                        datam.GroupDescription = post.PostGroupFk.PostGroupDescription;
+                        if (post.PostGroupFk != null)
+                        {
+                            datam.GroupFile = post.PostGroupFk.GroupFile;
+                            datam.GroupDescription = post.PostGroupFk.PostGroupDescription;
+
+                        }
+
+                        if (post.AppBinaryObjectFk != null)
+                        {
+                            datam.Attachment1 = post.AppBinaryObjectFk.Description;
+                        }
+
+                        if (post.AppBinaryObjectFk2 != null)
+                        {
+                            datam.Attachment2 = post.AppBinaryObjectFk2.Description;
+                        }
+
+                        if (post.AppBinaryObjectFk3 != null)
+                        {
+                            datam.Attachment3 = post.AppBinaryObjectFk3.Description;
+                        }
+                        if (post.AppBinaryObjectFk4 != null)
+                        {
+                            datam.Attachment4 = post.AppBinaryObjectFk4.Description;
+                        }
+                        if (post.AppBinaryObjectFk5 != null)
+                        {
+                            datam.Attachment5 = post.AppBinaryObjectFk5.Description;
+                        }
+                        if (post.AppBinaryObjectFk6 != null)
+                        {
+                            datam.Attachment6 = post.AppBinaryObjectFk6.Description;
+                        }
+                        if (post.AppBinaryObjectFk7 != null)
+                        {
+                            datam.Attachment7 = post.AppBinaryObjectFk7.Description;
+                        }
+                        if (post.AppBinaryObjectFk8 != null)
+                        {
+                            datam.Attachment8 = post.AppBinaryObjectFk8.Description;
+                        }
+                        if (post.AppBinaryObjectFk9 != null)
+                        {
+                            datam.Attachment9 = post.AppBinaryObjectFk9.Description;
+                        }
+                        if (post.AppBinaryObjectFk10 != null)
+                        {
+                            datam.Attachment10 = post.AppBinaryObjectFk10.Description;
+                        }
 
                     }
-
-                    if (post.AppBinaryObjectFk != null)
+                    catch (Exception)
                     {
-                        datam.Attachment1 = post.AppBinaryObjectFk.Description;
+                        //ignored
                     }
-
-                    if (post.AppBinaryObjectFk2 != null)
-                    {
-                        datam.Attachment2 = post.AppBinaryObjectFk2.Description;
-                    }
-
-                    if (post.AppBinaryObjectFk3 != null)
-                    {
-                        datam.Attachment3 = post.AppBinaryObjectFk3.Description;
-                    }
-                    if (post.AppBinaryObjectFk4 != null)
-                    {
-                        datam.Attachment4 = post.AppBinaryObjectFk4.Description;
-                    }
-                    if (post.AppBinaryObjectFk5 != null)
-                    {
-                        datam.Attachment5 = post.AppBinaryObjectFk5.Description;
-                    }
-                    if (post.AppBinaryObjectFk6 != null)
-                    {
-                        datam.Attachment6 = post.AppBinaryObjectFk6.Description;
-                    }
-                    if (post.AppBinaryObjectFk7 != null)
-                    {
-                        datam.Attachment7 = post.AppBinaryObjectFk7.Description;
-                    }
-                    if (post.AppBinaryObjectFk8 != null)
-                    {
-                        datam.Attachment8 = post.AppBinaryObjectFk8.Description;
-                    }
-                    if (post.AppBinaryObjectFk9 != null)
-                    {
-                        datam.Attachment9 = post.AppBinaryObjectFk9.Description;
-                    }
-                    if (post.AppBinaryObjectFk10 != null)
-                    {
-                        datam.Attachment10 = post.AppBinaryObjectFk10.Description;
-                    }
-
                     posts.Add(datam);
 
 
                 }
 
-                return Task.FromResult(new PagedResultDto<GetPostsForViewDto>(posts.Count, posts));
+                return Task.FromResult(new PagedResultDto<GetPostsForViewDto>(count, posts));
             }
             catch (Exception ex)
             {

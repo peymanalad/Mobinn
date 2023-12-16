@@ -65,21 +65,19 @@ namespace Chamran.Deed.People
             var groupMembers = from o in pagedAndFilteredGroupMembers
                                join o1 in _lookup_userRepository.GetAll() on o.UserId equals o1.Id into j1
                                from s1 in j1.DefaultIfEmpty()
-
                                join o2 in _lookup_organizationRepository.GetAll() on o.OrganizationId equals o2.Id into j2
                                from s2 in j2.DefaultIfEmpty()
-
                                select new
                                {
 
-                                   o.MemberPos,
-                                   o.MemberPosition,
-                                   Id = o.Id,
-                                   FirstName = s1.Name ?? "",
-                                   LastName = s1.Surname ?? "",
-                                   NationalId = s1.NationalId,
-                                   s1.UserName,
-                                   UserId = s1.Id,
+                                   MemberPos=(int?)o.MemberPos??0,
+                                   MemberPosition=o.MemberPosition??"",
+                                   o.Id,
+                                   FirstName = s1 == null?"":s1.Name ,
+                                   LastName = s1 == null?"":s1.Surname ,
+                                   NationalId=s1 == null?"":s1.NationalId,
+                                   UserName=s1 == null?"":s1.UserName,
+                                   UserId = s1 == null?0:s1.Id,
                                    OrganizationId = (int?)s2.Id,
                                    OrganizationGroupGroupName = s2 == null || s2.OrganizationName == null ? "" : s2.OrganizationName.ToString(),
                                };
