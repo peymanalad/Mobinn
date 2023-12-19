@@ -43,18 +43,16 @@ namespace Chamran.Deed.Info
                         .Include(e => e.CommentFk)
                         .Include(e => e.UserFk)
                         .Include(x=>x.CommentFk.PostFk.PostGroupFk)
-                        .Where(x => x.CommentFk.PostFk.PostGroupFk.OrganizationId== input.OrganizationId)
+                        .WhereIf(input.OrganizationId>0,x => x.CommentFk.PostFk.PostGroupFk.OrganizationId== input.OrganizationId)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false)
                         .WhereIf(input.MinLikeTimeFilter != null, e => e.LikeTime >= input.MinLikeTimeFilter)
                         .WhereIf(input.MaxLikeTimeFilter != null, e => e.LikeTime <= input.MaxLikeTimeFilter)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.CommentCommentCaptionFilter), e => e.CommentFk != null && e.CommentFk.CommentCaption == input.CommentCommentCaptionFilter)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter), e => e.UserFk != null && e.UserFk.Name == input.UserNameFilter);
 
-            var pagedAndFilteredCommentLikes = filteredCommentLikes
-                .OrderBy(input.Sorting ?? "id asc")
-                .PageBy(input);
+           
 
-            var commentLikes = from o in pagedAndFilteredCommentLikes
+            var commentLikes = from o in filteredCommentLikes
                                join o1 in _lookup_commentRepository.GetAll() on o.CommentId equals o1.Id into j1
                                from s1 in j1.DefaultIfEmpty()
 
@@ -63,16 +61,20 @@ namespace Chamran.Deed.Info
 
                                select new
                                {
-
+                                   o.CommentFk.PostId,
                                    o.LikeTime,
                                    Id = o.Id,
-                                   CommentCommentCaption = s1 == null || s1.CommentCaption == null ? "" : s1.CommentCaption.ToString(),
-                                   UserName = s2 == null || s2.Name == null ? "" : s2.Name.ToString()
+                                   CommentCommentCaption = s1 == null || s1.CommentCaption == null ? "" : s1.CommentCaption,
+                                   UserName = s2 == null || s2.Name == null ? "" : s2.Name
                                };
+            
+            var totalCount = await commentLikes.CountAsync();
 
-            var totalCount = await filteredCommentLikes.CountAsync();
+            var pagedAndFilteredCommentLikes = commentLikes
+                .OrderBy(input.Sorting ?? "id asc")
+                .PageBy(input);
 
-            var dbList = await commentLikes.ToListAsync();
+            var dbList = await pagedAndFilteredCommentLikes.ToListAsync();
             var results = new List<GetCommentLikeForViewDto>();
 
             foreach (var o in dbList)
@@ -85,6 +87,7 @@ namespace Chamran.Deed.Info
                         LikeTime = o.LikeTime,
                         Id = o.Id,
                     },
+                    PostId=o.PostId,
                     CommentCommentCaption = o.CommentCommentCaption,
                     UserName = o.UserName
                 };

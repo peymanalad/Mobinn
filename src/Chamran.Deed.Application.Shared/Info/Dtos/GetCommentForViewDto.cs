@@ -11,6 +11,6 @@
         public string CommentCommentCaption { get; set; }
 
         public string ReplyUserName { get; set; }
-
+        public int PostId { get; set; }
     }
 }

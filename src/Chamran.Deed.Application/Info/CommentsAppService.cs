@@ -40,11 +40,11 @@ namespace Chamran.Deed.Info
         {
 
             var filteredComments = _commentRepository.GetAll()
-                        .Include(e => e.PostFk)
                         .Include(e => e.UserFk)
                         .Include(e => e.CommentFk)
-                        .Include(x=>x.CommentFk.PostFk.PostGroupFk)
-                        .Where(x => x.CommentFk.PostFk.PostGroupFk.OrganizationId== input.OrganizationId)
+                        .Include(e => e.PostFk)
+                        .Include(x=>x.PostFk.PostGroupFk)
+                        .WhereIf(input.OrganizationId>0,x => x.PostFk.PostGroupFk.OrganizationId== input.OrganizationId)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.CommentCaption.Contains(input.Filter))
                         .WhereIf(!string.IsNullOrWhiteSpace(input.CommentCaptionFilter), e => e.CommentCaption.Contains(input.CommentCaptionFilter))
                         .WhereIf(input.MinInsertDateFilter != null, e => e.InsertDate >= input.MinInsertDateFilter)
@@ -53,11 +53,8 @@ namespace Chamran.Deed.Info
                         .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter), e => e.UserFk != null && e.UserFk.Name == input.UserNameFilter)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.CommentCommentCaptionFilter), e => e.CommentFk != null && e.CommentFk.CommentCaption == input.CommentCommentCaptionFilter);
 
-            var pagedAndFilteredComments = filteredComments
-                .OrderBy(input.Sorting ?? "id asc")
-                .PageBy(input);
-
-            var comments = from o in pagedAndFilteredComments
+           
+            var comments = from o in filteredComments
                            join o1 in _lookup_postRepository.GetAll() on o.PostId equals o1.Id into j1
                            from s1 in j1.DefaultIfEmpty()
 
@@ -69,7 +66,7 @@ namespace Chamran.Deed.Info
 
                            select new
                            {
-
+                               o.PostId,
                                o.CommentCaption,
                                o.InsertDate,
                                Id = o.Id,
@@ -78,9 +75,14 @@ namespace Chamran.Deed.Info
                                CommentCommentCaption = s3 == null || s3.CommentCaption == null ? "" : s3.CommentCaption.ToString()
                            };
 
-            var totalCount = await filteredComments.CountAsync();
 
-            var dbList = await comments.ToListAsync();
+
+            var totalCount = await comments.CountAsync();
+            var pagedAndFilteredComments = comments
+                .OrderBy(input.Sorting ?? "id asc")
+                .PageBy(input);
+
+            var dbList = await pagedAndFilteredComments.ToListAsync();
             var results = new List<GetCommentForViewDto>();
 
             foreach (var o in dbList)
@@ -94,6 +96,7 @@ namespace Chamran.Deed.Info
                         InsertDate = o.InsertDate,
                         Id = o.Id,
                     },
+                    PostId=o.PostId,
                     PostPostTitle = o.PostPostTitle,
                     UserName = o.UserName,
                     CommentCommentCaption = o.CommentCommentCaption

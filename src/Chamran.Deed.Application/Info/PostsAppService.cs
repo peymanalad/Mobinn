@@ -547,22 +547,29 @@ namespace Chamran.Deed.Info
 
         private async Task<Guid?> GetBinaryObjectFromCache(string fileToken, int? refId)
         {
-            if (fileToken.IsNullOrWhiteSpace())
+            try
+            {
+                if (fileToken.IsNullOrWhiteSpace())
+                {
+                    return null;
+                }
+
+                var fileCache = _tempFileCacheManager.GetFileInfo(fileToken);
+
+                if (fileCache == null)
+                {
+                    throw new UserFriendlyException("There is no such file with the token: " + fileToken);
+                }
+
+                var storedFile = new BinaryObject(AbpSession.TenantId, fileCache.File, BinarySourceType.Post, fileCache.FileName);
+                await _binaryObjectManager.SaveAsync(storedFile);
+                if (refId != null) storedFile.SourceId = refId;
+                return storedFile.Id;
+            }
+            catch (Exception)
             {
                 return null;
             }
-
-            var fileCache = _tempFileCacheManager.GetFileInfo(fileToken);
-
-            if (fileCache == null)
-            {
-                throw new UserFriendlyException("There is no such file with the token: " + fileToken);
-            }
-
-            var storedFile = new BinaryObject(AbpSession.TenantId, fileCache.File, BinarySourceType.Post, fileCache.FileName);
-            await _binaryObjectManager.SaveAsync(storedFile);
-            if (refId != null) storedFile.SourceId = refId;
-            return storedFile.Id;
         }
 
         private async Task<string> GetBinaryFileName(Guid? fileId)
