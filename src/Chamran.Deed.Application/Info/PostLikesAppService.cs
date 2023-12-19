@@ -43,7 +43,7 @@ namespace Chamran.Deed.Info
                         .Include(e => e.PostFk)
                         .Include(e => e.UserFk)
                         .Include(x => x.PostFk.PostGroupFk)
-                        .Where(x => x.PostFk.PostGroupFk.OrganizationId == input.OrganizationId)
+                        .WhereIf(input.OrganizationId>0,x => x.PostFk.PostGroupFk.OrganizationId == input.OrganizationId)
                         .WhereIf(input.UserId.HasValue, e => e.UserId == input.UserId.Value)
                         .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false)
                         .WhereIf(input.MinLikeTimeFilter != null, e => e.LikeTime >= input.MinLikeTimeFilter)
