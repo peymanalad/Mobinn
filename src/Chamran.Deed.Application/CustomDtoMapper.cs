@@ -95,7 +95,9 @@ namespace Chamran.Deed
             configuration.CreateMap<CreateOrEditPostGroupDto, PostGroup>().ReverseMap();
             configuration.CreateMap<PostGroupDto, PostGroup>().ReverseMap();
             configuration.CreateMap<CreateOrEditPostDto, Post>().ReverseMap();
-            configuration.CreateMap<PostDto, Post>().ReverseMap();
+            configuration.CreateMap<PostDto, Post>().ReverseMap(); 
+            configuration.CreateMap<SendPostNotificationDto,Post >().ReverseMap();
+            configuration.CreateMap<SendPostNotificationDto,PostDto >().ReverseMap();
             configuration.CreateMap<CreateOrEditGroupMemberDto, GroupMember>().ReverseMap();
             configuration.CreateMap<GroupMemberDto, GroupMember>().ReverseMap();
             //configuration.CreateMap<CreateOrEditOrganizationGroupDto, OrganizationGroup>().ReverseMap();
