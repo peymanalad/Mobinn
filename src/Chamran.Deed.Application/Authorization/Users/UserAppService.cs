@@ -660,6 +660,7 @@ namespace Chamran.Deed.Authorization.Users
             user.TenantId = AbpSession.TenantId;
             user.NationalId = input.User.NationalId;
             user.PhoneNumber = input.User.PhoneNumber;
+            user.IsActive = true;
             //Set password
             if (!input.User.Password.IsNullOrEmpty())
             {
@@ -757,6 +758,7 @@ namespace Chamran.Deed.Authorization.Users
             user.TenantId = AbpSession.TenantId;
             user.NationalId = input.User.NationalId;
             user.PhoneNumber = input.User.PhoneNumber;
+            user.IsActive = true;
             //Set password
             if (!input.User.Password.IsNullOrEmpty())
             {
