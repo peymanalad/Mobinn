@@ -26,6 +26,11 @@ using Chamran.Deed.Security;
 using Chamran.Deed.Storage;
 using Chamran.Deed.Timing;
 using Abp.Domain.Repositories;
+using Chamran.Deed.UiCustomization.Dto;
+using System.Collections.Generic;
+using System.Linq;
+using Chamran.Deed.People;
+using Microsoft.EntityFrameworkCore;
 
 namespace Chamran.Deed.Authorization.Users.Profile
 {
@@ -44,6 +49,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
         private readonly ProfileImageServiceFactory _profileImageServiceFactory;
         private readonly IUserAppService _userAppService;
         private readonly IRepository<User, long> _userRepository;
+        private readonly IRepository<GroupMember> _groupMemberRepository;
 
         public ProfileAppService(
             IBinaryObjectManager binaryObjectManager,
@@ -54,7 +60,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
             ICacheManager cacheManager,
             ITempFileCacheManager tempFileCacheManager,
             IBackgroundJobManager backgroundJobManager,
-            ProfileImageServiceFactory profileImageServiceFactory, IUserAppService userAppService, IRepository<User, long> userRepository)
+            ProfileImageServiceFactory profileImageServiceFactory, IUserAppService userAppService, IRepository<User, long> userRepository, IRepository<GroupMember> groupMemberRepository)
         {
             _binaryObjectManager = binaryObjectManager;
             _timeZoneService = timezoneService;
@@ -67,6 +73,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
             _profileImageServiceFactory = profileImageServiceFactory;
             _userAppService = userAppService;
             _userRepository = userRepository;
+            _groupMemberRepository = groupMemberRepository;
         }
 
         [DisableAuditing]
@@ -97,7 +104,19 @@ namespace Chamran.Deed.Authorization.Users.Profile
             {
                 userProfileEditDto.Timezone = string.Empty;
             }
+            userProfileEditDto.JoinedOrganizations = new List<CurrentOrganizationDto>();
+            var query = _groupMemberRepository.GetAll().Include(x => x.UserFk).Include(x => x.OrganizationFk).Where(x => x.UserId == AbpSession.UserId.Value);
 
+            foreach (var groupMember in query)
+            {
+                if (groupMember.OrganizationFk?.OrganizationName != "")
+                    userProfileEditDto.JoinedOrganizations.Add(new CurrentOrganizationDto()
+                    {
+                        OrganizationId = groupMember.OrganizationId,
+                        OrganizationName = groupMember.OrganizationFk?.OrganizationName ?? "",
+                        OrganizationPicture = groupMember.OrganizationFk?.OrganizationLogo
+                    });
+            }
             return userProfileEditDto;
         }
 
