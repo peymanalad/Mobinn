@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using Abp.Authorization.Users;
+using Chamran.Deed.UiCustomization.Dto;
 
 namespace Chamran.Deed.Authorization.Users.Profile.Dto
 {
@@ -31,5 +33,6 @@ namespace Chamran.Deed.Authorization.Users.Profile.Dto
         public string QrCodeSetupImageUrl { get; set; }
 
         public bool IsGoogleAuthenticatorEnabled { get; set; }
+        public List<CurrentOrganizationDto> JoinedOrganizations { get; set; }
     }
 }
