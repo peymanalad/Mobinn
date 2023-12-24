@@ -14,4 +14,11 @@ namespace Chamran.Deed.Notifications.Dto
         
         public string[] TargetNotifiers { get; set; }
     }
+
+    public class CreateAlarmInput
+    {
+        public string Message { get; set; }
+
+       
+    }
 }

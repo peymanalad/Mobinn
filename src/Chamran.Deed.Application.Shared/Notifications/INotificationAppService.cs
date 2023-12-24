@@ -26,6 +26,8 @@ namespace Chamran.Deed.Notifications
 
         Task DeleteAllUserNotifications(DeleteAllUserNotificationsInput input);
 
+        Task CreateAlarm(CreateAlarmInput input);
+
         Task CreateMassNotification(CreateMassNotificationInput input);
         
         Task CreateNewVersionReleasedNotification();

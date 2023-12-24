@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Abp.Application.Services;
 using Abp.Application.Services.Dto;
-using Chamran.Deed.AttributeHelper;
 using Chamran.Deed.Info.Dtos;
 using Chamran.Deed.Dto;
-using Chamran.Deed.Authorization.Users.Dto;
 
 namespace Chamran.Deed.Info
 {

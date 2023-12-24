@@ -46,7 +46,7 @@ namespace Chamran.Deed.People
                 .Include(e => e.UserFk)
                 .Include(e => e.OrganizationFk)
                 .WhereIf(!string.IsNullOrWhiteSpace(input.Filter),
-                    e => false || e.MemberPosition.Contains(input.Filter))
+                    e => false || e.MemberPosition.Contains(input.Filter)||e.OrganizationFk.OrganizationName.Contains(input.Filter)||e.UserFk.Name.Contains(input.Filter)||e.UserFk.Surname.Contains(input.Filter)||e.UserFk.UserName.Contains(input.Filter))
                 .WhereIf(!string.IsNullOrWhiteSpace(input.MemberPositionFilter),
                     e => e.MemberPosition.Contains(input.MemberPositionFilter))
                 .WhereIf(!string.IsNullOrWhiteSpace(input.UserNameFilter),
@@ -58,11 +58,9 @@ namespace Chamran.Deed.People
 
 
 
-            var pagedAndFilteredGroupMembers = filteredGroupMembers
-                .OrderBy(input.Sorting ?? "id asc")
-                .PageBy(input);
+            
 
-            var groupMembers = from o in pagedAndFilteredGroupMembers
+            var groupMembers = from o in filteredGroupMembers
                                join o1 in _lookup_userRepository.GetAll() on o.UserId equals o1.Id into j1
                                from s1 in j1.DefaultIfEmpty()
                                join o2 in _lookup_organizationRepository.GetAll() on o.OrganizationId equals o2.Id into j2
@@ -79,12 +77,15 @@ namespace Chamran.Deed.People
                                    UserName=s1 == null?"":s1.UserName,
                                    UserId = s1 == null?0:s1.Id,
                                    OrganizationId = (int?)s2.Id,
-                                   OrganizationGroupGroupName = s2 == null || s2.OrganizationName == null ? "" : s2.OrganizationName.ToString(),
+                                   OrganizationGroupGroupName = s2 == null || s2.OrganizationName == null ? "" : s2.OrganizationName,
                                };
 
-            var totalCount = await filteredGroupMembers.CountAsync();
+            var totalCount = await groupMembers.CountAsync();
 
-            var dbList = await groupMembers.ToListAsync();
+            var pagedAndFilteredGroupMembers = groupMembers
+                .OrderBy(input.Sorting ?? "id asc")
+                .PageBy(input);
+            var dbList = await pagedAndFilteredGroupMembers.ToListAsync();
             var results = new List<GetGroupMemberForViewDto>();
 
             foreach (var o in dbList)
