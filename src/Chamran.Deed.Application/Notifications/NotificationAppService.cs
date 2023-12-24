@@ -18,6 +18,7 @@ using Abp.UI;
 using Microsoft.EntityFrameworkCore;
 using Chamran.Deed.Authorization;
 using Chamran.Deed.Authorization.Users;
+using Chamran.Deed.Authorization.Users.Dto;
 using Chamran.Deed.Info.Dtos;
 using Chamran.Deed.Notifications.Dto;
 using Chamran.Deed.Organizations;
@@ -41,6 +42,7 @@ namespace Chamran.Deed.Notifications
         private readonly INotificationStore _notificationStore;
         private readonly IBackgroundJobManager _backgroundJobManager;
         private readonly IRepository<UserNotificationInfo, Guid> _userNotificationRepository;
+        private readonly IUserAppService _userAppService;
 
         public NotificationAppService(
             INotificationDefinitionManager notificationDefinitionManager,
@@ -53,7 +55,7 @@ namespace Chamran.Deed.Notifications
             INotificationConfiguration notificationConfiguration,
             INotificationStore notificationStore,
             IBackgroundJobManager backgroundJobManager,
-            IRepository<UserNotificationInfo, Guid> userNotificationRepository)
+            IRepository<UserNotificationInfo, Guid> userNotificationRepository, IUserAppService userAppService)
         {
             _notificationDefinitionManager = notificationDefinitionManager;
             _userNotificationManager = userNotificationManager;
@@ -66,6 +68,7 @@ namespace Chamran.Deed.Notifications
             _notificationStore = notificationStore;
             _backgroundJobManager = backgroundJobManager;
             _userNotificationRepository = userNotificationRepository;
+            _userAppService = userAppService;
         }
 
         [DisableAuditing]
@@ -371,6 +374,60 @@ namespace Chamran.Deed.Notifications
             return new PagedResultDto<MassNotificationOrganizationUnitLookupTableDto>(
                 totalCount,
                 lookupTableDtoList
+            );
+        }
+
+        [AbpAuthorize(AppPermissions.Pages_Administration_MassNotification_Create)]
+        public async Task CreateAlarm(CreateAlarmInput input)
+        {
+            //if (input.TargetNotifiers.IsNullOrEmpty())
+            //{
+            //    throw new UserFriendlyException(L("MassNotificationTargetNotifiersFieldIsRequiredMessage"));
+            //}
+
+            //var userIds = new List<UserIdentifier>();
+
+            //if (!input.UserIds.IsNullOrEmpty())
+            //{
+            //    userIds.AddRange(input.UserIds.Select(i => new UserIdentifier(AbpSession.TenantId, i)));
+            //}
+
+            //if (!input.OrganizationUnitIds.IsNullOrEmpty())
+            //{
+            //    userIds.AddRange(
+            //        await _userOrganizationUnitRepository.GetAllUsersInOrganizationUnitHierarchical(
+            //            input.OrganizationUnitIds)
+            //    );
+            //}
+
+            //if (userIds.Count == 0)
+            //{
+            //    if (input.OrganizationUnitIds.IsNullOrEmpty())
+            //    {
+            //        // tried to get users from organization, but could not find any user
+            //        throw new UserFriendlyException(L("MassNotificationNoUsersFoundInOrganizationUnitMessage"));
+            //    }
+
+            //    throw new UserFriendlyException(L("MassNotificationUserOrOrganizationUnitFieldIsRequiredMessage"));
+            //}
+
+            //var targetNotifiers = new List<Type>();
+
+            //foreach (var notifier in _notificationConfiguration.Notifiers)
+            //{
+            //    if (input.TargetNotifiers.Contains(notifier.FullName))
+            //    {
+            //        targetNotifiers.Add(notifier);
+            //    }
+            //}
+            var list = await _userAppService.GetListOfUsers(new GetUsersInput() { MaxResultCount = int.MaxValue });
+            var users = list.Items.Select(i => new UserIdentifier(AbpSession.TenantId, i.Id));
+
+            await _appNotifier.SendMassNotificationAsync(
+                input.Message,
+                users.DistinctBy(u => u.UserId).ToArray(),
+                NotificationSeverity.Info,
+                null
             );
         }
 

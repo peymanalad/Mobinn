@@ -118,14 +118,7 @@ namespace Chamran.Deed.Chat
                     .Where(m => m.UserId == AbpSession.UserId && m.TargetTenantId == AbpSession.TenantId && m.TargetUserId == friend.FriendUserId)
                     .OrderByDescending(m => m.CreationTime)
                     .Take(1)
-                    //.Join(_userRepository.GetAll().Where(x=> x.Id==friend.FriendUserId),
-                    //    chatMessage => chatMessage.UserId, // Key selector for the chat message UserId
-                    //    user => user.Id,              // Key selector for the user UserId
-                    //    (chatMessage, user) => new        // Result selector
-                    //        {
-                    //            ChatMessage = chatMessage,
-                    //            User = user
-                    //        })
+                 
                     .ToListAsync();
                 if (query.Any())
                 {
@@ -143,7 +136,7 @@ namespace Chamran.Deed.Chat
                     friend.FriendProfilePictureId = userResult.ProfilePictureId;
                 }
             }
-            var pagedAndFilteredFriends = friends.OrderByDescending(x => x.LatestMessage).Skip(input.SkipCount).Take(input.MaxResultCount).ToList();
+            var pagedAndFilteredFriends = friends.OrderByDescending(x => x.LastMessageDateTime).Skip(input.SkipCount).Take(input.MaxResultCount).ToList();
 
             return new GetPagedUserChatFriendsWithSettingsOutput()
             {
