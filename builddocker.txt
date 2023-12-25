@@ -15,6 +15,12 @@ docker images
 docker tag  55fe69ec91e9 docker.ideed.ir/ideedreact:7.3
 docker push docker.ideed.ir/ideedreact:7.3
 
+docker build -t ideedreacttest:7.3 C:\ZProjects\ideed\testDashboard
+docker images
+docker tag  55fe69ec91e9 docker.ideed.ir/ideedreact:7.3
+docker push docker.ideed.ir/ideedreact:7.3
+
+
 
 docker build -t ideedpwa:2.4 C:\ZProjects\ideed\pwa
 docker images
