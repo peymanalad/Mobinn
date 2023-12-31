@@ -10,15 +10,15 @@ docker push docker.ideed.ir/ideed:17.0
 docker push 192.168.54.145/ideed:17.0
 
 
-docker build -t ideedreact:7.3 C:\ZProjects\ideed\deed-dashboard
+docker build -t ideedreact:7.4 C:\ZProjects\ideed\deed-dashboard
 docker images
-docker tag  55fe69ec91e9 docker.ideed.ir/ideedreact:7.3
-docker push docker.ideed.ir/ideedreact:7.3
+docker tag  195e94ca7f2c docker.ideed.ir/ideedreact:7.4
+docker push docker.ideed.ir/ideedreact:7.4
 
-docker build -t ideedreacttest:7.3 C:\ZProjects\ideed\testDashboard
+docker build -t ideedreacttest:7.4 C:\ZProjects\ideed\testDashboard
 docker images
-docker tag  55fe69ec91e9 docker.ideed.ir/ideedreact:7.3
-docker push docker.ideed.ir/ideedreact:7.3
+docker tag  55fe69ec91e9 docker.ideed.ir/ideedreact:7.4
+docker push docker.ideed.ir/ideedreact:7.4
 
 
 
