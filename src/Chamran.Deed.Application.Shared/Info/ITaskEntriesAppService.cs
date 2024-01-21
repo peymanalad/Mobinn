@@ -29,5 +29,7 @@ namespace Chamran.Deed.Info
 
         Task<TaskEntryDto?> GetPreviousTaskById(int id);
 
+        Task MarkAllUnreadTasksOfUserAsRead(Guid sharedTaskId);
+
     }
 }

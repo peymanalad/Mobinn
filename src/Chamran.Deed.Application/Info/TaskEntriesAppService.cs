@@ -1,4 +1,5 @@
-﻿using Chamran.Deed.Authorization.Users;
+﻿using System;
+using Chamran.Deed.Authorization.Users;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using Abp.Linq.Extensions;
@@ -116,6 +117,7 @@ namespace Chamran.Deed.Info
         PST.[PostFile9],
         PST.[PostFile10],
         PST.[PostRefLink],
+        PST.[IsSeen],
 		PG.PostGroupDescription,
 		PG.GroupFile,
 		t.[IsPrivate],
@@ -182,7 +184,8 @@ SELECT DISTINCT
 	[IsPrivate],
 	[PostGroupDescription],
 	[GroupFile],
-	WorkFlowCount
+	WorkFlowCount,
+    [IsSeen]
 FROM (
     SELECT
         *,
@@ -504,6 +507,14 @@ ORDER BY
                 userIds: new[] { new UserIdentifier(AbpSession.TenantId, input.ReceiverId) },
                 NotificationSeverity.Info
             );
+
+            using var uow = UnitOfWorkManager.Begin();
+            var tasks = _taskEntryRepository.GetAll().Where(x => x.SharedTaskId == taskEntry.SharedTaskId);
+            foreach (var task in tasks)
+            {
+                task.IsSeen = false;
+            }
+            await uow.CompleteAsync();
         }
 
         [AbpAuthorize(AppPermissions.Pages_TaskEntries_Edit)]
@@ -511,6 +522,13 @@ ORDER BY
         {
             var taskEntry = await _taskEntryRepository.FirstOrDefaultAsync((int)input.Id);
             ObjectMapper.Map(input, taskEntry);
+            using var uow = UnitOfWorkManager.Begin();
+            var tasks = _taskEntryRepository.GetAll().Where(x => x.SharedTaskId == taskEntry.SharedTaskId);
+            foreach (var task in tasks)
+            {
+                task.IsSeen = false;
+            }
+            await uow.CompleteAsync();
 
         }
 
@@ -652,6 +670,17 @@ ORDER BY
             {
                 return null;
             }
+        }
+
+        public async Task MarkAllUnreadTasksOfUserAsRead(Guid sharedTaskId)
+        {
+            using var uow = UnitOfWorkManager.Begin();
+            var tasks = _taskEntryRepository.GetAll().Where(x => x.SharedTaskId == sharedTaskId);
+            foreach (var taskEntry in tasks)
+            {
+                taskEntry.IsSeen = true;
+            }
+            await uow.CompleteAsync();
         }
     }
 }

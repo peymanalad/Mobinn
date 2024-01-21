@@ -50,6 +50,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Abp.AspNetZeroCore\Abp.AspNetZeroCore.csproj" />
+    <ProjectReference Include="..\Chamran.Deed.Application.Shared\Chamran.Deed.Application.Shared.csproj" />
     <ProjectReference Include="..\Chamran.Deed.Core.Shared\Chamran.Deed.Core.Shared.csproj" />
   </ItemGroup>
 

@@ -4,6 +4,7 @@ using Chamran.Deed.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Chamran.Deed.Migrations
 {
     [DbContext(typeof(DeedDbContext))]
-    partial class DeedDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240120145819_PostKey")]
+    partial class PostKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2162,9 +2165,6 @@ namespace Chamran.Deed.Migrations
                     b.Property<bool?>("IsPublished")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsSeen")
-                        .HasColumnType("bit");
-
                     b.Property<bool?>("IsSpecial")
                         .HasColumnType("bit");
 
@@ -2836,9 +2836,6 @@ namespace Chamran.Deed.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<bool>("IsPrivate")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsSeen")
                         .HasColumnType("bit");
 
                     b.Property<long>("IssuerId")

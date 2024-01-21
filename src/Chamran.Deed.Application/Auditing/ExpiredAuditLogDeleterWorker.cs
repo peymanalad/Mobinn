@@ -88,15 +88,13 @@ namespace Chamran.Deed.Auditing
         {
             try
             {
-                using (var uow = UnitOfWorkManager.Begin())
+                using var uow = UnitOfWorkManager.Begin();
+                using (CurrentUnitOfWork.SetTenantId(null))
                 {
-                    using (CurrentUnitOfWork.SetTenantId(null))
+                    using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
                     {
-                        using (CurrentUnitOfWork.DisableFilter(AbpDataFilters.MayHaveTenant))
-                        {
-                            DeleteAuditLogs(expireDate);
-                            uow.Complete();
-                        }
+                        DeleteAuditLogs(expireDate);
+                        uow.Complete();
                     }
                 }
             }
@@ -110,13 +108,11 @@ namespace Chamran.Deed.Auditing
         {
             try
             {
-                using (var uow = UnitOfWorkManager.Begin())
+                using var uow = UnitOfWorkManager.Begin();
+                using (CurrentUnitOfWork.SetTenantId(tenantId))
                 {
-                    using (CurrentUnitOfWork.SetTenantId(tenantId))
-                    {
-                        DeleteAuditLogs(expireDate);
-                        uow.Complete();
-                    }
+                    DeleteAuditLogs(expireDate);
+                    uow.Complete();
                 }
             }
             catch (Exception e)

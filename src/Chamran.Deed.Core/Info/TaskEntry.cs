@@ -44,6 +44,7 @@ namespace Chamran.Deed.Info
 
         public bool IsPrivate { get; set; }
         public bool ReturnedToParent { get; set; }
+        public bool IsSeen { get; set; }
 
     }
 }

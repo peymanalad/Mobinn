@@ -17,5 +17,7 @@ namespace Chamran.Deed.Info.Dtos
 
         public int? ParentId { get; set; }
 
+        public bool IsSeen { get; set; }
+
     }
 }

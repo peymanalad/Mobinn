@@ -11,6 +11,7 @@ using Abp.Notifications;
 using Abp.RealTime;
 using Abp.UI;
 using Chamran.Deed.Authorization.Users;
+using Chamran.Deed.Chat.Dto;
 using Chamran.Deed.Friendships;
 using Chamran.Deed.Friendships.Cache;
 using Chamran.Deed.Notifications;
@@ -494,6 +495,7 @@ namespace Chamran.Deed.Chat
                     await _chatCommunicator.SendFriendshipRequestToClient(clients, friendship, false, isFriendOnline);
                 }
             }
+            var friendUser = await _userManager.GetUserAsync(receiverIdentifier);
 
             if (friendshipState == FriendshipState.Blocked)
             {
@@ -529,7 +531,11 @@ namespace Chamran.Deed.Chat
                   );
             }
 
-            await _appNotifier.SendChatNotificationAsync(JsonConvert.SerializeObject(sentMessage, new JsonSerializerSettings
+            var sentMessageDto = ObjectMapper.Map<ChatMessageDto>(sentMessage);
+            sentMessageDto.FriendName = friendUser.Name;
+            sentMessageDto.FriendSurName= friendUser.Surname;
+            sentMessageDto.FriendProfilePictureId= friendUser.ProfilePictureId;
+            await _appNotifier.SendChatNotificationAsync(JsonConvert.SerializeObject(sentMessageDto, new JsonSerializerSettings
                 {
                     ContractResolver = new DefaultContractResolver
                     {
@@ -569,7 +575,7 @@ namespace Chamran.Deed.Chat
                     await _chatCommunicator.SendFriendshipRequestToClient(clients, friendship, false, isFriendOnline);
                 }
             }
-
+            var friendUser = await _userManager.GetUserAsync(receiverIdentifier);
             if (friendshipState == FriendshipState.Blocked)
             {
                 //Do not send message if receiver banned the sender
@@ -604,8 +610,12 @@ namespace Chamran.Deed.Chat
                       sentMessage
                   );
             }
-
-            await _appNotifier.SendChatNotificationAsync(JsonConvert.SerializeObject(sentMessage, new JsonSerializerSettings
+            
+            var sentMessageDto = ObjectMapper.Map<ChatMessageDto>(sentMessage);
+            sentMessageDto.FriendName = friendUser.Name;
+            sentMessageDto.FriendSurName= friendUser.Surname;
+            sentMessageDto.FriendProfilePictureId= friendUser.ProfilePictureId;
+            await _appNotifier.SendChatNotificationAsync(JsonConvert.SerializeObject(sentMessageDto, new JsonSerializerSettings
             {
                 ContractResolver = new DefaultContractResolver
                 {
@@ -644,7 +654,8 @@ namespace Chamran.Deed.Chat
                     var isFriendOnline = _onlineClientManager.IsOnline(receiverIdentifier);
                     await _chatCommunicator.SendFriendshipRequestToClient(clients, friendship, false, isFriendOnline);
                 }
-            }
+            } 
+            var friendUser = await _userManager.GetUserAsync(receiverIdentifier);
 
             if (friendshipState == FriendshipState.Blocked)
             {
@@ -680,9 +691,11 @@ namespace Chamran.Deed.Chat
                       senderTenancyName,
                       sentMessage
                   );
-            }
-
-            await _appNotifier.SendChatNotificationAsync(JsonConvert.SerializeObject(sentMessage, new JsonSerializerSettings
+            } var sentMessageDto = ObjectMapper.Map<ChatMessageDto>(sentMessage);
+            sentMessageDto.FriendName = friendUser.Name;
+            sentMessageDto.FriendSurName= friendUser.Surname;
+            sentMessageDto.FriendProfilePictureId= friendUser.ProfilePictureId;
+            await _appNotifier.SendChatNotificationAsync(JsonConvert.SerializeObject(sentMessageDto, new JsonSerializerSettings
             {
                 ContractResolver = new DefaultContractResolver
                 {
