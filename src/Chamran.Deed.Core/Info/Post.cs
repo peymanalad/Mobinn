@@ -1,10 +1,7 @@
 ﻿using Chamran.Deed.People;
-using Chamran.Deed.Info;
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Abp.Domain.Entities.Auditing;
-using Abp.Domain.Entities;
 using Abp.Auditing;
 using Chamran.Deed.Storage;
 using System.Collections.Generic;
@@ -15,6 +12,8 @@ namespace Chamran.Deed.Info
     [Audited]
     public class Post : FullAuditedEntity
     {
+
+        public virtual Guid PostKey { get; set; }
         //File
 
         public virtual Guid? PostFile { get; set; } //File, (BinaryObjectId)

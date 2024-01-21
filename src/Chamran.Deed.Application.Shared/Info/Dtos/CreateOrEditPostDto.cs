@@ -6,6 +6,8 @@ namespace Chamran.Deed.Info.Dtos
 {
     public class CreateOrEditPostDto : EntityDto<int?>
     {
+        [Required]
+        public Guid PostKey { get; set; }
 
         public Guid? PostFile { get; set; }
 

@@ -30,5 +30,9 @@ namespace Chamran.Deed.Chat.Dto
         public long ReplyMessageId { get; set; }
         public string ReplyMessage { get; set; }
 
+        public Guid? FriendProfilePictureId { get; set; }
+        public string FriendName { get; set; }
+        public string FriendSurName { get; set; }
+
     }
 }

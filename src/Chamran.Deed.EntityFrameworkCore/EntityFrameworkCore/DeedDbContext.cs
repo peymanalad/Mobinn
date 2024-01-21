@@ -191,6 +191,10 @@ namespace Chamran.Deed.EntityFrameworkCore
                 .HasIndex(gm => new { gm.UserId, gm.OrganizationId })
                 .IsUnique();
 
+            modelBuilder.Entity<Post>()
+                .HasIndex(p => p.PostKey)
+                .IsUnique();
+
             modelBuilder.ConfigurePersistedGrantEntity();
         }
     }

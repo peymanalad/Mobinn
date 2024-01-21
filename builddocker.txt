@@ -2,12 +2,12 @@
 docker login docker.ideed.ir
 docker login 192.168.54.145:5000
 
-docker build -t ideed:17.0 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
+docker build -t ideed:18.2 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 docker images
-docker tag   5e87846611d1 docker.ideed.ir/ideed:17.0
-docker tag   126b257b0276 192.168.54.145/ideed:17.0
-docker push docker.ideed.ir/ideed:17.0
-docker push 192.168.54.145/ideed:17.0
+docker tag   1c10697b9b04 docker.ideed.ir/ideed:18.2
+docker tag   126b257b0276 192.168.54.145/ideed:18.2
+docker push docker.ideed.ir/ideed:18.2
+docker push 192.168.54.145/ideed:18.2
 
 
 docker build -t ideedreact:7.4 C:\ZProjects\ideed\deed-dashboard
@@ -48,7 +48,7 @@ sudo killall docker-containerd-shim
 
 
 
-sudo docker pull yasnadocker.yasnasystem.ir/ideed:17.0
+sudo docker pull yasnadocker.yasnasystem.ir/ideed:18.2
 docker build -t ideedfront:1.1 .
 docker images
 1bde69740be7
@@ -129,10 +129,10 @@ done
 
 
 
-docker build -t ideed:17.0 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
+docker build -t ideed:18.2 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 docker images
-docker tag 6aa8ea59ae0e yasnadocker.yasnasystem.ir/ideed:17.0
-docker push yasnadocker.yasnasystem.ir/ideed:17.0
+docker tag 6aa8ea59ae0e yasnadocker.yasnasystem.ir/ideed:18.2
+docker push yasnadocker.yasnasystem.ir/ideed:18.2
 
 docker-compose down -v
 nano docker-compose.yml

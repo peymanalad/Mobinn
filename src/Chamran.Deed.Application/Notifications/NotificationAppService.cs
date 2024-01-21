@@ -19,11 +19,9 @@ using Microsoft.EntityFrameworkCore;
 using Chamran.Deed.Authorization;
 using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.Authorization.Users.Dto;
-using Chamran.Deed.Info.Dtos;
 using Chamran.Deed.Notifications.Dto;
 using Chamran.Deed.Organizations;
 using MathNet.Numerics.Financial;
-using Newtonsoft.Json;
 using GetAllForLookupTableInput = Chamran.Deed.Notifications.Dto.GetAllForLookupTableInput;
 
 namespace Chamran.Deed.Notifications
@@ -105,6 +103,7 @@ namespace Chamran.Deed.Notifications
 
         }
 
+/*
         private List<UserNotificationDto> GetNotificationsDto(List<UserNotification> notifications)
         {
             var ls = new List<UserNotificationDto>();
@@ -124,51 +123,9 @@ namespace Chamran.Deed.Notifications
 
             return ls;
         }
+*/
 
-        private TenantNotificationDto GetTenantNotificationDto(TenantNotification tn)
-        {
-            return new TenantNotificationDto()
-            {
-                CreationTime = tn.CreationTime,
-                Id = tn.Id,
-                TenantId = tn.TenantId,
-                Data = GetNotficationDateDto(tn.Data, tn.NotificationName),
-                EntityId = tn.EntityId,
-                EntityTypeName = tn.EntityTypeName,
-                NotificationName = tn.NotificationName,
-                Severity = tn.Severity
-
-            };
-
-        }
-
-        private NotificationDataDto GetNotficationDateDto(NotificationData nd, string tnNotificationName)
-        {
-            var result = new NotificationDataDto();
-            ;
-            if (nd.Type == "Abp.Notifications.MessageNotificationData" && nd.Properties.Any())
-            {
-                
-                var message= JsonConvert.DeserializeObject<MessageNotificationData>(nd.Properties["Message"].ToString() ?? string.Empty);
-                switch (tnNotificationName)
-                {
-                    case AppNotificationNames.ChatMessage:
-                        {
-                            if (message != null)
-                            {
-                                result.Post = JsonConvert.DeserializeObject<PostDto>(message.Message);
-
-                            }
-                        }
-
-                        break;
-                    
-                }
-            }
-            return result;
-        }
-
-        public async Task<bool> ShouldUserUpdateApp()
+public async Task<bool> ShouldUserUpdateApp()
         {
             var notifications = await _userNotificationManager.GetUserNotificationsAsync(
                 AbpSession.ToUserIdentifier(), UserNotificationState.Unread
