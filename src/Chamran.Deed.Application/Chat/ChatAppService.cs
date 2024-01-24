@@ -18,6 +18,7 @@ using Chamran.Deed.Friendships.Cache;
 using Chamran.Deed.Friendships.Dto;
 using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.Chat;
+using static Chamran.Deed.Authorization.Roles.StaticRoleNames;
 
 namespace Chamran.Deed.Chat
 {
@@ -149,6 +150,19 @@ namespace Chamran.Deed.Chat
         }
 
         [DisableAuditing]
+        public async Task DeleteUserChatMessages(int friendUserId)
+        {
+            var userId = AbpSession.GetUserId();
+            using var uow = UnitOfWorkManager.Begin();
+            await _chatMessageRepository.DeleteAsync(x =>
+                x.UserId == userId && x.Side == ChatSide.Sender && x.TargetUserId == friendUserId);
+            await _chatMessageRepository.DeleteAsync(x =>
+                x.UserId == userId && x.Side == ChatSide.Receiver && x.TargetUserId == friendUserId);
+            await uow.CompleteAsync();
+        }
+
+
+            [DisableAuditing]
         public async Task<ListResultDto<ChatMessageDto>> GetUserChatMessages(GetUserChatMessagesInput input)
         {
             var userId = AbpSession.GetUserId();
