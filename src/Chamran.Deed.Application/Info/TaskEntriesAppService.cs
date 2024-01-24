@@ -117,7 +117,7 @@ namespace Chamran.Deed.Info
         PST.[PostFile9],
         PST.[PostFile10],
         PST.[PostRefLink],
-        PST.[IsSeen],
+        t.[IsSeen],
 		PG.PostGroupDescription,
 		PG.GroupFile,
 		t.[IsPrivate],
