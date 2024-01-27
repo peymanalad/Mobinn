@@ -63,6 +63,7 @@ namespace Chamran.Deed
             configuration.CreateMap<GetEntriesDetailDto, GetEntriesDetail>().ReverseMap();
             configuration.CreateMap<CreateOrEditTaskStatDto, TaskStat>().ReverseMap();
             configuration.CreateMap<TaskStatDto, TaskStat>().ReverseMap();
+            configuration.CreateMap<CreateOrEditTaskEntryDto, TaskEntryNotificationDto>().ReverseMap();
             configuration.CreateMap<CreateOrEditTaskEntryDto, TaskEntry>().ReverseMap();
             configuration.CreateMap<TaskEntryDto, TaskEntry>().ReverseMap();
             configuration.CreateMap<CreateOrEditOrganizationUserDto, OrganizationUser>().ReverseMap();
