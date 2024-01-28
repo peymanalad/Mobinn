@@ -2,23 +2,23 @@
 docker login docker.ideed.ir
 docker login 192.168.54.145:5000
 
-docker build -t ideed:18.3 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
+docker build -t ideed:18.7 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 docker images
-docker tag   c51562f0b171 docker.ideed.ir/ideed:18.3
-docker tag   126b257b0276 192.168.54.145/ideed:18.3
-docker push docker.ideed.ir/ideed:18.3
-docker push 192.168.54.145/ideed:18.3
+docker tag   f3a3bff1be56 docker.ideed.ir/ideed:18.7
+docker tag   126b257b0276 192.168.54.145/ideed:18.7
+docker push docker.ideed.ir/ideed:18.7
+docker push 192.168.54.145/ideed:18.7
 
 
-docker build -t ideedreact:8.1 C:\ZProjects\ideed\deed-dashboard
+docker build -t ideedreact:8.6 C:\ZProjects\ideed\deed-dashboard
 docker images
-docker tag  7119cbbca39a docker.ideed.ir/ideedreact:8.1
-docker push docker.ideed.ir/ideedreact:8.1
+docker tag  5eb503b640de docker.ideed.ir/ideedreact:8.6
+docker push docker.ideed.ir/ideedreact:8.6
 
-docker build -t ideedreacttest:8.1 C:\ZProjects\ideed\testDashboard
+docker build -t ideedreacttest:8.6 C:\ZProjects\ideed\testDashboard
 docker images
-docker tag  55fe69ec91e9 docker.ideed.ir/ideedreact:8.1
-docker push docker.ideed.ir/ideedreact:8.1
+docker tag  55fe69ec91e9 docker.ideed.ir/ideedreact:8.6
+docker push docker.ideed.ir/ideedreact:8.6
 
 
 
@@ -48,7 +48,7 @@ sudo killall docker-containerd-shim
 
 
 
-sudo docker pull yasnadocker.yasnasystem.ir/ideed:18.3
+sudo docker pull yasnadocker.yasnasystem.ir/ideed:18.7
 docker build -t ideedfront:1.1 .
 docker images
 1bde69740be7
@@ -129,10 +129,10 @@ done
 
 
 
-docker build -t ideed:18.3 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
+docker build -t ideed:18.7 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 docker images
-docker tag 6aa8ea59ae0e yasnadocker.yasnasystem.ir/ideed:18.3
-docker push yasnadocker.yasnasystem.ir/ideed:18.3
+docker tag 6aa8ea59ae0e yasnadocker.yasnasystem.ir/ideed:18.7
+docker push yasnadocker.yasnasystem.ir/ideed:18.7
 
 docker-compose down -v
 nano docker-compose.yml

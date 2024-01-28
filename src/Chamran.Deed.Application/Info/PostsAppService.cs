@@ -77,6 +77,27 @@ namespace Chamran.Deed.Info
 
         public async Task<PagedResultDto<GetPostForViewDto>> GetAll(GetAllPostsInput input)
         {
+            var totalparameters = new SqlParameter[]
+            {
+                new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
+                new SqlParameter("@Filter", string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
+                new SqlParameter("@PostCaptionFilter", string.IsNullOrWhiteSpace(input.PostCaptionFilter) ? (object)DBNull.Value : (object)input.PostCaptionFilter),
+                new SqlParameter("@IsSpecialFilter", input.IsSpecialFilter ?? (object)DBNull.Value),
+                new SqlParameter("@PostTitleFilter", string.IsNullOrWhiteSpace(input.PostTitleFilter) ? (object)DBNull.Value : (object)input.PostTitleFilter),
+                new SqlParameter("@GroupMemberMemberPositionFilter", string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter) ? (object)DBNull.Value : (object)input.GroupMemberMemberPositionFilter),
+                new SqlParameter("@PostGroupPostGroupDescriptionFilter", string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter) ? (object)DBNull.Value : (object)input.PostGroupPostGroupDescriptionFilter),
+                new SqlParameter("@FromDate", input.FromDate ?? (object)DBNull.Value),
+                new SqlParameter("@ToDate", input.ToDate ?? (object)DBNull.Value),
+                new SqlParameter("@OrderBy", input.Sorting ?? "CreationTime DESC"),
+                new SqlParameter("@MaxResultCount", int.MaxValue),
+                new SqlParameter("@SkipCount", 0)
+            };
+            var dbContextTotal = await _dbContextProvider.GetDbContextAsync();
+            var totalCount = await dbContextTotal.Set<GetPostsForView>()
+                .FromSqlRaw("EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy, @MaxResultCount, @SkipCount", totalparameters)
+                .CountAsync();
+
+
             var parameters = new SqlParameter[]
             {
                 new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
@@ -125,7 +146,7 @@ namespace Chamran.Deed.Info
                 }
                 );
             }
-            return new PagedResultDto<GetPostForViewDto>(result.Count, result);
+            return new PagedResultDto<GetPostForViewDto>(totalCount, result);
 
             //var filteredPosts = _postRepository.GetAll()
             //    .Include(e => e.GroupMemberFk)
