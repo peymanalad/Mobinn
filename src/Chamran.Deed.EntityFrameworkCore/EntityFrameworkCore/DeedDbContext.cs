@@ -18,87 +18,86 @@ using Chamran.Deed.Configurations;
 
 namespace Chamran.Deed.EntityFrameworkCore
 {
-    public class DeedDbContext : AbpZeroDbContext<Tenant, Role, User, DeedDbContext>, IAbpPersistedGrantDbContext
+        public sealed class DeedDbContext : AbpZeroDbContext<Tenant, Role, User, DeedDbContext>, IAbpPersistedGrantDbContext
     {
-        public virtual DbSet<InstagramCrawlerPost> InstagramCrawlerPosts { get; set; }
+        public DbSet<InstagramCrawlerPost> InstagramCrawlerPosts { get; set; }
 
-        public virtual DbSet<DeedChart> DeedCharts { get; set; }
+        public DbSet<DeedChart> DeedCharts { get; set; }
 
         //modelBuilder.Entity<MixedEntity>().HasNoKey(); // Configure as a shadow property
 
-        public virtual DbSet<GetEntriesDigest> EntriesDigest { get; set; }
-        public virtual DbSet<GetEntriesDetail> EntriesDetail { get; set; }
-        public virtual DbSet<GetPostsForView> PostsForView { get; set; }
-        public virtual DbSet<GetListOfUsers> ListOfUsers { get; set; }
+        public DbSet<GetEntriesDigest> EntriesDigest { get; set; }
+        public DbSet<GetEntriesDetail> EntriesDetail { get; set; }
+        public DbSet<GetPostsForView> PostsForView { get; set; }
+        public DbSet<GetListOfUsers> ListOfUsers { get; set; }
 
-        public virtual DbSet<TaskStat> TaskStats { get; set; }
+        public DbSet<TaskStat> TaskStats { get; set; }
 
-        public virtual DbSet<TaskEntry> TaskEntries { get; set; }
+        public DbSet<TaskEntry> TaskEntries { get; set; }
 
-        public virtual DbSet<OrganizationUser> OrganizationUsers { get; set; }
+        public DbSet<OrganizationUser> OrganizationUsers { get; set; }
 
-        public virtual DbSet<OrganizationChart> OrganizationCharts { get; set; }
+        public DbSet<OrganizationChart> OrganizationCharts { get; set; }
 
-        public virtual DbSet<UserPostGroup> UserPostGroups { get; set; }
+        public DbSet<UserPostGroup> UserPostGroups { get; set; }
 
-        public virtual DbSet<UserLocation> UserLocations { get; set; }
+        public DbSet<UserLocation> UserLocations { get; set; }
 
-        public virtual DbSet<UserToken> UserTokens { get; set; }
+        public DbSet<UserToken> UserTokens { get; set; }
 
-        public virtual DbSet<FCMQueue> FCMQueues { get; set; }
+        public DbSet<FCMQueue> FCMQueues { get; set; }
 
-        public virtual DbSet<Report> Reports { get; set; }
+        public DbSet<Report> Reports { get; set; }
 
-        public virtual DbSet<CommentLike> CommentLikes { get; set; }
+        public DbSet<CommentLike> CommentLikes { get; set; }
 
-        public virtual DbSet<PostLike> PostLikes { get; set; }
+        public DbSet<PostLike> PostLikes { get; set; }
 
-        public virtual DbSet<SoftwareUpdate> SoftwareUpdates { get; set; }
+        public DbSet<SoftwareUpdate> SoftwareUpdates { get; set; }
 
-        public virtual DbSet<Comment> Comments { get; set; }
+        public DbSet<Comment> Comments { get; set; }
 
-        public virtual DbSet<Seen> Seens { get; set; }
+        public DbSet<Seen> Seens { get; set; }
 
-        public virtual DbSet<PostCategory> PostCategories { get; set; }
+        public DbSet<PostCategory> PostCategories { get; set; }
 
-        public virtual DbSet<Hashtag> Hashtags { get; set; }
+        public DbSet<Hashtag> Hashtags { get; set; }
 
-        public virtual DbSet<PostGroup> PostGroups { get; set; }
+        public DbSet<PostGroup> PostGroups { get; set; }
 
-        public virtual DbSet<Post> Posts { get; set; }
+        public DbSet<Post> Posts { get; set; }
 
-        public virtual DbSet<GroupMember> GroupMembers { get; set; }
+        public DbSet<GroupMember> GroupMembers { get; set; }
 
         //public virtual DbSet<OrganizationGroup> OrganizationGroups { get; set; }
 
-        public virtual DbSet<Organization> Organizations { get; set; }
+        public DbSet<Organization> Organizations { get; set; }
 
         /* Define an IDbSet for each entity of the application */
 
-        public virtual DbSet<BinaryObject> BinaryObjects { get; set; }
+        public DbSet<BinaryObject> BinaryObjects { get; set; }
 
-        public virtual DbSet<Friendship> Friendships { get; set; }
+        public DbSet<Friendship> Friendships { get; set; }
 
-        public virtual DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
 
-        public virtual DbSet<SubscribableEdition> SubscribableEditions { get; set; }
+        public DbSet<SubscribableEdition> SubscribableEditions { get; set; }
 
-        public virtual DbSet<SubscriptionPayment> SubscriptionPayments { get; set; }
+        public DbSet<SubscriptionPayment> SubscriptionPayments { get; set; }
 
-        public virtual DbSet<Invoice> Invoices { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
 
-        public virtual DbSet<PersistedGrantEntity> PersistedGrants { get; set; }
+        public DbSet<PersistedGrantEntity> PersistedGrants { get; set; }
 
-        public virtual DbSet<SubscriptionPaymentExtensionData> SubscriptionPaymentExtensionDatas { get; set; }
+        public DbSet<SubscriptionPaymentExtensionData> SubscriptionPaymentExtensionDatas { get; set; }
 
-        public virtual DbSet<UserDelegation> UserDelegations { get; set; }
+        public DbSet<UserDelegation> UserDelegations { get; set; }
 
-        public virtual DbSet<RecentPassword> RecentPasswords { get; set; }
-
-        public DeedDbContext(DbContextOptions<DeedDbContext> options)
-            : base(options)
+        public DbSet<RecentPassword> RecentPasswords { get; set; }
+        
+        public DeedDbContext(DbContextOptions<DeedDbContext> options) : base(options)
         {
-
+            Database.SetCommandTimeout(60); // Set command timeout to 60 seconds
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
