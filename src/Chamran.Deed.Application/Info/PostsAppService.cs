@@ -88,14 +88,11 @@ namespace Chamran.Deed.Info
                 new SqlParameter("@PostGroupPostGroupDescriptionFilter", string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter) ? (object)DBNull.Value : (object)input.PostGroupPostGroupDescriptionFilter),
                 new SqlParameter("@FromDate", input.FromDate ?? (object)DBNull.Value),
                 new SqlParameter("@ToDate", input.ToDate ?? (object)DBNull.Value),
-                new SqlParameter("@OrderBy", input.Sorting ?? "CreationTime DESC"),
-                new SqlParameter("@MaxResultCount", int.MaxValue),
-                new SqlParameter("@SkipCount", 0)
-            };
+                new SqlParameter("@OrderBy", input.Sorting ?? "CreationTime DESC") };
             var dbContextTotal = await _dbContextProvider.GetDbContextAsync();
-            var totalCount = await dbContextTotal.Set<GetPostsForView>()
-                .FromSqlRaw("EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy, @MaxResultCount, @SkipCount", totalparameters)
-                .CountAsync();
+            var totalCount = dbContextTotal.Set<GetPostsForView>()
+                .FromSqlRaw("EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy", totalparameters)
+                .AsEnumerable().Count();
 
 
             var parameters = new SqlParameter[]

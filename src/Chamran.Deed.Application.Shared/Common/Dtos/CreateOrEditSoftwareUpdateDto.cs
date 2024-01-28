@@ -15,11 +15,14 @@ namespace Chamran.Deed.Common.Dtos
 
         [StringLength(SoftwareUpdateConsts.MaxWhatsNewLength, MinimumLength = SoftwareUpdateConsts.MinWhatsNewLength)]
         public string WhatsNew { get; set; }
+        public string DownloadLink { get; set; }
 
         [StringLength(SoftwareUpdateConsts.MaxPlatformLength, MinimumLength = SoftwareUpdateConsts.MinPlatformLength)]
         public string Platform { get; set; }
 
         public int BuildNo { get; set; }
+
+        
 
         public Guid? UpdateFile { get; set; }
 
