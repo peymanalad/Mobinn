@@ -6,7 +6,9 @@ using Abp.Dependency;
 using Abp.Notifications;
 using Abp.ObjectMapping;
 using Abp.RealTime;
+using Abp.Runtime.Session;
 using Castle.Core.Logging;
+using Chamran.Deed.Authorization.Users;
 using Microsoft.AspNetCore.SignalR;
 using Chamran.Deed.Chat;
 using Chamran.Deed.Chat.Dto;
@@ -30,15 +32,18 @@ namespace Chamran.Deed.Web.Chat.SignalR
         private readonly IHubContext<ChatHub> _chatHub;
 
         private readonly INotificationPublisher _notificationPublisher;
+        private readonly UserManager _userManager;
 
         public SignalRChatCommunicator(
             IObjectMapper objectMapper,
             IHubContext<ChatHub> chatHub,
-            INotificationPublisher notificationPublisher)
+            INotificationPublisher notificationPublisher,
+            UserManager userManager)
         {
             _objectMapper = objectMapper;
             _chatHub = chatHub;
             _notificationPublisher = notificationPublisher;
+            _userManager = userManager;
             Logger = NullLogger.Instance;
         }
 
@@ -65,7 +70,23 @@ namespace Chamran.Deed.Web.Chat.SignalR
                 {
                     return;
                 }
-                await signalRClient.SendAsync("getChatMessage", _objectMapper.Map<ChatMessageDto>(message));
+                var dto = _objectMapper.Map<ChatMessageDto>(message);
+                try
+                {
+                    if (client.UserId != null)
+                    {
+                        var receiver = new UserIdentifier(1, client.UserId.Value);
+                        var friendUser = await _userManager.GetUserAsync(receiver);
+                        dto.FriendName = friendUser.Name;
+                        dto.FriendSurName = friendUser.Surname;
+                        dto.FriendProfilePictureId = friendUser.ProfilePictureId;
+                    }
+                }
+                catch (Exception)
+                {
+                    //ignored
+                }
+                await signalRClient.SendAsync("getChatMessage", dto);
               
             }
         }
