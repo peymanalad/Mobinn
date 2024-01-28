@@ -73,22 +73,18 @@ namespace Chamran.Deed.Web.Chat.SignalR
                 var dto = _objectMapper.Map<ChatMessageDto>(message);
                 try
                 {
-                    if (client.UserId != null)
-                    {
-                        //var receiver = new UserIdentifier(1, client.UserId.Value);
-                        var receiver = new UserIdentifier(1, message.UserId);
-                        var friendUser = await _userManager.GetUserAsync(receiver);
-                        dto.FriendName = friendUser.Name;
-                        dto.FriendSurName = friendUser.Surname;
-                        dto.FriendProfilePictureId = friendUser.ProfilePictureId;
-                    }
+                    var receiver = new UserIdentifier(1, message.TargetUserId);
+                    var friendUser = await _userManager.GetUserAsync(receiver);
+                    dto.FriendName = friendUser.Name;
+                    dto.FriendSurName = friendUser.Surname;
+                    dto.FriendProfilePictureId = friendUser.ProfilePictureId;
                 }
                 catch (Exception)
                 {
                     //ignored
                 }
                 await signalRClient.SendAsync("getChatMessage", dto);
-              
+
             }
         }
 

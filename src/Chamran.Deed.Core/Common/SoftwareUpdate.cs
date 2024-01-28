@@ -24,7 +24,8 @@ namespace Chamran.Deed.Common
 
         public virtual int BuildNo { get; set; }
         //File
-
+        public virtual string DownloadLink { get; set; }
+        
         public virtual Guid? UpdateFile { get; set; } //File, (BinaryObjectId)
 
     }

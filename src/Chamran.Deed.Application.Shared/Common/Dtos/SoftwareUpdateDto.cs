@@ -9,7 +9,9 @@ namespace Chamran.Deed.Common.Dtos
 
         public bool ForceUpdate { get; set; }
 
-        public string WhatsNew { get; set; }
+        public string WhatsNew { get; set; } 
+
+        public string DownloadLink { get; set; }
 
         public string Platform { get; set; }
 
