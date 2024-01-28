@@ -75,7 +75,8 @@ namespace Chamran.Deed.Web.Chat.SignalR
                 {
                     if (client.UserId != null)
                     {
-                        var receiver = new UserIdentifier(1, client.UserId.Value);
+                        //var receiver = new UserIdentifier(1, client.UserId.Value);
+                        var receiver = new UserIdentifier(1, message.UserId);
                         var friendUser = await _userManager.GetUserAsync(receiver);
                         dto.FriendName = friendUser.Name;
                         dto.FriendSurName = friendUser.Surname;
