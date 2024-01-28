@@ -117,7 +117,7 @@ namespace Chamran.Deed.Info
         PST.[PostFile9],
         PST.[PostFile10],
         PST.[PostRefLink],
-        PST.[IsSeen],
+        t.[IsSeen],
 		PG.PostGroupDescription,
 		PG.GroupFile,
 		t.[IsPrivate],
@@ -496,8 +496,10 @@ ORDER BY
         {
             var taskEntry = ObjectMapper.Map<TaskEntry>(input);
             await _taskEntryRepository.InsertAsync(taskEntry);
-            
-            await _appNotifier.SendTaskNotificationAsync(JsonConvert.SerializeObject(taskEntry, new JsonSerializerSettings
+            var taskEntryNotification = ObjectMapper.Map<TaskEntryNotificationDto>(input);
+
+
+            await _appNotifier.SendTaskNotificationAsync(JsonConvert.SerializeObject(taskEntryNotification, new JsonSerializerSettings
                 {
                     ContractResolver = new DefaultContractResolver
                     {
