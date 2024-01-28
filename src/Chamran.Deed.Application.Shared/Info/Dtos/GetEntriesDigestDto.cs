@@ -46,6 +46,7 @@ namespace Chamran.Deed.Info.Dtos
         public Guid? GroupFile{ get; set; }
         public bool IsPrivate { get; set; }
         public int WorkFlowCount { get; set; }
+        public bool IsSeen { get; set; }
 
     } 
     

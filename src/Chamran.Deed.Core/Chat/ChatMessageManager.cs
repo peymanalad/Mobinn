@@ -495,7 +495,7 @@ namespace Chamran.Deed.Chat
                     await _chatCommunicator.SendFriendshipRequestToClient(clients, friendship, false, isFriendOnline);
                 }
             }
-            var friendUser = await _userManager.GetUserAsync(receiverIdentifier);
+            var friendUser = await _userManager.GetUserAsync(senderIdentifier);
 
             if (friendshipState == FriendshipState.Blocked)
             {
@@ -575,7 +575,7 @@ namespace Chamran.Deed.Chat
                     await _chatCommunicator.SendFriendshipRequestToClient(clients, friendship, false, isFriendOnline);
                 }
             }
-            var friendUser = await _userManager.GetUserAsync(receiverIdentifier);
+            var friendUser = await _userManager.GetUserAsync(senderIdentifier);
             if (friendshipState == FriendshipState.Blocked)
             {
                 //Do not send message if receiver banned the sender
@@ -655,7 +655,7 @@ namespace Chamran.Deed.Chat
                     await _chatCommunicator.SendFriendshipRequestToClient(clients, friendship, false, isFriendOnline);
                 }
             } 
-            var friendUser = await _userManager.GetUserAsync(receiverIdentifier);
+            var friendUser = await _userManager.GetUserAsync(senderIdentifier);
 
             if (friendshipState == FriendshipState.Blocked)
             {
