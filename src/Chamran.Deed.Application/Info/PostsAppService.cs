@@ -307,7 +307,8 @@ namespace Chamran.Deed.Info
             post.PostFile8 = await GetBinaryObjectFromCache(input.PostFileToken8, post.Id);
             post.PostFile9 = await GetBinaryObjectFromCache(input.PostFileToken9, post.Id);
             post.PostFile10 = await GetBinaryObjectFromCache(input.PostFileToken10, post.Id);
-
+            if(post.PostFile==null &&  post.PostFile2==null&&  post.PostFile3==null&&  post.PostFile4==null&&  post.PostFile5==null&&  post.PostFile6==null&&  post.PostFile7==null&&  post.PostFile8==null&&  post.PostFile9==null&&  post.PostFile10==null)
+                throw new UserFriendlyException("پست ارسالی هیچ مدیایی ندارد");
             await _unitOfWorkManager.Current.SaveChangesAsync();
             await unitOfWork.CompleteAsync();
             if (post.PostGroupId.HasValue)
