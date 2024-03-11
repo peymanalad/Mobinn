@@ -31,7 +31,7 @@ namespace Chamran.Deed.Net.Sms
             {
                 var msg = new List<MessageDTO> { new() { Recipient = number, Text = message, Messages = new List<MessageDTO>() } };
 
-                var res = await new SmsBehestan.Client(_deedSmsSenderConfiguration).EnqueueAsync(new EnqueueRequestDTO()
+                var res = await new Client(_deedSmsSenderConfiguration).EnqueueAsync(new EnqueueRequestDTO()
                 {
                     Messages = msg,
                 });
@@ -52,7 +52,7 @@ namespace Chamran.Deed.Net.Sms
             {
                 var msg = new List<MessageDTO> { new() { Recipient = number, Text = message, Messages = new List<MessageDTO>() } };
 
-                var res = await new SmsBehestan.Client(_deedSmsSenderConfiguration).EnqueueAsync(new EnqueueRequestDTO()
+                var res = await new Client(_deedSmsSenderConfiguration).EnqueueAsync(new EnqueueRequestDTO()
                 {
                     Messages = msg,
                 });

@@ -3,7 +3,7 @@
 	<Import Project="..\..\common.props"></Import>
 
 	<PropertyGroup>
-		<TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
 		<AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wp8+wpa81;</AssetTargetFallback>
 		<AssemblyName>Chamran.Deed.Web.Core</AssemblyName>
 		<PackageId>Chamran.Deed.Web.Core</PackageId>
@@ -17,41 +17,54 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="IdentityServer\**" />
+	  <Content Remove="IdentityServer\**" />
+	  <EmbeddedResource Remove="IdentityServer\**" />
+	  <None Remove="IdentityServer\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="OpenIddict\Views\Authorize\Authorize.cshtml" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\Chamran.Deed.GraphQL\Chamran.Deed.GraphQL.csproj" />
 		<ProjectReference Include="..\Chamran.Deed.Application\Chamran.Deed.Application.csproj" />
 		<ProjectReference Include="..\Chamran.Deed.EntityFrameworkCore\Chamran.Deed.EntityFrameworkCore.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Abp.AspNetCore.SignalR" Version="8.2.0" />
-		<PackageReference Include="Abp.AspNetZeroCore.Web" Version="4.1.0" />
-		<PackageReference Include="Hangfire.SqlServer" Version="1.8.0" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Abp.AspNetCore.SignalR" Version="9.1.1" />
+    <PackageReference Include="Abp.AspNetZeroCore.Web" Version="5.0.0" />
+    <PackageReference Include="Hangfire.SqlServer" Version="1.8.9" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Owl.reCAPTCHA" Version="7.0.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
 		<PackageReference Include="Swashbuckle.AspNetCore.Newtonsoft" Version="6.5.0" />
-		<PackageReference Include="Owl.reCAPTCHA" Version="7.0.0" />
-		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
-		<PackageReference Include="System.Net.Http" Version="4.3.4" />
 		<PackageReference Include="IdentityServer4.AccessTokenValidation" Version="3.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Abp.ZeroCore.IdentityServer4.vNext" Version="8.2.0" />
-		<PackageReference Include="Abp.AspNetCore" Version="8.2.0" />
-		<PackageReference Include="Abp.HangFire.AspNetCore" Version="8.2.0" />
-		<PackageReference Include="Abp.RedisCache" Version="8.2.0" />
+    <PackageReference Include="Abp.AspNetCore" Version="9.1.1" />
+    <PackageReference Include="Abp.HangFire.AspNetCore" Version="9.1.1" />
+    <PackageReference Include="Abp.RedisCache" Version="9.1.1" />
+    <PackageReference Include="Abp.HtmlSanitizer" Version="9.1.1" />
 	</ItemGroup>
 	
 	<ItemGroup>
-		<PackageReference Include="System.Diagnostics.PerformanceCounter" Version="7.0.0" />
-		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="7.0.3" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
-		<PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="7.0.9" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.0" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.Abstractions" Version="8.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.1" />
 	</ItemGroup>
 	
 	<ItemGroup>
-		<PackageReference Include="AspNetCore.HealthChecks.UI" Version="7.0.0-rc2.6" />
-		<PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="7.0.0-rc2.6" />
-		<PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="7.0.0-rc2.6" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI" Version="8.0.0" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.0" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="8.0.0" />
+    <PackageReference Include="OpenIddict.AspNetCore" Version="5.1.0" />
 	</ItemGroup>
 
 </Project>

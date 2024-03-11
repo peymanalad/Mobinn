@@ -25,14 +25,12 @@ using Chamran.Deed.Identity;
 using Chamran.Deed.Web.Chat.SignalR;
 using Chamran.Deed.Web.Common;
 using Swashbuckle.AspNetCore.Swagger;
-using Chamran.Deed.Web.IdentityServer;
 using Chamran.Deed.Web.Swagger;
 using Stripe;
 using ILoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
 using GraphQL.Server;
 using GraphQL.Server.Ui.Playground;
 using HealthChecks.UI.Client;
-using IdentityServer4.Configuration;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Hosting;
@@ -48,9 +46,11 @@ using Chamran.Deed.Web.MultiTenancy;
 using Abp.AspNetCore.Localization;
 using Chamran.Deed.Info;
 using Chamran.Deed.Web.Helpers.StimulsoftHelpers;
+using Chamran.Deed.Web.OpenIddict;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace Chamran.Deed.Web.Startup
 {
@@ -115,15 +115,29 @@ namespace Chamran.Deed.Web.Startup
             AuthConfigurer.Configure(services, _appConfiguration);
 
             //Identity server
-            if (bool.Parse(_appConfiguration["IdentityServer:IsEnabled"]))
+            //if (bool.Parse(_appConfiguration["IdentityServer:IsEnabled"]))
+            //{
+            //    IdentityServerRegistrar.Register(services, _appConfiguration, options =>
+            //        options.UserInteraction = new UserInteractionOptions()
+            //        {
+            //            LoginUrl = "/UI/Login",
+            //            LogoutUrl = "/UI/LogOut",
+            //            ErrorUrl = "/Error"
+            //        });
+            //}
+            //else
+            //{
+            //    services.Configure<SecurityStampValidatorOptions>(opts =>
+            //    {
+            //        opts.OnRefreshingPrincipal = SecurityStampValidatorCallback.UpdatePrincipal;
+            //    });
+            //}
+            if (bool.Parse(_appConfiguration["OpenIddict:IsEnabled"]))
             {
-                IdentityServerRegistrar.Register(services, _appConfiguration, options =>
-                    options.UserInteraction = new UserInteractionOptions()
-                    {
-                        LoginUrl = "/UI/Login",
-                        LogoutUrl = "/UI/LogOut",
-                        ErrorUrl = "/Error"
-                    });
+                OpenIddictRegistrar.Register(services, _appConfiguration);
+
+                services.Configure<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme,
+                    options => { options.LoginPath = "/Ui/Login"; });
             }
             else
             {
@@ -250,10 +264,9 @@ namespace Chamran.Deed.Web.Startup
             app.UseAuthentication();
             app.UseJwtTokenMiddleware();
 
-            if (bool.Parse(_appConfiguration["IdentityServer:IsEnabled"]))
+            if (bool.Parse(_appConfiguration["OpenIddict:IsEnabled"]))
             {
-                app.UseJwtTokenMiddleware("IdentityBearer");
-                app.UseIdentityServer();
+                app.UseAbpOpenIddictValidation();
             }
 
             app.UseAuthorization();
@@ -289,11 +302,14 @@ namespace Chamran.Deed.Web.Startup
 
             if (WebConsts.GraphQL.Enabled)
             {
-                app.UseGraphQL<MainSchema>();
+                app.UseGraphQL<MainSchema>(WebConsts.GraphQL.EndPoint);
                 if (WebConsts.GraphQL.PlaygroundEnabled)
                 {
+                    // to explorer API navigate https://*DOMAIN*/ui/playground
                     app.UseGraphQLPlayground(
-                        new GraphQLPlaygroundOptions()); //to explorer API navigate https://*DOMAIN*/ui/playground
+                        WebConsts.GraphQL.PlaygroundEndPoint,
+                        new PlaygroundOptions()
+                    );
                 }
             }
 

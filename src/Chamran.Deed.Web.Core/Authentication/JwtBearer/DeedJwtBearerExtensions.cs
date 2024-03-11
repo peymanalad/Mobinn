@@ -9,7 +9,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using Chamran.Deed.Web.Authentication.JwtBearer;
+
+namespace Chamran.Deed.Web.Authentication.JwtBearer;
 
 /// <summary>
 /// Extension methods to configure JWT bearer authentication.

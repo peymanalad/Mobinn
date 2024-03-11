@@ -1,7 +1,6 @@
 ﻿using Chamran.Deed.Common;
 using Chamran.Deed.Info;
 using Chamran.Deed.People;
-using Abp.IdentityServer4vNext;
 using Abp.Zero.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Chamran.Deed.Authorization.Delegation;
@@ -15,27 +14,40 @@ using Chamran.Deed.MultiTenancy.Accounting;
 using Chamran.Deed.MultiTenancy.Payments;
 using Chamran.Deed.Storage;
 using Chamran.Deed.Configurations;
+using Chamran.Deed.OpenIddict.Applications;
+using Chamran.Deed.OpenIddict.Authorizations;
+using Chamran.Deed.OpenIddict.Scopes;
+using Chamran.Deed.OpenIddict.Tokens;
+using HouradSystem.Deed.EntityFrameworkCore;
 
 namespace Chamran.Deed.EntityFrameworkCore
 {
-        public sealed class DeedDbContext : AbpZeroDbContext<Tenant, Role, User, DeedDbContext>, IAbpPersistedGrantDbContext
+    public class DeedDbContext : AbpZeroDbContext<Tenant, Role, User, DeedDbContext>, IOpenIddictDbContext
     {
-        public DbSet<InstagramCrawlerPost> InstagramCrawlerPosts { get; set; }
+        public virtual DbSet<OpenIddictApplication> Applications { get; }
+
+        public virtual DbSet<OpenIddictAuthorization> Authorizations { get; }
+
+        public virtual DbSet<OpenIddictScope> Scopes { get; }
+
+        public virtual DbSet<OpenIddictToken> Tokens { get; }
+
+        public virtual DbSet<InstagramCrawlerPost> InstagramCrawlerPosts { get; set; }
 
         public DbSet<DeedChart> DeedCharts { get; set; }
 
         //modelBuilder.Entity<MixedEntity>().HasNoKey(); // Configure as a shadow property
 
-        public DbSet<GetEntriesDigest> EntriesDigest { get; set; }
-        public DbSet<GetEntriesDetail> EntriesDetail { get; set; }
-        public DbSet<GetPostsForView> PostsForView { get; set; }
-        public DbSet<GetListOfUsers> ListOfUsers { get; set; }
+        public virtual DbSet<GetEntriesDigest> EntriesDigest { get; set; }
+        public virtual DbSet<GetEntriesDetail> EntriesDetail { get; set; }
+        public virtual DbSet<GetPostsForView> PostsForView { get; set; }
+        public virtual DbSet<GetListOfUsers> ListOfUsers { get; set; }
 
-        public DbSet<TaskStat> TaskStats { get; set; }
+        public virtual DbSet<TaskStat> TaskStats { get; set; }
 
-        public DbSet<TaskEntry> TaskEntries { get; set; }
+        public virtual DbSet<TaskEntry> TaskEntries { get; set; }
 
-        public DbSet<OrganizationUser> OrganizationUsers { get; set; }
+        public virtual DbSet<OrganizationUser> OrganizationUsers { get; set; }
 
         public DbSet<OrganizationChart> OrganizationCharts { get; set; }
 
@@ -87,14 +99,14 @@ namespace Chamran.Deed.EntityFrameworkCore
 
         public DbSet<Invoice> Invoices { get; set; }
 
-        public DbSet<PersistedGrantEntity> PersistedGrants { get; set; }
+        //public DbSet<PersistedGrantEntity> PersistedGrants { get; set; }
 
         public DbSet<SubscriptionPaymentExtensionData> SubscriptionPaymentExtensionDatas { get; set; }
 
         public DbSet<UserDelegation> UserDelegations { get; set; }
 
         public DbSet<RecentPassword> RecentPasswords { get; set; }
-        
+
         public DeedDbContext(DbContextOptions<DeedDbContext> options) : base(options)
         {
             Database.SetCommandTimeout(60); // Set command timeout to 60 seconds
@@ -194,7 +206,9 @@ namespace Chamran.Deed.EntityFrameworkCore
                 .HasIndex(p => p.PostKey)
                 .IsUnique();
 
-            modelBuilder.ConfigurePersistedGrantEntity();
+            modelBuilder.ConfigureOpenIddict();
         }
+
+
     }
 }

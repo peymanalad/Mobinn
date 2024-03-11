@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 
 # Clear the package cache
 RUN rm -rf /var/lib/apt/lists/*
@@ -25,7 +25,7 @@ RUN apt-get install -y tzdata
 ENV TZ=Asia/Tehran
 
 # Copy application to container
-COPY bin/Release/net7.0/publish/ App/
+COPY bin/Release/net8.0/publish/ App/
 WORKDIR /App
 
 # Expose ports

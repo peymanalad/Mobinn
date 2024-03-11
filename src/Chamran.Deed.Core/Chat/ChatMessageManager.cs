@@ -73,7 +73,7 @@ namespace Chamran.Deed.Chat
                 {
                     await _chatMessageRepository.DeleteAsync(row.Id);
                     var id = new UserIdentifier(row.TenantId, row.UserId);
-                    var clients = _onlineClientManager.GetAllByUserId(id);
+                    var clients = await _onlineClientManager.GetAllByUserIdAsync(id);
                     await _chatCommunicator.DeleteMessageToClients(clients, id, sharedMessageId);
                 }
 
@@ -153,7 +153,7 @@ namespace Chamran.Deed.Chat
                 {
                     row.Message = message;
                     var id = new UserIdentifier(row.TenantId, row.UserId);
-                    var clients = _onlineClientManager.GetAllByUserId(id);
+                    var clients = await _onlineClientManager.GetAllByUserIdAsync(id);
                     await _chatCommunicator.EditMessageToClient(clients, id, sharedMessageId, message);
                 }
 
@@ -313,7 +313,7 @@ namespace Chamran.Deed.Chat
             Save(sentMessage);
 
             await _chatCommunicator.SendMessageToClient(
-                _onlineClientManager.GetAllByUserId(senderIdentifier),
+                await _onlineClientManager.GetAllByUserIdAsync(senderIdentifier),
                 sentMessage
             );
 
@@ -363,7 +363,7 @@ namespace Chamran.Deed.Chat
             Save(sentMessage);
 
             await _chatCommunicator.SendMessageToClient(
-                _onlineClientManager.GetAllByUserId(senderIdentifier),
+                await _onlineClientManager.GetAllByUserIdAsync(senderIdentifier),
                 sentMessage
             );
 
@@ -413,7 +413,7 @@ namespace Chamran.Deed.Chat
             Save(sentMessage);
 
             await _chatCommunicator.SendMessageToClient(
-                _onlineClientManager.GetAllByUserId(senderIdentifier),
+                await _onlineClientManager.GetAllByUserIdAsync(senderIdentifier),
                 sentMessage
             );
 
@@ -471,7 +471,7 @@ namespace Chamran.Deed.Chat
         {
             var friendship = await _friendshipManager.GetFriendshipOrNullAsync(receiverIdentifier, senderIdentifier);
             var friendshipState = friendship?.State;
-            var clients = _onlineClientManager.GetAllByUserId(receiverIdentifier);
+            var clients = await _onlineClientManager.GetAllByUserIdAsync(receiverIdentifier);
 
             if (friendshipState == null)
             {
@@ -491,7 +491,7 @@ namespace Chamran.Deed.Chat
 
                 if (clients.Any())
                 {
-                    var isFriendOnline = _onlineClientManager.IsOnline(receiverIdentifier);
+                    var isFriendOnline = await _onlineClientManager.IsOnlineAsync(receiverIdentifier);
                     await _chatCommunicator.SendFriendshipRequestToClient(clients, friendship, false, isFriendOnline);
                 }
             }
@@ -551,7 +551,7 @@ namespace Chamran.Deed.Chat
         {
             var friendship = await _friendshipManager.GetFriendshipOrNullAsync(receiverIdentifier, senderIdentifier);
             var friendshipState = friendship?.State;
-            var clients = _onlineClientManager.GetAllByUserId(receiverIdentifier);
+            var clients = await _onlineClientManager.GetAllByUserIdAsync(receiverIdentifier);
 
             if (friendshipState == null)
             {
@@ -571,7 +571,7 @@ namespace Chamran.Deed.Chat
 
                 if (clients.Any())
                 {
-                    var isFriendOnline = _onlineClientManager.IsOnline(receiverIdentifier);
+                    var isFriendOnline =await _onlineClientManager.IsOnlineAsync(receiverIdentifier);
                     await _chatCommunicator.SendFriendshipRequestToClient(clients, friendship, false, isFriendOnline);
                 }
             }
@@ -631,7 +631,7 @@ namespace Chamran.Deed.Chat
         {
             var friendship = await _friendshipManager.GetFriendshipOrNullAsync(receiverIdentifier, senderIdentifier);
             var friendshipState = friendship?.State;
-            var clients = _onlineClientManager.GetAllByUserId(receiverIdentifier);
+            var clients = await _onlineClientManager.GetAllByUserIdAsync(receiverIdentifier);
 
             if (friendshipState == null)
             {
@@ -651,7 +651,7 @@ namespace Chamran.Deed.Chat
 
                 if (clients.Any())
                 {
-                    var isFriendOnline = _onlineClientManager.IsOnline(receiverIdentifier);
+                    var isFriendOnline = await _onlineClientManager.IsOnlineAsync(receiverIdentifier);
                     await _chatCommunicator.SendFriendshipRequestToClient(clients, friendship, false, isFriendOnline);
                 }
             } 

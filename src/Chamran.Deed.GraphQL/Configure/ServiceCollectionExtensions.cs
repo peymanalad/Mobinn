@@ -10,33 +10,32 @@ using Chamran.Deed.Schemas;
 
 namespace Chamran.Deed.Configure
 {
-    public static class ServiceCollectionExtensions
-    {
-        public static void AddAndConfigureGraphQL(this IServiceCollection services)
+        public static class ServiceCollectionExtensions
         {
-            services
-                .AddGraphQL(x => { x.EnableMetrics = DebugHelper.IsDebug; })
-                .AddNewtonsoftJson(deserializerSettings => { }, serializerSettings => { }) // For everything else
-                .AddErrorInfoProvider(opt => opt.ExposeExceptionStackTrace = DebugHelper.IsDebug)
-                .AddGraphTypes(ServiceLifetime.Scoped)
-                .AddUserContextBuilder(httpContext => new Dictionary<string, object>
-                {
-                    {"user", httpContext.User}
-                })
-                .AddNewtonsoftJson(deserializerSettings => { }, serializerSettings => { }) // For everything else
-                .AddDataLoader();
+            public static void AddAndConfigureGraphQL(this IServiceCollection services)
+            {
+                services
+                    .AddGraphQL(x => x.AddSystemTextJson()
+                        .AddErrorInfoProvider(opt => opt.ExposeExceptionDetails = DebugHelper.IsDebug)
+                        .AddGraphTypes()
+                        .AddDataLoader()
+                        .AddUserContextBuilder(httpContext => new Dictionary<string, object>
+                        {
+                            {"user", httpContext.User}
+                        })
+                    );
 
-            AllowSynchronousIo(services);
-        }
+                AllowSynchronousIo(services);
+            }
 
-        //https://github.com/graphql-dotnet/graphql-dotnet/issues/1326
-        private static void AllowSynchronousIo(IServiceCollection services)
-        {
-            // kestrel
-            services.Configure<KestrelServerOptions>(options => { options.AllowSynchronousIO = true; });
+            //https://github.com/graphql-dotnet/graphql-dotnet/issues/1326
+            private static void AllowSynchronousIo(IServiceCollection services)
+            {
+                // kestrel
+                services.Configure<KestrelServerOptions>(options => { options.AllowSynchronousIO = true; });
 
-            // IIS
-            services.Configure<IISServerOptions>(options => { options.AllowSynchronousIO = true; });
+                // IIS
+                services.Configure<IISServerOptions>(options => { options.AllowSynchronousIO = true; });
+            }
         }
     }
-}

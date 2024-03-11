@@ -68,7 +68,7 @@ namespace Chamran.Deed.Chat
 
                 foreach (var friend in friends)
                 {
-                    friend.IsOnline = _onlineClientManager.IsOnline(
+                    friend.IsOnline = await _onlineClientManager.IsOnlineAsync(
                         new UserIdentifier(friend.FriendTenantId, friend.FriendUserId)
                     );
                     var query = await _chatMessageRepository.GetAll()
@@ -112,7 +112,7 @@ namespace Chamran.Deed.Chat
 
             foreach (var friend in friends)
             {
-                friend.IsOnline = _onlineClientManager.IsOnline(
+                friend.IsOnline = await _onlineClientManager.IsOnlineAsync(
                     new UserIdentifier(friend.FriendTenantId, friend.FriendUserId)
                 );
                 var query = await _chatMessageRepository.GetAll()
@@ -273,13 +273,13 @@ namespace Chamran.Deed.Chat
 
             _userFriendsCache.ResetUnreadMessageCount(userIdentifier, friendIdentifier);
 
-            var onlineUserClients = _onlineClientManager.GetAllByUserId(userIdentifier);
+            var onlineUserClients = await _onlineClientManager.GetAllByUserIdAsync(userIdentifier);
             if (onlineUserClients.Any())
             {
                 await _chatCommunicator.SendAllUnreadMessagesOfUserReadToClients(onlineUserClients, friendIdentifier);
             }
 
-            var onlineFriendClients = _onlineClientManager.GetAllByUserId(friendIdentifier);
+            var onlineFriendClients = await _onlineClientManager.GetAllByUserIdAsync(friendIdentifier);
             if (onlineFriendClients.Any())
             {
                 await _chatCommunicator.SendReadStateChangeToClients(onlineFriendClients, userIdentifier);
@@ -334,13 +334,13 @@ namespace Chamran.Deed.Chat
 
             _userFriendsCache.ResetUnreadMessageCount(userIdentifier, friendIdentifier);
 
-            var onlineUserClients = _onlineClientManager.GetAllByUserId(userIdentifier);
+            var onlineUserClients = await _onlineClientManager.GetAllByUserIdAsync(userIdentifier);
             if (onlineUserClients.Any())
             {
                 await _chatCommunicator.SendAllUnreadMessagesOfUserReadToClients(onlineUserClients, friendIdentifier);
             }
 
-            var onlineFriendClients = _onlineClientManager.GetAllByUserId(friendIdentifier);
+            var onlineFriendClients = await _onlineClientManager.GetAllByUserIdAsync(friendIdentifier);
             if (onlineFriendClients.Any())
             {
                 await _chatCommunicator.SendReadStateChangeToClients(onlineFriendClients, userIdentifier);
@@ -396,13 +396,13 @@ namespace Chamran.Deed.Chat
 
             _userFriendsCache.ResetUnreadMessageCount(userIdentifier, friendIdentifier);
 
-            var onlineUserClients = _onlineClientManager.GetAllByUserId(userIdentifier);
+            var onlineUserClients = await _onlineClientManager.GetAllByUserIdAsync(userIdentifier);
             if (onlineUserClients.Any())
             {
                 await _chatCommunicator.SendAllUnreadMessagesOfUserReadToClients(onlineUserClients, friendIdentifier);
             }
 
-            var onlineFriendClients = _onlineClientManager.GetAllByUserId(friendIdentifier);
+            var onlineFriendClients = await _onlineClientManager.GetAllByUserIdAsync(friendIdentifier);
             if (onlineFriendClients.Any())
             {
                 await _chatCommunicator.SendReadStateChangeToClients(onlineFriendClients, userIdentifier);

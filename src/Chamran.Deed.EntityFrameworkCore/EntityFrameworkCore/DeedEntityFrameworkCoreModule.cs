@@ -1,7 +1,6 @@
 ﻿using Abp;
 using Abp.Dependency;
 using Abp.EntityFrameworkCore.Configuration;
-using Abp.IdentityServer4vNext;
 using Abp.Modules;
 using Abp.Reflection.Extensions;
 using Abp.Zero.EntityFrameworkCore;
@@ -13,8 +12,7 @@ namespace Chamran.Deed.EntityFrameworkCore
 {
     [DependsOn(
         typeof(AbpZeroCoreEntityFrameworkCoreModule),
-        typeof(DeedCoreModule),
-        typeof(AbpZeroCoreIdentityServervNextEntityFrameworkCoreModule)
+        typeof(DeedCoreModule)
         )]
     public class DeedEntityFrameworkCoreModule : AbpModule
     {

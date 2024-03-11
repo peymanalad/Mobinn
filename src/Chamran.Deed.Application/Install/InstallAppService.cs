@@ -5,6 +5,7 @@ using Abp;
 using Abp.Auditing;
 using Abp.Authorization;
 using Abp.Domain.Uow;
+using Abp.Extensions;
 using Abp.Localization;
 using Abp.Net.Mail;
 using Abp.Runtime.Security;

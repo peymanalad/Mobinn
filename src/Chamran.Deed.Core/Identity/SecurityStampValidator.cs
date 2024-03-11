@@ -35,7 +35,7 @@ namespace Chamran.Deed.Identity
             IUserDelegationManager userDelegationManager,
             PermissionChecker permissionChecker,
             IUnitOfWorkManager unitOfWorkManager)
-            : base(options, signInManager, systemClock, loggerFactory, unitOfWorkManager)
+            : base(options, signInManager, loggerFactory, unitOfWorkManager)
         {
             _userDelegationConfiguration = userDelegationConfiguration;
             _userDelegationManager = userDelegationManager;

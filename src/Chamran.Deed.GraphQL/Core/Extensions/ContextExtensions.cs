@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq;
 using GraphQL;
-using GraphQL.Language.AST;
+using GraphQL.Execution;
+using GraphQLParser.AST;
 
 namespace Chamran.Deed.Core.Extensions
 {
@@ -13,6 +14,12 @@ namespace Chamran.Deed.Core.Extensions
         {
             if (context.Arguments.ContainsKey(argumentName))
             {
+                var argument = context.Arguments[argumentName];
+                if (argument.Source == ArgumentSource.FieldDefault)
+                {
+                    return context;
+                }
+
                 argumentContainsAction(context.GetArgument<TArgType>(argumentName));
             }
 
@@ -45,23 +52,23 @@ namespace Chamran.Deed.Core.Extensions
                 return context.SubFields.ContainsKey(fragments[0]);
             }
 
-            if (context.SubFields[fragments[0]] == null)
+            if (context.SubFields[fragments[0]].Field == null)
             {
                 return false;
             }
 
-            if (context.SubFields[fragments[0]].SelectionSet == null)
+            if (context.SubFields[fragments[0]].Field?.SelectionSet == null)
             {
                 return false;
             }
 
-            if (context.SubFields[fragments[0]].SelectionSet.Selections == null)
+            if (context.SubFields[fragments[0]].Field?.SelectionSet.Selections == null)
             {
                 return false;
             }
 
 
-            var selections = context.SubFields[fragments[0]].SelectionSet.Selections;
+            var selections = context.SubFields[fragments[0]].Field?.SelectionSet.Selections;
 
             for (var i = 1; i < fragments.Length; i++)
             {
@@ -70,7 +77,7 @@ namespace Chamran.Deed.Core.Extensions
                     return false;
                 }
 
-                var field = selections.Select(selection => (Field)selection).FirstOrDefault(f => f.Name == fragments[i]);
+                var field = selections.Select(selection => (GraphQLField)selection).FirstOrDefault(f => f.Name == fragments[i]);
                 if (field == null)
                 {
                     return false;

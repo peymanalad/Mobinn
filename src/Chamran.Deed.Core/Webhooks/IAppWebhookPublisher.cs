@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
-using Chamran.Deed.Authorization.Users;
 
-namespace Chamran.Deed.WebHooks
+namespace Chamran.Deed.Webhooks
 {
     public interface IAppWebhookPublisher
     {

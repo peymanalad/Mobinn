@@ -7,6 +7,7 @@ using Abp.Authorization;
 using Abp.Localization;
 using Abp.Webhooks;
 using Chamran.Deed.Authorization;
+using Chamran.Deed.Webhooks;
 using Chamran.Deed.WebHooks.Dto;
 
 namespace Chamran.Deed.WebHooks

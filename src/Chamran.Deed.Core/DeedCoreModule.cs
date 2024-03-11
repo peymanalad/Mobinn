@@ -47,6 +47,7 @@ using Chamran.Deed.MultiTenancy;
 using Chamran.Deed.Net.Emailing;
 using Chamran.Deed.Net.Sms;
 using Chamran.Deed.Notifications;
+using Chamran.Deed.Webhooks;
 using Chamran.Deed.WebHooks;
 using Newtonsoft.Json;
 
