@@ -51,6 +51,7 @@ using Chamran.Deed.Authorization.Delegation;
 using Chamran.Deed.Authorization.Users.Profile.Cache;
 using Chamran.Deed.People;
 using Microsoft.EntityFrameworkCore;
+using Abp.Runtime.Validation;
 
 namespace Chamran.Deed.Web.Controllers
 {
@@ -138,7 +139,7 @@ namespace Chamran.Deed.Web.Controllers
 
         }
 
-        private async Task<string> EncryptQueryParameters(long userId, string passwordResetCode)
+        private async Task<string> EncryptQueryParameters(long userId, Tenant tenant, string passwordResetCode)
         {
             var expirationHours = await _settingManager.GetSettingValueAsync<int>(
                 AppSettings.UserManagement.Password.PasswordResetCodeExpirationHours
@@ -149,9 +150,13 @@ namespace Chamran.Deed.Web.Controllers
 
             var query = $"userId={userId}&resetCode={passwordResetCode}&expireDate={expireDate}";
 
+            if (tenant != null)
+            {
+                query += $"&tenantId={tenant.Id}";
+            }
+
             return SimpleStringCipher.Instance.Encrypt(query);
         }
-
 
         [HttpPost]
         public async Task<bool> SendOtp([FromBody] AuthenticateModel model)
@@ -317,7 +322,6 @@ namespace Chamran.Deed.Web.Controllers
             //(int)_configuration.AccessTokenExpiration.TotalSeconds,
         }
 
-
         [HttpPost]
         public async Task<AuthenticateResultModel> Authenticate([FromBody] AuthenticateModel model)
         {
@@ -350,7 +354,7 @@ namespace Chamran.Deed.Web.Controllers
                 {
                     ShouldResetPassword = true,
                     ReturnUrl = returnUrl,
-                    c = await EncryptQueryParameters(loginResult.User.Id, loginResult.User.PasswordResetCode)
+                    c = await EncryptQueryParameters(loginResult.User.Id, loginResult.Tenant, loginResult.User.PasswordResetCode)
                 };
             }
 
@@ -396,24 +400,18 @@ namespace Chamran.Deed.Web.Controllers
                 )
             );
 
-
-            if (model.ExpireDays <= 0)
-            {
-                model.ExpireDays = 93;
-            }
             var accessToken = CreateAccessToken(
                 await CreateJwtClaims(
                     loginResult.Identity,
                     loginResult.User,
                     refreshTokenKey: refreshToken.key
-                ), TimeSpan.FromDays(model.ExpireDays)
+                )
             );
-
 
             return new AuthenticateResultModel
             {
                 AccessToken = accessToken,
-                ExpireInSeconds = Convert.ToInt32(TimeSpan.FromDays(model.ExpireDays).TotalSeconds),//(int)_configuration.AccessTokenExpiration.TotalSeconds,
+                ExpireInSeconds = (int)_configuration.AccessTokenExpiration.TotalSeconds,
                 RefreshToken = refreshToken.token,
                 RefreshTokenExpireInSeconds = (int)_configuration.RefreshTokenExpiration.TotalSeconds,
                 EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
@@ -432,9 +430,10 @@ namespace Chamran.Deed.Web.Controllers
             }
 
             var (isRefreshTokenValid, principal) = await IsRefreshTokenValid(refreshToken);
+
             if (!isRefreshTokenValid)
             {
-                throw new ValidationException("Refresh token is not valid!");
+                throw new AbpValidationException("Refresh token is not valid!");
             }
 
             try
@@ -442,11 +441,6 @@ namespace Chamran.Deed.Web.Controllers
                 var user = await _userManager.GetUserAsync(
                     UserIdentifier.Parse(principal.Claims.First(x => x.Type == AppConsts.UserIdentifier).Value)
                 );
-
-                if (user == null)
-                {
-                    throw new UserFriendlyException("Unknown user or user identifier");
-                }
 
                 if (AllowOneConcurrentLoginPerUser())
                 {
@@ -472,7 +466,7 @@ namespace Chamran.Deed.Web.Controllers
             }
             catch (Exception e)
             {
-                throw new ValidationException("Refresh token is not valid!", e);
+                throw new AbpValidationException("Refresh token is not valid!" + e);
             }
         }
 
@@ -1104,6 +1098,7 @@ namespace Chamran.Deed.Web.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
         }
+
 
         private static string GetEncryptedAccessToken(string accessToken)
         {

@@ -112,7 +112,7 @@ namespace Chamran.Deed.Web
 
             tokenAuthConfig.SecurityKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_appConfiguration["Authentication:JwtBearer:SecurityKey"])
-            ); SecurityKey
+            );
 
             tokenAuthConfig.Issuer = _appConfiguration["Authentication:JwtBearer:Issuer"];
             tokenAuthConfig.Audience = _appConfiguration["Authentication:JwtBearer:Audience"];

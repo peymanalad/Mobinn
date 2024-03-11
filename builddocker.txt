@@ -4,10 +4,11 @@ docker login 192.168.54.145:5000
 
 docker build -t ideed:20.1 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 docker images
-docker tag   087033017b3b docker.ideed.ir/ideed:20.1
+docker tag   b7035118d475 docker.ideed.ir/ideed:20.1
 docker tag   126b257b0276 192.168.54.145/ideed:20.1
 docker push docker.ideed.ir/ideed:20.1
 docker push 192.168.54.145/ideed:20.1
+
 
 
 docker build -t ideedreact:9.5 C:\ZProjects\ideed\deed-dashboard
