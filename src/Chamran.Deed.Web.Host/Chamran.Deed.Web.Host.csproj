@@ -77,7 +77,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Abp.Castle.Log4Net" Version="8.2.0" />
+        <PackageReference Include="Abp.Castle.Log4Net" Version="8.4.0" />
+        <PackageReference Include="Hangfire.Core" Version="1.8.5" />
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.18.1" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.9">
             <PrivateAssets>all</PrivateAssets>

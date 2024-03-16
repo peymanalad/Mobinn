@@ -41,10 +41,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Abp.ZeroCore.IdentityServer4.vNext.EntityFrameworkCore" Version="8.2.0" />
-    <PackageReference Include="Abp.AutoMapper" Version="8.2.0" />
-    <PackageReference Include="Abp.MailKit" Version="8.2.0" />
-    <PackageReference Include="Abp.Zero.Ldap" Version="8.2.0" />
+    <PackageReference Include="Abp.ZeroCore.IdentityServer4.vNext.EntityFrameworkCore" Version="8.4.0" />
+    <PackageReference Include="Abp.AutoMapper" Version="8.4.0" />
+    <PackageReference Include="Abp.MailKit" Version="8.4.0" />
+    <PackageReference Include="Abp.Zero.Ldap" Version="8.4.0" />
     <PackageReference Include="Twilio" Version="6.6.0" />
   </ItemGroup>
 
