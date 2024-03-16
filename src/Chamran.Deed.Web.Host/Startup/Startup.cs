@@ -51,7 +51,6 @@ using Chamran.Deed.Web.Helpers.StimulsoftHelpers;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Http.Features;
-using Chamran.Deed.Web.IsWorkaround;
 
 namespace Chamran.Deed.Web.Startup
 {
