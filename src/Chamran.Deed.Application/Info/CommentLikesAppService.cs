@@ -65,7 +65,9 @@ namespace Chamran.Deed.Info
                                    o.LikeTime,
                                    Id = o.Id,
                                    CommentCommentCaption = s1 == null || s1.CommentCaption == null ? "" : s1.CommentCaption,
-                                   UserName = s2 == null || s2.Name == null ? "" : s2.Name
+                                   UserName = s2 == null || s2.Name == null ? "" : s2.Name,
+                                   FirstName=s2.Name,
+                                   LastName=s2.Surname
                                };
             
             var totalCount = await commentLikes.CountAsync();
@@ -89,7 +91,9 @@ namespace Chamran.Deed.Info
                     },
                     PostId=o.PostId,
                     CommentCommentCaption = o.CommentCommentCaption,
-                    UserName = o.UserName
+                    UserName = o.UserName,
+                    FirstName = o.FirstName,
+                    LastName = o.LastName
                 };
 
                 results.Add(res);
