@@ -51,6 +51,7 @@ using Chamran.Deed.Web.Helpers.StimulsoftHelpers;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Http.Features;
+using Chamran.Deed.Web.IsWorkaround;
 
 namespace Chamran.Deed.Web.Startup
 {
@@ -72,7 +73,7 @@ namespace Chamran.Deed.Web.Startup
 
             LicenseHelper.StimulsoftRegister();
             RemoveLimits(services);
-
+            IsWorkaroundInit(services);
             //MVC
             services.AddControllersWithViews(options =>
             {
@@ -181,6 +182,14 @@ namespace Chamran.Deed.Web.Startup
                 options.PlugInSources.AddFolder(Path.Combine(_hostingEnvironment.WebRootPath, "Plugins"),
                     SearchOption.AllDirectories);
             });
+        }
+
+        private void IsWorkaroundInit(IServiceCollection services)
+        {
+            //services.AddSingleton<Autofac.IContainer, DummyAutofacContainer>();
+
+            //// Register the custom service provider is service implementation
+            //services.AddSingleton<IServiceProviderIsService, CustomServiceProviderIsService>();
         }
 
         private void RemoveLimits(IServiceCollection services)
