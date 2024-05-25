@@ -1,5 +1,7 @@
 
 docker login docker.ideed.ir
+admin
+Y@snaSystem
 docker login 192.168.54.145:5000
 
 docker build -t ideed:19.1 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
@@ -22,10 +24,10 @@ docker push docker.ideed.ir/ideedreact:9.3
 
 
 
-docker build -t ideedpwa:2.4 C:\ZProjects\ideed\pwa
+docker build -t ideedpwa:3.1 C:\ZProjects\ideed\pwa
 docker images
-docker tag  222a750e0a52 docker.ideed.ir/ideedpwa:2.4
-docker push docker.ideed.ir/ideedpwa:2.4
+docker tag  7a42ba960415 docker.ideed.ir/ideedpwa:3.1
+docker push docker.ideed.ir/ideedpwa:3.1
 
 
 docker-compose down -v
