@@ -50,6 +50,7 @@ namespace Chamran.Deed.Info
         private readonly IRepository<Organization> organizationRepository;
         private readonly IAppNotifier _appNotifier;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
+
         //private readonly IRepository<PostCategory> _postCategoryRepository;
         //private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
 
@@ -236,9 +237,9 @@ namespace Chamran.Deed.Info
 
             if (output.Post.GroupMemberId != null)
             {
-                var _lookupGroupMember = await _lookup_groupMemberRepository.GetAll().Include(x=>x.OrganizationFk).FirstOrDefaultAsync(x=>x.Id==output.Post.GroupMemberId);
+                var _lookupGroupMember = await _lookup_groupMemberRepository.GetAll().Include(x => x.OrganizationFk).FirstOrDefaultAsync(x => x.Id == output.Post.GroupMemberId);
                 output.GroupMemberMemberPosition = _lookupGroupMember?.MemberPosition;
-                output.OrganizationId= _lookupGroupMember?.OrganizationId;
+                output.OrganizationId = _lookupGroupMember?.OrganizationId;
                 output.OrganizationName = _lookupGroupMember?.OrganizationFk.OrganizationName;
             }
 
@@ -307,8 +308,8 @@ namespace Chamran.Deed.Info
             post.PostFile8 = await GetBinaryObjectFromCache(input.PostFileToken8, post.Id);
             post.PostFile9 = await GetBinaryObjectFromCache(input.PostFileToken9, post.Id);
             post.PostFile10 = await GetBinaryObjectFromCache(input.PostFileToken10, post.Id);
-            if(post.PostFile==null &&  post.PostFile2==null&&  post.PostFile3==null&&  post.PostFile4==null&&  post.PostFile5==null&&  post.PostFile6==null&&  post.PostFile7==null&&  post.PostFile8==null&&  post.PostFile9==null&&  post.PostFile10==null)
-                throw new UserFriendlyException("پست ارسالی هیچ مدیایی ندارد");
+            if (post.PostFile == null && post.PostFile2 == null && post.PostFile3 == null && post.PostFile4 == null && post.PostFile5 == null && post.PostFile6 == null && post.PostFile7 == null && post.PostFile8 == null && post.PostFile9 == null && post.PostFile10 == null)
+                throw new UserFriendlyException("پست ارسالی هیچش مدیایی ندارد");
             await _unitOfWorkManager.Current.SaveChangesAsync();
             await unitOfWork.CompleteAsync();
             if (post.PostGroupId.HasValue)
@@ -730,10 +731,10 @@ namespace Chamran.Deed.Info
                                     join og in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
                                         equals og.Id into joiner2
                                     from og2 in joiner2.DefaultIfEmpty()
-                                    //join gm in _lookup_groupMemberRepository.GetAll() on og2.Id equals gm.OrganizationId into
+                                        //join gm in _lookup_groupMemberRepository.GetAll() on og2.Id equals gm.OrganizationId into
                                         //joiner3
-                                    //from gm2 in joiner3.DefaultIfEmpty()
-                                    //where gm2.UserId == AbpSession.UserId
+                                        //from gm2 in joiner3.DefaultIfEmpty()
+                                        //where gm2.UserId == AbpSession.UserId
                                     select new
                                     {
                                         p.Id,
@@ -965,6 +966,110 @@ namespace Chamran.Deed.Info
             }
             return Task.FromResult(new PagedResultDto<GetSeenUsersDto>(queryCount, users));
 
+        }
+
+        public Task<SuperUserDashboardViewDto> GetSuperUserDashboardView(int? organizationId)
+        {
+            var categoryCount = new List<DashboardViewCategoryInfo>(){
+                 new DashboardViewCategoryInfo(1,"تست",1),
+                 new DashboardViewCategoryInfo(2,"تست2",2),
+             };
+            var commentCountPerDay1 = new List<DashboardViewDate>()
+            {
+                new DashboardViewDate("1403/01/01",12),
+                new DashboardViewDate("1403/01/02",13),
+            };
+            var likeCountPerDay1 = new List<DashboardViewDate>()
+            {
+                new DashboardViewDate("1403/01/01",12),
+                new DashboardViewDate("1403/01/02",13),
+            };
+            var postCountPerDay1 = new List<DashboardViewDate>()
+            {
+                new DashboardViewDate("1403/01/01",12),
+                new DashboardViewDate("1403/01/02",13),
+            };
+            var viewCountPerDay1 = new List<DashboardViewDate>()
+            {
+                new DashboardViewDate("1403/01/01",12),
+                new DashboardViewDate("1403/01/02",13),
+            };
+            var top5CommentCountPerDay = new List<DashboardViewOrganizationCount>()
+            {
+                new DashboardViewOrganizationCount (1,"سازمان1",commentCountPerDay1)
+            };
+            var top5LikeCountPerDay = new List<DashboardViewOrganizationCount>()
+            {
+                new DashboardViewOrganizationCount (1,"سازمان1",likeCountPerDay1)
+            };
+            var top5PostCountPerDay = new List<DashboardViewOrganizationCount>()
+            {
+                new DashboardViewOrganizationCount(1,"سازمان1",postCountPerDay1)
+            };
+            var top5ViewCountPerDay = new List<DashboardViewOrganizationCount>()
+            {
+                new DashboardViewOrganizationCount (1,"سازمان1",viewCountPerDay1)
+            };
+            var result = new SuperUserDashboardViewDto()
+            {
+                TotalUserCount = 123,
+                TotalPostCount = 456,
+                TotalCommentCount = 789,
+                TotalPostViewCount = 1234,
+                CategoryCount = categoryCount,
+                Top5CommentCountPerDay = top5CommentCountPerDay,
+                Top5LikeCountPerDay = top5LikeCountPerDay,
+                Top5PostCountPerDay = top5PostCountPerDay,
+                Top5ViewCountPerDay = top5ViewCountPerDay
+
+
+            };
+
+            return Task.FromResult(result);
+        }
+
+        public Task<OrganizationDashboardViewDto> GetOrganizationDashboardView()
+        {
+             var categoryCount=new List<DashboardViewCategoryInfo>(){
+                 new DashboardViewCategoryInfo(1,"تست",1),
+                 new DashboardViewCategoryInfo(2,"تست2",2),
+             };
+            var commentCountPerDay=new List<DashboardViewDate>()
+            {
+                new DashboardViewDate("1403/01/01",12),
+                new DashboardViewDate("1403/01/02",13),
+            };
+            var likeCountPerDay = new List<DashboardViewDate>()
+            {
+                new DashboardViewDate("1403/01/01",12),
+                new DashboardViewDate("1403/01/02",13),
+            };
+            var postCountPerDay = new List<DashboardViewDate>()
+            {
+                new DashboardViewDate("1403/01/01",12),
+                new DashboardViewDate("1403/01/02",13),
+            };
+            var viewCountPerDay = new List<DashboardViewDate>()
+            {
+                new DashboardViewDate("1403/01/01",12),
+                new DashboardViewDate("1403/01/02",13),
+            };
+            var result = new OrganizationDashboardViewDto()
+            {
+                TotalUserCount = 123,
+                TotalPostCount = 456,
+                TotalCommentCount = 789,
+                TotalPostViewCount = 1234,
+                CategoryCount = categoryCount,
+                CommentCountPerDay=commentCountPerDay,
+                LikeCountPerDay=likeCountPerDay,
+                PostCountPerDay=postCountPerDay,
+                ViewCountPerDay=viewCountPerDay
+                
+
+            };
+
+            return Task.FromResult(result);
         }
     }
 }

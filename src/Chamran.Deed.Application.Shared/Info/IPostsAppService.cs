@@ -10,6 +10,9 @@ namespace Chamran.Deed.Info
     {
         Task<PagedResultDto<GetPostForViewDto>> GetAll(GetAllPostsInput input);
 
+        Task<SuperUserDashboardViewDto> GetSuperUserDashboardView(int? organizationId);
+        Task<OrganizationDashboardViewDto> GetOrganizationDashboardView();
+
         Task<GetPostForViewDto> GetPostForView(int id);
 
         Task<GetPostForEditOutput> GetPostForEdit(EntityDto input);
