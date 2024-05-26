@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using Abp.Dependency;
 using Abp.Domain.Repositories;
@@ -7,26 +8,74 @@ namespace Chamran.Deed.Storage
 {
     public class DbBinaryObjectManager : IBinaryObjectManager, ITransientDependency
     {
-        //private readonly IRepository<BinaryObject, Guid> _binaryObjectRepository;
+        private readonly string _baseFolder;
 
-        public DbBinaryObjectManager()//(IRepository<BinaryObject, Guid> binaryObjectRepository)
+        public DbBinaryObjectManager()
         {
-            //_binaryObjectRepository = binaryObjectRepository;
+            _baseFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BinaryObjects");
+            if (!Directory.Exists(_baseFolder))
+            {
+                Directory.CreateDirectory(_baseFolder);
+            }
+        }
+     
+        public async Task<BinaryObject> GetOrNullAsync(Guid id)
+        {
+            var directoryPath = GetDirectoryPath(id);
+            if (Directory.Exists(directoryPath))
+            {
+                var files = Directory.GetFiles(directoryPath);
+                if (files.Length > 0)
+                {
+                    var fullFilePath= files[0];
+                    var bytes = await File.ReadAllBytesAsync(fullFilePath);
+                    return new BinaryObject { Id = id, Bytes = bytes, Description = Path.GetFileName(files[0]) };
+                }
+            }
+            return null;
         }
 
-        public Task<BinaryObject> GetOrNullAsync(Guid id)
+
+        public async Task SaveAsync(BinaryObject file)
         {
-            //return _binaryObjectRepository.FirstOrDefaultAsync(id);
+            var directoryPath = GetDirectoryPath(file.Id);
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
+
+            var filePath = GetFilePath(file.Id, file.Description);
+            await File.WriteAllBytesAsync(filePath, file.Bytes);
         }
 
-        public Task SaveAsync(BinaryObject file)
+        public async Task DeleteAsync(Guid id)
         {
-            //return _binaryObjectRepository.InsertAsync(file);
+            var directoryPath = GetDirectoryPath(id);
+            if (Directory.Exists(directoryPath))
+            {
+                var files = Directory.GetFiles(directoryPath);
+                if (files.Length > 0)
+                {
+                    var fileName = Path.GetFileNameWithoutExtension(files[0]);
+                    var filePath = GetFilePath(id, fileName);
+                    if (File.Exists(filePath))
+                    {
+                        File.Delete(filePath);
+                    }
+                }
+            }
         }
 
-        public Task DeleteAsync(Guid id)
+        private string GetDirectoryPath(Guid id)
         {
-            //return _binaryObjectRepository.DeleteAsync(id);
+            return Path.Combine(_baseFolder, id.ToString()); 
+        }
+
+        private string GetFilePath(Guid id, string description)
+        {
+            var extension = Path.GetExtension(description);
+            var fileNameWithoutExtension = id.ToString();
+            return Path.Combine(GetDirectoryPath(id), $"{fileNameWithoutExtension}{extension}");
         }
     }
 }
