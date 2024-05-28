@@ -49,6 +49,7 @@ namespace Chamran.Deed.Storage
                             try
                             {
                                 await _dbBinaryObjectManager.SaveAsync(binaryObject);
+                                await _binaryObjectRepository.DeleteAsync(binaryObject);
                                 _logger.LogInformation($"Successfully migrated binary object with ID: {binaryObject.Id}");
                             }
                             catch (Exception ex)

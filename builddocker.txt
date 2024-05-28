@@ -12,22 +12,22 @@ docker push docker.ideed.ir/ideed:21.3
 
 
 
-docker build -t ideedreact:9.3 C:\ZProjects\ideed\deed-dashboard
+docker build -t ideedreact:10.2 C:\ZProjects\ideed\deed-dashboard
 docker images
-docker tag  d0d8d5ca4c2a docker.ideed.ir/ideedreact:9.3
-docker push docker.ideed.ir/ideedreact:9.3
+docker tag  7150987c0e4d docker.ideed.ir/ideedreact:10.2
+docker push docker.ideed.ir/ideedreact:10.2
 
-docker build -t ideedreacttest:9.3 C:\ZProjects\ideed\testDashboard
+docker build -t ideedreacttest:10.2 C:\ZProjects\ideed\testDashboard
 docker images
-docker tag  55fe69ec91e9 docker.ideed.ir/ideedreact:9.3
-docker push docker.ideed.ir/ideedreact:9.3
+docker tag  55fe69ec91e9 docker.ideed.ir/ideedreact:10.2
+docker push docker.ideed.ir/ideedreact:10.2
 
 
 
-docker build -t ideedpwa:3.1 C:\ZProjects\ideed\pwa
+docker build -t ideedpwa:3.3 C:\ZProjects\ideed\pwa
 docker images
-docker tag  7a42ba960415 docker.ideed.ir/ideedpwa:3.1
-docker push docker.ideed.ir/ideedpwa:3.1
+docker tag  51fb08c40ba7 docker.ideed.ir/ideedpwa:3.3
+docker push docker.ideed.ir/ideedpwa:3.3
 
 
 docker-compose down -v
