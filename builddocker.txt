@@ -24,10 +24,10 @@ docker push docker.ideed.ir/ideedreact:10.2
 
 
 
-docker build -t ideedpwa:3.3 C:\ZProjects\ideed\pwa
+docker build -t ideedpwa:3.5 C:\ZProjects\ideed\pwa
 docker images
-docker tag  51fb08c40ba7 docker.ideed.ir/ideedpwa:3.3
-docker push docker.ideed.ir/ideedpwa:3.3
+docker tag  53f2bb78fc31 docker.ideed.ir/ideedpwa:3.5
+docker push docker.ideed.ir/ideedpwa:3.5
 
 
 docker-compose down -v
