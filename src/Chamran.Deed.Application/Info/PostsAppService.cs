@@ -37,6 +37,7 @@ namespace Chamran.Deed.Info
     public class PostsAppService : DeedAppServiceBase, IPostsAppService
     {
         private readonly IRepository<Post> _postRepository;
+        private readonly IRepository<Comment> _commentRepository;
         private readonly IPostsExcelExporter _postsExcelExporter;
         private readonly IRepository<GroupMember, int> _lookup_groupMemberRepository;
         private readonly IRepository<PostGroup, int> _lookup_postGroupRepository;
@@ -57,9 +58,10 @@ namespace Chamran.Deed.Info
         //private CultureInfo _originalCulture;
         //private readonly CultureInfo _targetCulture=new CultureInfo("fa-IR");
 
-        public PostsAppService(IRepository<Post> postRepository, IPostsExcelExporter postsExcelExporter, IRepository<GroupMember, int> lookup_groupMemberRepository, IRepository<PostGroup, int> lookup_postGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager, IRepository<Organization> organization, IAppNotifier appNotifier, IRepository<UserPostGroup, int> userPostGroupRepository, IUnitOfWorkManager unitOfWorkManager, IRepository<PostLike, int> postLikeRepository, IRepository<Seen, int> seenRepository, IDbContextProvider<DeedDbContext> dbContextProvider)
+        public PostsAppService(IRepository<Post> postRepository, IRepository<Comment> commentRepository, IPostsExcelExporter postsExcelExporter, IRepository<GroupMember, int> lookup_groupMemberRepository, IRepository<PostGroup, int> lookup_postGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager, IRepository<Organization> organization, IAppNotifier appNotifier, IRepository<UserPostGroup, int> userPostGroupRepository, IUnitOfWorkManager unitOfWorkManager, IRepository<PostLike, int> postLikeRepository, IRepository<Seen, int> seenRepository, IDbContextProvider<DeedDbContext> dbContextProvider)
         {
             _postRepository = postRepository;
+            _commentRepository = commentRepository;
             _postsExcelExporter = postsExcelExporter;
             _lookup_groupMemberRepository = lookup_groupMemberRepository;
             _lookup_postGroupRepository = lookup_postGroupRepository;
@@ -118,8 +120,8 @@ namespace Chamran.Deed.Info
             var result = new List<GetPostForViewDto>();
             foreach (var post in queryResult)
             {
-                result.Add(new GetPostForViewDto()
-                {
+                result.Add(new GetPostForViewDto
+                    {
 
 
                     Post = new PostDto
@@ -481,7 +483,7 @@ namespace Chamran.Deed.Info
                          join o2 in _lookup_postGroupRepository.GetAll() on o.PostGroupId equals o2.Id into j2
                          from s2 in j2.DefaultIfEmpty()
 
-                         select new GetPostForViewDto()
+                         select new GetPostForViewDto
                          {
                              Post = new PostDto
                              {
@@ -644,7 +646,7 @@ namespace Chamran.Deed.Info
 
                 foreach (var postCategory in queryPostCat)
                 {
-                    cat.Add(new GetPostCategoriesForViewDto()
+                    cat.Add(new GetPostCategoriesForViewDto
                     {
                         PostGroupLatestPicFile = postCategory.PostGroupLatestPicFile,
                         PostGroupHeaderPicFile = postCategory.PostGroupHeaderPicFile,
@@ -674,7 +676,7 @@ namespace Chamran.Deed.Info
 
                 foreach (var post in filteredPosts)
                 {
-                    var datam = new GetPostsForViewDto()
+                    var datam = new GetPostsForViewDto
                     {
                         //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
                         Id = post.Id,
@@ -777,7 +779,7 @@ namespace Chamran.Deed.Info
 
                 foreach (var post in pagedAndFilteredPosts)
                 {
-                    var datam = new GetPostsForViewDto()
+                    var datam = new GetPostsForViewDto
                     {
                         //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
                         Id = post.Id,
@@ -901,7 +903,7 @@ namespace Chamran.Deed.Info
             List<GetLikedUsersDto> users = new List<GetLikedUsersDto>();
             foreach (var row in pagedAndFiltered)
             {
-                var datam = new GetLikedUsersDto()
+                var datam = new GetLikedUsersDto
                 {
                     UserId = row.UserId,
                     Surname = row.Surname,
@@ -946,7 +948,7 @@ namespace Chamran.Deed.Info
             List<GetSeenUsersDto> users = new List<GetSeenUsersDto>();
             foreach (var row in pagedAndFiltered)
             {
-                var datam = new GetSeenUsersDto()
+                var datam = new GetSeenUsersDto
                 {
                     UserId = row.UserId,
                     Surname = row.Surname,
@@ -968,108 +970,181 @@ namespace Chamran.Deed.Info
 
         }
 
-        public Task<SuperUserDashboardViewDto> GetSuperUserDashboardView(int? organizationId)
+        public async Task<SuperUserDashboardViewDto> GetSuperUserDashboardView()
         {
-            var categoryCount = new List<DashboardViewCategoryInfo>(){
-                 new DashboardViewCategoryInfo(1,"تست",1),
-                 new DashboardViewCategoryInfo(2,"تست2",2),
-             };
-            var commentCountPerDay1 = new List<DashboardViewDate>()
+            var last30Days = DateTime.Now.AddDays(-30);
+
+            // Total counts
+            var totalUserCount = await _lookup_groupMemberRepository.GetAll().CountAsync();
+            var totalPostCount = await _postRepository.GetAll().CountAsync();
+            var totalCommentCount = await _commentRepository.GetAll().CountAsync();
+            var totalPostViewCount = await _seenRepository.GetAll().CountAsync();
+
+            // Category count
+            var categoryCount = await _postRepository.GetAll()
+                .GroupBy(p => new { p.PostGroupFk.Id, p.PostGroupFk.PostGroupDescription })
+                .Select(g => new DashboardViewCategoryInfo(g.Key.Id, g.Key.PostGroupDescription, g.Count()))
+                .ToListAsync();
+
+            // Top 5 organizations with highest comment counts per day
+            var top5CommentCountPerDay = await _commentRepository.GetAll()
+                .Where(c => c.CreationTime >= last30Days)
+                .GroupBy(c => new { c.PostFk.PostGroupFk.OrganizationId, c.PostFk.PostGroupFk.OrganizationFk.OrganizationName, Date = c.CreationTime.Date })
+                .Select(g => new { g.Key.OrganizationId, g.Key.OrganizationName, g.Key.Date, Count = g.Count() })
+                .OrderByDescending(g => g.Count)
+                .Take(5)
+                .ToListAsync();
+            var groupedTop5CommentCountPerDay = top5CommentCountPerDay
+                .GroupBy(g => g.OrganizationId)
+                .Select(g => new DashboardViewOrganizationCount(g.Key, g.First().OrganizationName,
+                    g.Select(d => new DashboardViewDate(ToPersianDateString(d.Date), d.Count)).ToList()))
+                .ToList();
+
+            // Top 5 organizations with highest like counts per day
+            var top5LikeCountPerDay = await _postLikeRepository.GetAll()
+                .Where(l => l.LikeTime >= last30Days)
+                .GroupBy(l => new { l.PostFk.PostGroupFk.OrganizationId, l.PostFk.PostGroupFk.OrganizationFk.OrganizationName, Date = l.LikeTime.Date })
+                .Select(g => new { g.Key.OrganizationId, g.Key.OrganizationName, g.Key.Date, Count = g.Count() })
+                .OrderByDescending(g => g.Count)
+                .Take(5)
+                .ToListAsync();
+            var groupedTop5LikeCountPerDay = top5LikeCountPerDay
+                .GroupBy(g => g.OrganizationId)
+                .Select(g => new DashboardViewOrganizationCount(g.Key, g.First().OrganizationName,
+                    g.Select(d => new DashboardViewDate(ToPersianDateString(d.Date), d.Count)).ToList()))
+                .ToList();
+
+            // Top 5 organizations with highest post counts per day
+            var top5PostCountPerDay = await _postRepository.GetAll()
+                .Where(p => p.CreationTime >= last30Days)
+                .GroupBy(p => new { p.PostGroupFk.OrganizationId, p.PostGroupFk.OrganizationFk.OrganizationName, Date = p.CreationTime.Date })
+                .Select(g => new { g.Key.OrganizationId, g.Key.OrganizationName, g.Key.Date, Count = g.Count() })
+                .OrderByDescending(g => g.Count)
+                .Take(5)
+                .ToListAsync();
+            var groupedTop5PostCountPerDay = top5PostCountPerDay
+                .GroupBy(g => g.OrganizationId)
+                .Select(g => new DashboardViewOrganizationCount(g.Key, g.First().OrganizationName,
+                    g.Select(d => new DashboardViewDate(ToPersianDateString(d.Date), d.Count)).ToList()))
+                .ToList();
+
+            // Top 5 organizations with highest view counts per day
+            var top5ViewCountPerDay = await _seenRepository.GetAll()
+                .Where(s => s.SeenTime >= last30Days)
+                .GroupBy(s => new { s.PostFk.PostGroupFk.OrganizationId, s.PostFk.PostGroupFk.OrganizationFk.OrganizationName, Date = s.SeenTime.Date })
+                .Select(g => new { g.Key.OrganizationId, g.Key.OrganizationName, g.Key.Date, Count = g.Count() })
+                .OrderByDescending(g => g.Count)
+                .Take(5)
+                .ToListAsync();
+            var groupedTop5ViewCountPerDay = top5ViewCountPerDay
+                .GroupBy(g => g.OrganizationId)
+                .Select(g => new DashboardViewOrganizationCount(g.Key, g.First().OrganizationName,
+                    g.Select(d => new DashboardViewDate(ToPersianDateString(d.Date), d.Count)).ToList()))
+                .ToList();
+
+            var result = new SuperUserDashboardViewDto
             {
-                new DashboardViewDate("1403/01/01",12),
-                new DashboardViewDate("1403/01/02",13),
-            };
-            var likeCountPerDay1 = new List<DashboardViewDate>()
-            {
-                new DashboardViewDate("1403/01/01",12),
-                new DashboardViewDate("1403/01/02",13),
-            };
-            var postCountPerDay1 = new List<DashboardViewDate>()
-            {
-                new DashboardViewDate("1403/01/01",12),
-                new DashboardViewDate("1403/01/02",13),
-            };
-            var viewCountPerDay1 = new List<DashboardViewDate>()
-            {
-                new DashboardViewDate("1403/01/01",12),
-                new DashboardViewDate("1403/01/02",13),
-            };
-            var top5CommentCountPerDay = new List<DashboardViewOrganizationCount>()
-            {
-                new DashboardViewOrganizationCount (1,"سازمان1",commentCountPerDay1)
-            };
-            var top5LikeCountPerDay = new List<DashboardViewOrganizationCount>()
-            {
-                new DashboardViewOrganizationCount (1,"سازمان1",likeCountPerDay1)
-            };
-            var top5PostCountPerDay = new List<DashboardViewOrganizationCount>()
-            {
-                new DashboardViewOrganizationCount(1,"سازمان1",postCountPerDay1)
-            };
-            var top5ViewCountPerDay = new List<DashboardViewOrganizationCount>()
-            {
-                new DashboardViewOrganizationCount (1,"سازمان1",viewCountPerDay1)
-            };
-            var result = new SuperUserDashboardViewDto()
-            {
-                TotalUserCount = 123,
-                TotalPostCount = 456,
-                TotalCommentCount = 789,
-                TotalPostViewCount = 1234,
+                TotalUserCount = totalUserCount,
+                TotalPostCount = totalPostCount,
+                TotalCommentCount = totalCommentCount,
+                TotalPostViewCount = totalPostViewCount,
                 CategoryCount = categoryCount,
-                Top5CommentCountPerDay = top5CommentCountPerDay,
-                Top5LikeCountPerDay = top5LikeCountPerDay,
-                Top5PostCountPerDay = top5PostCountPerDay,
-                Top5ViewCountPerDay = top5ViewCountPerDay
-
-
+                Top5CommentCountPerDay = groupedTop5CommentCountPerDay,
+                Top5LikeCountPerDay = groupedTop5LikeCountPerDay,
+                Top5PostCountPerDay = groupedTop5PostCountPerDay,
+                Top5ViewCountPerDay = groupedTop5ViewCountPerDay
             };
 
-            return Task.FromResult(result);
+            return result;
         }
 
-        public Task<OrganizationDashboardViewDto> GetOrganizationDashboardView()
+        private static string ToPersianDateString(DateTime date)
         {
-             var categoryCount=new List<DashboardViewCategoryInfo>(){
-                 new DashboardViewCategoryInfo(1,"تست",1),
-                 new DashboardViewCategoryInfo(2,"تست2",2),
-             };
-            var commentCountPerDay=new List<DashboardViewDate>()
-            {
-                new DashboardViewDate("1403/01/01",12),
-                new DashboardViewDate("1403/01/02",13),
-            };
-            var likeCountPerDay = new List<DashboardViewDate>()
-            {
-                new DashboardViewDate("1403/01/01",12),
-                new DashboardViewDate("1403/01/02",13),
-            };
-            var postCountPerDay = new List<DashboardViewDate>()
-            {
-                new DashboardViewDate("1403/01/01",12),
-                new DashboardViewDate("1403/01/02",13),
-            };
-            var viewCountPerDay = new List<DashboardViewDate>()
-            {
-                new DashboardViewDate("1403/01/01",12),
-                new DashboardViewDate("1403/01/02",13),
-            };
-            var result = new OrganizationDashboardViewDto()
-            {
-                TotalUserCount = 123,
-                TotalPostCount = 456,
-                TotalCommentCount = 789,
-                TotalPostViewCount = 1234,
-                CategoryCount = categoryCount,
-                CommentCountPerDay=commentCountPerDay,
-                LikeCountPerDay=likeCountPerDay,
-                PostCountPerDay=postCountPerDay,
-                ViewCountPerDay=viewCountPerDay
-                
-
-            };
-
-            return Task.FromResult(result);
+            PersianCalendar persianCalendar = new PersianCalendar();
+            return string.Format("{0:0000}/{1:00}/{2:00}",
+                persianCalendar.GetYear(date),
+                persianCalendar.GetMonth(date),
+                persianCalendar.GetDayOfMonth(date));
         }
+
+        public async Task<OrganizationDashboardViewDto> GetOrganizationDashboardView(int organizationId)
+        {
+            var last30Days = DateTime.Now.AddDays(-30);
+
+            // Total counts
+            var totalUserCount = await _lookup_groupMemberRepository.GetAll().Where(u=>u.OrganizationId==organizationId).CountAsync();
+            var totalPostCount = await _postRepository.GetAll()
+                .Where(p => p.PostGroupFk.OrganizationId == organizationId)
+                .CountAsync();
+            var totalCommentCount = await _commentRepository.GetAll()
+                .Where(c => c.PostFk.PostGroupFk.OrganizationId == organizationId)
+                .CountAsync();
+            var totalPostViewCount = await _seenRepository.GetAll()
+                .Where(s => s.PostFk.PostGroupFk.OrganizationId == organizationId)
+                .CountAsync();
+
+            // Category count
+            var categoryCount = await _postRepository.GetAll()
+                .Where(p => p.PostGroupFk.OrganizationId == organizationId)
+                .GroupBy(p => new { p.PostGroupFk.Id, p.PostGroupFk.PostGroupDescription })
+                .Select(g => new DashboardViewCategoryInfo(g.Key.Id, g.Key.PostGroupDescription, g.Count()))
+                .ToListAsync();
+
+            // Comments per day
+            var commentCountPerDayQuery = await _commentRepository.GetAll()
+                .Where(c => c.CreationTime >= last30Days && c.PostFk.PostGroupFk.OrganizationId == organizationId)
+                .GroupBy(c => c.CreationTime.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+            var commentCountPerDay = commentCountPerDayQuery
+                .Select(g => new DashboardViewDate(ToPersianDateString(g.Date), g.Count))
+                .ToList();
+
+            // Likes per day
+            var likeCountPerDayQuery = await _postLikeRepository.GetAll()
+                .Where(l => l.LikeTime >= last30Days && l.PostFk.PostGroupFk.OrganizationId == organizationId)
+                .GroupBy(l => l.LikeTime.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+            var likeCountPerDay = likeCountPerDayQuery
+                .Select(g => new DashboardViewDate(ToPersianDateString(g.Date), g.Count))
+                .ToList();
+
+            // Posts per day
+            var postCountPerDayQuery = await _postRepository.GetAll()
+                .Where(p => p.CreationTime >= last30Days && p.PostGroupFk.OrganizationId == organizationId)
+                .GroupBy(p => p.CreationTime.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+            var postCountPerDay = postCountPerDayQuery
+                .Select(g => new DashboardViewDate(ToPersianDateString(g.Date), g.Count))
+                .ToList();
+
+            // Views per day
+            var viewCountPerDayQuery = await _seenRepository.GetAll()
+                .Where(s => s.SeenTime >= last30Days && s.PostFk.PostGroupFk.OrganizationId == organizationId)
+                .GroupBy(s => s.SeenTime.Date)
+                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .ToListAsync();
+            var viewCountPerDay = viewCountPerDayQuery
+                .Select(g => new DashboardViewDate(ToPersianDateString(g.Date), g.Count))
+                .ToList();
+
+            var result = new OrganizationDashboardViewDto
+            {
+                TotalUserCount = totalUserCount,
+                TotalPostCount = totalPostCount,
+                TotalCommentCount = totalCommentCount,
+                TotalPostViewCount = totalPostViewCount,
+                CategoryCount = categoryCount,
+                CommentCountPerDay = commentCountPerDay,
+                LikeCountPerDay = likeCountPerDay,
+                PostCountPerDay = postCountPerDay,
+                ViewCountPerDay = viewCountPerDay
+            };
+
+            return result;
+        }
+
     }
 }
