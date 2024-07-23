@@ -1,8 +1,11 @@
+ssh root@deed.mspos.ir -p 2022
+M@snaviM@snavi
+
 
 docker login docker.ideed.ir
 admin
 Y@snaSystem
-docker login 192.168.54.145:5000
+docker login 192.168.54.445:5000
 
 docker build -t ideed:21.4 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 docker images
@@ -24,10 +27,10 @@ docker push docker.ideed.ir/ideedreact:10.2
 
 
 
-docker build -t ideedpwa:3.5 C:\ZProjects\ideed\pwa
+docker build -t ideedpwa:4.4 C:\ZProjects\ideed\pwa
 docker images
-docker tag  53f2bb78fc31 docker.ideed.ir/ideedpwa:3.5
-docker push docker.ideed.ir/ideedpwa:3.5
+docker tag  1cfa58e30576 docker.ideed.ir/ideedpwa:4.4
+docker push docker.ideed.ir/ideedpwa:4.4
 
 
 docker-compose down -v
