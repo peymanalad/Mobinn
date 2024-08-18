@@ -1067,32 +1067,33 @@ namespace Chamran.Deed.Info
                 persianCalendar.GetDayOfMonth(date));
         }
 
-        public async Task<OrganizationDashboardViewDto> GetOrganizationDashboardView(int organizationId)
+        public async Task<OrganizationDashboardViewDto> GetOrganizationDashboardView(int? organizationId)
         {
+            if (organizationId == 0) organizationId = null;
             var last30Days = DateTime.Now.AddDays(-30);
 
             // Total counts
             var totalUserCount = await _lookup_groupMemberRepository.GetAll().Where(u=>u.OrganizationId==organizationId).CountAsync();
             var totalPostCount = await _postRepository.GetAll()
-                .Where(p => p.PostGroupFk.OrganizationId == organizationId)
+                .WhereIf(organizationId.HasValue,p => p.PostGroupFk.OrganizationId == organizationId)
                 .CountAsync();
             var totalCommentCount = await _commentRepository.GetAll()
-                .Where(c => c.PostFk.PostGroupFk.OrganizationId == organizationId)
+                .WhereIf(organizationId.HasValue, c => c.PostFk.PostGroupFk.OrganizationId == organizationId)
                 .CountAsync();
             var totalPostViewCount = await _seenRepository.GetAll()
-                .Where(s => s.PostFk.PostGroupFk.OrganizationId == organizationId)
+                .WhereIf(organizationId.HasValue,s => s.PostFk.PostGroupFk.OrganizationId == organizationId)
                 .CountAsync();
 
             // Category count
             var categoryCount = await _postRepository.GetAll()
-                .Where(p => p.PostGroupFk.OrganizationId == organizationId)
+                .WhereIf(organizationId.HasValue, p => p.PostGroupFk.OrganizationId == organizationId)
                 .GroupBy(p => new { p.PostGroupFk.Id, p.PostGroupFk.PostGroupDescription })
                 .Select(g => new DashboardViewCategoryInfo(g.Key.Id, g.Key.PostGroupDescription, g.Count()))
                 .ToListAsync();
 
             // Comments per day
             var commentCountPerDayQuery = await _commentRepository.GetAll()
-                .Where(c => c.CreationTime >= last30Days && c.PostFk.PostGroupFk.OrganizationId == organizationId)
+                .WhereIf(organizationId.HasValue, c => c.CreationTime >= last30Days && c.PostFk.PostGroupFk.OrganizationId == organizationId)
                 .GroupBy(c => c.CreationTime.Date)
                 .Select(g => new { Date = g.Key, Count = g.Count() })
                 .ToListAsync();
@@ -1102,7 +1103,7 @@ namespace Chamran.Deed.Info
 
             // Likes per day
             var likeCountPerDayQuery = await _postLikeRepository.GetAll()
-                .Where(l => l.LikeTime >= last30Days && l.PostFk.PostGroupFk.OrganizationId == organizationId)
+                .WhereIf(organizationId.HasValue, l => l.LikeTime >= last30Days && l.PostFk.PostGroupFk.OrganizationId == organizationId)
                 .GroupBy(l => l.LikeTime.Date)
                 .Select(g => new { Date = g.Key, Count = g.Count() })
                 .ToListAsync();
@@ -1112,7 +1113,7 @@ namespace Chamran.Deed.Info
 
             // Posts per day
             var postCountPerDayQuery = await _postRepository.GetAll()
-                .Where(p => p.CreationTime >= last30Days && p.PostGroupFk.OrganizationId == organizationId)
+                .WhereIf(organizationId.HasValue, p => p.CreationTime >= last30Days && p.PostGroupFk.OrganizationId == organizationId)
                 .GroupBy(p => p.CreationTime.Date)
                 .Select(g => new { Date = g.Key, Count = g.Count() })
                 .ToListAsync();
@@ -1122,7 +1123,7 @@ namespace Chamran.Deed.Info
 
             // Views per day
             var viewCountPerDayQuery = await _seenRepository.GetAll()
-                .Where(s => s.SeenTime >= last30Days && s.PostFk.PostGroupFk.OrganizationId == organizationId)
+                .WhereIf(organizationId.HasValue, s => s.SeenTime >= last30Days && s.PostFk.PostGroupFk.OrganizationId == organizationId)
                 .GroupBy(s => s.SeenTime.Date)
                 .Select(g => new { Date = g.Key, Count = g.Count() })
                 .ToListAsync();
