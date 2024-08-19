@@ -87,8 +87,12 @@ namespace Chamran.Deed.Web.Controllers
                 }
             }
 
+            // Set the Cache-Control header
+            Response.Headers.Add("Cache-Control", "max-age=31536000");
+
             return File(fileObject.Bytes, contentType, fileName);
         }
+
 
         [DisableAuditing]
         [AllowAnonymous]
