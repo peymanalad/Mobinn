@@ -58,7 +58,13 @@ namespace Chamran.Deed.Info
         //private CultureInfo _originalCulture;
         //private readonly CultureInfo _targetCulture=new CultureInfo("fa-IR");
 
-        public PostsAppService(IRepository<Post> postRepository, IRepository<Comment> commentRepository, IPostsExcelExporter postsExcelExporter, IRepository<GroupMember, int> lookup_groupMemberRepository, IRepository<PostGroup, int> lookup_postGroupRepository, ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager, IRepository<Organization> organization, IAppNotifier appNotifier, IRepository<UserPostGroup, int> userPostGroupRepository, IUnitOfWorkManager unitOfWorkManager, IRepository<PostLike, int> postLikeRepository, IRepository<Seen, int> seenRepository, IDbContextProvider<DeedDbContext> dbContextProvider)
+        public PostsAppService(IRepository<Post> postRepository, IRepository<Comment> commentRepository,
+            IPostsExcelExporter postsExcelExporter, IRepository<GroupMember, int> lookup_groupMemberRepository,
+            IRepository<PostGroup, int> lookup_postGroupRepository, ITempFileCacheManager tempFileCacheManager,
+            IBinaryObjectManager binaryObjectManager, IRepository<Organization> organization, IAppNotifier appNotifier,
+            IRepository<UserPostGroup, int> userPostGroupRepository, IUnitOfWorkManager unitOfWorkManager,
+            IRepository<PostLike, int> postLikeRepository, IRepository<Seen, int> seenRepository,
+            IDbContextProvider<DeedDbContext> dbContextProvider)
         {
             _postRepository = postRepository;
             _commentRepository = commentRepository;
@@ -83,30 +89,59 @@ namespace Chamran.Deed.Info
             var totalparameters = new SqlParameter[]
             {
                 new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
-                new SqlParameter("@Filter", string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
-                new SqlParameter("@PostCaptionFilter", string.IsNullOrWhiteSpace(input.PostCaptionFilter) ? (object)DBNull.Value : (object)input.PostCaptionFilter),
+                new SqlParameter("@Filter",
+                    string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
+                new SqlParameter("@PostCaptionFilter",
+                    string.IsNullOrWhiteSpace(input.PostCaptionFilter)
+                        ? (object)DBNull.Value
+                        : (object)input.PostCaptionFilter),
                 new SqlParameter("@IsSpecialFilter", input.IsSpecialFilter ?? (object)DBNull.Value),
-                new SqlParameter("@PostTitleFilter", string.IsNullOrWhiteSpace(input.PostTitleFilter) ? (object)DBNull.Value : (object)input.PostTitleFilter),
-                new SqlParameter("@GroupMemberMemberPositionFilter", string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter) ? (object)DBNull.Value : (object)input.GroupMemberMemberPositionFilter),
-                new SqlParameter("@PostGroupPostGroupDescriptionFilter", string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter) ? (object)DBNull.Value : (object)input.PostGroupPostGroupDescriptionFilter),
+                new SqlParameter("@PostTitleFilter",
+                    string.IsNullOrWhiteSpace(input.PostTitleFilter)
+                        ? (object)DBNull.Value
+                        : (object)input.PostTitleFilter),
+                new SqlParameter("@GroupMemberMemberPositionFilter",
+                    string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter)
+                        ? (object)DBNull.Value
+                        : (object)input.GroupMemberMemberPositionFilter),
+                new SqlParameter("@PostGroupPostGroupDescriptionFilter",
+                    string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter)
+                        ? (object)DBNull.Value
+                        : (object)input.PostGroupPostGroupDescriptionFilter),
                 new SqlParameter("@FromDate", input.FromDate ?? (object)DBNull.Value),
                 new SqlParameter("@ToDate", input.ToDate ?? (object)DBNull.Value),
-                new SqlParameter("@OrderBy", input.Sorting ?? "CreationTime DESC") };
+                new SqlParameter("@OrderBy", input.Sorting ?? "CreationTime DESC")
+            };
             var dbContextTotal = await _dbContextProvider.GetDbContextAsync();
             var totalCount = dbContextTotal.Set<GetPostsForView>()
-                .FromSqlRaw("EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy", totalparameters)
+                .FromSqlRaw(
+                    "EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy",
+                    totalparameters)
                 .AsEnumerable().Count();
 
 
             var parameters = new SqlParameter[]
             {
                 new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
-                new SqlParameter("@Filter", string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
-                new SqlParameter("@PostCaptionFilter", string.IsNullOrWhiteSpace(input.PostCaptionFilter) ? (object)DBNull.Value : (object)input.PostCaptionFilter),
+                new SqlParameter("@Filter",
+                    string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
+                new SqlParameter("@PostCaptionFilter",
+                    string.IsNullOrWhiteSpace(input.PostCaptionFilter)
+                        ? (object)DBNull.Value
+                        : (object)input.PostCaptionFilter),
                 new SqlParameter("@IsSpecialFilter", input.IsSpecialFilter ?? (object)DBNull.Value),
-                new SqlParameter("@PostTitleFilter", string.IsNullOrWhiteSpace(input.PostTitleFilter) ? (object)DBNull.Value : (object)input.PostTitleFilter),
-                new SqlParameter("@GroupMemberMemberPositionFilter", string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter) ? (object)DBNull.Value : (object)input.GroupMemberMemberPositionFilter),
-                new SqlParameter("@PostGroupPostGroupDescriptionFilter", string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter) ? (object)DBNull.Value : (object)input.PostGroupPostGroupDescriptionFilter),
+                new SqlParameter("@PostTitleFilter",
+                    string.IsNullOrWhiteSpace(input.PostTitleFilter)
+                        ? (object)DBNull.Value
+                        : (object)input.PostTitleFilter),
+                new SqlParameter("@GroupMemberMemberPositionFilter",
+                    string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter)
+                        ? (object)DBNull.Value
+                        : (object)input.GroupMemberMemberPositionFilter),
+                new SqlParameter("@PostGroupPostGroupDescriptionFilter",
+                    string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter)
+                        ? (object)DBNull.Value
+                        : (object)input.PostGroupPostGroupDescriptionFilter),
                 new SqlParameter("@FromDate", input.FromDate ?? (object)DBNull.Value),
                 new SqlParameter("@ToDate", input.ToDate ?? (object)DBNull.Value),
                 new SqlParameter("@OrderBy", input.Sorting ?? "CreationTime DESC"),
@@ -115,8 +150,10 @@ namespace Chamran.Deed.Info
             };
             var dbContext = await _dbContextProvider.GetDbContextAsync();
             var queryResult = await dbContext.Set<GetPostsForView>()
-                .FromSqlRaw("EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy, @MaxResultCount, @SkipCount", parameters)
-               .ToListAsync();
+                .FromSqlRaw(
+                    "EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy, @MaxResultCount, @SkipCount",
+                    parameters)
+                .ToListAsync();
             var result = new List<GetPostForViewDto>();
             foreach (var post in queryResult)
             {
@@ -124,28 +161,29 @@ namespace Chamran.Deed.Info
                     {
 
 
-                    Post = new PostDto
-                    {
-                        PostFile = post.PostFile,
-                        PostCaption = post.PostCaption,
-                        IsSpecial = post.IsSpecial,
-                        IsPublished = post.IsPublished,
-                        PostTitle = post.PostTitle,
-                        PostRefLink = post.PostRefLink,
-                        Id = post.Id,
-                        CreationTime = post.CreationTime,
-                        LastModificationTime = post.LastModificationTime
-                    },
-                    GroupMemberMemberPosition = post.GroupMemberMemberPosition ?? "",
-                    PostGroupPostGroupDescription = post.PostGroupPostGroupDescription ?? "",
-                    GroupFile = post.GroupFile,
-                    TotalVisits = post.TotalVisits,
-                    TotalLikes = post.TotalLikes,
-                    OrganizationId = post.OrganizationId,
-                    OrganizationName = post.OrganizationName
-                }
+                        Post = new PostDto
+                        {
+                            PostFile = post.PostFile,
+                            PostCaption = post.PostCaption,
+                            IsSpecial = post.IsSpecial,
+                            IsPublished = post.IsPublished,
+                            PostTitle = post.PostTitle,
+                            PostRefLink = post.PostRefLink,
+                            Id = post.Id,
+                            CreationTime = post.CreationTime,
+                            LastModificationTime = post.LastModificationTime
+                        },
+                        GroupMemberMemberPosition = post.GroupMemberMemberPosition ?? "",
+                        PostGroupPostGroupDescription = post.PostGroupPostGroupDescription ?? "",
+                        GroupFile = post.GroupFile,
+                        TotalVisits = post.TotalVisits,
+                        TotalLikes = post.TotalLikes,
+                        OrganizationId = post.OrganizationId,
+                        OrganizationName = post.OrganizationName
+                    }
                 );
             }
+
             return new PagedResultDto<GetPostForViewDto>(totalCount, result);
 
             //var filteredPosts = _postRepository.GetAll()
@@ -215,13 +253,15 @@ namespace Chamran.Deed.Info
 
             if (output.Post.GroupMemberId != null)
             {
-                var _lookupGroupMember = await _lookup_groupMemberRepository.FirstOrDefaultAsync((int)output.Post.GroupMemberId);
+                var _lookupGroupMember =
+                    await _lookup_groupMemberRepository.FirstOrDefaultAsync((int)output.Post.GroupMemberId);
                 output.GroupMemberMemberPosition = _lookupGroupMember?.MemberPosition;
             }
 
             if (output.Post.PostGroupId != null)
             {
-                var _lookupPostGroup = await _lookup_postGroupRepository.FirstOrDefaultAsync((int)output.Post.PostGroupId);
+                var _lookupPostGroup =
+                    await _lookup_postGroupRepository.FirstOrDefaultAsync((int)output.Post.PostGroupId);
                 output.PostGroupPostGroupDescription = _lookupPostGroup?.PostGroupDescription;
             }
 
@@ -239,7 +279,8 @@ namespace Chamran.Deed.Info
 
             if (output.Post.GroupMemberId != null)
             {
-                var _lookupGroupMember = await _lookup_groupMemberRepository.GetAll().Include(x => x.OrganizationFk).FirstOrDefaultAsync(x => x.Id == output.Post.GroupMemberId);
+                var _lookupGroupMember = await _lookup_groupMemberRepository.GetAll().Include(x => x.OrganizationFk)
+                    .FirstOrDefaultAsync(x => x.Id == output.Post.GroupMemberId);
                 output.GroupMemberMemberPosition = _lookupGroupMember?.MemberPosition;
                 output.OrganizationId = _lookupGroupMember?.OrganizationId;
                 output.OrganizationName = _lookupGroupMember?.OrganizationFk.OrganizationName;
@@ -310,7 +351,9 @@ namespace Chamran.Deed.Info
             post.PostFile8 = await GetBinaryObjectFromCache(input.PostFileToken8, post.Id);
             post.PostFile9 = await GetBinaryObjectFromCache(input.PostFileToken9, post.Id);
             post.PostFile10 = await GetBinaryObjectFromCache(input.PostFileToken10, post.Id);
-            if (post.PostFile == null && post.PostFile2 == null && post.PostFile3 == null && post.PostFile4 == null && post.PostFile5 == null && post.PostFile6 == null && post.PostFile7 == null && post.PostFile8 == null && post.PostFile9 == null && post.PostFile10 == null)
+            if (post.PostFile == null && post.PostFile2 == null && post.PostFile3 == null && post.PostFile4 == null &&
+                post.PostFile5 == null && post.PostFile6 == null && post.PostFile7 == null && post.PostFile8 == null &&
+                post.PostFile9 == null && post.PostFile10 == null)
                 throw new UserFriendlyException("پست ارسالی هیچش مدیایی ندارد");
             await _unitOfWorkManager.Current.SaveChangesAsync();
             await unitOfWork.CompleteAsync();
@@ -336,12 +379,12 @@ namespace Chamran.Deed.Info
             }
 
             await _appNotifier.SendPostNotificationAsync(JsonConvert.SerializeObject(post, new JsonSerializerSettings
-            {
-                ContractResolver = new DefaultContractResolver
                 {
-                    NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
-                }
-            }),
+                    ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
+                    }
+                }),
                 userIds: ids.ToArray(),
                 NotificationSeverity.Info
             );
@@ -362,6 +405,7 @@ namespace Chamran.Deed.Info
             {
                 //ignore
             }
+
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken2))
@@ -373,6 +417,7 @@ namespace Chamran.Deed.Info
             {
                 //ignore
             }
+
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken3))
@@ -383,6 +428,7 @@ namespace Chamran.Deed.Info
             {
                 //ignore
             }
+
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken4))
@@ -393,6 +439,7 @@ namespace Chamran.Deed.Info
             {
                 //ignore
             }
+
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken5))
@@ -403,6 +450,7 @@ namespace Chamran.Deed.Info
             {
                 //ignore
             }
+
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken6))
@@ -413,6 +461,7 @@ namespace Chamran.Deed.Info
             {
                 //ignore
             }
+
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken7))
@@ -423,6 +472,7 @@ namespace Chamran.Deed.Info
             {
                 //ignore
             }
+
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken8))
@@ -433,6 +483,7 @@ namespace Chamran.Deed.Info
             {
                 //ignore
             }
+
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken9))
@@ -443,6 +494,7 @@ namespace Chamran.Deed.Info
             {
                 //ignore
             }
+
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken10))
@@ -466,51 +518,67 @@ namespace Chamran.Deed.Info
         {
 
             var filteredPosts = _postRepository.GetAll()
-                        .Include(e => e.GroupMemberFk)
-                        .Include(e => e.PostGroupFk)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.PostCaption.Contains(input.Filter) || e.PostTitle.Contains(input.Filter))
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.PostCaptionFilter), e => e.PostCaption.Contains(input.PostCaptionFilter))
-                        .WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.PostTitleFilter), e => e.PostTitle.Contains(input.PostTitleFilter))
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter), e => e.GroupMemberFk != null && e.GroupMemberFk.MemberPosition == input.GroupMemberMemberPositionFilter)
-                        .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter), e => e.PostGroupFk != null && e.PostGroupFk.PostGroupDescription == input.PostGroupPostGroupDescriptionFilter)
-                        .WhereIf(input.OrganizationId.HasValue, e => e.PostGroupFk.OrganizationId == input.OrganizationId);
+                .Include(e => e.GroupMemberFk)
+                .Include(e => e.PostGroupFk)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.Filter),
+                    e => false || e.PostCaption.Contains(input.Filter) || e.PostTitle.Contains(input.Filter))
+                .WhereIf(!string.IsNullOrWhiteSpace(input.PostCaptionFilter),
+                    e => e.PostCaption.Contains(input.PostCaptionFilter))
+                .WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1,
+                    e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
+                .WhereIf(!string.IsNullOrWhiteSpace(input.PostTitleFilter),
+                    e => e.PostTitle.Contains(input.PostTitleFilter))
+                .WhereIf(!string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter),
+                    e => e.GroupMemberFk != null &&
+                         e.GroupMemberFk.MemberPosition == input.GroupMemberMemberPositionFilter)
+                .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter),
+                    e => e.PostGroupFk != null &&
+                         e.PostGroupFk.PostGroupDescription == input.PostGroupPostGroupDescriptionFilter)
+                .WhereIf(input.OrganizationId.HasValue, e => e.PostGroupFk.OrganizationId == input.OrganizationId);
             var persianCalendar = new PersianCalendar();
             var query = (from o in filteredPosts
-                         join o1 in _lookup_groupMemberRepository.GetAll() on o.GroupMemberId equals o1.Id into j1
-                         from s1 in j1.DefaultIfEmpty()
+                join o1 in _lookup_groupMemberRepository.GetAll() on o.GroupMemberId equals o1.Id into j1
+                from s1 in j1.DefaultIfEmpty()
 
-                         join o2 in _lookup_postGroupRepository.GetAll() on o.PostGroupId equals o2.Id into j2
-                         from s2 in j2.DefaultIfEmpty()
+                join o2 in _lookup_postGroupRepository.GetAll() on o.PostGroupId equals o2.Id into j2
+                from s2 in j2.DefaultIfEmpty()
 
-                         select new GetPostForViewDto
-                         {
-                             Post = new PostDto
-                             {
-                                 PostFile = o.PostFile,
-                                 PostCaption = o.PostCaption,
-                                 IsSpecial = o.IsSpecial,
-                                 IsPublished = o.IsPublished,
-                                 PostTitle = o.PostTitle,
-                                 Id = o.Id,
-                                 CreationTime = o.CreationTime,
-                                 PostRefLink = o.PostRefLink
+                select new GetPostForViewDto
+                {
+                    Post = new PostDto
+                    {
+                        PostFile = o.PostFile,
+                        PostCaption = o.PostCaption,
+                        IsSpecial = o.IsSpecial,
+                        IsPublished = o.IsPublished,
+                        PostTitle = o.PostTitle,
+                        Id = o.Id,
+                        CreationTime = o.CreationTime,
+                        PostRefLink = o.PostRefLink
 
-                             },
-                             GroupMemberMemberPosition = s1 == null || s1.MemberPosition == null ? "" : s1.MemberPosition,
-                             PostGroupPostGroupDescription = s2 == null || s2.PostGroupDescription == null ? "" : s2.PostGroupDescription.ToString(),
-                             PersianCreationTime = o.CreationTime != null ? persianCalendar.GetYear(o.CreationTime).ToString("D4") + "/" + persianCalendar.GetMonth(o.CreationTime).ToString("D2") + "/" + persianCalendar.GetDayOfMonth(o.CreationTime).ToString("D2") : null
-                         });
+                    },
+                    GroupMemberMemberPosition = s1 == null || s1.MemberPosition == null ? "" : s1.MemberPosition,
+                    PostGroupPostGroupDescription = s2 == null || s2.PostGroupDescription == null
+                        ? ""
+                        : s2.PostGroupDescription.ToString(),
+                    PersianCreationTime = o.CreationTime != null
+                        ? persianCalendar.GetYear(o.CreationTime).ToString("D4") + "/" +
+                          persianCalendar.GetMonth(o.CreationTime).ToString("D2") + "/" +
+                          persianCalendar.GetDayOfMonth(o.CreationTime).ToString("D2")
+                        : null
+                });
             var postListDtos = await query.ToListAsync();
             return _postsExcelExporter.ExportToFile(postListDtos);
         }
+
         [AbpAuthorize(AppPermissions.Pages_Posts)]
-        public async Task<PagedResultDto<PostGroupMemberLookupTableDto>> GetAllGroupMemberForLookupTable(GetAllForLookupTableInput input)
+        public async Task<PagedResultDto<PostGroupMemberLookupTableDto>> GetAllGroupMemberForLookupTable(
+            GetAllForLookupTableInput input)
         {
             var query = _lookup_groupMemberRepository.GetAll().Include(x => x.UserFk).WhereIf(
-                   !string.IsNullOrWhiteSpace(input.Filter),
-                  e => e.MemberPosition != null && e.MemberPosition.Contains(input.Filter)
-               );
+                !string.IsNullOrWhiteSpace(input.Filter),
+                e => e.MemberPosition != null && e.MemberPosition.Contains(input.Filter)
+            );
 
             var totalCount = await query.CountAsync();
 
@@ -535,12 +603,14 @@ namespace Chamran.Deed.Info
         }
 
         [AbpAuthorize(AppPermissions.Pages_Posts)]
-        public async Task<PagedResultDto<PostPostGroupLookupTableDto>> GetAllPostGroupForLookupTable(GetAllForLookupTableInput input)
+        public async Task<PagedResultDto<PostPostGroupLookupTableDto>> GetAllPostGroupForLookupTable(
+            GetAllForLookupTableInput input)
         {
-            var query = _lookup_postGroupRepository.GetAll().Include(x => x.OrganizationFk).Where(x => x.OrganizationId == input.OrganizationId).WhereIf(
-                   !string.IsNullOrWhiteSpace(input.Filter),
-                  e => e.PostGroupDescription != null && e.PostGroupDescription.Contains(input.Filter)
-               );
+            var query = _lookup_postGroupRepository.GetAll().Include(x => x.OrganizationFk)
+                .Where(x => x.OrganizationId == input.OrganizationId).WhereIf(
+                    !string.IsNullOrWhiteSpace(input.Filter),
+                    e => e.PostGroupDescription != null && e.PostGroupDescription.Contains(input.Filter)
+                );
 
             var totalCount = await query.CountAsync();
 
@@ -583,7 +653,8 @@ namespace Chamran.Deed.Info
                     throw new UserFriendlyException("There is no such file with the token: " + fileToken);
                 }
 
-                var storedFile = new BinaryObject(AbpSession.TenantId, fileCache.File, BinarySourceType.Post, fileCache.FileName);
+                var storedFile = new BinaryObject(AbpSession.TenantId, fileCache.File, BinarySourceType.Post,
+                    fileCache.FileName);
                 await _binaryObjectManager.SaveAsync(storedFile);
                 if (refId != null) storedFile.SourceId = refId;
                 return storedFile.Id;
@@ -629,20 +700,21 @@ namespace Chamran.Deed.Info
             {
                 var cat = new List<GetPostCategoriesForViewDto>();
                 var queryPostCat = from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
-                                       //join g in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationId equals g.Id into joiner1
-                                       //from g in joiner1.DefaultIfEmpty()
-                                       //join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
-                                       //from gm in joiner2.DefaultIfEmpty()
-                                       //where gm.UserId == AbpSession.UserId
-                                   where pc.OrganizationId == organizationId
-                                   orderby pc.Ordering
-                                   select new
-                                   {
-                                       pc.Id,
-                                       pc.PostGroupDescription,
-                                       PostGroupHeaderPicFile = pc.GroupFile,
-                                       PostGroupLatestPicFile = _postRepository.GetAll().Where(p => p.PostGroupId == pc.Id).OrderByDescending(p => p.CreationTime).FirstOrDefault().PostFile
-                                   };
+                    //join g in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationId equals g.Id into joiner1
+                    //from g in joiner1.DefaultIfEmpty()
+                    //join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
+                    //from gm in joiner2.DefaultIfEmpty()
+                    //where gm.UserId == AbpSession.UserId
+                    where pc.OrganizationId == organizationId
+                    orderby pc.Ordering
+                    select new
+                    {
+                        pc.Id,
+                        pc.PostGroupDescription,
+                        PostGroupHeaderPicFile = pc.GroupFile,
+                        PostGroupLatestPicFile = _postRepository.GetAll().Where(p => p.PostGroupId == pc.Id)
+                            .OrderByDescending(p => p.CreationTime).FirstOrDefault().PostFile
+                    };
 
                 foreach (var postCategory in queryPostCat)
                 {
@@ -654,6 +726,7 @@ namespace Chamran.Deed.Info
                         PostGroupDescription = postCategory.PostGroupDescription
                     });
                 }
+
                 return Task.FromResult(new PagedResultDto<GetPostCategoriesForViewDto>(cat.Count, cat));
             }
             catch (Exception ex)
@@ -694,10 +767,12 @@ namespace Chamran.Deed.Info
                         datam.MemberPosition = post.GroupMemberFk.MemberPosition;
                         datam.MemberUserName = post.GroupMemberFk.UserFk.UserName;
                     }
+
                     res.Add(datam);
 
 
                 }
+
                 return Task.FromResult(new PagedResultDto<GetPostsForViewDto>(res.Count, res));
             }
             catch (Exception ex)
@@ -727,55 +802,55 @@ namespace Chamran.Deed.Info
                         .Include(e => e.AppBinaryObjectFk10)
                         .Where(x => x.PostGroupFk.OrganizationId == input.OrganizationId)
                         .WhereIf(input.PostGroupId > 0, p => p.PostGroupId == input.PostGroupId)
-                                    join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
-                                        pg.Id into joiner1
-                                    from pg in joiner1.DefaultIfEmpty()
-                                    join og in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
-                                        equals og.Id into joiner2
-                                    from og2 in joiner2.DefaultIfEmpty()
-                                        //join gm in _lookup_groupMemberRepository.GetAll() on og2.Id equals gm.OrganizationId into
-                                        //joiner3
-                                        //from gm2 in joiner3.DefaultIfEmpty()
-                                        //where gm2.UserId == AbpSession.UserId
-                                    select new
-                                    {
-                                        p.Id,
-                                        p.GroupMemberId,
-                                        p.IsSpecial,
-                                        p.IsPublished,
-                                        p.PostCaption,
-                                        p.CreationTime,
-                                        p.PostFile,
-                                        p.PostFile2,
-                                        p.PostFile3,
-                                        p.PostFile4,
-                                        p.PostFile5,
-                                        p.PostFile6,
-                                        p.PostFile7,
-                                        p.PostFile8,
-                                        p.PostFile9,
-                                        p.PostFile10,
-                                        p.PostTitle,
-                                        p.PostRefLink,
-                                        p.PostGroupId,
-                                        p.GroupMemberFk,
-                                        p.PostGroupFk,
-                                        p.AppBinaryObjectFk,
-                                        p.AppBinaryObjectFk2,
-                                        p.AppBinaryObjectFk3,
-                                        p.AppBinaryObjectFk4,
-                                        p.AppBinaryObjectFk5,
-                                        p.AppBinaryObjectFk6,
-                                        p.AppBinaryObjectFk7,
-                                        p.AppBinaryObjectFk8,
-                                        p.AppBinaryObjectFk9,
-                                        p.AppBinaryObjectFk10,
+                    join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
+                        pg.Id into joiner1
+                    from pg in joiner1.DefaultIfEmpty()
+                    join og in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
+                        equals og.Id into joiner2
+                    from og2 in joiner2.DefaultIfEmpty()
+                    //join gm in _lookup_groupMemberRepository.GetAll() on og2.Id equals gm.OrganizationId into
+                    //joiner3
+                    //from gm2 in joiner3.DefaultIfEmpty()
+                    //where gm2.UserId == AbpSession.UserId
+                    select new
+                    {
+                        p.Id,
+                        p.GroupMemberId,
+                        p.IsSpecial,
+                        p.IsPublished,
+                        p.PostCaption,
+                        p.CreationTime,
+                        p.PostFile,
+                        p.PostFile2,
+                        p.PostFile3,
+                        p.PostFile4,
+                        p.PostFile5,
+                        p.PostFile6,
+                        p.PostFile7,
+                        p.PostFile8,
+                        p.PostFile9,
+                        p.PostFile10,
+                        p.PostTitle,
+                        p.PostRefLink,
+                        p.PostGroupId,
+                        p.GroupMemberFk,
+                        p.PostGroupFk,
+                        p.AppBinaryObjectFk,
+                        p.AppBinaryObjectFk2,
+                        p.AppBinaryObjectFk3,
+                        p.AppBinaryObjectFk4,
+                        p.AppBinaryObjectFk5,
+                        p.AppBinaryObjectFk6,
+                        p.AppBinaryObjectFk7,
+                        p.AppBinaryObjectFk8,
+                        p.AppBinaryObjectFk9,
+                        p.AppBinaryObjectFk10,
 
-                                    };
+                    };
                 var count = filteredPosts.Count();
                 var pagedAndFilteredPosts = filteredPosts
-    .OrderBy(input.Sorting ?? "id desc")
-    .PageBy(input);
+                    .OrderBy(input.Sorting ?? "id desc")
+                    .PageBy(input);
 
                 foreach (var post in pagedAndFilteredPosts)
                 {
@@ -832,30 +907,37 @@ namespace Chamran.Deed.Info
                         {
                             datam.Attachment3 = post.AppBinaryObjectFk3.Description;
                         }
+
                         if (post.AppBinaryObjectFk4 != null)
                         {
                             datam.Attachment4 = post.AppBinaryObjectFk4.Description;
                         }
+
                         if (post.AppBinaryObjectFk5 != null)
                         {
                             datam.Attachment5 = post.AppBinaryObjectFk5.Description;
                         }
+
                         if (post.AppBinaryObjectFk6 != null)
                         {
                             datam.Attachment6 = post.AppBinaryObjectFk6.Description;
                         }
+
                         if (post.AppBinaryObjectFk7 != null)
                         {
                             datam.Attachment7 = post.AppBinaryObjectFk7.Description;
                         }
+
                         if (post.AppBinaryObjectFk8 != null)
                         {
                             datam.Attachment8 = post.AppBinaryObjectFk8.Description;
                         }
+
                         if (post.AppBinaryObjectFk9 != null)
                         {
                             datam.Attachment9 = post.AppBinaryObjectFk9.Description;
                         }
+
                         if (post.AppBinaryObjectFk10 != null)
                         {
                             datam.Attachment10 = post.AppBinaryObjectFk10.Description;
@@ -866,6 +948,7 @@ namespace Chamran.Deed.Info
                     {
                         //ignored
                     }
+
                     posts.Add(datam);
 
 
@@ -883,19 +966,19 @@ namespace Chamran.Deed.Info
         {
             var query = from pl in _postLikeRepository.GetAll().Include(x => x.UserFk)
 
-                        where pl.PostId == input.PostId
-                        select new
-                        {
-                            UserId = pl.UserFk.Id,
-                            pl.UserFk.NationalId,
-                            pl.UserFk.IsSuperUser,
-                            pl.UserFk.UserName,
-                            pl.UserFk.Name,
-                            pl.UserFk.Surname,
-                            pl.UserFk.PhoneNumber,
-                            pl.UserFk.ProfilePictureId,
-                            pl.LikeTime
-                        };
+                where pl.PostId == input.PostId
+                select new
+                {
+                    UserId = pl.UserFk.Id,
+                    pl.UserFk.NationalId,
+                    pl.UserFk.IsSuperUser,
+                    pl.UserFk.UserName,
+                    pl.UserFk.Name,
+                    pl.UserFk.Surname,
+                    pl.UserFk.PhoneNumber,
+                    pl.UserFk.ProfilePictureId,
+                    pl.LikeTime
+                };
             var queryCount = query.Count();
             var pagedAndFiltered = query
                 .OrderBy(input.Sorting ?? "UserId desc")
@@ -920,6 +1003,7 @@ namespace Chamran.Deed.Info
 
 
             }
+
             return Task.FromResult(new PagedResultDto<GetLikedUsersDto>(queryCount, users));
 
         }
@@ -928,19 +1012,19 @@ namespace Chamran.Deed.Info
         {
             var query = from pl in _seenRepository.GetAll().Include(x => x.UserFk)
 
-                        where pl.PostId == input.PostId
-                        select new
-                        {
-                            UserId = pl.UserFk.Id,
-                            pl.UserFk.NationalId,
-                            pl.UserFk.IsSuperUser,
-                            pl.UserFk.UserName,
-                            pl.UserFk.Name,
-                            pl.UserFk.Surname,
-                            pl.UserFk.PhoneNumber,
-                            pl.UserFk.ProfilePictureId,
-                            pl.SeenTime
-                        };
+                where pl.PostId == input.PostId
+                select new
+                {
+                    UserId = pl.UserFk.Id,
+                    pl.UserFk.NationalId,
+                    pl.UserFk.IsSuperUser,
+                    pl.UserFk.UserName,
+                    pl.UserFk.Name,
+                    pl.UserFk.Surname,
+                    pl.UserFk.PhoneNumber,
+                    pl.UserFk.ProfilePictureId,
+                    pl.SeenTime
+                };
             var queryCount = query.Count();
             var pagedAndFiltered = query
                 .OrderBy(input.Sorting ?? "UserId desc")
@@ -966,6 +1050,7 @@ namespace Chamran.Deed.Info
 
 
             }
+
             return Task.FromResult(new PagedResultDto<GetSeenUsersDto>(queryCount, users));
 
         }
@@ -980,65 +1065,92 @@ namespace Chamran.Deed.Info
             var totalCommentCount = await _commentRepository.GetAll().CountAsync();
             var totalPostViewCount = await _seenRepository.GetAll().CountAsync();
 
-            // Category count
+            // Category count, filtering out null PostGroupFk
             var categoryCount = await _postRepository.GetAll()
+                .Where(p => p.PostGroupFk != null)
                 .GroupBy(p => new { p.PostGroupFk.Id, p.PostGroupFk.PostGroupDescription })
                 .Select(g => new DashboardViewCategoryInfo(g.Key.Id, g.Key.PostGroupDescription, g.Count()))
                 .ToListAsync();
 
             // Top 5 organizations with highest comment counts per day
             var top5CommentCountPerDay = await _commentRepository.GetAll()
-                .Where(c => c.CreationTime >= last30Days)
-                .GroupBy(c => new { c.PostFk.PostGroupFk.OrganizationId, c.PostFk.PostGroupFk.OrganizationFk.OrganizationName, Date = c.CreationTime.Date })
+                .Where(c => c.CreationTime >= last30Days && c.PostFk.PostGroupFk != null)
+                .GroupBy(c => new
+                {
+                    c.PostFk.PostGroupFk.OrganizationId, c.PostFk.PostGroupFk.OrganizationFk.OrganizationName,
+                    Date = c.CreationTime.Date
+                })
                 .Select(g => new { g.Key.OrganizationId, g.Key.OrganizationName, g.Key.Date, Count = g.Count() })
                 .OrderByDescending(g => g.Count)
                 .Take(5)
                 .ToListAsync();
+
             var groupedTop5CommentCountPerDay = top5CommentCountPerDay
                 .GroupBy(g => g.OrganizationId)
-                .Select(g => new DashboardViewOrganizationCount(g.Key, g.First().OrganizationName,
+                .Select(g => new DashboardViewOrganizationCount(
+                    g.Key ?? 0,
+                    g.First().OrganizationName,
                     g.Select(d => new DashboardViewDate(ToPersianDateString(d.Date), d.Count)).ToList()))
                 .ToList();
 
-            // Top 5 organizations with highest like counts per day
+            // Similar adjustments for likes, posts, and views per day
             var top5LikeCountPerDay = await _postLikeRepository.GetAll()
-                .Where(l => l.LikeTime >= last30Days)
-                .GroupBy(l => new { l.PostFk.PostGroupFk.OrganizationId, l.PostFk.PostGroupFk.OrganizationFk.OrganizationName, Date = l.LikeTime.Date })
+                .Where(l => l.LikeTime >= last30Days && l.PostFk.PostGroupFk != null)
+                .GroupBy(l => new
+                {
+                    l.PostFk.PostGroupFk.OrganizationId, l.PostFk.PostGroupFk.OrganizationFk.OrganizationName,
+                    Date = l.LikeTime.Date
+                })
                 .Select(g => new { g.Key.OrganizationId, g.Key.OrganizationName, g.Key.Date, Count = g.Count() })
                 .OrderByDescending(g => g.Count)
                 .Take(5)
                 .ToListAsync();
+
             var groupedTop5LikeCountPerDay = top5LikeCountPerDay
                 .GroupBy(g => g.OrganizationId)
-                .Select(g => new DashboardViewOrganizationCount(g.Key, g.First().OrganizationName,
+                .Select(g => new DashboardViewOrganizationCount(
+                    g.Key ?? 0,
+                    g.First().OrganizationName,
                     g.Select(d => new DashboardViewDate(ToPersianDateString(d.Date), d.Count)).ToList()))
                 .ToList();
 
-            // Top 5 organizations with highest post counts per day
             var top5PostCountPerDay = await _postRepository.GetAll()
-                .Where(p => p.CreationTime >= last30Days)
-                .GroupBy(p => new { p.PostGroupFk.OrganizationId, p.PostGroupFk.OrganizationFk.OrganizationName, Date = p.CreationTime.Date })
+                .Where(p => p.CreationTime >= last30Days && p.PostGroupFk != null)
+                .GroupBy(p => new
+                {
+                    p.PostGroupFk.OrganizationId, p.PostGroupFk.OrganizationFk.OrganizationName,
+                    Date = p.CreationTime.Date
+                })
                 .Select(g => new { g.Key.OrganizationId, g.Key.OrganizationName, g.Key.Date, Count = g.Count() })
                 .OrderByDescending(g => g.Count)
                 .Take(5)
                 .ToListAsync();
+
             var groupedTop5PostCountPerDay = top5PostCountPerDay
                 .GroupBy(g => g.OrganizationId)
-                .Select(g => new DashboardViewOrganizationCount(g.Key, g.First().OrganizationName,
+                .Select(g => new DashboardViewOrganizationCount(
+                    g.Key ?? 0,
+                    g.First().OrganizationName,
                     g.Select(d => new DashboardViewDate(ToPersianDateString(d.Date), d.Count)).ToList()))
                 .ToList();
 
-            // Top 5 organizations with highest view counts per day
             var top5ViewCountPerDay = await _seenRepository.GetAll()
-                .Where(s => s.SeenTime >= last30Days)
-                .GroupBy(s => new { s.PostFk.PostGroupFk.OrganizationId, s.PostFk.PostGroupFk.OrganizationFk.OrganizationName, Date = s.SeenTime.Date })
+                .Where(s => s.SeenTime >= last30Days && s.PostFk.PostGroupFk != null)
+                .GroupBy(s => new
+                {
+                    s.PostFk.PostGroupFk.OrganizationId, s.PostFk.PostGroupFk.OrganizationFk.OrganizationName,
+                    Date = s.SeenTime.Date
+                })
                 .Select(g => new { g.Key.OrganizationId, g.Key.OrganizationName, g.Key.Date, Count = g.Count() })
                 .OrderByDescending(g => g.Count)
                 .Take(5)
                 .ToListAsync();
+
             var groupedTop5ViewCountPerDay = top5ViewCountPerDay
                 .GroupBy(g => g.OrganizationId)
-                .Select(g => new DashboardViewOrganizationCount(g.Key, g.First().OrganizationName,
+                .Select(g => new DashboardViewOrganizationCount(
+                    g.Key ?? 0,
+                    g.First().OrganizationName,
                     g.Select(d => new DashboardViewDate(ToPersianDateString(d.Date), d.Count)).ToList()))
                 .ToList();
 
@@ -1058,6 +1170,8 @@ namespace Chamran.Deed.Info
             return result;
         }
 
+
+
         private static string ToPersianDateString(DateTime date)
         {
             PersianCalendar persianCalendar = new PersianCalendar();
@@ -1073,63 +1187,58 @@ namespace Chamran.Deed.Info
             var last30Days = DateTime.Now.AddDays(-30);
 
             // Total counts
-            var totalUserCount = await _lookup_groupMemberRepository.GetAll().Where(u=>u.OrganizationId==organizationId).CountAsync();
+            var totalUserCount = await _lookup_groupMemberRepository.GetAll()
+                .Where(u => !organizationId.HasValue || u.OrganizationId == organizationId)
+                .CountAsync();
             var totalPostCount = await _postRepository.GetAll()
-                .WhereIf(organizationId.HasValue,p => p.PostGroupFk.OrganizationId == organizationId)
+                .Where(p => !organizationId.HasValue || p.PostGroupFk.OrganizationId == organizationId)
                 .CountAsync();
             var totalCommentCount = await _commentRepository.GetAll()
-                .WhereIf(organizationId.HasValue, c => c.PostFk.PostGroupFk.OrganizationId == organizationId)
+                .Where(c => !organizationId.HasValue || c.PostFk.PostGroupFk.OrganizationId == organizationId)
                 .CountAsync();
             var totalPostViewCount = await _seenRepository.GetAll()
-                .WhereIf(organizationId.HasValue,s => s.PostFk.PostGroupFk.OrganizationId == organizationId)
+                .Where(s => !organizationId.HasValue || s.PostFk.PostGroupFk.OrganizationId == organizationId)
                 .CountAsync();
 
-            // Category count
+            // Category count, filtering out null PostGroupFk
             var categoryCount = await _postRepository.GetAll()
-                .WhereIf(organizationId.HasValue, p => p.PostGroupFk.OrganizationId == organizationId)
+                .Where(p => p.PostGroupFk != null &&
+                            (!organizationId.HasValue || p.PostGroupFk.OrganizationId == organizationId))
                 .GroupBy(p => new { p.PostGroupFk.Id, p.PostGroupFk.PostGroupDescription })
                 .Select(g => new DashboardViewCategoryInfo(g.Key.Id, g.Key.PostGroupDescription, g.Count()))
                 .ToListAsync();
 
             // Comments per day
-            var commentCountPerDayQuery = await _commentRepository.GetAll()
-                .WhereIf(organizationId.HasValue, c => c.CreationTime >= last30Days && c.PostFk.PostGroupFk.OrganizationId == organizationId)
+            var commentCountPerDay = await _commentRepository.GetAll()
+                .Where(c => c.CreationTime >= last30Days && c.PostFk.PostGroupFk != null && (!organizationId.HasValue ||
+                    c.PostFk.PostGroupFk.OrganizationId == organizationId))
                 .GroupBy(c => c.CreationTime.Date)
-                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .Select(g => new DashboardViewDate(ToPersianDateString(g.Key), g.Count()))
                 .ToListAsync();
-            var commentCountPerDay = commentCountPerDayQuery
-                .Select(g => new DashboardViewDate(ToPersianDateString(g.Date), g.Count))
-                .ToList();
 
             // Likes per day
-            var likeCountPerDayQuery = await _postLikeRepository.GetAll()
-                .WhereIf(organizationId.HasValue, l => l.LikeTime >= last30Days && l.PostFk.PostGroupFk.OrganizationId == organizationId)
+            var likeCountPerDay = await _postLikeRepository.GetAll()
+                .Where(l => l.LikeTime >= last30Days && l.PostFk.PostGroupFk != null && (!organizationId.HasValue ||
+                    l.PostFk.PostGroupFk.OrganizationId == organizationId))
                 .GroupBy(l => l.LikeTime.Date)
-                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .Select(g => new DashboardViewDate(ToPersianDateString(g.Key), g.Count()))
                 .ToListAsync();
-            var likeCountPerDay = likeCountPerDayQuery
-                .Select(g => new DashboardViewDate(ToPersianDateString(g.Date), g.Count))
-                .ToList();
 
             // Posts per day
-            var postCountPerDayQuery = await _postRepository.GetAll()
-                .WhereIf(organizationId.HasValue, p => p.CreationTime >= last30Days && p.PostGroupFk.OrganizationId == organizationId)
+            var postCountPerDay = await _postRepository.GetAll()
+                .Where(p => p.CreationTime >= last30Days && p.PostGroupFk != null &&
+                            (!organizationId.HasValue || p.PostGroupFk.OrganizationId == organizationId))
                 .GroupBy(p => p.CreationTime.Date)
-                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .Select(g => new DashboardViewDate(ToPersianDateString(g.Key), g.Count()))
                 .ToListAsync();
-            var postCountPerDay = postCountPerDayQuery
-                .Select(g => new DashboardViewDate(ToPersianDateString(g.Date), g.Count))
-                .ToList();
 
             // Views per day
-            var viewCountPerDayQuery = await _seenRepository.GetAll()
-                .WhereIf(organizationId.HasValue, s => s.SeenTime >= last30Days && s.PostFk.PostGroupFk.OrganizationId == organizationId)
+            var viewCountPerDay = await _seenRepository.GetAll()
+                .Where(s => s.SeenTime >= last30Days && s.PostFk.PostGroupFk != null && (!organizationId.HasValue ||
+                    s.PostFk.PostGroupFk.OrganizationId == organizationId))
                 .GroupBy(s => s.SeenTime.Date)
-                .Select(g => new { Date = g.Key, Count = g.Count() })
+                .Select(g => new DashboardViewDate(ToPersianDateString(g.Key), g.Count()))
                 .ToListAsync();
-            var viewCountPerDay = viewCountPerDayQuery
-                .Select(g => new DashboardViewDate(ToPersianDateString(g.Date), g.Count))
-                .ToList();
 
             var result = new OrganizationDashboardViewDto
             {
@@ -1145,7 +1254,9 @@ namespace Chamran.Deed.Info
             };
 
             return result;
-        }
 
+
+
+        }
     }
 }
