@@ -4,6 +4,7 @@ using Abp.Auditing;
 using Abp.Authorization.Users;
 using Abp.Extensions;
 using Abp.Timing;
+using Chamran.Deed.Authorization.Accounts.Dto;
 
 namespace Chamran.Deed.Authorization.Users
 {
@@ -12,6 +13,7 @@ namespace Chamran.Deed.Authorization.Users
     /// </summary>
     public class User : AbpUser<User>
     {
+
         public string NationalId { get; set; }
         public virtual Guid? ProfilePictureId { get; set; }
 
@@ -27,6 +29,8 @@ namespace Chamran.Deed.Authorization.Users
         public List<UserOrganizationUnit> OrganizationUnits { get; set; }
 
         public bool IsSuperUser { get; set; }
+
+        public AccountUserType UserType { get; set; } = AccountUserType.Normal;
 
         //Can add application specific user properties here
 

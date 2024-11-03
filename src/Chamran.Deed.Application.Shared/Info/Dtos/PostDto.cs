@@ -15,11 +15,19 @@ namespace Chamran.Deed.Info.Dtos
         public bool IsSpecial { get; set; }
         public bool IsPublished { get; set; }
 
+        public long PublisherUserId { get; set; }
+        public DateTime DatePublished { get; set; }
+        public PostStatus CurrentPostStatus { get; set; }
+        public string PostComment { get; set; }
+
+
+
         public string PostTitle { get; set; }
 
         public int? GroupMemberId { get; set; }
 
         public int? PostGroupId { get; set; }
+        public int? PostSubGroupId { get; set; }
 
         public string PostRefLink { get; set; }
 

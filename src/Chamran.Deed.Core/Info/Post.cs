@@ -5,6 +5,7 @@ using Abp.Domain.Entities.Auditing;
 using Abp.Auditing;
 using Chamran.Deed.Storage;
 using System.Collections.Generic;
+using Chamran.Deed.Info.Dtos;
 
 namespace Chamran.Deed.Info
 {
@@ -12,6 +13,10 @@ namespace Chamran.Deed.Info
     [Audited]
     public class Post : FullAuditedEntity
     {
+        public long PublisherUserId { get; set; }
+        public DateTime DatePublished { get; set; }
+        public PostStatus CurrentPostStatus { get; set; }
+        public string PostComment { get; set; }
 
         public virtual Guid PostKey { get; set; }
         //File
@@ -32,6 +37,7 @@ namespace Chamran.Deed.Info
         public virtual bool IsSpecial { get; set; }
         public virtual bool IsPublished { get; set; }
 
+
         public virtual string PostTitle { get; set; }
 
         public virtual int? GroupMemberId { get; set; }
@@ -40,9 +46,14 @@ namespace Chamran.Deed.Info
         public GroupMember GroupMemberFk { get; set; }
 
         public virtual int? PostGroupId { get; set; }
+        public virtual int? PostSubGroupId { get; set; }
 
         [ForeignKey("PostGroupId")]
         public PostGroup PostGroupFk { get; set; }
+
+        [ForeignKey("PostSubGroupId")]
+        public PostSubGroup PostSubGroupFk { get; set; }
+
 
         [ForeignKey("PostFile")]
         public BinaryObject AppBinaryObjectFk { get; set; }

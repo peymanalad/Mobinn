@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Chamran.Deed.Authorization.Accounts.Dto;
+using System;
 using System.Collections.Generic;
 
 namespace Chamran.Deed.Web.Models.TokenAuth
@@ -28,6 +29,8 @@ namespace Chamran.Deed.Web.Models.TokenAuth
         public string RefreshToken { get; set; }
 
         public int RefreshTokenExpireInSeconds { get; set; }
+
+        public AccountUserType UserType { get; set; }
         public string c { get; set; }
 
         public List<JoinedOrganizationDto> JoinedOrganizations { get; set; }

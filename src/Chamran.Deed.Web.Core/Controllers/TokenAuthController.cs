@@ -51,6 +51,7 @@ using Chamran.Deed.Authorization.Delegation;
 using Chamran.Deed.Authorization.Users.Profile.Cache;
 using Chamran.Deed.People;
 using Microsoft.EntityFrameworkCore;
+using IdentityModel.OidcClient;
 
 namespace Chamran.Deed.Web.Controllers
 {
@@ -301,7 +302,8 @@ namespace Chamran.Deed.Web.Controllers
                 TwoFactorRememberClientToken = null,//twoFactorRememberClientToken,
                 UserId = loginResult.Id,
                 ReturnUrl = returnUrl,
-                JoinedOrganizations = new List<JoinedOrganizationDto>()
+                JoinedOrganizations = new List<JoinedOrganizationDto>(),
+                UserType=loginResult.UserType,
             };
             var query = _groupMemberRepository.GetAll().Include(x => x.UserFk).Include(x=>x.OrganizationFk).Where(x => x.UserId == loginResult.Id);
             foreach (var groupMember in query)
@@ -410,7 +412,7 @@ namespace Chamran.Deed.Web.Controllers
             );
 
 
-            return new AuthenticateResultModel
+            var result = new AuthenticateResultModel
             {
                 AccessToken = accessToken,
                 ExpireInSeconds = Convert.ToInt32(TimeSpan.FromDays(model.ExpireDays).TotalSeconds),//(int)_configuration.AccessTokenExpiration.TotalSeconds,
@@ -419,8 +421,24 @@ namespace Chamran.Deed.Web.Controllers
                 EncryptedAccessToken = GetEncryptedAccessToken(accessToken),
                 TwoFactorRememberClientToken = twoFactorRememberClientToken,
                 UserId = loginResult.User.Id,
-                ReturnUrl = returnUrl
+                ReturnUrl = returnUrl,
+                JoinedOrganizations = new List<JoinedOrganizationDto>(),
+                UserType = loginResult.User.UserType,
             };
+
+            var query = _groupMemberRepository.GetAll().Include(x => x.UserFk).Include(x => x.OrganizationFk).Where(x => x.UserId == loginResult.Id);
+            foreach (var groupMember in query)
+            {
+                result.JoinedOrganizations.Add(new JoinedOrganizationDto()
+                {
+                    OrganizationId = groupMember.OrganizationId,
+                    OrganizationName = groupMember.OrganizationFk?.OrganizationName ?? "",
+                    OrganizationPicture = groupMember.OrganizationFk?.OrganizationLogo
+                });
+            }
+
+            return result; 
+
         }
 
         [HttpPost]

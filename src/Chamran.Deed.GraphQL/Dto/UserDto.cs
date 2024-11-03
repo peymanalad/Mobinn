@@ -5,6 +5,7 @@ using Abp.AutoMapper;
 using Abp.Domain.Entities;
 using Abp.Domain.Entities.Auditing;
 using Abp.Organizations;
+using Chamran.Deed.Authorization.Accounts.Dto;
 using Chamran.Deed.Authorization.Roles;
 
 namespace Chamran.Deed.Dto
@@ -29,6 +30,9 @@ namespace Chamran.Deed.Dto
         public bool IsActive { get; set; }
 
         public bool IsSuperUser { get; set; }
+
+        public AccountUserType UserType { get; set; } = AccountUserType.Normal;
+
 
         public DateTime CreationTime { get; set; }
 
