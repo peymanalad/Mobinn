@@ -13,8 +13,8 @@ namespace Chamran.Deed.Info
     [Audited]
     public class Post : FullAuditedEntity
     {
-        public long PublisherUserId { get; set; }
-        public DateTime DatePublished { get; set; }
+        public long? PublisherUserId { get; set; }
+        public DateTime? DatePublished { get; set; }
         public PostStatus CurrentPostStatus { get; set; }
         public string PostComment { get; set; }
 

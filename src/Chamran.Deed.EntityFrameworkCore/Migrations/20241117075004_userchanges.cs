@@ -22,8 +22,8 @@ namespace Chamran.Deed.Migrations
                 name: "DatePublished",
                 table: "Posts",
                 type: "datetime2",
-                nullable: false,
-                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+                nullable: true
+                );
 
             migrationBuilder.AddColumn<string>(
                 name: "PostComment",
@@ -41,8 +41,8 @@ namespace Chamran.Deed.Migrations
                 name: "PublisherUserId",
                 table: "Posts",
                 type: "bigint",
-                nullable: false,
-                defaultValue: 0L);
+                nullable: true
+                );
 
             migrationBuilder.AddColumn<int>(
                 name: "UserType",
