@@ -64,6 +64,7 @@ namespace Chamran.Deed.EntityFrameworkCore
         public DbSet<Hashtag> Hashtags { get; set; }
 
         public DbSet<PostGroup> PostGroups { get; set; }
+        public DbSet<PostSubGroup> PostSubGroups { get; set; }
 
         public DbSet<Post> Posts { get; set; }
 

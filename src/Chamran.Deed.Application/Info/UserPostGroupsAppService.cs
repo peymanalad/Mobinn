@@ -253,9 +253,7 @@ namespace Chamran.Deed.Info
                 throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
             }
             var orgEntity = orgQuery.First();
-            var query = _lookup_postGroupRepository.GetAll().WhereIf(
-                   !string.IsNullOrWhiteSpace(input.Filter),
-                  e => e.PostGroupDescription != null && e.PostGroupDescription.Contains(input.Filter)
+            var query = _lookup_postGroupRepository.GetAll().WhereIf(!string.IsNullOrWhiteSpace(input.Filter),e => e.PostGroupDescription != null && e.PostGroupDescription.Contains(input.Filter)
                );
             query = query.Where(x => x.OrganizationId == orgEntity.Id);
             var totalCount = await query.CountAsync();
