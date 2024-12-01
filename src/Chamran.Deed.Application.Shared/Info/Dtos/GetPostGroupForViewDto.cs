@@ -7,4 +7,11 @@
         public string OrganizationGroupGroupName { get; set; }
 
     }
+
+    public class GetPostSubGroupForViewDto
+    {
+        public PostSubGroupDto PostSubGroup { get; set; }
+
+
+    }
 }

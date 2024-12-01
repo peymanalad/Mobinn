@@ -13,4 +13,12 @@ namespace Chamran.Deed.Info.Dtos
         public string GroupFileFileName { get; set; }
 
     }
+
+    public class GetPostSubGroupForEditOutput
+    {
+        public CreateOrEditPostSubGroupDto PostSubGroup { get; set; }
+
+        public string SubGroupFileFileName { get; set; }
+
+    }
 }

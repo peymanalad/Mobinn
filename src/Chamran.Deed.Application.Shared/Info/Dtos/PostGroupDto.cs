@@ -16,4 +16,15 @@ namespace Chamran.Deed.Info.Dtos
         public int? OrganizationId { get; set; }
 
     }
+
+    public class PostSubGroupDto : EntityDto
+    {
+        public string PostSubGroupDescription { get; set; }
+
+        public Guid? SubGroupFile { get; set; }
+
+        public string SubGroupFileFileName { get; set; }
+
+
+    }
 }
