@@ -15,4 +15,13 @@ namespace Chamran.Deed.Info.Dtos
         public string OrganizationGroupGroupNameFilter { get; set; }
 
     }
+
+    public class GetAllPostSubGroupsForExcelInput
+    {
+        public string Filter { get; set; }
+
+        public string PostSubGroupDescriptionFilter { get; set; }
+
+
+    }
 }
