@@ -1,4 +1,5 @@
 ﻿using Abp.Application.Services.Dto;
+using Chamran.Deed.Authorization.Accounts.Dto;
 
 namespace Chamran.Deed.Sessions.Dto
 {
@@ -15,5 +16,7 @@ namespace Chamran.Deed.Sessions.Dto
         public string ProfilePictureId { get; set; }
 
         public bool IsSuperUser { get; set; }
+
+        public AccountUserType UserType { get; set; }
     }
 }

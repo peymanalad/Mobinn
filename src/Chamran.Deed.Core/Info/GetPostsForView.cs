@@ -23,4 +23,8 @@ public class GetPostsForView
 
     public int TotalLikes { get; set; }
     public int TotalVisits { get; set; }
+    public int? PostSubGroupId { get; set; }
+    public string PublisherUserName { get; set; }
+    public string PublisherUserFirstName { get; set; }
+    public string PublisherUserLastName { get; set; }
 }
