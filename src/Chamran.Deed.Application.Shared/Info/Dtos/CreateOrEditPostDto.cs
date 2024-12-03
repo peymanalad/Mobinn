@@ -24,6 +24,7 @@ namespace Chamran.Deed.Info.Dtos
         public int? GroupMemberId { get; set; }
 
         public int? PostGroupId { get; set; }
+        public int? PostSubGroupId { get; set; }
 
         public Guid? PostFile2 { get; set; }
 
