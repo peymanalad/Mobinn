@@ -17,6 +17,7 @@ public class GetPostsForView
 
     public string GroupMemberMemberPosition { get; set; }
     public string PostGroupPostGroupDescription { get; set; }
+    public string PostGroupPostSubGroupDescription { get; set; }
     public Guid? GroupFile { get; set; }
     public int OrganizationId { get; set; }
     public string OrganizationName { get; set; }

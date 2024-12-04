@@ -41,6 +41,7 @@ namespace Chamran.Deed.Info
         private readonly IPostsExcelExporter _postsExcelExporter;
         private readonly IRepository<GroupMember, int> _lookup_groupMemberRepository;
         private readonly IRepository<PostGroup, int> _lookup_postGroupRepository;
+        private readonly IRepository<PostSubGroup, int> _lookup_postSubGroupRepository;
         private readonly IRepository<UserPostGroup, int> _userPostGroupRepository;
         private readonly IRepository<Seen, int> _seenRepository;
         private readonly IRepository<PostLike, int> _postLikeRepository;
@@ -60,7 +61,7 @@ namespace Chamran.Deed.Info
 
         public PostsAppService(IRepository<Post> postRepository, IRepository<Comment> commentRepository,
             IPostsExcelExporter postsExcelExporter, IRepository<GroupMember, int> lookup_groupMemberRepository,
-            IRepository<PostGroup, int> lookup_postGroupRepository, ITempFileCacheManager tempFileCacheManager,
+            IRepository<PostGroup, int> lookup_postGroupRepository, IRepository<PostSubGroup, int> lookup_postSubGroupRepository, ITempFileCacheManager tempFileCacheManager,
             IBinaryObjectManager binaryObjectManager, IRepository<Organization> organization, IAppNotifier appNotifier,
             IRepository<UserPostGroup, int> userPostGroupRepository, IUnitOfWorkManager unitOfWorkManager,
             IRepository<PostLike, int> postLikeRepository, IRepository<Seen, int> seenRepository,
@@ -71,6 +72,7 @@ namespace Chamran.Deed.Info
             _postsExcelExporter = postsExcelExporter;
             _lookup_groupMemberRepository = lookup_groupMemberRepository;
             _lookup_postGroupRepository = lookup_postGroupRepository;
+            _lookup_postSubGroupRepository = lookup_postSubGroupRepository;
             _tempFileCacheManager = tempFileCacheManager;
             _binaryObjectManager = binaryObjectManager;
             organizationRepository = organization;
@@ -158,29 +160,34 @@ namespace Chamran.Deed.Info
             foreach (var post in queryResult)
             {
                 result.Add(new GetPostForViewDto
+                {
+
+
+                    Post = new PostDto
                     {
-
-
-                        Post = new PostDto
-                        {
-                            PostFile = post.PostFile,
-                            PostCaption = post.PostCaption,
-                            IsSpecial = post.IsSpecial,
-                            IsPublished = post.IsPublished,
-                            PostTitle = post.PostTitle,
-                            PostRefLink = post.PostRefLink,
-                            Id = post.Id,
-                            CreationTime = post.CreationTime,
-                            LastModificationTime = post.LastModificationTime
-                        },
-                        GroupMemberMemberPosition = post.GroupMemberMemberPosition ?? "",
-                        PostGroupPostGroupDescription = post.PostGroupPostGroupDescription ?? "",
-                        GroupFile = post.GroupFile,
-                        TotalVisits = post.TotalVisits,
-                        TotalLikes = post.TotalLikes,
-                        OrganizationId = post.OrganizationId,
-                        OrganizationName = post.OrganizationName
-                    }
+                        PostFile = post.PostFile,
+                        PostCaption = post.PostCaption,
+                        IsSpecial = post.IsSpecial,
+                        IsPublished = post.IsPublished,
+                        PostTitle = post.PostTitle,
+                        PostRefLink = post.PostRefLink,
+                        Id = post.Id,
+                        CreationTime = post.CreationTime,
+                        LastModificationTime = post.LastModificationTime
+                    },
+                    GroupMemberMemberPosition = post.GroupMemberMemberPosition ?? "",
+                    PostGroupPostGroupDescription = post.PostGroupPostGroupDescription ?? "",
+                    PostGroupPostSubGroupDescription = post.PostGroupPostSubGroupDescription ?? "",
+                    GroupFile = post.GroupFile,
+                    TotalVisits = post.TotalVisits,
+                    TotalLikes = post.TotalLikes,
+                    OrganizationId = post.OrganizationId,
+                    OrganizationName = post.OrganizationName,
+                    PostSubGroupId = post.PostSubGroupId,
+                    PublisherUserFirstName = post.PublisherUserFirstName,
+                    PublisherUserLastName = post.PublisherUserLastName,
+                    PublisherUserName = post.PublisherUserName,
+                }
                 );
             }
 
@@ -293,6 +300,9 @@ namespace Chamran.Deed.Info
                 var _lookupPostGroup = await _lookup_postGroupRepository.GetAll().Include(x => x.OrganizationFk)
                     .FirstOrDefaultAsync(x => x.Id == output.Post.PostGroupId);
                 output.PostGroupPostGroupDescription = _lookupPostGroup?.PostGroupDescription;
+                var _lookupPostSubGroup = await _lookup_postSubGroupRepository.GetAll()
+                    .FirstOrDefaultAsync(x => x.Id == output.Post.PostSubGroupId);
+                output.PostGroupPostSubGroupDescription = _lookupPostSubGroup?.PostSubGroupDescription;
                 output.OrganizationId = _lookupPostGroup?.OrganizationId;
                 output.OrganizationName = _lookupPostGroup?.OrganizationFk.OrganizationName;
             }
@@ -379,12 +389,12 @@ namespace Chamran.Deed.Info
             }
 
             await _appNotifier.SendPostNotificationAsync(JsonConvert.SerializeObject(post, new JsonSerializerSettings
+            {
+                ContractResolver = new DefaultContractResolver
                 {
-                    ContractResolver = new DefaultContractResolver
-                    {
-                        NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
-                    }
-                }),
+                    NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
+                }
+            }),
                 userIds: ids.ToArray(),
                 NotificationSeverity.Info
             );
@@ -537,36 +547,36 @@ namespace Chamran.Deed.Info
                 .WhereIf(input.OrganizationId.HasValue, e => e.PostGroupFk.OrganizationId == input.OrganizationId);
             var persianCalendar = new PersianCalendar();
             var query = (from o in filteredPosts
-                join o1 in _lookup_groupMemberRepository.GetAll() on o.GroupMemberId equals o1.Id into j1
-                from s1 in j1.DefaultIfEmpty()
+                         join o1 in _lookup_groupMemberRepository.GetAll() on o.GroupMemberId equals o1.Id into j1
+                         from s1 in j1.DefaultIfEmpty()
 
-                join o2 in _lookup_postGroupRepository.GetAll() on o.PostGroupId equals o2.Id into j2
-                from s2 in j2.DefaultIfEmpty()
+                         join o2 in _lookup_postGroupRepository.GetAll() on o.PostGroupId equals o2.Id into j2
+                         from s2 in j2.DefaultIfEmpty()
 
-                select new GetPostForViewDto
-                {
-                    Post = new PostDto
-                    {
-                        PostFile = o.PostFile,
-                        PostCaption = o.PostCaption,
-                        IsSpecial = o.IsSpecial,
-                        IsPublished = o.IsPublished,
-                        PostTitle = o.PostTitle,
-                        Id = o.Id,
-                        CreationTime = o.CreationTime,
-                        PostRefLink = o.PostRefLink
+                         select new GetPostForViewDto
+                         {
+                             Post = new PostDto
+                             {
+                                 PostFile = o.PostFile,
+                                 PostCaption = o.PostCaption,
+                                 IsSpecial = o.IsSpecial,
+                                 IsPublished = o.IsPublished,
+                                 PostTitle = o.PostTitle,
+                                 Id = o.Id,
+                                 CreationTime = o.CreationTime,
+                                 PostRefLink = o.PostRefLink
 
-                    },
-                    GroupMemberMemberPosition = s1 == null || s1.MemberPosition == null ? "" : s1.MemberPosition,
-                    PostGroupPostGroupDescription = s2 == null || s2.PostGroupDescription == null
-                        ? ""
-                        : s2.PostGroupDescription.ToString(),
-                    PersianCreationTime = o.CreationTime != null
-                        ? persianCalendar.GetYear(o.CreationTime).ToString("D4") + "/" +
-                          persianCalendar.GetMonth(o.CreationTime).ToString("D2") + "/" +
-                          persianCalendar.GetDayOfMonth(o.CreationTime).ToString("D2")
-                        : null
-                });
+                             },
+                             GroupMemberMemberPosition = s1 == null || s1.MemberPosition == null ? "" : s1.MemberPosition,
+                             PostGroupPostGroupDescription = s2 == null || s2.PostGroupDescription == null
+                                 ? ""
+                                 : s2.PostGroupDescription.ToString(),
+                             PersianCreationTime = o.CreationTime != null
+                                 ? persianCalendar.GetYear(o.CreationTime).ToString("D4") + "/" +
+                                   persianCalendar.GetMonth(o.CreationTime).ToString("D2") + "/" +
+                                   persianCalendar.GetDayOfMonth(o.CreationTime).ToString("D2")
+                                 : null
+                         });
             var postListDtos = await query.ToListAsync();
             return _postsExcelExporter.ExportToFile(postListDtos);
         }
@@ -700,21 +710,21 @@ namespace Chamran.Deed.Info
             {
                 var cat = new List<GetPostCategoriesForViewDto>();
                 var queryPostCat = from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
-                    //join g in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationId equals g.Id into joiner1
-                    //from g in joiner1.DefaultIfEmpty()
-                    //join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
-                    //from gm in joiner2.DefaultIfEmpty()
-                    //where gm.UserId == AbpSession.UserId
-                    where pc.OrganizationId == organizationId
-                    orderby pc.Ordering
-                    select new
-                    {
-                        pc.Id,
-                        pc.PostGroupDescription,
-                        PostGroupHeaderPicFile = pc.GroupFile,
-                        PostGroupLatestPicFile = _postRepository.GetAll().Where(p => p.PostGroupId == pc.Id)
-                            .OrderByDescending(p => p.CreationTime).FirstOrDefault().PostFile
-                    };
+                                       //join g in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationId equals g.Id into joiner1
+                                       //from g in joiner1.DefaultIfEmpty()
+                                       //join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
+                                       //from gm in joiner2.DefaultIfEmpty()
+                                       //where gm.UserId == AbpSession.UserId
+                                   where pc.OrganizationId == organizationId
+                                   orderby pc.Ordering
+                                   select new
+                                   {
+                                       pc.Id,
+                                       pc.PostGroupDescription,
+                                       PostGroupHeaderPicFile = pc.GroupFile,
+                                       PostGroupLatestPicFile = _postRepository.GetAll().Where(p => p.PostGroupId == pc.Id)
+                                           .OrderByDescending(p => p.CreationTime).FirstOrDefault().PostFile
+                                   };
 
                 foreach (var postCategory in queryPostCat)
                 {
@@ -802,51 +812,51 @@ namespace Chamran.Deed.Info
                         .Include(e => e.AppBinaryObjectFk10)
                         .Where(x => x.PostGroupFk.OrganizationId == input.OrganizationId)
                         .WhereIf(input.PostGroupId > 0, p => p.PostGroupId == input.PostGroupId)
-                    join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
-                        pg.Id into joiner1
-                    from pg in joiner1.DefaultIfEmpty()
-                    join og in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
-                        equals og.Id into joiner2
-                    from og2 in joiner2.DefaultIfEmpty()
-                    //join gm in _lookup_groupMemberRepository.GetAll() on og2.Id equals gm.OrganizationId into
-                    //joiner3
-                    //from gm2 in joiner3.DefaultIfEmpty()
-                    //where gm2.UserId == AbpSession.UserId
-                    select new
-                    {
-                        p.Id,
-                        p.GroupMemberId,
-                        p.IsSpecial,
-                        p.IsPublished,
-                        p.PostCaption,
-                        p.CreationTime,
-                        p.PostFile,
-                        p.PostFile2,
-                        p.PostFile3,
-                        p.PostFile4,
-                        p.PostFile5,
-                        p.PostFile6,
-                        p.PostFile7,
-                        p.PostFile8,
-                        p.PostFile9,
-                        p.PostFile10,
-                        p.PostTitle,
-                        p.PostRefLink,
-                        p.PostGroupId,
-                        p.GroupMemberFk,
-                        p.PostGroupFk,
-                        p.AppBinaryObjectFk,
-                        p.AppBinaryObjectFk2,
-                        p.AppBinaryObjectFk3,
-                        p.AppBinaryObjectFk4,
-                        p.AppBinaryObjectFk5,
-                        p.AppBinaryObjectFk6,
-                        p.AppBinaryObjectFk7,
-                        p.AppBinaryObjectFk8,
-                        p.AppBinaryObjectFk9,
-                        p.AppBinaryObjectFk10,
+                                    join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
+                                        pg.Id into joiner1
+                                    from pg in joiner1.DefaultIfEmpty()
+                                    join og in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
+                                        equals og.Id into joiner2
+                                    from og2 in joiner2.DefaultIfEmpty()
+                                        //join gm in _lookup_groupMemberRepository.GetAll() on og2.Id equals gm.OrganizationId into
+                                        //joiner3
+                                        //from gm2 in joiner3.DefaultIfEmpty()
+                                        //where gm2.UserId == AbpSession.UserId
+                                    select new
+                                    {
+                                        p.Id,
+                                        p.GroupMemberId,
+                                        p.IsSpecial,
+                                        p.IsPublished,
+                                        p.PostCaption,
+                                        p.CreationTime,
+                                        p.PostFile,
+                                        p.PostFile2,
+                                        p.PostFile3,
+                                        p.PostFile4,
+                                        p.PostFile5,
+                                        p.PostFile6,
+                                        p.PostFile7,
+                                        p.PostFile8,
+                                        p.PostFile9,
+                                        p.PostFile10,
+                                        p.PostTitle,
+                                        p.PostRefLink,
+                                        p.PostGroupId,
+                                        p.GroupMemberFk,
+                                        p.PostGroupFk,
+                                        p.AppBinaryObjectFk,
+                                        p.AppBinaryObjectFk2,
+                                        p.AppBinaryObjectFk3,
+                                        p.AppBinaryObjectFk4,
+                                        p.AppBinaryObjectFk5,
+                                        p.AppBinaryObjectFk6,
+                                        p.AppBinaryObjectFk7,
+                                        p.AppBinaryObjectFk8,
+                                        p.AppBinaryObjectFk9,
+                                        p.AppBinaryObjectFk10,
 
-                    };
+                                    };
                 var count = filteredPosts.Count();
                 var pagedAndFilteredPosts = filteredPosts
                     .OrderBy(input.Sorting ?? "id desc")
@@ -966,19 +976,19 @@ namespace Chamran.Deed.Info
         {
             var query = from pl in _postLikeRepository.GetAll().Include(x => x.UserFk)
 
-                where pl.PostId == input.PostId
-                select new
-                {
-                    UserId = pl.UserFk.Id,
-                    pl.UserFk.NationalId,
-                    pl.UserFk.IsSuperUser,
-                    pl.UserFk.UserName,
-                    pl.UserFk.Name,
-                    pl.UserFk.Surname,
-                    pl.UserFk.PhoneNumber,
-                    pl.UserFk.ProfilePictureId,
-                    pl.LikeTime
-                };
+                        where pl.PostId == input.PostId
+                        select new
+                        {
+                            UserId = pl.UserFk.Id,
+                            pl.UserFk.NationalId,
+                            pl.UserFk.IsSuperUser,
+                            pl.UserFk.UserName,
+                            pl.UserFk.Name,
+                            pl.UserFk.Surname,
+                            pl.UserFk.PhoneNumber,
+                            pl.UserFk.ProfilePictureId,
+                            pl.LikeTime
+                        };
             var queryCount = query.Count();
             var pagedAndFiltered = query
                 .OrderBy(input.Sorting ?? "UserId desc")
@@ -1012,19 +1022,19 @@ namespace Chamran.Deed.Info
         {
             var query = from pl in _seenRepository.GetAll().Include(x => x.UserFk)
 
-                where pl.PostId == input.PostId
-                select new
-                {
-                    UserId = pl.UserFk.Id,
-                    pl.UserFk.NationalId,
-                    pl.UserFk.IsSuperUser,
-                    pl.UserFk.UserName,
-                    pl.UserFk.Name,
-                    pl.UserFk.Surname,
-                    pl.UserFk.PhoneNumber,
-                    pl.UserFk.ProfilePictureId,
-                    pl.SeenTime
-                };
+                        where pl.PostId == input.PostId
+                        select new
+                        {
+                            UserId = pl.UserFk.Id,
+                            pl.UserFk.NationalId,
+                            pl.UserFk.IsSuperUser,
+                            pl.UserFk.UserName,
+                            pl.UserFk.Name,
+                            pl.UserFk.Surname,
+                            pl.UserFk.PhoneNumber,
+                            pl.UserFk.ProfilePictureId,
+                            pl.SeenTime
+                        };
             var queryCount = query.Count();
             var pagedAndFiltered = query
                 .OrderBy(input.Sorting ?? "UserId desc")
@@ -1077,7 +1087,8 @@ namespace Chamran.Deed.Info
                 .Where(c => c.CreationTime >= last30Days && c.PostFk.PostGroupFk != null)
                 .GroupBy(c => new
                 {
-                    c.PostFk.PostGroupFk.OrganizationId, c.PostFk.PostGroupFk.OrganizationFk.OrganizationName,
+                    c.PostFk.PostGroupFk.OrganizationId,
+                    c.PostFk.PostGroupFk.OrganizationFk.OrganizationName,
                     Date = c.CreationTime.Date
                 })
                 .Select(g => new { g.Key.OrganizationId, g.Key.OrganizationName, g.Key.Date, Count = g.Count() })
@@ -1098,7 +1109,8 @@ namespace Chamran.Deed.Info
                 .Where(l => l.LikeTime >= last30Days && l.PostFk.PostGroupFk != null)
                 .GroupBy(l => new
                 {
-                    l.PostFk.PostGroupFk.OrganizationId, l.PostFk.PostGroupFk.OrganizationFk.OrganizationName,
+                    l.PostFk.PostGroupFk.OrganizationId,
+                    l.PostFk.PostGroupFk.OrganizationFk.OrganizationName,
                     Date = l.LikeTime.Date
                 })
                 .Select(g => new { g.Key.OrganizationId, g.Key.OrganizationName, g.Key.Date, Count = g.Count() })
@@ -1118,7 +1130,8 @@ namespace Chamran.Deed.Info
                 .Where(p => p.CreationTime >= last30Days && p.PostGroupFk != null)
                 .GroupBy(p => new
                 {
-                    p.PostGroupFk.OrganizationId, p.PostGroupFk.OrganizationFk.OrganizationName,
+                    p.PostGroupFk.OrganizationId,
+                    p.PostGroupFk.OrganizationFk.OrganizationName,
                     Date = p.CreationTime.Date
                 })
                 .Select(g => new { g.Key.OrganizationId, g.Key.OrganizationName, g.Key.Date, Count = g.Count() })
@@ -1138,7 +1151,8 @@ namespace Chamran.Deed.Info
                 .Where(s => s.SeenTime >= last30Days && s.PostFk.PostGroupFk != null)
                 .GroupBy(s => new
                 {
-                    s.PostFk.PostGroupFk.OrganizationId, s.PostFk.PostGroupFk.OrganizationFk.OrganizationName,
+                    s.PostFk.PostGroupFk.OrganizationId,
+                    s.PostFk.PostGroupFk.OrganizationFk.OrganizationName,
                     Date = s.SeenTime.Date
                 })
                 .Select(g => new { g.Key.OrganizationId, g.Key.OrganizationName, g.Key.Date, Count = g.Count() })
