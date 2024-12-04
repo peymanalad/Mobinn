@@ -11,6 +11,7 @@ namespace Chamran.Deed.Info.Dtos
         public string GroupMemberMemberPosition { get; set; }
 
         public string PostGroupPostGroupDescription { get; set; }
+        public string PostGroupPostSubGroupDescription { get; set; }
 
         public string PostFileFileName { get; set; }
         public string PostFile2FileName { get; set; }
