@@ -2,6 +2,7 @@
 using Abp.Auditing;
 using Abp.Authorization.Users;
 using Abp.Domain.Entities;
+using Chamran.Deed.Authorization.Accounts.Dto;
 
 namespace Chamran.Deed.Authorization.Users.Dto
 {
@@ -39,12 +40,14 @@ namespace Chamran.Deed.Authorization.Users.Dto
         public string Password { get; set; }
 
         public bool IsActive { get; set; }
+        public AccountUserType UserType { get; set; }
 
         public bool ShouldChangePasswordOnNextLogin { get; set; }
 
         public virtual bool IsTwoFactorEnabled { get; set; }
 
         public virtual bool IsLockoutEnabled { get; set; }
+
 
     }
 }

@@ -7,7 +7,8 @@ namespace Chamran.Deed.Info.Dtos
     public enum PostStatus
     {
         Pending=0,
-        Published=1,
-        Rejected=2,
+        Revised=1,
+        Published=2,
+        Rejected=3,
     }
 }

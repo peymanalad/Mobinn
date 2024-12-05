@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Chamran.Deed.Authorization.Accounts.Dto;
 using Chamran.Deed.Organizations.Dto;
 
 namespace Chamran.Deed.Authorization.Users.Dto
@@ -19,5 +20,6 @@ namespace Chamran.Deed.Authorization.Users.Dto
         public string AllowedUserNameCharacters { get; set; }
         
         public bool IsSMTPSettingsProvided { get; set; }
+
     }
 }

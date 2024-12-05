@@ -19,6 +19,7 @@ namespace Chamran.Deed.Authorization.Users.Dto
         public string UserNameFilter { get; set; }
         public string PhoneNumberFilter { get; set; }
         public bool? IsActiveFilter { get; set; }
+        public int? UserType{ get; set; }
 
         public List<string> Permissions { get; set; }
 

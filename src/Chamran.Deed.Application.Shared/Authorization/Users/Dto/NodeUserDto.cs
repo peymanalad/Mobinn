@@ -2,6 +2,7 @@
 using Abp.Auditing;
 using Abp.Authorization.Users;
 using Abp.Domain.Entities;
+using Chamran.Deed.Authorization.Accounts.Dto;
 
 namespace Chamran.Deed.Authorization.Users.Dto
 {
@@ -12,6 +13,7 @@ namespace Chamran.Deed.Authorization.Users.Dto
         /// </summary>
         public long? Id { get; set; }
         public string NationalId { get; set; }
+        public AccountUserType UserType { get; set; }
         [Required]
         [StringLength(AbpUserBase.MaxNameLength)]
         public string Name { get; set; }
