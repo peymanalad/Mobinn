@@ -140,7 +140,8 @@ namespace Chamran.Deed.Info
                     PostRefLink = post.PostRefLink,
                     Id = post.Id,
                     CreationTime = post.CreationTime,
-                    LastModificationTime = post.LastModificationTime
+                    LastModificationTime = post.LastModificationTime,
+                    CurrentPostStatus = (PostStatus)post.CurrentPostStatus
                 },
                 GroupMemberMemberPosition = post.GroupMemberMemberPosition ?? "",
                 PostGroupPostGroupDescription = post.PostGroupPostGroupDescription ?? "",

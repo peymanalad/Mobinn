@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Chamran.Deed.Info.Dtos;
+using System;
 using System.Collections.Generic;
 
 namespace Chamran.Deed.Info;
@@ -28,4 +29,6 @@ public class GetPostsForView
     public string PublisherUserName { get; set; }
     public string PublisherUserFirstName { get; set; }
     public string PublisherUserLastName { get; set; }
+    public int CurrentPostStatus { get; set; }
+
 }
