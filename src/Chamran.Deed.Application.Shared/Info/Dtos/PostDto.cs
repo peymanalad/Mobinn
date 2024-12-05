@@ -33,5 +33,7 @@ namespace Chamran.Deed.Info.Dtos
 
         public DateTime CreationTime { get; set; }
         public DateTime? LastModificationTime { get; set; }
+
+
     }
 }
