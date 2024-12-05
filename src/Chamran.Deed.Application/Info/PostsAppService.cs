@@ -96,28 +96,8 @@ namespace Chamran.Deed.Info
 
         public async Task<PagedResultDto<GetPostForViewDto>> GetAll(GetAllPostsInput input)
         {
-            var totalparameters = new SqlParameter[]
-            {
-        new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
-        new SqlParameter("@Filter", string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
-        new SqlParameter("@PostCaptionFilter", string.IsNullOrWhiteSpace(input.PostCaptionFilter) ? (object)DBNull.Value : (object)input.PostCaptionFilter),
-        new SqlParameter("@IsSpecialFilter", input.IsSpecialFilter ?? (object)DBNull.Value),
-        new SqlParameter("@PostTitleFilter", string.IsNullOrWhiteSpace(input.PostTitleFilter) ? (object)DBNull.Value : (object)input.PostTitleFilter),
-        new SqlParameter("@GroupMemberMemberPositionFilter", string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter) ? (object)DBNull.Value : (object)input.GroupMemberMemberPositionFilter),
-        new SqlParameter("@PostGroupPostGroupDescriptionFilter", string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter) ? (object)DBNull.Value : (object)input.PostGroupPostGroupDescriptionFilter),
-        new SqlParameter("@PostGroupPostSubGroupDescriptionFilter", string.IsNullOrWhiteSpace(input.PostGroupPostSubGroupDescriptionFilter) ? (object)DBNull.Value : (object)input.PostGroupPostSubGroupDescriptionFilter), // New parameter
-        new SqlParameter("@FromDate", input.FromDate ?? (object)DBNull.Value),
-        new SqlParameter("@ToDate", input.ToDate ?? (object)DBNull.Value),
-        new SqlParameter("@OrderBy", input.Sorting ?? "CreationTime DESC")
-            };
-            var dbContextTotal = await _dbContextProvider.GetDbContextAsync();
-            var totalCount = dbContextTotal.Set<GetPostsForView>()
-                .FromSqlRaw(
-                    "EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @PostGroupPostSubGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy",
-                    totalparameters)
-                .AsEnumerable().Count();
-
-            var parameters = new SqlParameter[]
+            // Prepare parameters
+            var parameters = new[]
             {
         new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
         new SqlParameter("@Filter", string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
@@ -132,14 +112,22 @@ namespace Chamran.Deed.Info
         new SqlParameter("@OrderBy", input.Sorting ?? "CreationTime DESC"),
         new SqlParameter("@MaxResultCount", input.MaxResultCount),
         new SqlParameter("@SkipCount", input.SkipCount)
-            };
+    };
+
             var dbContext = await _dbContextProvider.GetDbContextAsync();
+
+            // Execute the SQL and get all results as a list
             var queryResult = await dbContext.Set<GetPostsForView>()
                 .FromSqlRaw(
                     "EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @PostGroupPostSubGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy, @MaxResultCount, @SkipCount",
                     parameters)
+                .AsNoTracking()
                 .ToListAsync();
 
+            // Count the total results (without paging)
+            var totalCount = queryResult.Count;
+
+            // Map results to DTOs
             var result = queryResult.Select(post => new GetPostForViewDto
             {
                 Post = new PostDto
@@ -168,8 +156,10 @@ namespace Chamran.Deed.Info
                 PublisherUserName = post.PublisherUserName,
             }).ToList();
 
+            // Return paged result
             return new PagedResultDto<GetPostForViewDto>(totalCount, result);
         }
+
 
 
         public async Task<GetPostForViewDto> GetPostForView(int id)
@@ -287,7 +277,7 @@ namespace Chamran.Deed.Info
                 throw new UserFriendlyException("پست ارسالی هیچش مدیایی ندارد");
             await _unitOfWorkManager.Current.SaveChangesAsync();
             await unitOfWork.CompleteAsync();
-            if (post.PostGroupId.HasValue)
+            if (post.PostGroupId.HasValue && post.CurrentPostStatus==PostStatus.Published)
                 await PublishNewPostNotifications(post);
             await SendSmsNotification(post);
         }
@@ -514,8 +504,11 @@ namespace Chamran.Deed.Info
 
             if (shouldSendSmsNotification)
             {
-                await PublishNewPostNotifications(post);
+                await SendSmsNotification(post);
             }
+
+            if (post.PostGroupId.HasValue && post.CurrentPostStatus == PostStatus.Published)
+                await PublishNewPostNotifications(post);
 
         }
 
