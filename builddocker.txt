@@ -2,35 +2,35 @@ ssh root@deed.mspos.ir -p 2022
 M@snaviM@snavi
 
 
-docker login docker.ideed.ir
+docker login docker.mobinn.ir
 admin
 Y@snaSystem
 docker login 192.168.55.145:5000
 
-docker build -t ideed:23.1 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
+docker build -t ideed:23.5 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 docker images
-docker tag   326df3b26603 docker.ideed.ir/ideed:23.1
+docker tag   a55d7c8c200d docker.mobinn.ir/ideed:23.5
 
-docker push docker.ideed.ir/ideed:23.1
+docker push docker.mobinn.ir/ideed:23.5
 
 
 
 docker build -t ideedreact:10.2 C:\ZProjects\ideed\deed-dashboard
 docker images
-docker tag  edaaa74c0537 docker.ideed.ir/ideedreact:10.2
-docker push docker.ideed.ir/ideedreact:10.2
+docker tag  edaaa74c0537 docker.mobinn.ir/ideedreact:10.2
+docker push docker.mobinn.ir/ideedreact:10.2
 
 docker build -t ideedreacttest:10.2 C:\ZProjects\ideed\testDashboard
 docker images
-docker tag  55fe69ec91e9 docker.ideed.ir/ideedreact:10.2
-docker push docker.ideed.ir/ideedreact:10.2
+docker tag  55fe69ec91e9 docker.mobinn.ir/ideedreact:10.2
+docker push docker.mobinn.ir/ideedreact:10.2
 
 
 
 docker build -t ideedpwa:5.1 C:\ZProjects\ideed\pwa
 docker images
-docker tag  2c68fc9b601d docker.ideed.ir/ideedpwa:5.1
-docker push docker.ideed.ir/ideedpwa:5.1
+docker tag  2c68fc9b601d docker.mobinn.ir/ideedpwa:5.1
+docker push docker.mobinn.ir/ideedpwa:5.1
 
 
 docker-compose down -v
@@ -53,7 +53,7 @@ sudo killall docker-containerd-shim
 
 
 
-sudo docker pull yasnadocker.yasnasystem.ir/ideed:23.1
+sudo docker pull yasnadocker.yasnasystem.ir/ideed:23.5
 docker build -t ideedfront:1.1 .
 docker images
 1bde69740be7
@@ -134,10 +134,10 @@ done
 
 
 
-docker build -t ideed:23.1 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
+docker build -t ideed:23.5 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 docker images
-docker tag 6aa8ea59ae0e yasnadocker.yasnasystem.ir/ideed:23.1
-docker push yasnadocker.yasnasystem.ir/ideed:23.1
+docker tag 6aa8ea59ae0e yasnadocker.yasnasystem.ir/ideed:23.5
+docker push yasnadocker.yasnasystem.ir/ideed:23.5
 
 docker-compose down -v
 nano docker-compose.yml

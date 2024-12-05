@@ -7,7 +7,7 @@ namespace Chamran.Deed.Info.Dtos
         public PostDto Post { get; set; }
         public string GroupMemberMemberPosition { get; set; }
         public string PostGroupPostGroupDescription { get; set; }
-        public string PostGroupPostSubGroupDescription { get; set; }
+        public string PostGroupPostSubGroupDescription { get; set; } // New field
         public int TotalVisits { get; set; }
         public int TotalLikes { get; set; }
         public Guid? GroupFile { get; set; }
@@ -20,5 +20,6 @@ namespace Chamran.Deed.Info.Dtos
         public string PublisherUserLastName { get; set; }
     }
 
-   
+
+
 }

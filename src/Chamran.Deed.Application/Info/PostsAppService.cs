@@ -90,165 +90,77 @@ namespace Chamran.Deed.Info
         {
             var totalparameters = new SqlParameter[]
             {
-                new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
-                new SqlParameter("@Filter",
-                    string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
-                new SqlParameter("@PostCaptionFilter",
-                    string.IsNullOrWhiteSpace(input.PostCaptionFilter)
-                        ? (object)DBNull.Value
-                        : (object)input.PostCaptionFilter),
-                new SqlParameter("@IsSpecialFilter", input.IsSpecialFilter ?? (object)DBNull.Value),
-                new SqlParameter("@PostTitleFilter",
-                    string.IsNullOrWhiteSpace(input.PostTitleFilter)
-                        ? (object)DBNull.Value
-                        : (object)input.PostTitleFilter),
-                new SqlParameter("@GroupMemberMemberPositionFilter",
-                    string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter)
-                        ? (object)DBNull.Value
-                        : (object)input.GroupMemberMemberPositionFilter),
-                new SqlParameter("@PostGroupPostGroupDescriptionFilter",
-                    string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter)
-                        ? (object)DBNull.Value
-                        : (object)input.PostGroupPostGroupDescriptionFilter),
-                new SqlParameter("@FromDate", input.FromDate ?? (object)DBNull.Value),
-                new SqlParameter("@ToDate", input.ToDate ?? (object)DBNull.Value),
-                new SqlParameter("@OrderBy", input.Sorting ?? "CreationTime DESC")
+        new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
+        new SqlParameter("@Filter", string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
+        new SqlParameter("@PostCaptionFilter", string.IsNullOrWhiteSpace(input.PostCaptionFilter) ? (object)DBNull.Value : (object)input.PostCaptionFilter),
+        new SqlParameter("@IsSpecialFilter", input.IsSpecialFilter ?? (object)DBNull.Value),
+        new SqlParameter("@PostTitleFilter", string.IsNullOrWhiteSpace(input.PostTitleFilter) ? (object)DBNull.Value : (object)input.PostTitleFilter),
+        new SqlParameter("@GroupMemberMemberPositionFilter", string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter) ? (object)DBNull.Value : (object)input.GroupMemberMemberPositionFilter),
+        new SqlParameter("@PostGroupPostGroupDescriptionFilter", string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter) ? (object)DBNull.Value : (object)input.PostGroupPostGroupDescriptionFilter),
+        new SqlParameter("@PostGroupPostSubGroupDescriptionFilter", string.IsNullOrWhiteSpace(input.PostGroupPostSubGroupDescriptionFilter) ? (object)DBNull.Value : (object)input.PostGroupPostSubGroupDescriptionFilter), // New parameter
+        new SqlParameter("@FromDate", input.FromDate ?? (object)DBNull.Value),
+        new SqlParameter("@ToDate", input.ToDate ?? (object)DBNull.Value),
+        new SqlParameter("@OrderBy", input.Sorting ?? "CreationTime DESC")
             };
             var dbContextTotal = await _dbContextProvider.GetDbContextAsync();
             var totalCount = dbContextTotal.Set<GetPostsForView>()
                 .FromSqlRaw(
-                    "EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy",
+                    "EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @PostGroupPostSubGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy",
                     totalparameters)
                 .AsEnumerable().Count();
 
-
             var parameters = new SqlParameter[]
             {
-                new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
-                new SqlParameter("@Filter",
-                    string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
-                new SqlParameter("@PostCaptionFilter",
-                    string.IsNullOrWhiteSpace(input.PostCaptionFilter)
-                        ? (object)DBNull.Value
-                        : (object)input.PostCaptionFilter),
-                new SqlParameter("@IsSpecialFilter", input.IsSpecialFilter ?? (object)DBNull.Value),
-                new SqlParameter("@PostTitleFilter",
-                    string.IsNullOrWhiteSpace(input.PostTitleFilter)
-                        ? (object)DBNull.Value
-                        : (object)input.PostTitleFilter),
-                new SqlParameter("@GroupMemberMemberPositionFilter",
-                    string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter)
-                        ? (object)DBNull.Value
-                        : (object)input.GroupMemberMemberPositionFilter),
-                new SqlParameter("@PostGroupPostGroupDescriptionFilter",
-                    string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter)
-                        ? (object)DBNull.Value
-                        : (object)input.PostGroupPostGroupDescriptionFilter),
-                new SqlParameter("@FromDate", input.FromDate ?? (object)DBNull.Value),
-                new SqlParameter("@ToDate", input.ToDate ?? (object)DBNull.Value),
-                new SqlParameter("@OrderBy", input.Sorting ?? "CreationTime DESC"),
-                new SqlParameter("@MaxResultCount", input.MaxResultCount),
-                new SqlParameter("@SkipCount", input.SkipCount)
+        new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
+        new SqlParameter("@Filter", string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
+        new SqlParameter("@PostCaptionFilter", string.IsNullOrWhiteSpace(input.PostCaptionFilter) ? (object)DBNull.Value : (object)input.PostCaptionFilter),
+        new SqlParameter("@IsSpecialFilter", input.IsSpecialFilter ?? (object)DBNull.Value),
+        new SqlParameter("@PostTitleFilter", string.IsNullOrWhiteSpace(input.PostTitleFilter) ? (object)DBNull.Value : (object)input.PostTitleFilter),
+        new SqlParameter("@GroupMemberMemberPositionFilter", string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter) ? (object)DBNull.Value : (object)input.GroupMemberMemberPositionFilter),
+        new SqlParameter("@PostGroupPostGroupDescriptionFilter", string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter) ? (object)DBNull.Value : (object)input.PostGroupPostGroupDescriptionFilter),
+        new SqlParameter("@PostGroupPostSubGroupDescriptionFilter", string.IsNullOrWhiteSpace(input.PostGroupPostSubGroupDescriptionFilter) ? (object)DBNull.Value : (object)input.PostGroupPostSubGroupDescriptionFilter), // New parameter
+        new SqlParameter("@FromDate", input.FromDate ?? (object)DBNull.Value),
+        new SqlParameter("@ToDate", input.ToDate ?? (object)DBNull.Value),
+        new SqlParameter("@OrderBy", input.Sorting ?? "CreationTime DESC"),
+        new SqlParameter("@MaxResultCount", input.MaxResultCount),
+        new SqlParameter("@SkipCount", input.SkipCount)
             };
             var dbContext = await _dbContextProvider.GetDbContextAsync();
             var queryResult = await dbContext.Set<GetPostsForView>()
                 .FromSqlRaw(
-                    "EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy, @MaxResultCount, @SkipCount",
+                    "EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @PostGroupPostSubGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy, @MaxResultCount, @SkipCount",
                     parameters)
                 .ToListAsync();
-            var result = new List<GetPostForViewDto>();
-            foreach (var post in queryResult)
+
+            var result = queryResult.Select(post => new GetPostForViewDto
             {
-                result.Add(new GetPostForViewDto
+                Post = new PostDto
                 {
-
-
-                    Post = new PostDto
-                    {
-                        PostFile = post.PostFile,
-                        PostCaption = post.PostCaption,
-                        IsSpecial = post.IsSpecial,
-                        IsPublished = post.IsPublished,
-                        PostTitle = post.PostTitle,
-                        PostRefLink = post.PostRefLink,
-                        Id = post.Id,
-                        CreationTime = post.CreationTime,
-                        LastModificationTime = post.LastModificationTime
-                    },
-                    GroupMemberMemberPosition = post.GroupMemberMemberPosition ?? "",
-                    PostGroupPostGroupDescription = post.PostGroupPostGroupDescription ?? "",
-                    PostGroupPostSubGroupDescription = post.PostGroupPostSubGroupDescription ?? "",
-                    GroupFile = post.GroupFile,
-                    TotalVisits = post.TotalVisits,
-                    TotalLikes = post.TotalLikes,
-                    OrganizationId = post.OrganizationId,
-                    OrganizationName = post.OrganizationName,
-                    PostSubGroupId = post.PostSubGroupId,
-                    PublisherUserFirstName = post.PublisherUserFirstName,
-                    PublisherUserLastName = post.PublisherUserLastName,
-                    PublisherUserName = post.PublisherUserName,
-                }
-                );
-            }
+                    PostFile = post.PostFile,
+                    PostCaption = post.PostCaption,
+                    IsSpecial = post.IsSpecial,
+                    IsPublished = post.IsPublished,
+                    PostTitle = post.PostTitle,
+                    PostRefLink = post.PostRefLink,
+                    Id = post.Id,
+                    CreationTime = post.CreationTime,
+                    LastModificationTime = post.LastModificationTime
+                },
+                GroupMemberMemberPosition = post.GroupMemberMemberPosition ?? "",
+                PostGroupPostGroupDescription = post.PostGroupPostGroupDescription ?? "",
+                PostGroupPostSubGroupDescription = post.PostGroupPostSubGroupDescription ?? "", // New field
+                GroupFile = post.GroupFile,
+                TotalVisits = post.TotalVisits,
+                TotalLikes = post.TotalLikes,
+                OrganizationId = post.OrganizationId,
+                OrganizationName = post.OrganizationName,
+                PostSubGroupId = post.PostSubGroupId,
+                PublisherUserFirstName = post.PublisherUserFirstName,
+                PublisherUserLastName = post.PublisherUserLastName,
+                PublisherUserName = post.PublisherUserName,
+            }).ToList();
 
             return new PagedResultDto<GetPostForViewDto>(totalCount, result);
-
-            //var filteredPosts = _postRepository.GetAll()
-            //    .Include(e => e.GroupMemberFk)
-            //    .Include(e => e.PostGroupFk)
-            //    .WhereIf(input.OrganizationId.HasValue, x => x.PostGroupFk.OrganizationId == input.OrganizationId.Value)
-            //    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), e => false || e.PostCaption.Contains(input.Filter) || e.PostTitle.Contains(input.Filter))
-            //    .WhereIf(!string.IsNullOrWhiteSpace(input.PostCaptionFilter), e => e.PostCaption.Contains(input.PostCaptionFilter))
-            //    .WhereIf(input.IsSpecialFilter.HasValue && input.IsSpecialFilter > -1, e => (input.IsSpecialFilter == 1 && e.IsSpecial) || (input.IsSpecialFilter == 0 && !e.IsSpecial))
-            //    .WhereIf(!string.IsNullOrWhiteSpace(input.PostTitleFilter), e => e.PostTitle.Contains(input.PostTitleFilter))
-            //    .WhereIf(!string.IsNullOrWhiteSpace(input.GroupMemberMemberPositionFilter), e => e.GroupMemberFk != null && e.GroupMemberFk.MemberPosition == input.GroupMemberMemberPositionFilter)
-            //    .WhereIf(!string.IsNullOrWhiteSpace(input.PostGroupPostGroupDescriptionFilter), e => e.PostGroupFk != null && e.PostGroupFk.PostGroupDescription == input.PostGroupPostGroupDescriptionFilter)
-            //    .WhereIf(input.FromDate.HasValue, e => e.CreationTime >= input.FromDate.Value)
-            //    .WhereIf(input.ToDate.HasValue, e => e.CreationTime <= input.ToDate.Value);
-
-            //var pagedAndFilteredPosts = await filteredPosts
-            //    .OrderBy(input.Sorting ?? "Id asc")
-            //    .PageBy(input)
-            //    .ToListAsync();
-
-            //var results = new List<GetPostForViewDto>();
-
-            //foreach (var post in pagedAndFilteredPosts)
-            //{
-            //    var seenGroup = await _seenRepository.GetAll().Where(seen => seen.PostId == post.Id).ToListAsync();
-            //    var likeGroup = await _postLikeRepository.GetAll().Where(postLike => postLike.PostId == post.Id).ToListAsync();
-
-            //    var resultDto = new GetPostForViewDto
-            //    {
-            //        Post = new PostDto
-            //        {
-            //            PostFile = post.PostFile,
-            //            PostCaption = post.PostCaption,
-            //            IsSpecial = post.IsSpecial,
-            //            IsPublished = post.IsPublished,
-            //            PostTitle = post.PostTitle,
-            //            PostRefLink = post.PostRefLink,
-            //            Id = post.Id,
-            //            CreationTime = post.CreationTime,
-            //            LastModificationTime = post.LastModificationTime
-            //        },
-            //        GroupMemberMemberPosition = post.GroupMemberFk?.MemberPosition ?? "",
-            //        PostGroupPostGroupDescription = post.PostGroupFk?.PostGroupDescription ?? "",
-            //        GroupFile = post.PostGroupFk.GroupFile,
-            //        TotalVisits = seenGroup.Count,
-            //        TotalLikes = likeGroup.Count,
-            //        OrganizationId = post.PostGroupFk?.OrganizationFk?.Id ?? 0,
-            //        OrganizationName = post.PostGroupFk?.OrganizationFk?.OrganizationName ?? ""
-            //    };
-
-            //    resultDto.Post.PostFileFileName = await GetBinaryFileName(post.PostFile);
-
-            //    results.Add(resultDto);
-            //}
-
-            //var totalCount = await filteredPosts.CountAsync();
-
-            //return new PagedResultDto<GetPostForViewDto>(totalCount, results);
         }
 
 
