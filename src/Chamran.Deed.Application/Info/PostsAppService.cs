@@ -393,9 +393,14 @@ namespace Chamran.Deed.Info
         [AbpAuthorize(AppPermissions.Pages_Posts_Edit)]
         protected virtual async Task Update(CreateOrEditPostDto input)
         {
+            if (input.GroupMemberId == null)
+            {
+                throw new Exception("کاربر سازمان نمی تواند خالی باشد");
+            }
             var post = await _postRepository.FirstOrDefaultAsync((int)input.Id);
             bool shouldSendSmsNotification = post.CurrentPostStatus != input.CurrentPostStatus;
             ObjectMapper.Map(input, post);
+            
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken))
@@ -511,6 +516,7 @@ namespace Chamran.Deed.Info
             {
                 await PublishNewPostNotifications(post);
             }
+
         }
 
         [AbpAuthorize(AppPermissions.Pages_Posts_Delete)]
