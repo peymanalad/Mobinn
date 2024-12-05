@@ -29,7 +29,11 @@ using AutoMapper.Internal.Mappers;
 using Chamran.Deed.Authorization.Users.Dto;
 using Microsoft.Data.SqlClient;
 using Abp.EntityFrameworkCore;
+using Chamran.Deed.Authorization.Accounts.Dto;
+using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.EntityFrameworkCore;
+using Chamran.Deed.Net.Sms;
+using NPOI.SS.Formula.Functions;
 
 namespace Chamran.Deed.Info
 {
@@ -44,8 +48,10 @@ namespace Chamran.Deed.Info
         private readonly IRepository<PostSubGroup, int> _lookup_postSubGroupRepository;
         private readonly IRepository<UserPostGroup, int> _userPostGroupRepository;
         private readonly IRepository<Seen, int> _seenRepository;
+        private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<PostLike, int> _postLikeRepository;
         private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
+        private readonly ISmsSender _smsSender;
 
         private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IBinaryObjectManager _binaryObjectManager;
@@ -65,7 +71,7 @@ namespace Chamran.Deed.Info
             IBinaryObjectManager binaryObjectManager, IRepository<Organization> organization, IAppNotifier appNotifier,
             IRepository<UserPostGroup, int> userPostGroupRepository, IUnitOfWorkManager unitOfWorkManager,
             IRepository<PostLike, int> postLikeRepository, IRepository<Seen, int> seenRepository,
-            IDbContextProvider<DeedDbContext> dbContextProvider)
+            IRepository<User, long> userRepository, IDbContextProvider<DeedDbContext> dbContextProvider,ISmsSender smsSender)
         {
             _postRepository = postRepository;
             _commentRepository = commentRepository;
@@ -81,7 +87,9 @@ namespace Chamran.Deed.Info
             _unitOfWorkManager = unitOfWorkManager;
             _postLikeRepository = postLikeRepository;
             _seenRepository = seenRepository;
+            _userRepository = userRepository;
             _dbContextProvider = dbContextProvider;
+            _smsSender = smsSender;
             //_postCategoryRepository = postCategoryRepository;
             //_dbContextProvider= dbContextProvider;
         }
@@ -281,6 +289,77 @@ namespace Chamran.Deed.Info
             await unitOfWork.CompleteAsync();
             if (post.PostGroupId.HasValue)
                 await PublishNewPostNotifications(post);
+            await SendSmsNotification(post);
+        }
+
+        private async Task SendSmsNotification(Post post)
+        {
+            try
+            {
+                // Fetch the OrganizationId for the current post
+                var organizationId = await _lookup_groupMemberRepository.GetAll()
+                    .Where(gm => gm.Id == post.GroupMemberId)
+                    .Select(gm => gm.OrganizationId)
+                    .FirstOrDefaultAsync();
+
+                if (organizationId == null)
+                {
+                    throw new UserFriendlyException("سازمان مرتبط با این پست پیدا نشد");
+                }
+
+                switch (post.CurrentPostStatus)
+                {
+                    case PostStatus.Pending:
+                    {
+                        var monitorUsers = _userRepository.GetAll()
+                            .Where(x => x.UserType == AccountUserType.Monitor
+                                        && x.PhoneNumber.StartsWith("09")
+                                        && x.PhoneNumber.Length == 11);
+
+                        var organizationMemberIds = _lookup_groupMemberRepository.GetAll()
+                            .Where(gm => gm.OrganizationId == organizationId)
+                            .Select(gm => gm.UserId)
+                            .ToList();
+
+                        foreach (var monitorUser in monitorUsers)
+                        {
+                            if (organizationMemberIds.Contains(monitorUser.Id))
+                            {
+                                await _smsSender.SendAsync(monitorUser.PhoneNumber, "پست جدیدی در انتظار بررسی است");
+                            }
+                        }
+
+                        break;
+                    }
+                    case PostStatus.Revised:
+                    {
+                        var publisherUsers = _userRepository.GetAll()
+                            .Where(x => x.UserType == AccountUserType.Distributer
+                                        && x.PhoneNumber.StartsWith("09")
+                                        && x.PhoneNumber.Length == 11);
+
+                        var organizationMemberIds = _lookup_groupMemberRepository.GetAll()
+                            .Where(gm => gm.OrganizationId == organizationId)
+                            .Select(gm => gm.UserId)
+                            .ToList();
+
+                        foreach (var publisherUser in publisherUsers)
+                        {
+                            if (organizationMemberIds.Contains(publisherUser.Id))
+                            {
+                                await _smsSender.SendAsync(publisherUser.PhoneNumber, "پست جدیدی در انتظار انتشار است");
+                            }
+                        }
+
+                        break;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                
+            }
         }
 
         private async Task PublishNewPostNotifications(Post post)
@@ -307,8 +386,7 @@ namespace Chamran.Deed.Info
                     NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
                 }
             }),
-                userIds: ids.ToArray(),
-                NotificationSeverity.Info
+                userIds: ids.ToArray()
             );
         }
 
@@ -316,6 +394,7 @@ namespace Chamran.Deed.Info
         protected virtual async Task Update(CreateOrEditPostDto input)
         {
             var post = await _postRepository.FirstOrDefaultAsync((int)input.Id);
+            bool shouldSendSmsNotification = post.CurrentPostStatus != input.CurrentPostStatus;
             ObjectMapper.Map(input, post);
             try
             {
@@ -428,6 +507,10 @@ namespace Chamran.Deed.Info
                 //ignore
             }
 
+            if (shouldSendSmsNotification)
+            {
+                await PublishNewPostNotifications(post);
+            }
         }
 
         [AbpAuthorize(AppPermissions.Pages_Posts_Delete)]

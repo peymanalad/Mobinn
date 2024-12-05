@@ -4,6 +4,7 @@ using Abp.Application.Services.Dto;
 using Abp.Domain.Entities;
 using Abp.Domain.Entities.Auditing;
 using Abp.Timing;
+using Chamran.Deed.Authorization.Accounts.Dto;
 
 namespace Chamran.Deed.Authorization.Users.Dto
 {
@@ -17,6 +18,7 @@ namespace Chamran.Deed.Authorization.Users.Dto
         public string UserName { get; set; }
 
         public string EmailAddress { get; set; }
+        public AccountUserType UserType{ get; set; }
         
         public DateTime? LockoutEndDateUtc { get; set; }
 

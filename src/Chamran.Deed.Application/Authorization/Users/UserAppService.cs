@@ -44,6 +44,7 @@ using NUglify.Helpers;
 using Abp.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using Chamran.Deed.EntityFrameworkCore;
+using Chamran.Deed.Authorization.Accounts.Dto;
 
 namespace Chamran.Deed.Authorization.Users
 {
@@ -171,14 +172,9 @@ namespace Chamran.Deed.Authorization.Users
         public async Task<PagedResultDto<UserListDto>> GetListOfUsers(GetUsersInput input)
         {
             if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
-            //var totalCountParameter = new SqlParameter("@TotalCount", SqlDbType.Int)
-            //{
-            //    Direction = ParameterDirection.Output
-            //};
 
             var parameters = new[]
-   {
-
+            {
         new SqlParameter("@NationalIdFilter", input.NationalIdFilter ?? (object)DBNull.Value),
         new SqlParameter("@NameFilter", string.IsNullOrWhiteSpace(input.NameFilter) ? (object)DBNull.Value : (object)input.NameFilter),
         new SqlParameter("@SurNameFilter", string.IsNullOrWhiteSpace(input.SurNameFilter) ? (object)DBNull.Value : (object)input.SurNameFilter),
@@ -189,80 +185,48 @@ namespace Chamran.Deed.Authorization.Users
         new SqlParameter("@ToCreationDate", input.ToCreationDate ?? (object)DBNull.Value),
         new SqlParameter("@FromLastLoginDate", input.FromLastLoginDate ?? (object)DBNull.Value),
         new SqlParameter("@ToLastLoginDate", input.ToLastLoginDate ?? (object)DBNull.Value),
-        new SqlParameter("@Role", (object)DBNull.Value ),//string.IsNullOrWhiteSpace(input.Role) ? (object)DBNull.Value : (object)input.Role),
+        new SqlParameter("@Role", input.Role ?? (object)DBNull.Value),
         new SqlParameter("@OnlyLockedUsers", input.OnlyLockedUsers),
         new SqlParameter("@Filter", string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
-        //string.IsNullOrWhiteSpace(input.Permissions) ? (object)DBNull.Value : (object)input.Permissions),
-        new SqlParameter("@Permissions",(object)DBNull.Value ),
+        new SqlParameter("@Permissions", (object)DBNull.Value),
         new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
         new SqlParameter("@Sorting", input.Sorting ?? "CreationTime DESC"),
         new SqlParameter("@MaxResultCount", input.MaxResultCount),
-           new SqlParameter("@SkipCount", input.SkipCount),
-   };
+        new SqlParameter("@SkipCount", input.SkipCount),
+        new SqlParameter("@UserType", input.UserType ?? (object)DBNull.Value)
+    };
 
             var dbContext = await _dbContextProvider.GetDbContextAsync();
 
             var queryResult = await dbContext.Set<GetListOfUsers>()
-                .FromSqlRaw("EXEC GetListOfUsers @NationalIdFilter, @NameFilter, @SurNameFilter, @UserNameFilter, @PhoneNumberFilter, @IsActiveFilter, @FromCreationDate, @ToCreationDate, @FromLastLoginDate, @ToLastLoginDate, @Role, @OnlyLockedUsers, @Filter, @Permissions, @OrganizationId, @Sorting, @MaxResultCount, @SkipCount", parameters)
+                .FromSqlRaw("EXEC GetListOfUsers @NationalIdFilter, @NameFilter, @SurNameFilter, @UserNameFilter, @PhoneNumberFilter, @IsActiveFilter, @FromCreationDate, @ToCreationDate, @FromLastLoginDate, @ToLastLoginDate, @Role, @OnlyLockedUsers, @Filter, @Permissions, @OrganizationId, @Sorting, @MaxResultCount, @SkipCount, @UserType", parameters)
                 .ToListAsync();
 
-            var result = new List<UserListDto>();
-            foreach (var user in queryResult)
+            var result = queryResult.Select(user => new UserListDto
             {
-                result.Add(new UserListDto
-                {
-                    Id = user.Id,
-                    NationalId = user.NationalId,
-                    Name = user.Name,
-                    Surname = user.Surname,
-                    UserName = user.UserName,
-                    EmailAddress = user.EmailAddress,
-                    PhoneNumber = user.PhoneNumber,
-                    ProfilePictureId = user.ProfilePictureId,
-                    Roles = new List<UserListRoleDto>()
-                    {
-                        new UserListRoleDto()
-                        {
-                            RoleId = user.AssignedRoleId??3,
-                            RoleName = string.IsNullOrEmpty(user.AssignedRoleName)?"User":user.AssignedRoleName,
-                        }
-                    },
-                    // Roles = user.Roles, // You may need to map roles separately based on your structure
-                    IsActive = user.IsActive,
-                    CreationTime = user.CreationTime,
-                    LastLoginAttemptTime = user.LastLoginAttemptTime
-                });
+                Id = user.Id,
+                NationalId = user.NationalId,
+                Name = user.Name,
+                Surname = user.Surname,
+                UserName = user.UserName,
+                EmailAddress = user.EmailAddress,
+                PhoneNumber = user.PhoneNumber,
+                ProfilePictureId = user.ProfilePictureId,
+                Roles = new List<UserListRoleDto>
+        {
+            new UserListRoleDto
+            {
+                RoleId = user.AssignedRoleId ?? 3,
+                RoleName = string.IsNullOrEmpty(user.AssignedRoleName) ? "User" : user.AssignedRoleName,
             }
-            object[] countParameters = {
+        },
+                IsActive = user.IsActive,
+                CreationTime = user.CreationTime,
+                LastLoginAttemptTime = user.LastLoginAttemptTime,
+                UserType = (AccountUserType)user.UserType
+            }).ToList();
 
-                new SqlParameter("@NationalIdFilter", input.NationalIdFilter ?? (object)DBNull.Value),
-                new SqlParameter("@NameFilter", string.IsNullOrWhiteSpace(input.NameFilter) ? (object)DBNull.Value : (object)input.NameFilter),
-                new SqlParameter("@SurNameFilter", string.IsNullOrWhiteSpace(input.SurNameFilter) ? (object)DBNull.Value : (object)input.SurNameFilter),
-                new SqlParameter("@UserNameFilter", string.IsNullOrWhiteSpace(input.UserNameFilter) ? (object)DBNull.Value : (object)input.UserNameFilter),
-                new SqlParameter("@PhoneNumberFilter", string.IsNullOrWhiteSpace(input.PhoneNumberFilter) ? (object)DBNull.Value : (object)input.PhoneNumberFilter),
-                new SqlParameter("@IsActiveFilter", input.IsActiveFilter ?? (object)DBNull.Value),
-                new SqlParameter("@FromCreationDate", input.FromCreationDate ?? (object)DBNull.Value),
-                new SqlParameter("@ToCreationDate", input.ToCreationDate ?? (object)DBNull.Value),
-                new SqlParameter("@FromLastLoginDate", input.FromLastLoginDate ?? (object)DBNull.Value),
-                new SqlParameter("@ToLastLoginDate", input.ToLastLoginDate ?? (object)DBNull.Value),
-                new SqlParameter("@Role", (object)DBNull.Value ),//string.IsNullOrWhiteSpace(input.Role) ? (object)DBNull.Value : (object)input.Role),
-                new SqlParameter("@OnlyLockedUsers", input.OnlyLockedUsers),
-                new SqlParameter("@Filter", string.IsNullOrWhiteSpace(input.Filter) ? (object)DBNull.Value : (object)input.Filter),
-                //string.IsNullOrWhiteSpace(input.Permissions) ? (object)DBNull.Value : (object)input.Permissions),
-                new SqlParameter("@Permissions",(object)DBNull.Value ),
-                new SqlParameter("@OrganizationId", input.OrganizationId ?? (object)DBNull.Value),
-                new SqlParameter("@Sorting", input.Sorting ?? "CreationTime DESC"),
-                new SqlParameter("@MaxResultCount",9999999),
-                new SqlParameter("@SkipCount", (object)0),
-};
-            var countQueryResult = await dbContext.Set<GetListOfUsers>()
-                    .FromSqlRaw(
-                        "EXEC GetListOfUsers @NationalIdFilter, @NameFilter, @SurNameFilter, @UserNameFilter, @PhoneNumberFilter, @IsActiveFilter, @FromCreationDate, @ToCreationDate, @FromLastLoginDate, @ToLastLoginDate, @Role, @OnlyLockedUsers, @Filter, @Permissions, @OrganizationId, @Sorting, @MaxResultCount, @SkipCount",
-                        countParameters)
-                    .ToListAsync()
-                ;
-            return new PagedResultDto<UserListDto>(countQueryResult.Count, result);
-
+            return new PagedResultDto<UserListDto>(queryResult.Count, result);
         }
 
 
@@ -578,7 +542,6 @@ namespace Chamran.Deed.Authorization.Users
 
                 output.User = ObjectMapper.Map<UserEditDto>(user);
                 output.ProfilePictureId = user.ProfilePictureId;
-
                 var organizationUnits = await UserManager.GetOrganizationUnitsAsync(user);
                 output.MemberedOrganizationUnits = organizationUnits.Select(ou => ou.Code).ToList();
 
