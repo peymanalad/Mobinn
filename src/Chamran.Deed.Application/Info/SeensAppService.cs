@@ -35,15 +35,25 @@ namespace Chamran.Deed.Info
         [AbpAuthorize(AppPermissions.Pages_Seens_Create)]
         public async Task CreateCurrentSeen(int postId)
         {
-            if (AbpSession.UserId == null) throw new UserFriendlyException("Not Logged In!");
+            if (AbpSession.UserId == null)
+                throw new UserFriendlyException("Not Logged In!");
 
-            var seen = new Seen()
+            var userId = AbpSession.UserId.Value;
+
+            // Check if the record already exists
+            var existingSeen = await _seenRepository.FirstOrDefaultAsync(s => s.UserId == userId && s.PostId == postId);
+
+            if (existingSeen == null)
             {
-                UserId = AbpSession.UserId,
-                PostId = postId,
-                SeenTime = Clock.Now
-            };
-            await _seenRepository.InsertAsync(seen);
+                var seen = new Seen
+                {
+                    UserId = userId,
+                    PostId = postId,
+                    SeenTime = Clock.Now
+                };
+
+                await _seenRepository.InsertAsync(seen);
+            }
         }
 
         [AbpAuthorize(AppPermissions.Pages_Seens_Create)]

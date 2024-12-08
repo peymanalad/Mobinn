@@ -8,4 +8,10 @@ namespace Chamran.Deed.Info.Dtos
 
         public string DisplayName { get; set; }
     }
+    public class AllowedUserPostGroupUserLookupTableDto
+    {
+        public long Id { get; set; }
+
+        public string DisplayName { get; set; }
+    }
 }

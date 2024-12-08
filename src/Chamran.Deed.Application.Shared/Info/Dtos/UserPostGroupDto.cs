@@ -11,4 +11,13 @@ namespace Chamran.Deed.Info.Dtos
         public int PostGroupId { get; set; }
 
     }
+
+    public class AllowedUserPostGroupDto : EntityDto
+    {
+
+        public long UserId { get; set; }
+
+        public int PostGroupId { get; set; }
+
+    }
 }

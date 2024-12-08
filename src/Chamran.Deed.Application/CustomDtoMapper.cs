@@ -71,7 +71,9 @@ namespace Chamran.Deed
             configuration.CreateMap<CreateOrEditOrganizationChartDto, OrganizationChart>().ReverseMap();
             configuration.CreateMap<OrganizationChartDto, OrganizationChart>().ReverseMap();
             configuration.CreateMap<CreateOrEditUserPostGroupDto, UserPostGroup>().ReverseMap();
-            configuration.CreateMap<UserPostGroupDto, UserPostGroup>().ReverseMap();
+            configuration.CreateMap<UserPostGroupDto, UserPostGroup>().ReverseMap(); 
+            configuration.CreateMap<CreateOrEditAllowedUserPostGroupDto, AllowedUserPostGroup>().ReverseMap();
+            configuration.CreateMap<AllowedUserPostGroupDto, AllowedUserPostGroup>().ReverseMap();
             configuration.CreateMap<CreateOrEditUserLocationDto, UserLocation>().ReverseMap();
             configuration.CreateMap<UserLocationDto, UserLocation>().ReverseMap();
             configuration.CreateMap<CreateOrEditUserTokenDto, Common.UserToken>().ReverseMap();
