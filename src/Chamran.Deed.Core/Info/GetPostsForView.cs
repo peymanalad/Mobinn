@@ -30,5 +30,6 @@ public class GetPostsForView
     public string PublisherUserFirstName { get; set; }
     public string PublisherUserLastName { get; set; }
     public int CurrentPostStatus { get; set; }
-
+    public long? PublisherUserId { get; set; }
+    public DateTime? DatePublished { get; set; }
 }
