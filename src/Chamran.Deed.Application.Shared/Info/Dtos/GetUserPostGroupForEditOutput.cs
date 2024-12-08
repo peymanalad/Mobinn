@@ -13,4 +13,13 @@ namespace Chamran.Deed.Info.Dtos
         public string PostGroupPostGroupDescription { get; set; }
 
     }
+    public class GetAllowedUserPostGroupForEditOutput
+    {
+        public CreateOrEditAllowedUserPostGroupDto UserPostGroup { get; set; }
+
+        public string UserName { get; set; }
+
+        public string PostGroupPostGroupDescription { get; set; }
+
+    }
 }

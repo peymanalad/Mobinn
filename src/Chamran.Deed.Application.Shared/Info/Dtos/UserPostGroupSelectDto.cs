@@ -10,4 +10,11 @@ namespace Chamran.Deed.Info.Dtos
         public string GroupDescription { get; set; }
         public bool IsSelected { get; set; }
     }
+
+    public class AllowedUserPostGroupselectDto
+    {
+        public int GroupId { get; set; }
+        public string GroupDescription { get; set; }
+        public bool IsSelected { get; set; }
+    }
 }

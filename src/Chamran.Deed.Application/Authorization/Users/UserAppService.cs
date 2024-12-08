@@ -618,6 +618,19 @@ namespace Chamran.Deed.Authorization.Users
                 await _userPolicy.CheckMaxUserCountAsync(AbpSession.GetTenantId());
             }
 
+            // Check for unique username
+            if (await UserManager.Users.AnyAsync(u => u.UserName == input.User.PhoneNumber))
+            {
+                throw new UserFriendlyException($"The username '{input.User.PhoneNumber}' is already taken.");
+            }
+
+            // Check for unique phone number
+            if (!string.IsNullOrWhiteSpace(input.User.PhoneNumber) &&
+                await UserManager.Users.AnyAsync(u => u.PhoneNumber == input.User.PhoneNumber))
+            {
+                throw new UserFriendlyException($"The phone number '{input.User.PhoneNumber}' is already in use.");
+            }
+
             var user = ObjectMapper.Map<User>(input.User); //Passwords is not mapped (see mapping configuration)
             user.UserName = input.User.PhoneNumber;
             user.TenantId = AbpSession.TenantId;
@@ -714,6 +727,19 @@ namespace Chamran.Deed.Authorization.Users
             if (AbpSession.TenantId.HasValue)
             {
                 await _userPolicy.CheckMaxUserCountAsync(AbpSession.GetTenantId());
+            }
+
+            // Check for unique username
+            if (await UserManager.Users.AnyAsync(u => u.UserName == input.User.PhoneNumber))
+            {
+                throw new UserFriendlyException($"The username '{input.User.PhoneNumber}' is already taken.");
+            }
+
+            // Check for unique phone number
+            if (!string.IsNullOrWhiteSpace(input.User.PhoneNumber) &&
+                await UserManager.Users.AnyAsync(u => u.PhoneNumber == input.User.PhoneNumber))
+            {
+                throw new UserFriendlyException($"The phone number '{input.User.PhoneNumber}' is already in use.");
             }
 
             var user = ObjectMapper.Map<User>(input.User); //Passwords is not mapped (see mapping configuration)
@@ -892,6 +918,20 @@ namespace Chamran.Deed.Authorization.Users
 
             var user = await UserManager.FindByIdAsync(input.User.Id.Value.ToString());
 
+            // Check if the username is already in use by another user
+            if (await UserManager.Users.AnyAsync(u => u.UserName == input.User.UserName && u.Id != user.Id))
+            {
+                throw new UserFriendlyException($"The username '{input.User.UserName}' is already taken by another user.");
+            }
+
+            // Check if the phone number is already in use by another user
+            if (!string.IsNullOrWhiteSpace(input.User.PhoneNumber) &&
+                await UserManager.Users.AnyAsync(u => u.PhoneNumber == input.User.PhoneNumber && u.Id != user.Id))
+            {
+                throw new UserFriendlyException($"The phone number '{input.User.PhoneNumber}' is already in use by another user.");
+            }
+
+
             //Update user properties
             ObjectMapper.Map(input.User, user); //Passwords is not mapped (see mapping configuration)
 
@@ -942,6 +982,19 @@ namespace Chamran.Deed.Authorization.Users
             if (AbpSession.TenantId.HasValue)
             {
                 await _userPolicy.CheckMaxUserCountAsync(AbpSession.GetTenantId());
+            }
+
+            // Check if the username is already in use
+            if (await UserManager.Users.AnyAsync(u => u.UserName == input.User.UserName))
+            {
+                throw new UserFriendlyException($"The username '{input.User.UserName}' is already taken or IsDeleted = true");
+            }
+
+            // Check if the phone number is already in use
+            if (!string.IsNullOrWhiteSpace(input.User.PhoneNumber) &&
+                await UserManager.Users.AnyAsync(u => u.PhoneNumber == input.User.PhoneNumber))
+            {
+                throw new UserFriendlyException($"The phone number '{input.User.PhoneNumber}' is already in use or IsDeleted = true");
             }
 
             var user = ObjectMapper.Map<User>(input.User); //Passwords is not mapped (see mapping configuration)

@@ -40,6 +40,7 @@ namespace Chamran.Deed.EntityFrameworkCore
         public DbSet<OrganizationChart> OrganizationCharts { get; set; }
 
         public DbSet<UserPostGroup> UserPostGroups { get; set; }
+        public DbSet<AllowedUserPostGroup> AllowedUserPostGroups { get; set; }
 
         public DbSet<UserLocation> UserLocations { get; set; }
 

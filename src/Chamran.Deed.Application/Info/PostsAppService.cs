@@ -813,6 +813,7 @@ namespace Chamran.Deed.Info
                         .Include(e => e.AppBinaryObjectFk9)
                         .Include(e => e.AppBinaryObjectFk10)
                         .Where(x => x.PostGroupFk.OrganizationId == input.OrganizationId)
+                        .Where(x=>x.IsPublished)
                         .WhereIf(input.PostGroupId > 0, p => p.PostGroupId == input.PostGroupId)
                                     join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
                                         pg.Id into joiner1
