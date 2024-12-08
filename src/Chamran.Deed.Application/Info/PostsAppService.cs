@@ -141,7 +141,14 @@ namespace Chamran.Deed.Info
                     Id = post.Id,
                     CreationTime = post.CreationTime,
                     LastModificationTime = post.LastModificationTime,
-                    CurrentPostStatus = (PostStatus)post.CurrentPostStatus
+                    CurrentPostStatus = (PostStatus)post.CurrentPostStatus,
+                    PublisherUserId = post.PublisherUserId,
+                    DatePublished = post.DatePublished,
+                    PublisherUserFirstName = post.PublisherUserFirstName,
+                    PublisherUserLastName = post.PublisherUserLastName,
+                    PublisherUserName = post.PublisherUserName,
+                    PostSubGroupId = post.PostSubGroupId,
+                    
                 },
                 GroupMemberMemberPosition = post.GroupMemberMemberPosition ?? "",
                 PostGroupPostGroupDescription = post.PostGroupPostGroupDescription ?? "",
