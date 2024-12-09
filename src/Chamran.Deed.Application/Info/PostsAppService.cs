@@ -58,6 +58,7 @@ namespace Chamran.Deed.Info
         private readonly IRepository<Organization> organizationRepository;
         private readonly IAppNotifier _appNotifier;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
+        private readonly IRepository<AllowedUserPostGroup, int> _allowedUserPostGroupRepository;
 
         //private readonly IRepository<PostCategory> _postCategoryRepository;
         //private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
@@ -70,7 +71,7 @@ namespace Chamran.Deed.Info
             IRepository<PostGroup, int> lookup_postGroupRepository, IRepository<PostSubGroup, int> lookup_postSubGroupRepository, ITempFileCacheManager tempFileCacheManager,
             IBinaryObjectManager binaryObjectManager, IRepository<Organization> organization, IAppNotifier appNotifier,
             IRepository<UserPostGroup, int> userPostGroupRepository, IUnitOfWorkManager unitOfWorkManager,
-            IRepository<PostLike, int> postLikeRepository, IRepository<Seen, int> seenRepository,
+            IRepository<PostLike, int> postLikeRepository, IRepository<Seen, int> seenRepository, IRepository<AllowedUserPostGroup, int> allowedUserPostGroupRepository,
             IRepository<User, long> userRepository, IDbContextProvider<DeedDbContext> dbContextProvider,ISmsSender smsSender)
         {
             _postRepository = postRepository;
@@ -79,6 +80,7 @@ namespace Chamran.Deed.Info
             _lookup_groupMemberRepository = lookup_groupMemberRepository;
             _lookup_postGroupRepository = lookup_postGroupRepository;
             _lookup_postSubGroupRepository = lookup_postSubGroupRepository;
+            _allowedUserPostGroupRepository = allowedUserPostGroupRepository;
             _tempFileCacheManager = tempFileCacheManager;
             _binaryObjectManager = binaryObjectManager;
             organizationRepository = organization;
@@ -618,12 +620,18 @@ namespace Chamran.Deed.Info
         public async Task<PagedResultDto<PostPostGroupLookupTableDto>> GetAllPostGroupForLookupTable(
             GetAllForLookupTableInput input)
         {
+            if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
+            var user = await _userRepository.GetAsync(AbpSession.UserId.Value);
             var query = _lookup_postGroupRepository.GetAll().Include(x => x.OrganizationFk)
                 .WhereIf(input.OrganizationId.HasValue,x => x.OrganizationId == input.OrganizationId).WhereIf(
                     !string.IsNullOrWhiteSpace(input.Filter),
                     e => e.PostGroupDescription != null && e.PostGroupDescription.Contains(input.Filter)
                 );
-
+            if ((int)user.UserType < 3)
+            {
+                query = query.Where(pg => _allowedUserPostGroupRepository.GetAll()
+                    .Any(aug => aug.UserId == user.Id  && aug.PostGroupId == pg.Id));
+            }
             var totalCount = await query.CountAsync();
 
             var postGroupList = await query
