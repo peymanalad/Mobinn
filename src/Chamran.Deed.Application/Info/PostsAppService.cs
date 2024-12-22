@@ -34,6 +34,7 @@ using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.EntityFrameworkCore;
 using Chamran.Deed.Net.Sms;
 using NPOI.SS.Formula.Functions;
+using Stripe.Identity;
 
 namespace Chamran.Deed.Info
 {
@@ -60,6 +61,8 @@ namespace Chamran.Deed.Info
         private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly IRepository<AllowedUserPostGroup, int> _allowedUserPostGroupRepository;
 
+        private readonly IRepository<PostSubGroup> _PostSubGroupRepository;
+
         //private readonly IRepository<PostCategory> _postCategoryRepository;
         //private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
 
@@ -72,7 +75,8 @@ namespace Chamran.Deed.Info
             IBinaryObjectManager binaryObjectManager, IRepository<Organization> organization, IAppNotifier appNotifier,
             IRepository<UserPostGroup, int> userPostGroupRepository, IUnitOfWorkManager unitOfWorkManager,
             IRepository<PostLike, int> postLikeRepository, IRepository<Seen, int> seenRepository, IRepository<AllowedUserPostGroup, int> allowedUserPostGroupRepository,
-            IRepository<User, long> userRepository, IDbContextProvider<DeedDbContext> dbContextProvider,ISmsSender smsSender)
+            IRepository<User, long> userRepository, IDbContextProvider<DeedDbContext> dbContextProvider,ISmsSender smsSender,
+            IRepository<PostSubGroup> PostSubGroupRepository)
         {
             _postRepository = postRepository;
             _commentRepository = commentRepository;
@@ -94,6 +98,7 @@ namespace Chamran.Deed.Info
             _smsSender = smsSender;
             //_postCategoryRepository = postCategoryRepository;
             //_dbContextProvider= dbContextProvider;
+            _PostSubGroupRepository = PostSubGroupRepository;
         }
 
         public async Task<PagedResultDto<GetPostForViewDto>> GetAll(GetAllPostsInput input)
@@ -714,12 +719,12 @@ namespace Chamran.Deed.Info
             post.PostFile = null;
         }
 
-        public Task<PagedResultDto<GetPostCategoriesForViewDto>> GetPostCategoriesForView(int organizationId)
+        public async Task<PagedResultDto<GetPostCategoriesForViewDto>> GetPostCategoriesForView(int organizationId)
         {
             try
             {
                 var cat = new List<GetPostCategoriesForViewDto>();
-                var queryPostCat = from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
+                var queryPostCat = await (from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
                                        //join g in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationId equals g.Id into joiner1
                                        //from g in joiner1.DefaultIfEmpty()
                                        //join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
@@ -733,21 +738,26 @@ namespace Chamran.Deed.Info
                                        pc.PostGroupDescription,
                                        PostGroupHeaderPicFile = pc.GroupFile,
                                        PostGroupLatestPicFile = _postRepository.GetAll().Where(p => p.PostGroupId == pc.Id)
-                                           .OrderByDescending(p => p.CreationTime).FirstOrDefault().PostFile
-                                   };
+                                           .OrderByDescending(p => p.CreationTime).FirstOrDefault().PostFile,
+                                       
+                                   }).ToListAsync();
 
                 foreach (var postCategory in queryPostCat)
                 {
+                    var filteredPostSubGroups = await _lookup_postSubGroupRepository.GetAll()
+                        .Where(p => p.PostGroupId == postCategory.Id).CountAsync();
+
                     cat.Add(new GetPostCategoriesForViewDto
                     {
                         PostGroupLatestPicFile = postCategory.PostGroupLatestPicFile,
                         PostGroupHeaderPicFile = postCategory.PostGroupHeaderPicFile,
                         Id = postCategory.Id,
-                        PostGroupDescription = postCategory.PostGroupDescription
+                        PostGroupDescription = postCategory.PostGroupDescription,
+                        HasSubGroups = filteredPostSubGroups > 0,
                     });
                 }
 
-                return Task.FromResult(new PagedResultDto<GetPostCategoriesForViewDto>(cat.Count, cat));
+                return await Task.FromResult(new PagedResultDto<GetPostCategoriesForViewDto>(cat.Count, cat));
             }
             catch (Exception ex)
             {
@@ -856,6 +866,7 @@ namespace Chamran.Deed.Info
                                         p.PostGroupId,
                                         p.GroupMemberFk,
                                         p.PostGroupFk,
+                                        p.PostSubGroupFk,
                                         p.AppBinaryObjectFk,
                                         p.AppBinaryObjectFk2,
                                         p.AppBinaryObjectFk3,
@@ -912,6 +923,11 @@ namespace Chamran.Deed.Info
                             datam.GroupFile = post.PostGroupFk.GroupFile;
                             datam.GroupDescription = post.PostGroupFk.PostGroupDescription;
 
+                        }
+
+                        if (post.PostSubGroupFk != null)
+                        {
+                            datam.PostSubGroupDescription = post.PostSubGroupFk.PostSubGroupDescription;
                         }
 
                         if (post.AppBinaryObjectFk != null)
