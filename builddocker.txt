@@ -5,7 +5,7 @@ M@snaviM@snavi
 docker login docker.mobinn.ir
 admin
 Y@snaSystem
-docker login 192.168.55.145:5000
+docker login 192.168.55.545:5000
 
 docker build -t ideed:23.29 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 docker images
@@ -27,10 +27,10 @@ docker push docker.mobinn.ir/ideedreact:10.9
 
 
 
-docker build -t ideedpwa:5.1 C:\ZProjects\ideed\pwa
+docker build -t ideedpwa:5.5 C:\ZProjects\ideed\pwa
 docker images
-docker tag  2c68fc9b601d docker.mobinn.ir/ideedpwa:5.1
-docker push docker.mobinn.ir/ideedpwa:5.1
+docker tag  45f13c791e99 docker.mobinn.ir/ideedpwa:5.5
+docker push docker.mobinn.ir/ideedpwa:5.5
 
 
 docker-compose down -v
