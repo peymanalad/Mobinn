@@ -10,6 +10,7 @@ namespace Chamran.Deed.Info.Dtos
         public string PostGroupDescription { get; set; }
         public Guid? PostGroupLatestPicFile { get; set; }
         public Guid? PostGroupHeaderPicFile { get; set; }
+        public bool? HasSubGroups { get; set; }
 
     }
 }
