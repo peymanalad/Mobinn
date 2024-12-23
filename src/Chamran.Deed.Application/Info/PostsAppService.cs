@@ -34,6 +34,7 @@ using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.EntityFrameworkCore;
 using Chamran.Deed.Net.Sms;
 using NPOI.SS.Formula.Functions;
+using Stripe.Identity;
 
 namespace Chamran.Deed.Info
 {
@@ -58,7 +59,6 @@ namespace Chamran.Deed.Info
         private readonly IRepository<Organization> organizationRepository;
         private readonly IAppNotifier _appNotifier;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
-        private readonly IRepository<AllowedUserPostGroup, int> _allowedUserPostGroupRepository;
 
         //private readonly IRepository<PostCategory> _postCategoryRepository;
         //private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
@@ -80,7 +80,6 @@ namespace Chamran.Deed.Info
             _lookup_groupMemberRepository = lookup_groupMemberRepository;
             _lookup_postGroupRepository = lookup_postGroupRepository;
             _lookup_postSubGroupRepository = lookup_postSubGroupRepository;
-            _allowedUserPostGroupRepository = allowedUserPostGroupRepository;
             _tempFileCacheManager = tempFileCacheManager;
             _binaryObjectManager = binaryObjectManager;
             organizationRepository = organization;
@@ -620,18 +619,12 @@ namespace Chamran.Deed.Info
         public async Task<PagedResultDto<PostPostGroupLookupTableDto>> GetAllPostGroupForLookupTable(
             GetAllForLookupTableInput input)
         {
-            if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
-            var user = await _userRepository.GetAsync(AbpSession.UserId.Value);
             var query = _lookup_postGroupRepository.GetAll().Include(x => x.OrganizationFk)
                 .WhereIf(input.OrganizationId.HasValue,x => x.OrganizationId == input.OrganizationId).WhereIf(
                     !string.IsNullOrWhiteSpace(input.Filter),
                     e => e.PostGroupDescription != null && e.PostGroupDescription.Contains(input.Filter)
                 );
-            if ((int)user.UserType < 3)
-            {
-                query = query.Where(pg => _allowedUserPostGroupRepository.GetAll()
-                    .Any(aug => aug.UserId == user.Id  && aug.PostGroupId == pg.Id));
-            }
+
             var totalCount = await query.CountAsync();
 
             var postGroupList = await query
@@ -714,12 +707,12 @@ namespace Chamran.Deed.Info
             post.PostFile = null;
         }
 
-        public Task<PagedResultDto<GetPostCategoriesForViewDto>> GetPostCategoriesForView(int organizationId)
+        public async Task<PagedResultDto<GetPostCategoriesForViewDto>> GetPostCategoriesForView(int organizationId)
         {
             try
             {
                 var cat = new List<GetPostCategoriesForViewDto>();
-                var queryPostCat = from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
+                var queryPostCat = await (from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
                                        //join g in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationId equals g.Id into joiner1
                                        //from g in joiner1.DefaultIfEmpty()
                                        //join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
@@ -733,21 +726,26 @@ namespace Chamran.Deed.Info
                                        pc.PostGroupDescription,
                                        PostGroupHeaderPicFile = pc.GroupFile,
                                        PostGroupLatestPicFile = _postRepository.GetAll().Where(p => p.PostGroupId == pc.Id)
-                                           .OrderByDescending(p => p.CreationTime).FirstOrDefault().PostFile
-                                   };
+                                           .OrderByDescending(p => p.CreationTime).FirstOrDefault().PostFile,
+                                       
+                                   }).ToListAsync();
 
                 foreach (var postCategory in queryPostCat)
                 {
+                    var filteredPostSubGroups = await _lookup_postSubGroupRepository.GetAll()
+                        .Where(p => p.PostGroupId == postCategory.Id).CountAsync();
+
                     cat.Add(new GetPostCategoriesForViewDto
                     {
                         PostGroupLatestPicFile = postCategory.PostGroupLatestPicFile,
                         PostGroupHeaderPicFile = postCategory.PostGroupHeaderPicFile,
                         Id = postCategory.Id,
-                        PostGroupDescription = postCategory.PostGroupDescription
+                        PostGroupDescription = postCategory.PostGroupDescription,
+                        HasSubGroups = filteredPostSubGroups > 0,
                     });
                 }
 
-                return Task.FromResult(new PagedResultDto<GetPostCategoriesForViewDto>(cat.Count, cat));
+                return await Task.FromResult(new PagedResultDto<GetPostCategoriesForViewDto>(cat.Count, cat));
             }
             catch (Exception ex)
             {
@@ -856,6 +854,7 @@ namespace Chamran.Deed.Info
                                         p.PostGroupId,
                                         p.GroupMemberFk,
                                         p.PostGroupFk,
+                                        p.PostSubGroupFk,
                                         p.AppBinaryObjectFk,
                                         p.AppBinaryObjectFk2,
                                         p.AppBinaryObjectFk3,
@@ -912,6 +911,11 @@ namespace Chamran.Deed.Info
                             datam.GroupFile = post.PostGroupFk.GroupFile;
                             datam.GroupDescription = post.PostGroupFk.PostGroupDescription;
 
+                        }
+
+                        if (post.PostSubGroupFk != null)
+                        {
+                            datam.PostSubGroupDescription = post.PostSubGroupFk.PostSubGroupDescription;
                         }
 
                         if (post.AppBinaryObjectFk != null)
