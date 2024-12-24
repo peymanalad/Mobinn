@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <localizationDictionary culture="en">
-  <texts>    <text name="InstagramCrawlerPost">Instagram crawler post</text>
+  <texts>
+    <text name="InstagramCrawlerPost">Instagram crawler post</text>
     <text name="CreateNewInstagramCrawlerPost">Create new instagram crawler post</text>
     <text name="EditInstagramCrawlerPost">Edit instagram crawler post</text>
     <text name="DeleteInstagramCrawlerPost">Delete instagram crawler post</text>

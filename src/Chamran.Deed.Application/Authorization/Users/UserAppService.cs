@@ -855,7 +855,9 @@ namespace Chamran.Deed.Authorization.Users
                 throw new UserFriendlyException(L("YouCanNotDeleteOwnAccount"));
             }
 
-            var members = _groupMemberRepository.GetAll().Where(x => x.UserId == input.Id);
+            var members = _groupMemberRepository.GetAll()
+                .Where(x => x.UserId == input.Id)
+                .ToList();
             foreach (var groupMember in members)
             {
                 if (_postRepository.GetAll().Any(x => x.GroupMemberId == groupMember.Id))
@@ -863,6 +865,10 @@ namespace Chamran.Deed.Authorization.Users
             }
 
             var user = await UserManager.GetUserByIdAsync(input.Id);
+            if (user == null)
+            {
+                throw new UserFriendlyException(L("کاربر پیدا نشد."));
+            }
             CheckErrors(await UserManager.DeleteAsync(user));
             
         }
