@@ -398,6 +398,10 @@ namespace Chamran.Deed.Info
             }
             var post = await _postRepository.FirstOrDefaultAsync((int)input.Id);
             bool shouldSendSmsNotification = post.CurrentPostStatus != input.CurrentPostStatus;
+            if (input.PublisherUserId == null)
+            {
+                input.PublisherUserId = post.PublisherUserId;
+            }
             ObjectMapper.Map(input, post);
             
             try
