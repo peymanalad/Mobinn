@@ -9,6 +9,7 @@ namespace Chamran.Deed.Info.Dtos
     {
         public int PostGroupId { get; set; }
         public int  OrganizationId { get; set; }
+        public int PostSubGroupId { get; set; }
         
     }
 }
