@@ -825,6 +825,7 @@ namespace Chamran.Deed.Info
                         .Where(x => x.PostGroupFk.OrganizationId == input.OrganizationId)
                         .Where(x=>x.IsPublished)
                         .WhereIf(input.PostGroupId > 0, p => p.PostGroupId == input.PostGroupId)
+                        .WhereIf(input.PostSubGroupId > 0, p => p.PostSubGroupId == input.PostSubGroupId)
                                     join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
                                         pg.Id into joiner1
                                     from pg in joiner1.DefaultIfEmpty()
