@@ -25,6 +25,7 @@ using Abp.Domain.Uow;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Globalization;
+using Abp.Auditing;
 using AutoMapper.Internal.Mappers;
 using Chamran.Deed.Authorization.Users.Dto;
 using Microsoft.Data.SqlClient;
@@ -402,6 +403,7 @@ namespace Chamran.Deed.Info
             {
                 input.PublisherUserId = post.PublisherUserId;
             }
+
             ObjectMapper.Map(input, post);
             
             try
