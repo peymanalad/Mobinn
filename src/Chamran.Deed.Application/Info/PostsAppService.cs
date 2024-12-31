@@ -626,7 +626,11 @@ namespace Chamran.Deed.Info
             GetAllForLookupTableInput input)
         {
             var query = _lookup_postGroupRepository.GetAll().Include(x => x.OrganizationFk)
-                .WhereIf(input.OrganizationId.HasValue,x => x.OrganizationId == input.OrganizationId).WhereIf(
+                //.WhereIf(input.OrganizationId.HasValue,x => x.OrganizationId == input.OrganizationId)
+                .WhereIf(input.OrganizationIds != null && input.OrganizationIds.Any(),
+                    x => input.OrganizationIds.Contains((int)x.OrganizationId))
+
+                .WhereIf(
                     !string.IsNullOrWhiteSpace(input.Filter),
                     e => e.PostGroupDescription != null && e.PostGroupDescription.Contains(input.Filter)
                 );

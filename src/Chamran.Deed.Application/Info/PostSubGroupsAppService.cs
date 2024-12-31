@@ -31,11 +31,14 @@ namespace Chamran.Deed.Info
         private readonly IPostSubGroupsExcelExporter _PostSubGroupsExcelExporter;
         private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IBinaryObjectManager _binaryObjectManager;
+        private readonly IRepository<Post> _postRepository;
+
 
         public PostSubGroupsAppService(IRepository<PostSubGroup> PostSubGroupRepository,
             IPostSubGroupsExcelExporter PostSubGroupsExcelExporter,
             ITempFileCacheManager tempFileCacheManager, IBinaryObjectManager binaryObjectManager,
-            IRepository<User, long> userRepository, IRepository<GroupMember> groupMemberRepository)
+            IRepository<User, long> userRepository, IRepository<GroupMember> groupMemberRepository,
+            IRepository<Post> postRepository)
         {
             _PostSubGroupRepository = PostSubGroupRepository;
             _PostSubGroupsExcelExporter = PostSubGroupsExcelExporter;
@@ -43,6 +46,7 @@ namespace Chamran.Deed.Info
             _tempFileCacheManager = tempFileCacheManager;
             _binaryObjectManager = binaryObjectManager;
             _groupMemberRepository = groupMemberRepository;
+            _postRepository = postRepository;
         }
 
         public async Task<PagedResultDto<GetPostSubGroupForViewDto>> GetAll(GetAllPostSubGroupsInput input)
@@ -94,6 +98,10 @@ namespace Chamran.Deed.Info
                                     o.PostSubGroupDescription,
                                     o.GroupFile,
                                     Id = o.Id,
+                                    PostSubGroupLatestPic = _postRepository.GetAll()
+                                        .Where(p => p.PostSubGroupId == o.Id) // فیلتر فایل‌ها بر اساس SubGroup
+                                        .OrderByDescending(p => p.CreationTime) // جدیدترین بر اساس زمان
+                                        .FirstOrDefault().PostFile // فایل آخرین پست
                                     //OrganizationGroupGroupName = s1 == null || s1.OrganizationName == null ? "" : s1.OrganizationName.ToString()
                                 };
 
@@ -108,11 +116,12 @@ namespace Chamran.Deed.Info
                 {
                     PostSubGroup = new PostSubGroupDto
                     {
-
                         PostSubGroupDescription = o.PostSubGroupDescription,
                         SubGroupFile = o.GroupFile,
                         Id = o.Id,
+                        PostSubGroupLatestPic = o.PostSubGroupLatestPic
                     },
+                     
                 };
                 res.PostSubGroup.SubGroupFileFileName = await GetBinaryFileName(o.GroupFile);
 
