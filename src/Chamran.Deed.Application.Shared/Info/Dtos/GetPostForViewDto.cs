@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Chamran.Deed.Info.Dtos
 {
@@ -18,6 +19,7 @@ namespace Chamran.Deed.Info.Dtos
         public string PublisherUserName { get; set; }
         public string PublisherUserFirstName { get; set; }
         public string PublisherUserLastName { get; set; }
+        public List<PostEditHistoryDto> PostEditHistories { get; set; }
     }
 
 

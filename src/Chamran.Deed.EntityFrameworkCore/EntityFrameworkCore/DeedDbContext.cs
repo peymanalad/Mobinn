@@ -1,4 +1,5 @@
-﻿using Chamran.Deed.Common;
+﻿using Abp.Auditing;
+using Chamran.Deed.Common;
 using Chamran.Deed.Info;
 using Chamran.Deed.People;
 using Abp.IdentityServer4vNext;
@@ -15,6 +16,7 @@ using Chamran.Deed.MultiTenancy.Accounting;
 using Chamran.Deed.MultiTenancy.Payments;
 using Chamran.Deed.Storage;
 using Chamran.Deed.Configurations;
+using Z.EntityFramework.Plus;
 
 namespace Chamran.Deed.EntityFrameworkCore
 {
@@ -97,6 +99,8 @@ namespace Chamran.Deed.EntityFrameworkCore
 
         public DbSet<RecentPassword> RecentPasswords { get; set; }
         
+        public DbSet<PostEditHistory> PostEditHistories { get; set; }
+
         public DeedDbContext(DbContextOptions<DeedDbContext> options) : base(options)
         {
             Database.SetCommandTimeout(60); // Set command timeout to 60 seconds
@@ -195,6 +199,19 @@ namespace Chamran.Deed.EntityFrameworkCore
             modelBuilder.Entity<Post>()
                 .HasIndex(p => p.PostKey)
                 .IsUnique();
+
+            modelBuilder.Entity<Post>()
+                .HasMany(p => p.EditHistories)
+                .WithOne(e => e.Post)
+                .HasForeignKey(e => e.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            //modelBuilder.Entity<AuditLog>(b =>
+            //{
+            //    b.Property(x => x.Parameters)
+            //        .HasMaxLength(int.MaxValue)
+            //        .HasColumnType("nvarchar(max)");
+            //});
 
             modelBuilder.ConfigurePersistedGrantEntity();
         }

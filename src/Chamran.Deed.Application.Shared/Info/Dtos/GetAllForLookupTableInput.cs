@@ -8,7 +8,7 @@ namespace Chamran.Deed.Info.Dtos
     {
         public string Filter { get; set; }
         //public int? OrganizationId { get; set; }
-        [CanBeNull] public List<int> OrganizationIds { get; set; }
+        public int? OrganizationId { get; set; }
 
     }
 }

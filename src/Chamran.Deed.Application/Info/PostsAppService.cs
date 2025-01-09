@@ -26,16 +26,19 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Globalization;
 using Abp.Auditing;
+using Abp.Authorization.Users;
 using AutoMapper.Internal.Mappers;
 using Chamran.Deed.Authorization.Users.Dto;
 using Microsoft.Data.SqlClient;
 using Abp.EntityFrameworkCore;
+using Abp.Events.Bus;
 using Chamran.Deed.Authorization.Accounts.Dto;
 using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.EntityFrameworkCore;
 using Chamran.Deed.Net.Sms;
 using NPOI.SS.Formula.Functions;
 using Stripe.Identity;
+using Abp.Runtime.Session;
 
 namespace Chamran.Deed.Info
 {
@@ -54,6 +57,7 @@ namespace Chamran.Deed.Info
         private readonly IRepository<PostLike, int> _postLikeRepository;
         private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
         private readonly ISmsSender _smsSender;
+        private readonly IRepository<PostEditHistory> _postEditHistoryRespoRepository;
 
         private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IBinaryObjectManager _binaryObjectManager;
@@ -61,6 +65,7 @@ namespace Chamran.Deed.Info
         private readonly IAppNotifier _appNotifier;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
 
+        private readonly IRepository<UserRole,long> _userRoleRepository;
         //private readonly IRepository<PostCategory> _postCategoryRepository;
         //private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
 
@@ -73,7 +78,8 @@ namespace Chamran.Deed.Info
             IBinaryObjectManager binaryObjectManager, IRepository<Organization> organization, IAppNotifier appNotifier,
             IRepository<UserPostGroup, int> userPostGroupRepository, IUnitOfWorkManager unitOfWorkManager,
             IRepository<PostLike, int> postLikeRepository, IRepository<Seen, int> seenRepository, IRepository<AllowedUserPostGroup, int> allowedUserPostGroupRepository,
-            IRepository<User, long> userRepository, IDbContextProvider<DeedDbContext> dbContextProvider,ISmsSender smsSender)
+            IRepository<User, long> userRepository, IDbContextProvider<DeedDbContext> dbContextProvider,ISmsSender smsSender,
+            IRepository<PostEditHistory> postEditHistoryRespoRepository,IRepository<UserRole,long> userRoleRepository)
         {
             _postRepository = postRepository;
             _commentRepository = commentRepository;
@@ -92,8 +98,11 @@ namespace Chamran.Deed.Info
             _userRepository = userRepository;
             _dbContextProvider = dbContextProvider;
             _smsSender = smsSender;
+            _postEditHistoryRespoRepository = postEditHistoryRespoRepository;
             //_postCategoryRepository = postCategoryRepository;
             //_dbContextProvider= dbContextProvider;
+            _userRoleRepository = userRoleRepository;
+
         }
 
         public async Task<PagedResultDto<GetPostForViewDto>> GetAll(GetAllPostsInput input)
@@ -129,41 +138,53 @@ namespace Chamran.Deed.Info
             // Count the total results (without paging)
             var totalCount = queryResult.Count;
 
+            var editHistories = await dbContext.PostEditHistories
+                .Where(e => queryResult.Select(p => p.Id).Contains(e.PostId))
+                .ToListAsync();
+
             // Map results to DTOs
-            var result = queryResult.Select(post => new GetPostForViewDto
+            var result = queryResult.GroupBy(post => post.Id).Select(post => new GetPostForViewDto
             {
                 Post = new PostDto
                 {
-                    PostFile = post.PostFile,
-                    PostCaption = post.PostCaption,
-                    IsSpecial = post.IsSpecial,
-                    IsPublished = post.IsPublished,
-                    PostTitle = post.PostTitle,
-                    PostRefLink = post.PostRefLink,
-                    Id = post.Id,
-                    CreationTime = post.CreationTime,
-                    LastModificationTime = post.LastModificationTime,
-                    CurrentPostStatus = (PostStatus)post.CurrentPostStatus,
-                    PublisherUserId = post.PublisherUserId,
-                    DatePublished = post.DatePublished,
-                    PublisherUserFirstName = post.PublisherUserFirstName,
-                    PublisherUserLastName = post.PublisherUserLastName,
-                    PublisherUserName = post.PublisherUserName,
-                    PostSubGroupId = post.PostSubGroupId,
-                    
+                    PostFile = post.First().PostFile,
+                    PostCaption = post.First().PostCaption,
+                    IsSpecial = post.First().IsSpecial,
+                    IsPublished = post.First().IsPublished,
+                    PostTitle = post.First().PostTitle,
+                    PostRefLink = post.First().PostRefLink,
+                    Id = post.Key,
+                    CreationTime = post.First().CreationTime,
+                    LastModificationTime = post.First().LastModificationTime,
+                    CurrentPostStatus = (PostStatus)post.First().CurrentPostStatus,
+                    PublisherUserId = post.First().PublisherUserId,
+                    DatePublished = post.First().DatePublished,
+                    PublisherUserFirstName = post.First().PublisherUserFirstName,
+                    PublisherUserLastName = post.First().PublisherUserLastName,
+                    PublisherUserName = post.First().PublisherUserName,
+                    PostSubGroupId = post.First().PostSubGroupId,
+
                 },
-                GroupMemberMemberPosition = post.GroupMemberMemberPosition ?? "",
-                PostGroupPostGroupDescription = post.PostGroupPostGroupDescription ?? "",
-                PostGroupPostSubGroupDescription = post.PostGroupPostSubGroupDescription ?? "", // New field
-                GroupFile = post.GroupFile,
-                TotalVisits = post.TotalVisits,
-                TotalLikes = post.TotalLikes,
-                OrganizationId = post.OrganizationId,
-                OrganizationName = post.OrganizationName,
-                PostSubGroupId = post.PostSubGroupId,
-                PublisherUserFirstName = post.PublisherUserFirstName,
-                PublisherUserLastName = post.PublisherUserLastName,
-                PublisherUserName = post.PublisherUserName,
+                GroupMemberMemberPosition = post.First().GroupMemberMemberPosition ?? "",
+                PostGroupPostGroupDescription = post.First().PostGroupPostGroupDescription ?? "",
+                PostGroupPostSubGroupDescription = post.First().PostGroupPostSubGroupDescription ?? "", // New field
+                GroupFile = post.First().GroupFile,
+                TotalVisits = post.First().TotalVisits,
+                TotalLikes = post.First().TotalLikes,
+                OrganizationId = post.First().OrganizationId,
+                OrganizationName = post.First().OrganizationName,
+                PostSubGroupId = post.First().PostSubGroupId,
+                PublisherUserFirstName = post.First().PublisherUserFirstName,
+                PublisherUserLastName = post.First().PublisherUserLastName,
+                PublisherUserName = post.First().PublisherUserName,
+                PostEditHistories = editHistories
+                    .Where(e => e.PostId == post.Key)
+                    .Select(e => new PostEditHistoryDto
+                    {
+                        EditorName = e.EditorName,
+                        EditTime = e.EditTime,
+                        Changes = e.Changes,
+                    }).ToList()
             }).ToList();
 
             // Return paged result
@@ -267,6 +288,14 @@ namespace Chamran.Deed.Info
             }
 
             var post = ObjectMapper.Map<Post>(input);
+            var userRole = await _userRoleRepository.FirstOrDefaultAsync(ur => ur.UserId == AbpSession.UserId);
+            if (userRole == null)
+            {
+                Console.WriteLine("Current user role not found.");
+                return;
+            }
+
+            //var currentUserRoleId = userRole.RoleId;
             post.GroupMemberId = grpMemberId.Id;
 
             await _postRepository.InsertAsync(post);
@@ -285,14 +314,81 @@ namespace Chamran.Deed.Info
                 post.PostFile5 == null && post.PostFile6 == null && post.PostFile7 == null && post.PostFile8 == null &&
                 post.PostFile9 == null && post.PostFile10 == null)
                 throw new UserFriendlyException("پست ارسالی هیچش مدیایی ندارد");
-            await _unitOfWorkManager.Current.SaveChangesAsync();
+            //await _unitOfWorkManager.Current.SaveChangesAsync();
+
+            try
+            {
+                await _unitOfWorkManager.Current.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                Console.WriteLine($"DbUpdateException: {ex.Message}");
+
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+
+                if (ex.Entries != null && ex.Entries.Any())
+                {
+                    foreach (var entry in ex.Entries)
+                    {
+                        Console.WriteLine($"Entity: {entry.Entity.GetType().Name}, State: {entry.State}");
+                    }
+                }
+
+                throw; // برای مشاهده StackTrace
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General Exception: {ex.Message}");
+                throw;
+            }
+
+
             await unitOfWork.CompleteAsync();
-            if (post.PostGroupId.HasValue && post.CurrentPostStatus==PostStatus.Published)
-                await PublishNewPostNotifications(post);
+            if (post.PostGroupId.HasValue && post.CurrentPostStatus == PostStatus.Published)
+            {
+                await PublishNewPostNotifications(post/*, input.OrganizationId*/);
+            }
+
+            //var currentUser = GetCurrentUserAsync().Result;
+
+            //if (currentUser.UserType == AccountUserType.Distributer 
+            //    || currentUser.UserType == AccountUserType.Admin 
+            //    || currentUser.UserType == AccountUserType.SuperAdmin 
+            //    || currentUser.IsSuperUser)
+            //{
+            //    post.IsPublished = true;
+            //    post.CurrentPostStatus = PostStatus.Published;
+            //    //await SendSmsNotification(post,input.OrganizationId);
+
+            //}
+
+
+
+
+            //if (userRole.RoleId == 5 || userRole.RoleId == 2 || GetCurrentUserAsync().Result.IsSuperUser)
+            //{
+            //    await SendSmsNotification(post);
+            //}
+            //else if (userRole.RoleId == 4)
+            //{
+            //    post.IsPublished = false;
+            //    post.CurrentPostStatus = PostStatus.Pending;
+            //    await PublishNewPostNotifications(post,organizationId:input.OrganizationId);
+            //}
+            //else
+            //{
+            //    throw new UnauthorizedAccessException("شما اجازه انتشار خبر را نداريد.");
+            //}
+
+            //await SendSmsNotification(post,input.OrganizationId);
             await SendSmsNotification(post);
+
         }
 
-        private async Task SendSmsNotification(Post post)
+        private async Task SendSmsNotification(Post post/*, int organization*/)
         {
             try
             {
@@ -353,6 +449,24 @@ namespace Chamran.Deed.Info
 
                         break;
                     }
+                    //case PostStatus.Published:
+                    //    {
+                    //        var allOrganizationUsers = _lookup_groupMemberRepository.GetAll()
+                    //            .Join(_userRepository.GetAll()
+                    //                , g => g.UserId
+                    //                , u => u.Id
+                    //                , (g, u) => new { GroupMember = g, User = u })
+                    //            .Where(x => x.GroupMember.OrganizationId == organization
+                    //                && x.User.PhoneNumber.StartsWith("09")
+                    //                && x.User.PhoneNumber.Length == 11)
+                    //            .Select(x => x.User)
+                    //            .ToListAsync();
+                    //        foreach (var user in allOrganizationUsers.Result)
+                    //        {
+                    //            await _smsSender.SendAsync(user.PhoneNumber, "پست جديد منتشر شد.");
+                    //        }
+                    //        break;
+                    //    }
                 }
             }
             catch (Exception e)
@@ -362,8 +476,22 @@ namespace Chamran.Deed.Info
             }
         }
 
-        private async Task PublishNewPostNotifications(Post post)
+        private async Task PublishNewPostNotifications(Post post/*, int organizationId*/)
         {
+            //var allOrganizationUsers = _lookup_groupMemberRepository.GetAll()
+            //    .Join(_userRepository.GetAll()
+            //        , g => g.UserId
+            //        , u => u.Id
+            //        , (g, u) => new { GroupMember = g, User = u })
+            //    .Where(x => x.GroupMember.OrganizationId == organizationId 
+            //                && (x.User.UserType == AccountUserType.Distributer || x.User.UserType == AccountUserType.Admin))
+            //    .Select(x => x.User)
+            //    .ToListAsync();
+            //var ids = new List<UserIdentifier>();
+            //foreach (var row in allOrganizationUsers.Result)
+            //{
+            //    ids.Add(new UserIdentifier(AbpSession.TenantId, row.Id));
+            //}
             var query = _userPostGroupRepository.GetAll().Where(x => x.PostGroupId == post.PostGroupId.Value);
             var ids = new List<UserIdentifier>();
             foreach (var row in query)
@@ -380,14 +508,15 @@ namespace Chamran.Deed.Info
             }
 
             await _appNotifier.SendPostNotificationAsync(JsonConvert.SerializeObject(post, new JsonSerializerSettings
-            {
-                ContractResolver = new DefaultContractResolver
                 {
-                    NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
-                }
-            }),
+                    ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
+                    }
+                }),
                 userIds: ids.ToArray()
             );
+
         }
 
         [AbpAuthorize(AppPermissions.Pages_Posts_Edit)]
@@ -403,6 +532,24 @@ namespace Chamran.Deed.Info
             {
                 input.PublisherUserId = post.PublisherUserId;
             }
+
+            if (input.DatePublished == null)
+            {
+                input.PublisherUserId = post.PublisherUserId;
+            }
+
+            var changes = GetChanges(post, input);
+            var currentUserName = await GetCurrentUserName();
+            if (changes != "")
+            {
+                post.EditHistories.Add(new PostEditHistory
+                {
+                    EditorName = currentUserName,
+                    EditTime = DateTime.Now,
+                    Changes = changes
+                });
+            }
+
 
             ObjectMapper.Map(input, post);
             
@@ -519,11 +666,13 @@ namespace Chamran.Deed.Info
 
             if (shouldSendSmsNotification)
             {
+                //await SendSmsNotification(post,input.OrganizationId);
                 await SendSmsNotification(post);
+
             }
 
             if (post.PostGroupId.HasValue && post.CurrentPostStatus == PostStatus.Published)
-                await PublishNewPostNotifications(post);
+                await PublishNewPostNotifications(post/*,input.OrganizationId*/);
 
         }
 
@@ -626,10 +775,7 @@ namespace Chamran.Deed.Info
             GetAllForLookupTableInput input)
         {
             var query = _lookup_postGroupRepository.GetAll().Include(x => x.OrganizationFk)
-                //.WhereIf(input.OrganizationId.HasValue,x => x.OrganizationId == input.OrganizationId)
-                .WhereIf(input.OrganizationIds != null && input.OrganizationIds.Any(),
-                    x => input.OrganizationIds.Contains((int)x.OrganizationId))
-
+                .WhereIf(input.OrganizationId.HasValue, x => x.OrganizationId == input.OrganizationId)
                 .WhereIf(
                     !string.IsNullOrWhiteSpace(input.Filter),
                     e => e.PostGroupDescription != null && e.PostGroupDescription.Contains(input.Filter)
@@ -1298,5 +1444,76 @@ namespace Chamran.Deed.Info
 
 
         }
+
+        private string GetChanges(Post post, CreateOrEditPostDto input)
+        {
+            var changes = new List<string>();
+
+            if (post.PostTitle != input.PostTitle)
+                changes.Add($"عنوان از {post.PostTitle} به {input.PostTitle} تغییر کرد.");
+
+            if (post.PostCaption != input.PostCaption)
+                changes.Add($"متن از {post.PostCaption} به {input.PostCaption} تغییر کرد.");
+            //if (post.PostCaption != input.PostCaption)
+            //    changes.Add($"سازمان از {post.AppBinaryObjectFk4} به {input.PostCaption} تغییر کرد.");
+            if (post.PostGroupId != input.PostGroupId)
+                changes.Add($"گروه خبری از {post.PostCaption} به {input.PostCaption} تغییر کرد.");
+            if (post.PostSubGroupId != input.PostSubGroupId)
+                changes.Add($"زیر گروه خبری از {post.PostCaption} به {input.PostCaption} تغییر کرد.");
+            if (post.PostFile != input.PostFile)
+                changes.Add($"فایل اول از {post.PostFile} به {input.PostFile} تغییر کرد.");
+            if (post.PostFile2 != input.PostFile2)
+                changes.Add($"فایل دوم از {post.PostFile2} به {input.PostFile2} تغییر کرد.");
+            if (post.PostFile3 != input.PostFile3)
+                changes.Add($"فایل سوم از {post.PostFile3} به {input.PostFile3} تغییر کرد.");
+            if (post.PostFile4 != input.PostFile4)
+                changes.Add($"فایل چهارم از {post.PostFile4} به {input.PostFile4} تغییر کرد.");
+            if (post.PostFile5 != input.PostFile5)
+                changes.Add($"فایل پنجم از {post.PostFile5} به {input.PostFile5} تغییر کرد.");
+            if (post.PostFile6 != input.PostFile6)
+                changes.Add($"فایل ششم از {post.PostFile6} به {input.PostFile6} تغییر کرد.");
+            if (post.PostFile7 != input.PostFile7)
+                changes.Add($"فایل هفتم از {post.PostFile7} به {input.PostFile7} تغییر کرد.");
+            if (post.PostFile8 != input.PostFile8)
+                changes.Add($"فایل هشتم از {post.PostFile8} به {input.PostFile8} تغییر کرد.");
+            if (post.PostFile9 != input.PostFile9)
+                changes.Add($"فایل نهم از {post.PostFile9} به {input.PostFile9} تغییر کرد.");
+            if (post.PostFile10 != input.PostFile10)
+                changes.Add($"فایل دهم از {post.PostFile10} به {input.PostFile10} تغییر کرد.");
+            if (post.PostRefLink != input.PostRefLink)
+                changes.Add($"لینک خبر از {post.PostRefLink} به {input.PostRefLink} تغییر کرد.");
+            if (post.PostComment != input.PostComment)
+                changes.Add($"نظر از {post.PostComment} به {input.PostComment} تغییر کرد.");
+            //if (post.IsSpecial != input.IsSpecial)
+            //    changes.Add($"ویژه بودن خبر از {post.PostCaption} به {input.PostCaption} تغییر کرد.");
+            if (post.IsSpecial == true && input.IsSpecial == false)
+                changes.Add("اصالت خبر رد شد.");
+            if (post.IsSpecial == false && input.IsSpecial == true)
+                changes.Add("اصالت خبر تائيد شد.");
+            if (post.IsPublished == true && input.IsPublished == false)
+                changes.Add("خبر از حالت انتشار خارج شد.");
+            if (post.IsPublished == false && input.IsPublished == true)
+                changes.Add("خبر منتشر شد.");
+
+            return string.Join(", ", changes);
+        }
+
+        private async Task<string> GetCurrentUserName()
+        {
+            var user = await UserManager.GetUserAsync(AbpSession.ToUserIdentifier());
+            return user?.FullName ?? "Unknown User";
+        }
+
+        public async Task<List<User>> GetUsersByOrganizationAsync(int organizationId)
+        {
+            var users = await _lookup_groupMemberRepository.GetAll()
+                .Where(gm => gm.OrganizationId == organizationId) 
+                .Select(gm => gm.UserFk) 
+                .ToListAsync();
+
+            return users;
+        }
+
+
     }
 }

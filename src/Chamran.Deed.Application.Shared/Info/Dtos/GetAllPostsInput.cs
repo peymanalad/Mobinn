@@ -1,5 +1,6 @@
 ﻿using Abp.Application.Services.Dto;
 using System;
+using System.Collections.Generic;
 
 namespace Chamran.Deed.Info.Dtos
 {

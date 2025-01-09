@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Chamran.Deed.Migrations
 {
     [DbContext(typeof(DeedDbContext))]
-    [Migration("20241208055932_AllowedUserGroup")]
-    partial class AllowedUserGroup
+    [Migration("20250101122000_UpdateAuditLogParametersLimit")]
+    partial class UpdateAuditLogParametersLimit
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -166,7 +166,8 @@ namespace Chamran.Deed.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("Parameters")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("ReturnValue")
                         .HasColumnType("nvarchar(max)");

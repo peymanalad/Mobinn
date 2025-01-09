@@ -69,6 +69,8 @@ namespace Chamran.Deed.Info.Dtos
         public PostStatus CurrentPostStatus { get; set; }
         public string PostComment { get; set; }
 
+        //
+        public int OrganizationId { get; set; }
 
     }
 }
