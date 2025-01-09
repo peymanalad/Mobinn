@@ -66,6 +66,25 @@ namespace Chamran.Deed.Info
                     e => e.OrganizationFk != null &&
                          e.OrganizationFk.OrganizationName == input.OrganizationGroupGroupNameFilter);
 
+            //if (!user.IsSuperUser)
+            //{
+            //    var orgQuery =
+            //        from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
+            //        join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
+            //            .OrganizationId into joined2
+            //        from grpMember in joined2.DefaultIfEmpty()
+            //        where grpMember.UserId == AbpSession.UserId
+            //        select org;
+
+            //    if (!orgQuery.Any())
+            //    {
+            //        throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+            //    }
+            //    var orgEntity = orgQuery.First();
+
+            //    filteredPostGroups = filteredPostGroups.Where(x => x.OrganizationId == orgEntity.Id);
+
+            //}
             if (!user.IsSuperUser)
             {
                 var orgQuery =
@@ -74,18 +93,17 @@ namespace Chamran.Deed.Info
                         .OrganizationId into joined2
                     from grpMember in joined2.DefaultIfEmpty()
                     where grpMember.UserId == AbpSession.UserId
-                    select org;
+                    select org.Id;
 
-                if (!orgQuery.Any())
+                var orgIds = orgQuery.ToList(); 
+
+                if (!orgIds.Any())
                 {
-                    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+                    throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی‌باشد");
                 }
-                var orgEntity = orgQuery.First();
 
-                filteredPostGroups = filteredPostGroups.Where(x => x.OrganizationId == orgEntity.Id);
-
+                filteredPostGroups = filteredPostGroups.Where(x => orgIds.Contains((int)x.OrganizationId));
             }
-
 
 
 
