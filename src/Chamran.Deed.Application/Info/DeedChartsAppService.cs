@@ -52,29 +52,45 @@ namespace Chamran.Deed.Info
                         .WhereIf(!string.IsNullOrWhiteSpace(input.DeedChartCaptionFilter), e => e.ParentFk != null && e.ParentFk.Caption == input.DeedChartCaptionFilter);
 
 
+            //if (!user.IsSuperUser)
+            //{
+            //    var orgQuery =
+            //        from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
+            //        join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
+            //            .OrganizationId into joined2
+            //        from grpMember in joined2.DefaultIfEmpty()
+            //        where grpMember.UserId == AbpSession.UserId
+            //        select org;
+
+            //    if (!orgQuery.Any())
+            //    {
+            //        throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
+            //    }
+            //    var orgEntity = orgQuery.First();
+            //    //filteredOrganizationCharts = filteredOrganizationCharts.Where(x => x.OrganizationId == orgEntity.Id);
+            //    var headerQuery = from x in _deedChartRepository.GetAll()
+            //        where x.OrganizationId == orgEntity.Id
+            //        select x;
+            //    if (!headerQuery.Any()) throw new UserFriendlyException("شاخه مادر برای سازمان انتخابی یافت نشد");
+            //    var headerEntity = headerQuery.First();
+            //    filteredDeedCharts =
+            //        filteredDeedCharts.Where(x => x.LeafPath.StartsWith(headerEntity.LeafPath));
+            //}
+
             if (!user.IsSuperUser)
             {
                 var orgQuery =
                     from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
-                    join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember
-                        .OrganizationId into joined2
+                    join grpMember in _groupMemberRepository.GetAll() on org.Id equals grpMember.OrganizationId into joined2
                     from grpMember in joined2.DefaultIfEmpty()
                     where grpMember.UserId == AbpSession.UserId
                     select org;
-
                 if (!orgQuery.Any())
                 {
                     throw new UserFriendlyException("کاربر عضو هیچ گروهی در هیچ سازمانی نمی باشد");
                 }
-                var orgEntity = orgQuery.First();
-                //filteredOrganizationCharts = filteredOrganizationCharts.Where(x => x.OrganizationId == orgEntity.Id);
-                var headerQuery = from x in _deedChartRepository.GetAll()
-                    where x.OrganizationId == orgEntity.Id
-                    select x;
-                if (!headerQuery.Any()) throw new UserFriendlyException("شاخه مادر برای سازمان انتخابی یافت نشد");
-                var headerEntity = headerQuery.First();
-                filteredDeedCharts =
-                    filteredDeedCharts.Where(x => x.LeafPath.StartsWith(headerEntity.LeafPath));
+                // فقط سازمان‌های مربوط به کاربر را فیلتر کنید
+                filteredDeedCharts = filteredDeedCharts.Where(x => orgQuery.Any(org => org.Id == x.OrganizationId));
             }
 
             var pagedAndFilteredDeedCharts = filteredDeedCharts
