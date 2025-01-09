@@ -11,7 +11,7 @@ namespace Chamran.Deed.Info
 {
     [Table("Posts")]
     [Audited]
-    public class Post : FullAuditedEntity
+    public class Post : FullAuditedEntity<int>
     {
         public long? PublisherUserId { get; set; }
         public DateTime? DatePublished { get; set; }
@@ -94,6 +94,8 @@ namespace Chamran.Deed.Info
         public virtual string PostRefLink { get; set; }
 
         public virtual ICollection<PostLike> PostLikes { get; set; } // Collection of PostLikes
+        public virtual ICollection<PostEditHistory> EditHistories { get; set; } = new List<PostEditHistory>();
+
 
     }
 }

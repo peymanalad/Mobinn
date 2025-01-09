@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Chamran.Deed.Migrations
 {
     [DbContext(typeof(DeedDbContext))]
-    [Migration("20241208055932_AllowedUserGroup")]
-    partial class AllowedUserGroup
+    [Migration("20250102222106_AddPostEditHistory")]
+    partial class AddPostEditHistory
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -166,7 +166,8 @@ namespace Chamran.Deed.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("Parameters")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("ReturnValue")
                         .HasColumnType("nvarchar(max)");
@@ -2741,6 +2742,54 @@ namespace Chamran.Deed.Migrations
                     b.ToView("vwPostCategories", (string)null);
                 });
 
+            modelBuilder.Entity("Chamran.Deed.Info.PostEditHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Changes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("CreatorUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("DeleterUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EditTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EditorName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("LastModifierUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("PostEditHistories");
+                });
+
             modelBuilder.Entity("Chamran.Deed.Info.PostGroup", b =>
                 {
                     b.Property<int>("Id")
@@ -3936,6 +3985,17 @@ namespace Chamran.Deed.Migrations
                     b.Navigation("PostSubGroupFk");
                 });
 
+            modelBuilder.Entity("Chamran.Deed.Info.PostEditHistory", b =>
+                {
+                    b.HasOne("Chamran.Deed.Info.Post", "Post")
+                        .WithMany("EditHistories")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+                });
+
             modelBuilder.Entity("Chamran.Deed.Info.PostGroup", b =>
                 {
                     b.HasOne("Chamran.Deed.People.Organization", "OrganizationFk")
@@ -4218,6 +4278,8 @@ namespace Chamran.Deed.Migrations
 
             modelBuilder.Entity("Chamran.Deed.Info.Post", b =>
                 {
+                    b.Navigation("EditHistories");
+
                     b.Navigation("PostLikes");
                 });
 #pragma warning restore 612, 618

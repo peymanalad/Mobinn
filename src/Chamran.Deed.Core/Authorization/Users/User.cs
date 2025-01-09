@@ -5,6 +5,7 @@ using Abp.Authorization.Users;
 using Abp.Extensions;
 using Abp.Timing;
 using Chamran.Deed.Authorization.Accounts.Dto;
+using Newtonsoft.Json;
 
 namespace Chamran.Deed.Authorization.Users
 {
@@ -25,6 +26,7 @@ namespace Chamran.Deed.Authorization.Users
 
         public string GoogleAuthenticatorKey { get; set; }
         public string RecoveryCode { get; set; }
+        [JsonIgnore]
 
         public List<UserOrganizationUnit> OrganizationUnits { get; set; }
 

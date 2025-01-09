@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Chamran.Deed.Migrations
 {
     [DbContext(typeof(DeedDbContext))]
-    [Migration("20241208055932_AllowedUserGroup")]
-    partial class AllowedUserGroup
+    [Migration("20250101104310_UpdateAuditLogParametersColumn")]
+    partial class UpdateAuditLogParametersColumn
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

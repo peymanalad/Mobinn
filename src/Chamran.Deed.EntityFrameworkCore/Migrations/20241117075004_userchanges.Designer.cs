@@ -166,8 +166,7 @@ namespace Chamran.Deed.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("Parameters")
-                        .HasMaxLength(1024)
-                        .HasColumnType("nvarchar(1024)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ReturnValue")
                         .HasColumnType("nvarchar(max)");
