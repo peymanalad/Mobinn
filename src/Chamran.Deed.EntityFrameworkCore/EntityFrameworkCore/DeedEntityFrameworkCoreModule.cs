@@ -1,4 +1,5 @@
-﻿using Abp;
+﻿using System;
+using Abp;
 using Abp.Dependency;
 using Abp.EntityFrameworkCore.Configuration;
 using Abp.IdentityServer4vNext;
@@ -57,13 +58,25 @@ namespace Chamran.Deed.EntityFrameworkCore
         {
             var configurationAccessor = IocManager.Resolve<IAppConfigurationAccessor>();
 
+            var connectionString = configurationAccessor.Configuration["ConnectionStrings:Default"]
+                                   ?? Environment.GetEnvironmentVariable("ConnectionStrings__Default");
+
             using (var scope = IocManager.CreateScope())
             {
-                if (!SkipDbSeed && scope.Resolve<DatabaseCheckHelper>().Exist(configurationAccessor.Configuration["ConnectionStrings:Default"]))
+                if (!SkipDbSeed && scope.Resolve<DatabaseCheckHelper>().Exist(connectionString))
                 {
                     SeedHelper.SeedHostDb(IocManager);
                 }
             }
+            //using (var scope = IocManager.CreateScope())
+            //{
+            //    if (!SkipDbSeed && scope.Resolve<DatabaseCheckHelper>().Exist(configurationAccessor.Configuration["ConnectionStrings:Default"]))
+            //    {
+            //        SeedHelper.SeedHostDb(IocManager);
+            //    }
+            //}
         }
     }
+
+
 }

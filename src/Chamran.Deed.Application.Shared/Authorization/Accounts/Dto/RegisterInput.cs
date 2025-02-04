@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using Abp.Auditing;
 using Abp.Authorization.Users;
 using Abp.Extensions;
+using Chamran.Deed.Authorization.Accounts.Validation;
 using Chamran.Deed.Validation;
 
 namespace Chamran.Deed.Authorization.Accounts.Dto
@@ -30,6 +31,7 @@ namespace Chamran.Deed.Authorization.Accounts.Dto
         [Required]
         [StringLength(AbpUserBase.MaxPlainPasswordLength)]
         [DisableAuditing]
+        [StrongPassword]
         public string Password { get; set; }
 
         [DisableAuditing]

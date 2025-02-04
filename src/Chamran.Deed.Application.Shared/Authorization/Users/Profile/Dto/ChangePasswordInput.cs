@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Abp.Auditing;
+using Chamran.Deed.Authorization.Accounts.Validation;
 
 namespace Chamran.Deed.Authorization.Users.Profile.Dto
 {
@@ -11,6 +12,7 @@ namespace Chamran.Deed.Authorization.Users.Profile.Dto
 
         [Required]
         [DisableAuditing]
+        [StrongPassword]
         public string NewPassword { get; set; }
     }
 }

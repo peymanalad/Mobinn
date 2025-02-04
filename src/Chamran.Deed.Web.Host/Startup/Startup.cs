@@ -48,6 +48,7 @@ using Chamran.Deed.Web.MultiTenancy;
 using Abp.AspNetCore.Localization;
 using Chamran.Deed.Info;
 using Chamran.Deed.Web.Helpers.StimulsoftHelpers;
+using Chamran.Deed.Web.MiddleWares;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Http.Features;
@@ -221,6 +222,7 @@ namespace Chamran.Deed.Web.Startup
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
+            app.UseMiddleware<ClickjackingMiddleware>();
             app.UseForwardedHeaders(new ForwardedHeadersOptions
             {
                 ForwardedHeaders = ForwardedHeaders.All, //ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
