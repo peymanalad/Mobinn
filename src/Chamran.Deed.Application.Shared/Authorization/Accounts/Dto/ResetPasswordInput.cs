@@ -4,6 +4,7 @@ using System.Web;
 using Abp.Auditing;
 using Abp.Runtime.Security;
 using Abp.Runtime.Validation;
+using Chamran.Deed.Authorization.Accounts.Validation;
 
 namespace Chamran.Deed.Authorization.Accounts.Dto
 {
@@ -15,6 +16,7 @@ namespace Chamran.Deed.Authorization.Accounts.Dto
         public DateTime ExpireDate { get; set; }
 
         [DisableAuditing]
+        [StrongPassword]
         public string Password { get; set; }
 
         public string ReturnUrl { get; set; }

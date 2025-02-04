@@ -533,10 +533,11 @@ namespace Chamran.Deed.Info
                 input.PublisherUserId = post.PublisherUserId;
             }
 
-            if (input.DatePublished == null)
-            {
-                input.PublisherUserId = post.PublisherUserId;
-            }
+            //if (input.DatePublished == null)
+            //{
+            //    input.PublisherUserId = post.PublisherUserId;
+            //}
+            input.PublisherUserId = post.PublisherUserId;
 
             var changes = GetChanges(post, input);
             var currentUserName = await GetCurrentUserName();

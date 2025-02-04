@@ -176,10 +176,10 @@ namespace Chamran.Deed.Authorization.Users
             var parameters = new[]
             {
         new SqlParameter("@NationalIdFilter", input.NationalIdFilter ?? (object)DBNull.Value),
-        new SqlParameter("@NameFilter", string.IsNullOrWhiteSpace(input.NameFilter) ? (object)DBNull.Value : (object)input.NameFilter),
-        new SqlParameter("@SurNameFilter", string.IsNullOrWhiteSpace(input.SurNameFilter) ? (object)DBNull.Value : (object)input.SurNameFilter),
-        new SqlParameter("@UserNameFilter", string.IsNullOrWhiteSpace(input.UserNameFilter) ? (object)DBNull.Value : (object)input.UserNameFilter),
-        new SqlParameter("@PhoneNumberFilter", string.IsNullOrWhiteSpace(input.PhoneNumberFilter) ? (object)DBNull.Value : (object)input.PhoneNumberFilter),
+        new SqlParameter("@NameFilter", string.IsNullOrWhiteSpace(input.NameFilter) ? (object)DBNull.Value : (object)input.NameFilter.Replace('ي', 'ی').Replace('ك', 'ک')),
+        new SqlParameter("@SurNameFilter", string.IsNullOrWhiteSpace(input.SurNameFilter) ? (object)DBNull.Value : (object)input.SurNameFilter.Replace('ي', 'ی').Replace('ك', 'ک')),
+        new SqlParameter("@UserNameFilter", string.IsNullOrWhiteSpace(input.UserNameFilter) ? (object)DBNull.Value : (object)input.UserNameFilter.Replace('ي', 'ی').Replace('ك', 'ک')),
+        new SqlParameter("@PhoneNumberFilter", string.IsNullOrWhiteSpace(input.PhoneNumberFilter) ? (object)DBNull.Value : (object)input.PhoneNumberFilter.Replace('ي', 'ی').Replace('ك', 'ک')),
         new SqlParameter("@IsActiveFilter", input.IsActiveFilter ?? (object)DBNull.Value),
         new SqlParameter("@FromCreationDate", input.FromCreationDate ?? (object)DBNull.Value),
         new SqlParameter("@ToCreationDate", input.ToCreationDate ?? (object)DBNull.Value),

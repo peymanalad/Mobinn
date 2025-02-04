@@ -3,6 +3,7 @@ using Abp.Auditing;
 using Abp.Authorization.Users;
 using Abp.Domain.Entities;
 using Chamran.Deed.Authorization.Accounts.Dto;
+using Chamran.Deed.Authorization.Accounts.Validation;
 
 namespace Chamran.Deed.Authorization.Users.Dto
 {
@@ -37,6 +38,7 @@ namespace Chamran.Deed.Authorization.Users.Dto
         // Not used "Required" attribute since empty value is used to 'not change password'
         [StringLength(AbpUserBase.MaxPlainPasswordLength)]
         [DisableAuditing]
+        [StrongPassword]
         public string Password { get; set; }
 
         public bool IsActive { get; set; }
