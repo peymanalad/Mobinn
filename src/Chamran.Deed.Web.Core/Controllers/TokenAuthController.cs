@@ -52,6 +52,7 @@ using Chamran.Deed.Authorization.Users.Profile.Cache;
 using Chamran.Deed.People;
 using Microsoft.EntityFrameworkCore;
 using IdentityModel.OidcClient;
+using System.Security.Cryptography;
 
 namespace Chamran.Deed.Web.Controllers
 {
@@ -354,11 +355,29 @@ namespace Chamran.Deed.Web.Controllers
                 await ValidateReCaptcha(model.CaptchaResponse);
             }
 
+
+            string privateKeyInput = Environment.GetEnvironmentVariable("PRIVATE_KEY_PATH");
+
+            string privateKeyPem;
+
+            if (System.IO.File.Exists(privateKeyInput))
+            {
+                privateKeyPem = System.IO.File.ReadAllText(privateKeyInput);
+            }
+            else
+            {
+                privateKeyPem = privateKeyInput;
+            }
             var loginResult = await GetLoginResultAsync(
-                model.UserNameOrEmailAddress,
-                model.Password,
+                model.UserNameOrEmailAddress, 
+                DecryptWithPrivateKey(model.Password, privateKeyPem),
                 GetTenancyNameOrNull()
             );
+
+            if (loginResult.User.UserType == AccountUserType.Normal)
+            {
+                throw new AbpAuthorizationException("ورود کاربر عادی مجاز نیست.");
+            }
 
             var returnUrl = model.ReturnUrl;
 
@@ -466,6 +485,17 @@ namespace Chamran.Deed.Web.Controllers
             return result;
 
         }
+
+        static string DecryptWithPrivateKey(string encryptedText, string privateKeyPem)
+        {
+            using (RSA rsa = RSA.Create())
+            {
+                rsa.ImportFromPem(privateKeyPem);
+                byte[] decryptedBytes = rsa.Decrypt(Convert.FromBase64String(encryptedText), RSAEncryptionPadding.Pkcs1);
+                return Encoding.UTF8.GetString(decryptedBytes);
+            }
+        }
+
 
         [HttpPost]
         public async Task<RefreshTokenResult> RefreshToken(string refreshToken)

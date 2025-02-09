@@ -11,7 +11,7 @@ namespace Chamran.Deed.Web.Models.TokenAuth
         public string UserNameOrEmailAddress { get; set; }
 
         [Required]
-        [MaxLength(AbpUserBase.MaxPlainPasswordLength)]
+        //[MaxLength(AbpUserBase.MaxPlainPasswordLength)]
         [DisableAuditing]
         public string Password { get; set; }
 

@@ -36,7 +36,6 @@ namespace Chamran.Deed.Authorization.Users.Dto
         public string PhoneNumber { get; set; }
 
         // Not used "Required" attribute since empty value is used to 'not change password'
-        [StringLength(AbpUserBase.MaxPlainPasswordLength)]
         [DisableAuditing]
         [StrongPassword]
         public string Password { get; set; }
