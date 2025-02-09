@@ -16,6 +16,8 @@ using Abp.Authorization;
 using Abp.Timing;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
+using Abp.Runtime.Session;
+using Chamran.Deed.Authorization.Accounts.Dto;
 
 namespace Chamran.Deed.Info
 {
@@ -38,7 +40,15 @@ namespace Chamran.Deed.Info
 
         public async Task<PagedResultDto<GetPostLikeForViewDto>> GetAll(GetAllPostLikesInput input)
         {
-
+            var user = await UserManager.GetUserAsync(AbpSession.ToUserIdentifier());
+            if ((user.IsSuperUser && user.UserType == AccountUserType.SuperAdmin) || user.UserType == AccountUserType.Admin)
+            {
+                input.UserId = null;
+            }
+            else
+            {
+                input.UserId = (int)user.Id;
+            }
             var filteredPostLikes = _postLikeRepository.GetAll()
                         .Include(e => e.PostFk)
                         .Include(e => e.UserFk)

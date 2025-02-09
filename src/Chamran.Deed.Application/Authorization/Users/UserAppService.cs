@@ -45,6 +45,13 @@ using Abp.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using Chamran.Deed.EntityFrameworkCore;
 using Chamran.Deed.Authorization.Accounts.Dto;
+using System.IO;
+using System.Text;
+using System.Security.Cryptography;
+using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.Crypto;
 
 namespace Chamran.Deed.Authorization.Users
 {
@@ -602,6 +609,7 @@ namespace Chamran.Deed.Authorization.Users
 
         public async Task<long> CreateOrUpdateUser(CreateOrUpdateUserInput input)
         {
+            DecryptUserPassword(input);
             if (input.User.Id.HasValue)
             {
                 return await UpdateUserAsync(input);
@@ -1194,5 +1202,36 @@ namespace Chamran.Deed.Authorization.Users
 
             return query;
         }
+        private void DecryptUserPassword(CreateOrUpdateUserInput input)
+        {
+            if (!string.IsNullOrWhiteSpace(input.User.Password))
+            {
+                input.User.Password = DecryptPassword(input.User.Password);
+            }
+        }
+
+        private string DecryptPassword(string encryptedPassword)
+        {
+            var privateKeyInput = Environment.GetEnvironmentVariable("PRIVATE_KEY_PATH");
+            if (string.IsNullOrWhiteSpace(privateKeyInput))
+            {
+                throw new InvalidOperationException("Private key path is not set.");
+            }
+
+            string privateKeyPem = System.IO.File.Exists(privateKeyInput)
+                ? System.IO.File.ReadAllText(privateKeyInput)
+                : privateKeyInput;
+
+            using (var rsa = RSA.Create())
+            {
+                rsa.ImportFromPem(privateKeyPem.ToCharArray());
+                byte[] encryptedBytes = Convert.FromBase64String(encryptedPassword);
+                byte[] decryptedBytes = rsa.Decrypt(encryptedBytes, RSAEncryptionPadding.Pkcs1);
+                return Encoding.UTF8.GetString(decryptedBytes);
+            }
+        }
+
+
+
     }
 }

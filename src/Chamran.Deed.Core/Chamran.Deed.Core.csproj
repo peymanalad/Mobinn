@@ -33,6 +33,7 @@
     <PackageReference Include="Castle.Windsor.MsDependencyInjection" Version="4.1.0" />
     <PackageReference Include="PayPalHttp" Version="1.0.1" />
     <PackageReference Include="PayPalCheckoutSdk" Version="1.0.4" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
     <PackageReference Include="Stripe.net" Version="41.16.0" />
     <PackageReference Include="TimeZoneConverter" Version="6.1.0" />
     <!--<PackageReference Include="Abp.AspNetZeroCore" Version="4.1.0" />-->

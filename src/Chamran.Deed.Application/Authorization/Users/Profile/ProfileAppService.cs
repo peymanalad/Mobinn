@@ -31,6 +31,15 @@ using System.Collections.Generic;
 using System.Linq;
 using Chamran.Deed.People;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+using Org.BouncyCastle.OpenSsl;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
+
+
 
 namespace Chamran.Deed.Authorization.Users.Profile
 {
@@ -282,9 +291,14 @@ namespace Chamran.Deed.Authorization.Users.Profile
             await UserManager.InitializeOptionsAsync(AbpSession.TenantId);
 
             var user = await GetCurrentUserAsync();
-            if (await UserManager.CheckPasswordAsync(user, input.CurrentPassword))
+
+            string decryptedCurrentPassword = DecryptWithPrivateKey(input.CurrentPassword);
+            string decryptedNewPassword = DecryptWithPrivateKey(input.NewPassword);
+
+            if (await UserManager.CheckPasswordAsync(user, decryptedCurrentPassword))
             {
-                CheckErrors(await UserManager.ChangePasswordAsync(user, input.NewPassword));
+                var result = await UserManager.ChangePasswordAsync(user, decryptedNewPassword);
+                CheckErrors(result);
             }
             else
             {
@@ -294,6 +308,25 @@ namespace Chamran.Deed.Authorization.Users.Profile
                 }));
             }
         }
+
+        static string DecryptWithPrivateKey(string encryptedText)
+        {
+            string privateKeyInput = Environment.GetEnvironmentVariable("PRIVATE_KEY_PATH");
+
+            if (!File.Exists(privateKeyInput))
+            {
+                throw new FileNotFoundException("Private key file not found.", privateKeyInput);
+            }
+
+            string privateKeyPem = File.ReadAllText(privateKeyInput);
+            using (RSA rsa = RSA.Create())
+            {
+                rsa.ImportFromPem(privateKeyPem);
+                byte[] decryptedBytes = rsa.Decrypt(Convert.FromBase64String(encryptedText), RSAEncryptionPadding.Pkcs1);
+                return Encoding.UTF8.GetString(decryptedBytes);
+            }
+        }
+
 
         public async Task UpdateProfilePicture(UpdateProfilePictureInput input)
         {
