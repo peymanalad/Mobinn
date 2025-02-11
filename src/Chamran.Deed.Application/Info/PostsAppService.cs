@@ -679,7 +679,7 @@ namespace Chamran.Deed.Info
 
         [AbpAuthorize(AppPermissions.Pages_Posts_Delete)]
         public async Task Delete(EntityDto input)
-        {
+        { 
             await _postRepository.DeleteAsync(input.Id);
         }
 
