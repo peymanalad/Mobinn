@@ -108,7 +108,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
                 SettingScopes.User,
                 AbpSession.TenantId
             );
-            
+
             if (userProfileEditDto.Timezone == defaultTimeZoneId)
             {
                 userProfileEditDto.Timezone = string.Empty;
@@ -238,7 +238,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
             }
 
             var user = await UserManager.GetUserAsync(AbpSession.ToUserIdentifier());
-            if(user.IsSuperUser)
+            if (user.IsSuperUser || user.UserType == Accounts.Dto.AccountUserType.SuperAdmin)
                 throw new UserFriendlyException("SuperUser Can't Login to the App!");
 
             user.IsPhoneNumberConfirmed = true;
@@ -256,33 +256,40 @@ namespace Chamran.Deed.Authorization.Users.Profile
         public async Task UpdateCurrentUserProfile(CurrentUserProfileEditDto input)
         {
             var user = await GetCurrentUserAsync();
-
-            if (user.PhoneNumber != input.PhoneNumber)
+            if (user.UserType == Accounts.Dto.AccountUserType.SuperAdmin || user.UserType == Accounts.Dto.AccountUserType.Admin)
             {
-                input.IsPhoneNumberConfirmed = false;
-            }
-            else if (user.IsPhoneNumberConfirmed)
-            {
-                input.IsPhoneNumberConfirmed = true;
-            }
-
-            ObjectMapper.Map(input, user);
-            CheckErrors(await UserManager.UpdateAsync(user));
-
-            if (Clock.SupportsMultipleTimezone)
-            {
-                if (input.Timezone.IsNullOrEmpty())
+                if (user.PhoneNumber != input.PhoneNumber)
                 {
-                    var defaultValue =
-                        await _timeZoneService.GetDefaultTimezoneAsync(SettingScopes.User, AbpSession.TenantId);
-                    await SettingManager.ChangeSettingForUserAsync(AbpSession.ToUserIdentifier(),
-                        TimingSettingNames.TimeZone, defaultValue);
+                    input.IsPhoneNumberConfirmed = false;
                 }
-                else
+                else if (user.IsPhoneNumberConfirmed)
                 {
-                    await SettingManager.ChangeSettingForUserAsync(AbpSession.ToUserIdentifier(),
-                        TimingSettingNames.TimeZone, input.Timezone);
+                    input.IsPhoneNumberConfirmed = true;
                 }
+
+                ObjectMapper.Map(input, user);
+               
+                CheckErrors(await UserManager.UpdateAsync(user));
+
+                if (Clock.SupportsMultipleTimezone)
+                {
+                    if (input.Timezone.IsNullOrEmpty())
+                    {
+                        var defaultValue =
+                            await _timeZoneService.GetDefaultTimezoneAsync(SettingScopes.User, AbpSession.TenantId);
+                        await SettingManager.ChangeSettingForUserAsync(AbpSession.ToUserIdentifier(),
+                            TimingSettingNames.TimeZone, defaultValue);
+                    }
+                    else
+                    {
+                        await SettingManager.ChangeSettingForUserAsync(AbpSession.ToUserIdentifier(),
+                            TimingSettingNames.TimeZone, input.Timezone);
+                    }
+                }
+            }
+            else
+            {
+                throw new UserFriendlyException("فقط کاربر مدیر امکان ویرایش اطلاعات کاربری دارد");
             }
         }
 
@@ -438,7 +445,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
                 await _binaryObjectManager.SaveAsync(storedFile);
                 storedFile.SourceId = (int?)user.Id;
                 await CurrentUnitOfWork.SaveChangesAsync(); //It's done to get Id of the role.
-                await _userAppService.UpdateProfilePictureId(user.Id,storedFile.Id);
+                await _userAppService.UpdateProfilePictureId(user.Id, storedFile.Id);
 
 
             }
@@ -447,7 +454,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
                 await _userAppService.RemoveProfilePicture(user.Id);
 
             }
-          
+
         }
 
 

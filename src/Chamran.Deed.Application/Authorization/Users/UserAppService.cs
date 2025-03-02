@@ -858,6 +858,7 @@ namespace Chamran.Deed.Authorization.Users
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Delete)]
         public async Task DeleteUser(EntityDto<long> input)
         {
+           
             if (input.Id == AbpSession.GetUserId())
             {
                 throw new UserFriendlyException(L("YouCanNotDeleteOwnAccount"));
@@ -877,8 +878,12 @@ namespace Chamran.Deed.Authorization.Users
             {
                 throw new UserFriendlyException(L("کاربر پیدا نشد."));
             }
+            if (user.UserType == Accounts.Dto.AccountUserType.SuperAdmin)
+            {
+                throw new UserFriendlyException("امکان حذف کاربر سوپر ادمین وجود ندارد");
+            }
             CheckErrors(await UserManager.DeleteAsync(user));
-            
+
         }
 
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Unlock)]
@@ -931,7 +936,12 @@ namespace Chamran.Deed.Authorization.Users
             Debug.Assert(input.User.Id != null, "input.User.Id should be set.");
 
             var user = await UserManager.FindByIdAsync(input.User.Id.Value.ToString());
-
+            var currentUserType = user.UserType;
+            bool isSuperAdmin = false;
+            if (user.UserType == Accounts.Dto.AccountUserType.SuperAdmin)
+            {
+                isSuperAdmin = true;
+            }
             // Check if the username is already in use by another user
             if (await UserManager.Users.AnyAsync(u => u.UserName == input.User.UserName && u.Id != user.Id))
             {
@@ -948,7 +958,21 @@ namespace Chamran.Deed.Authorization.Users
 
             //Update user properties
             ObjectMapper.Map(input.User, user); //Passwords is not mapped (see mapping configuration)
+            if (isSuperAdmin)
+            {
+                user.UserType = Accounts.Dto.AccountUserType.SuperAdmin;
+                user.IsActive = true;
+                user.IsSuperUser = true;
 
+            }
+            else
+            {
+                if (input.User.UserType==AccountUserType.SuperAdmin || input.User.UserType == AccountUserType.Admin)
+                {
+                    user.UserType = currentUserType;
+                }
+                user.IsSuperUser = false;
+            }
             CheckErrors(await UserManager.UpdateAsync(user));
 
             if (input.SetRandomPassword)

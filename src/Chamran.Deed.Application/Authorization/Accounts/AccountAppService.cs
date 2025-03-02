@@ -134,18 +134,25 @@ namespace Chamran.Deed.Authorization.Accounts
 
         public async Task<ResetPasswordOutput> ResetPassword(ResetPasswordInput input)
         {
+
             if (input.ExpireDate < Clock.Now)
             {
                 throw new UserFriendlyException(L("PasswordResetLinkExpired"));
             }
             
             var user = await UserManager.GetUserByIdAsync(input.UserId);
+            if (user.UserType == AccountUserType.SuperAdmin)
+            {
+                throw new UserFriendlyException("امکان ریست رمز سوپر ادمین وجود ندارد");
+            }
+
             if (user == null || user.PasswordResetCode.IsNullOrEmpty() || user.PasswordResetCode != input.ResetCode)
             {
                 throw new UserFriendlyException(L("InvalidPasswordResetCode"), L("InvalidPasswordResetCode_Detail"));
             }
     
             await UserManager.InitializeOptionsAsync(AbpSession.TenantId);
+           
             CheckErrors(await UserManager.ChangePasswordAsync(user, input.Password));
             user.PasswordResetCode = null;
             user.IsEmailConfirmed = true;
