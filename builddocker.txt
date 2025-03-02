@@ -9,7 +9,7 @@ docker login 192.168.55.545:5000
 
 docker build -t ideed:23.99 C:\ZProjects\iDeed\aspnet-core\src\Chamran.Deed.Web.Host
 docker images
-docker tag   1f165995d1f8 docker.mobinn.ir/ideed:23.99
+docker tag   01dfc97ae77a docker.mobinn.ir/ideed:23.99
 docker push docker.mobinn.ir/ideed:23.99
 
 docker save -o ideed_23_99.tar ideed:23.99
