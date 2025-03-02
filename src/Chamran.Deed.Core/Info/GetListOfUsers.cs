@@ -8,6 +8,7 @@ namespace Chamran.Deed.Info;
 
 public class GetListOfUsers :EntityDto<long>, IPassivable, IHasCreationTime
 {
+    public int Id { get; set; }
     public string NationalId { get; set; }
     public string Name { get; set; }
 
@@ -30,4 +31,5 @@ public class GetListOfUsers :EntityDto<long>, IPassivable, IHasCreationTime
     public DateTime? LastLoginAttemptTime { get; set; }
     public int? AssignedRoleId { get; set; }
     public string AssignedRoleName { get; set; }
+    public DateTime? LockoutEndDate { get; set; }
 }

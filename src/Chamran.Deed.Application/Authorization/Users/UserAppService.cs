@@ -174,11 +174,11 @@ namespace Chamran.Deed.Authorization.Users
                 userListDtos
             );
         }
-
         [HttpGet]
         public async Task<PagedResultDto<UserListDto>> GetListOfUsers(GetUsersInput input)
         {
-            if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
+            if (AbpSession.UserId == null)
+                throw new UserFriendlyException("User Must be Logged in!");
 
             var parameters = new[]
             {
@@ -209,29 +209,42 @@ namespace Chamran.Deed.Authorization.Users
                 .FromSqlRaw("EXEC GetListOfUsers @NationalIdFilter, @NameFilter, @SurNameFilter, @UserNameFilter, @PhoneNumberFilter, @IsActiveFilter, @FromCreationDate, @ToCreationDate, @FromLastLoginDate, @ToLastLoginDate, @Role, @OnlyLockedUsers, @Filter, @Permissions, @OrganizationId, @Sorting, @MaxResultCount, @SkipCount, @UserType", parameters)
                 .ToListAsync();
 
-            var result = queryResult.Select(user => new UserListDto
+            // ✅ Debug Output (Check SQL output before processing)
+            foreach (var user in queryResult)
             {
-                Id = user.Id,
-                NationalId = user.NationalId,
-                Name = user.Name,
-                Surname = user.Surname,
-                UserName = user.UserName,
-                EmailAddress = user.EmailAddress,
-                PhoneNumber = user.PhoneNumber,
-                ProfilePictureId = user.ProfilePictureId,
-                Roles = new List<UserListRoleDto>
-        {
-            new UserListRoleDto
-            {
-                RoleId = user.AssignedRoleId ?? 3,
-                RoleName = string.IsNullOrEmpty(user.AssignedRoleName) ? "User" : user.AssignedRoleName,
+                Console.WriteLine($"[SQL Debug] UserId: {user.Id}, RoleId: {user.AssignedRoleId}, RoleName: {user.AssignedRoleName}");
             }
-        },
-                IsActive = user.IsActive,
-                CreationTime = user.CreationTime,
-                LastLoginAttemptTime = user.LastLoginAttemptTime,
-                UserType = (AccountUserType)user.UserType
-            }).ToList();
+
+            var result = queryResult
+                .GroupBy(u => u.Id) // Groups by user Id
+                .Select(groupedUsers =>
+                {
+                    var user = groupedUsers.OrderByDescending(u => u.CreationTime).First(); // Select the most recent record
+                    return new UserListDto
+                    {
+                        Id = user.Id, // ✅ Ensured correct selection
+                        NationalId = user.NationalId,
+                        Name = user.Name,
+                        Surname = user.Surname,
+                        UserName = user.UserName,
+                        EmailAddress = user.EmailAddress,
+                        PhoneNumber = user.PhoneNumber,
+                        ProfilePictureId = user.ProfilePictureId,
+                        IsActive = user.IsActive,
+                        CreationTime = user.CreationTime,
+                        LastLoginAttemptTime = user.LastLoginAttemptTime,
+                        LockoutEndDateUtc = user.LockoutEndDate,
+                        UserType = (AccountUserType)user.UserType,
+
+                        // ✅ Role assignment remains exactly the same
+                        Roles = groupedUsers.Select(user => new UserListRoleDto
+                        {
+                            RoleId = user.AssignedRoleId ?? 3,
+                            RoleName = string.IsNullOrEmpty(user.AssignedRoleName) ? "User" : user.AssignedRoleName
+                        }).Distinct().ToList()
+                    };
+                })
+                .ToList();
 
             return new PagedResultDto<UserListDto>(queryResult.Count, result);
         }
