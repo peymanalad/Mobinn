@@ -222,6 +222,13 @@ namespace Chamran.Deed.Web.Startup
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
+            // اضافه کردن X-Frame-Options به هدر
+            app.Use(async (context, next) =>
+            {
+                context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
+                await next();
+            });
+
             app.UseMiddleware<ClickjackingMiddleware>();
             app.UseForwardedHeaders(new ForwardedHeadersOptions
             {
