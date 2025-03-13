@@ -614,10 +614,15 @@ namespace Chamran.Deed.Authorization.Users
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_ChangePermissions)]
         public async Task UpdateUserPermissions(UpdateUserPermissionsInput input)
         {
-            var user = await UserManager.GetUserByIdAsync(input.Id);
-            var grantedPermissions =
-                PermissionManager.GetPermissionsFromNamesByValidating(input.GrantedPermissionNames);
-            await UserManager.SetGrantedPermissionsAsync(user, grantedPermissions);
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType == AccountUserType.Admin || currentUser.UserType == AccountUserType.SuperAdmin)
+            {
+
+                var user = await UserManager.GetUserByIdAsync(input.Id);
+                var grantedPermissions =
+                    PermissionManager.GetPermissionsFromNamesByValidating(input.GrantedPermissionNames);
+                await UserManager.SetGrantedPermissionsAsync(user, grantedPermissions);
+            }
         }
 
         public async Task<long> CreateOrUpdateUser(CreateOrUpdateUserInput input)
@@ -950,11 +955,7 @@ namespace Chamran.Deed.Authorization.Users
 
             var user = await UserManager.FindByIdAsync(input.User.Id.Value.ToString());
             var currentUserType = user.UserType;
-            bool isSuperAdmin = false;
-            if (user.UserType == Accounts.Dto.AccountUserType.SuperAdmin)
-            {
-                isSuperAdmin = true;
-            }
+            bool isSuperAdmin = user.UserType == AccountUserType.SuperAdmin;
             // Check if the username is already in use by another user
             if (await UserManager.Users.AnyAsync(u => u.UserName == input.User.UserName && u.Id != user.Id))
             {
