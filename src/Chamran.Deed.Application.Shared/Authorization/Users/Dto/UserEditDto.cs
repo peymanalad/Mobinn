@@ -43,7 +43,7 @@ namespace Chamran.Deed.Authorization.Users.Dto
         public bool IsActive { get; set; }
         public AccountUserType UserType { get; set; }
 
-        public bool ShouldChangePasswordOnNextLogin { get; set; }
+        public bool ShouldChangePasswordOnNextLogin { get; set; } = false;
 
         public virtual bool IsTwoFactorEnabled { get; set; }
 

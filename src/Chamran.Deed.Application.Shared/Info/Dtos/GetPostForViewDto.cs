@@ -19,6 +19,12 @@ namespace Chamran.Deed.Info.Dtos
         public string PublisherUserName { get; set; }
         public string PublisherUserFirstName { get; set; }
         public string PublisherUserLastName { get; set; }
+
+        public long? CreatorUserId { get; set; }
+        public string CreatorUserFirstName { get; set; }
+        public string CreatorUserLastName { get; set; }
+        public string CreatorUserName { get; set; }
+
         public List<PostEditHistoryDto> PostEditHistories { get; set; }
     }
 
