@@ -549,6 +549,11 @@ namespace Chamran.Deed.Info
                 input.PublisherUserId = post.PublisherUserId;
             }
 
+            if (input.CreatorUserId == null)
+            {
+                input.PublisherUserId = post.PublisherUserId;
+
+            }
             //if (input.DatePublished == null)
             //{
             //    input.PublisherUserId = post.PublisherUserId;
