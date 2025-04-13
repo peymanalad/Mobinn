@@ -14,6 +14,7 @@ using Abp.UI;
 using Abp.Zero.Configuration;
 using Chamran.Deed.Authentication;
 using Chamran.Deed.Authorization;
+using Chamran.Deed.Authorization.Accounts.Dto;
 using Chamran.Deed.Configuration.Dto;
 using Chamran.Deed.Configuration.Host.Dto;
 using Chamran.Deed.Editions;
@@ -243,6 +244,10 @@ namespace Chamran.Deed.Configuration.Host
 
         private async Task<UserLockOutSettingsEditDto> GetUserLockOutSettingsAsync()
         {
+            if (GetCurrentUser().UserType == AccountUserType.Admin || GetCurrentUser().UserType == AccountUserType.SuperAdmin)
+            {
+                return null; 
+            }
             return new UserLockOutSettingsEditDto
             {
                 IsEnabled = await SettingManager.GetSettingValueAsync<bool>(AbpZeroSettingNames.UserManagement
@@ -548,15 +553,19 @@ namespace Chamran.Deed.Configuration.Host
 
         private async Task UpdateUserLockOutSettingsAsync(UserLockOutSettingsEditDto settings)
         {
-            await SettingManager.ChangeSettingForApplicationAsync(
-                AbpZeroSettingNames.UserManagement.UserLockOut.IsEnabled,
-                settings.IsEnabled.ToString().ToLowerInvariant());
-            await SettingManager.ChangeSettingForApplicationAsync(
-                AbpZeroSettingNames.UserManagement.UserLockOut.DefaultAccountLockoutSeconds,
-                settings.DefaultAccountLockoutSeconds.ToString());
-            await SettingManager.ChangeSettingForApplicationAsync(
-                AbpZeroSettingNames.UserManagement.UserLockOut.MaxFailedAccessAttemptsBeforeLockout,
-                settings.MaxFailedAccessAttemptsBeforeLockout.ToString());
+            if (GetCurrentUser().UserType == AccountUserType.Admin || GetCurrentUser().UserType == AccountUserType.SuperAdmin)
+            {
+                await SettingManager.ChangeSettingForApplicationAsync(
+                    AbpZeroSettingNames.UserManagement.UserLockOut.IsEnabled,
+                    settings.IsEnabled.ToString().ToLowerInvariant());
+                await SettingManager.ChangeSettingForApplicationAsync(
+                    AbpZeroSettingNames.UserManagement.UserLockOut.DefaultAccountLockoutSeconds,
+                    settings.DefaultAccountLockoutSeconds.ToString());
+                await SettingManager.ChangeSettingForApplicationAsync(
+                    AbpZeroSettingNames.UserManagement.UserLockOut.MaxFailedAccessAttemptsBeforeLockout,
+                    settings.MaxFailedAccessAttemptsBeforeLockout.ToString());
+            }
+
         }
 
         private async Task UpdateTwoFactorLoginSettingsAsync(TwoFactorLoginSettingsEditDto settings)

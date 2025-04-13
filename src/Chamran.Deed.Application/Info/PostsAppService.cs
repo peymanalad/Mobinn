@@ -107,6 +107,8 @@ namespace Chamran.Deed.Info
 
         public async Task<PagedResultDto<GetPostForViewDto>> GetAll(GetAllPostsInput input)
         {
+            User user = GetCurrentUser();
+            
             // Prepare parameters
             var parameters = new[]
             {
@@ -128,67 +130,81 @@ namespace Chamran.Deed.Info
             var dbContext = await _dbContextProvider.GetDbContextAsync();
 
             // Execute the SQL and get all results as a list
-            var queryResult = await dbContext.Set<GetPostsForView>()
-                .FromSqlRaw(
-                    "EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @PostGroupPostSubGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy, @MaxResultCount, @SkipCount",
-                    parameters)
-                .AsNoTracking()
-                .ToListAsync();
-
-            // Count the total results (without paging)
-            var totalCount = queryResult.Count;
-
-            var editHistories = await dbContext.PostEditHistories
-                .Where(e => queryResult.Select(p => p.Id).Contains(e.PostId))
-                .ToListAsync();
-
-            // Map results to DTOs
-            var result = queryResult.GroupBy(post => post.Id).Select(post => new GetPostForViewDto
+            try
             {
-                Post = new PostDto
+                var queryResult = await dbContext.Set<GetPostsForView>()
+                    .FromSqlRaw(
+                        "EXEC GetFilteredPosts @OrganizationId, @Filter, @PostCaptionFilter, @IsSpecialFilter, @PostTitleFilter, @GroupMemberMemberPositionFilter, @PostGroupPostGroupDescriptionFilter, @PostGroupPostSubGroupDescriptionFilter, @FromDate, @ToDate, @OrderBy, @MaxResultCount, @SkipCount",
+                        parameters)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                // Count the total results (without paging)
+                var totalCount = queryResult.Count;
+
+                var editHistories = await dbContext.PostEditHistories
+                    .Where(e => queryResult.Select(p => p.Id).Contains(e.PostId))
+                    .ToListAsync();
+
+                // Map results to DTOs
+                var result = queryResult.GroupBy(post => post.Id).Select(post => new GetPostForViewDto
                 {
-                    PostFile = post.First().PostFile,
-                    PostCaption = post.First().PostCaption,
-                    IsSpecial = post.First().IsSpecial,
-                    IsPublished = post.First().IsPublished,
-                    PostTitle = post.First().PostTitle,
-                    PostRefLink = post.First().PostRefLink,
-                    Id = post.Key,
-                    CreationTime = post.First().CreationTime,
-                    LastModificationTime = post.First().LastModificationTime,
-                    CurrentPostStatus = (PostStatus)post.First().CurrentPostStatus,
-                    PublisherUserId = post.First().PublisherUserId,
-                    DatePublished = post.First().DatePublished,
+                    Post = new PostDto
+                    {
+                        PostFile = post.First().PostFile,
+                        PostCaption = post.First().PostCaption,
+                        IsSpecial = post.First().IsSpecial,
+                        IsPublished = post.First().IsPublished,
+                        PostTitle = post.First().PostTitle,
+                        PostRefLink = post.First().PostRefLink,
+                        Id = post.Key,
+                        CreationTime = post.First().CreationTime,
+                        LastModificationTime = post.First().LastModificationTime,
+                        CurrentPostStatus = (PostStatus)post.First().CurrentPostStatus,
+                        PublisherUserId = post.First().PublisherUserId,
+                        DatePublished = post.First().DatePublished,
+                        PublisherUserFirstName = post.First().PublisherUserFirstName,
+                        PublisherUserLastName = post.First().PublisherUserLastName,
+                        PublisherUserName = post.First().PublisherUserName,
+                        PostSubGroupId = post.First().PostSubGroupId,
+
+
+                    },
+                    GroupMemberMemberPosition = post.First().GroupMemberMemberPosition ?? "",
+                    PostGroupPostGroupDescription = post.First().PostGroupPostGroupDescription ?? "",
+                    PostGroupPostSubGroupDescription = post.First().PostGroupPostSubGroupDescription ?? "", // New field
+                    GroupFile = post.First().GroupFile,
+                    TotalVisits = post.First().TotalVisits,
+                    TotalLikes = post.First().TotalLikes,
+                    OrganizationId = post.First().OrganizationId,
+                    OrganizationName = post.First().OrganizationName,
+                    PostSubGroupId = post.First().PostSubGroupId,
                     PublisherUserFirstName = post.First().PublisherUserFirstName,
                     PublisherUserLastName = post.First().PublisherUserLastName,
                     PublisherUserName = post.First().PublisherUserName,
-                    PostSubGroupId = post.First().PostSubGroupId,
+                    CreatorUserFirstName = post.First().CreatorUserFirstName,
+                    CreatorUserLastName = post.First().CreatorUserLastName,
+                    CreatorUserName = post.First().CreatorUserName,
+                    PostEditHistories = editHistories
+                        .Where(e => e.PostId == post.Key)
+                        .Select(e => new PostEditHistoryDto
+                        {
+                            EditorName = e.EditorName,
+                            EditTime = e.EditTime,
+                            Changes = e.Changes,
+                        }).ToList()
+                }).ToList();
 
-                },
-                GroupMemberMemberPosition = post.First().GroupMemberMemberPosition ?? "",
-                PostGroupPostGroupDescription = post.First().PostGroupPostGroupDescription ?? "",
-                PostGroupPostSubGroupDescription = post.First().PostGroupPostSubGroupDescription ?? "", // New field
-                GroupFile = post.First().GroupFile,
-                TotalVisits = post.First().TotalVisits,
-                TotalLikes = post.First().TotalLikes,
-                OrganizationId = post.First().OrganizationId,
-                OrganizationName = post.First().OrganizationName,
-                PostSubGroupId = post.First().PostSubGroupId,
-                PublisherUserFirstName = post.First().PublisherUserFirstName,
-                PublisherUserLastName = post.First().PublisherUserLastName,
-                PublisherUserName = post.First().PublisherUserName,
-                PostEditHistories = editHistories
-                    .Where(e => e.PostId == post.Key)
-                    .Select(e => new PostEditHistoryDto
-                    {
-                        EditorName = e.EditorName,
-                        EditTime = e.EditTime,
-                        Changes = e.Changes,
-                    }).ToList()
-            }).ToList();
-
-            // Return paged result
-            return new PagedResultDto<GetPostForViewDto>(totalCount, result);
+                // Return paged result
+                return new PagedResultDto<GetPostForViewDto>(totalCount, result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+                if (ex.InnerException != null)
+                    Console.WriteLine("Inner: " + ex.InnerException.Message);
+                throw;
+            }
         }
 
 
@@ -541,13 +557,13 @@ namespace Chamran.Deed.Info
 
             var changes = GetChanges(post, input);
             var currentUserName = await GetCurrentUserName();
-            if (changes != "")
+            if (await changes != "")
             {
                 post.EditHistories.Add(new PostEditHistory
                 {
                     EditorName = currentUserName,
                     EditTime = DateTime.Now,
-                    Changes = changes
+                    Changes = await changes
                 });
             }
 
@@ -1446,7 +1462,7 @@ namespace Chamran.Deed.Info
 
         }
 
-        private string GetChanges(Post post, CreateOrEditPostDto input)
+        private async Task<string> GetChanges(Post post, CreateOrEditPostDto input)
         {
             var changes = new List<string>();
 
@@ -1458,9 +1474,19 @@ namespace Chamran.Deed.Info
             //if (post.PostCaption != input.PostCaption)
             //    changes.Add($"سازمان از {post.AppBinaryObjectFk4} به {input.PostCaption} تغییر کرد.");
             if (post.PostGroupId != input.PostGroupId)
-                changes.Add($"گروه خبری از {post.PostCaption} به {input.PostCaption} تغییر کرد.");
+            {
+                var newPostGroup = await _lookup_postGroupRepository.FirstOrDefaultAsync(pg => pg.Id == input.PostGroupId.Value);
+                string newGroupDescription = newPostGroup?.PostGroupDescription ?? "نامشخص";
+                changes.Add($"گروه خبری از {post.PostGroupFk.PostGroupDescription} به {input.PostCaption} تغییر کرد.");
+            }
+
             if (post.PostSubGroupId != input.PostSubGroupId)
-                changes.Add($"زیر گروه خبری از {post.PostCaption} به {input.PostCaption} تغییر کرد.");
+            {
+                var newSubGroup = await _lookup_postSubGroupRepository.FirstOrDefaultAsync(sg => sg.Id == input.PostSubGroupId);
+                string newSubGroupDescription = newSubGroup?.PostSubGroupDescription ?? "نامشخص";
+                changes.Add($"زیر گروه خبری از {post.PostSubGroupFk.PostSubGroupDescription} به {input.PostCaption} تغییر کرد.");
+            }
+
             if (post.PostFile != input.PostFile)
                 changes.Add($"فایل اول از {post.PostFile} به {input.PostFile} تغییر کرد.");
             if (post.PostFile2 != input.PostFile2)
@@ -1496,7 +1522,7 @@ namespace Chamran.Deed.Info
             if (post.IsPublished == false && input.IsPublished == true)
                 changes.Add("خبر منتشر شد.");
 
-            return string.Join(", ", changes);
+            return string.Join("\n", changes);
         }
 
         private async Task<string> GetCurrentUserName()

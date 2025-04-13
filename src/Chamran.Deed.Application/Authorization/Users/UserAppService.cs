@@ -220,6 +220,12 @@ namespace Chamran.Deed.Authorization.Users
                 .Select(groupedUsers =>
                 {
                     var user = groupedUsers.OrderByDescending(u => u.CreationTime).First(); // Select the most recent record
+
+                    if (GetCurrentUser().UserType == AccountUserType.Admin || GetCurrentUser().UserType == AccountUserType.SuperAdmin)
+                    {
+                        user.LockoutEndDate = null;
+                    }
+
                     return new UserListDto
                     {
                         Id = user.Id, // ✅ Ensured correct selection
