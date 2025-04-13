@@ -65,6 +65,7 @@ namespace Chamran.Deed.Info.Dtos
         public string PostRefLink { get; set; }
 
         public long? PublisherUserId { get; set; }
+        public long? CreatorUserId { get; set; }
         public DateTime? DatePublished { get; set; }
         public PostStatus CurrentPostStatus { get; set; }
         public string PostComment { get; set; }

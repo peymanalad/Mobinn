@@ -17,6 +17,7 @@ namespace Chamran.Deed.Info.Dtos
         public bool IsPublished { get; set; }
 
         public long? PublisherUserId { get; set; }
+        public long? CreatorUserId { get; set; }
         public DateTime? DatePublished { get; set; }
         public PostStatus CurrentPostStatus { get; set; }
         public string PostComment { get; set; }
@@ -37,5 +38,8 @@ namespace Chamran.Deed.Info.Dtos
         public string PublisherUserFirstName { get; set; }
         public string PublisherUserLastName { get; set; }
         public string PublisherUserName { get; set; }
+        public string CreatorUserFirstName { get; set; }
+        public string CreatorUserLastName { get; set; }
+        public string CreatorUserName { get; set; }
     }
 }

@@ -112,10 +112,11 @@ namespace Chamran.Deed.EntityFrameworkCore
             {
                 entry.ToTable("Reports", tb => tb.HasTrigger("trgAfterInsertReports"));
             });
-            modelBuilder.Entity<GetEntriesDigest>().HasNoKey();
-            modelBuilder.Entity<GetEntriesDetail>().HasNoKey();
-            modelBuilder.Entity<GetPostsForView>().HasNoKey();
-            modelBuilder.Entity<GetListOfUsers>().HasNoKey();
+            modelBuilder.Entity<GetEntriesDetail>().HasNoKey().ToView("vwGetEntriesDetail");
+            modelBuilder.Entity<GetEntriesDigest>().HasNoKey().ToView("vwGetEntriesDigest");
+            modelBuilder.Entity<GetPostsForView>().HasNoKey().ToView("vwGetPostsForView");
+            modelBuilder.Entity<GetListOfUsers>().HasNoKey().ToView("vwGetListOfUsers");
+
 
             modelBuilder.Entity<OrganizationChart>()
                 .HasOne(node => node.ParentFk)   // Use ParentFk navigation property
