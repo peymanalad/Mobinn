@@ -166,6 +166,9 @@ namespace Chamran.Deed.Info
                         PublisherUserFirstName = post.First().PublisherUserFirstName,
                         PublisherUserLastName = post.First().PublisherUserLastName,
                         PublisherUserName = post.First().PublisherUserName,
+                        CreatorUserFirstName = post.First().CreatorUserFirstName,
+                        CreatorUserLastName = post.First().CreatorUserLastName,
+                        CreatorUserName = post.First().CreatorUserName,
                         PostSubGroupId = post.First().PostSubGroupId,
 
 
@@ -311,7 +314,7 @@ namespace Chamran.Deed.Info
                 return;
             }
 
-            //var currentUserRoleId = userRole.RoleId;
+            post.CreatorUserId = AbpSession.UserId;
             post.GroupMemberId = grpMemberId.Id;
 
             await _postRepository.InsertAsync(post);
@@ -544,22 +547,33 @@ namespace Chamran.Deed.Info
             }
             var post = await _postRepository.FirstOrDefaultAsync((int)input.Id);
             bool shouldSendSmsNotification = post.CurrentPostStatus != input.CurrentPostStatus;
-            if (input.PublisherUserId == null)
+            //if (input.PublisherUserId == null)
+            //{
+            //    input.PublisherUserId = post.PublisherUserId;
+            //}
+
+            //if (input.CreatorUserId == null)
+            //{
+            //    input.PublisherUserId = post.PublisherUserId;
+
+            //}
+
+            bool isPublishingNow = !post.IsPublished && input.IsPublished;
+            if (isPublishingNow)
             {
-                input.PublisherUserId = post.PublisherUserId;
+                input.PublisherUserId = AbpSession.UserId ?? throw new UserFriendlyException("کاربر وارد نشده است.");
+                input.CreatorUserId = post.CreatorUserId;
             }
 
-            if (input.CreatorUserId == null)
-            {
-                input.PublisherUserId = post.PublisherUserId;
-
-            }
             //if (input.DatePublished == null)
             //{
             //    input.PublisherUserId = post.PublisherUserId;
             //}
-            input.PublisherUserId = post.PublisherUserId;
-
+            else
+            {
+                input.PublisherUserId = post.PublisherUserId;
+                input.CreatorUserId = post.CreatorUserId;
+            }
             var changes = GetChanges(post, input);
             var currentUserName = await GetCurrentUserName();
             if (await changes != "")
