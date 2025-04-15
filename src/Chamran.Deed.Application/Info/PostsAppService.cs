@@ -162,6 +162,7 @@ namespace Chamran.Deed.Info
                         LastModificationTime = post.First().LastModificationTime,
                         CurrentPostStatus = (PostStatus)post.First().CurrentPostStatus,
                         PublisherUserId = post.First().PublisherUserId,
+                        CreatorUserId = post.First().CreatorUserId,
                         DatePublished = post.First().DatePublished,
                         PublisherUserFirstName = post.First().PublisherUserFirstName,
                         PublisherUserLastName = post.First().PublisherUserLastName,
@@ -170,8 +171,6 @@ namespace Chamran.Deed.Info
                         CreatorUserLastName = post.First().CreatorUserLastName,
                         CreatorUserName = post.First().CreatorUserName,
                         PostSubGroupId = post.First().PostSubGroupId,
-
-
                     },
                     GroupMemberMemberPosition = post.First().GroupMemberMemberPosition ?? "",
                     PostGroupPostGroupDescription = post.First().PostGroupPostGroupDescription ?? "",
@@ -314,7 +313,7 @@ namespace Chamran.Deed.Info
                 return;
             }
 
-            post.CreatorUserId = AbpSession.UserId;
+            post.CreatorUserId = GetCurrentUserAsync().Result.Id;
             post.GroupMemberId = grpMemberId.Id;
 
             await _postRepository.InsertAsync(post);
