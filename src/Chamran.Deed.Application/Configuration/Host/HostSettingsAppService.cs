@@ -248,17 +248,8 @@ namespace Chamran.Deed.Configuration.Host
             {
                 return null; 
             }
-            return new UserLockOutSettingsEditDto
-            {
-                IsEnabled = await SettingManager.GetSettingValueAsync<bool>(AbpZeroSettingNames.UserManagement
-                    .UserLockOut.IsEnabled),
-                MaxFailedAccessAttemptsBeforeLockout =
-                    await SettingManager.GetSettingValueAsync<int>(AbpZeroSettingNames.UserManagement.UserLockOut
-                        .MaxFailedAccessAttemptsBeforeLockout),
-                DefaultAccountLockoutSeconds =
-                    await SettingManager.GetSettingValueAsync<int>(AbpZeroSettingNames.UserManagement.UserLockOut
-                        .DefaultAccountLockoutSeconds)
-            };
+
+            return null;
         }
 
         private async Task<TwoFactorLoginSettingsEditDto> GetTwoFactorLoginSettingsAsync()
@@ -518,7 +509,7 @@ namespace Chamran.Deed.Configuration.Host
                 await UpdatePasswordComplexitySettingsAsync(settings.PasswordComplexity);
             }
 
-            await UpdateUserLockOutSettingsAsync(settings.UserLockOut);
+            //await UpdateUserLockOutSettingsAsync(settings.UserLockOut);
             await UpdateTwoFactorLoginSettingsAsync(settings.TwoFactorLogin);
             await UpdateOneConcurrentLoginPerUserSettingAsync(settings.AllowOneConcurrentLoginPerUser);
         }

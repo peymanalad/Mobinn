@@ -38,7 +38,7 @@ namespace Chamran.Deed.Authorization.Users
 
         public User()
         {
-            IsLockoutEnabled = true;
+            IsLockoutEnabled = false;
             IsTwoFactorEnabled = true;
         }
 

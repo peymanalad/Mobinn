@@ -543,13 +543,11 @@ namespace Chamran.Deed.Authorization.Users
                 output.User = new UserEditDto
                 {
                     IsActive = true,
-                    ShouldChangePasswordOnNextLogin = true,
+                    ShouldChangePasswordOnNextLogin = false,
                     IsTwoFactorEnabled =
                         await SettingManager.GetSettingValueAsync<bool>(AbpZeroSettingNames.UserManagement
                             .TwoFactorLogin.IsEnabled),
-                    IsLockoutEnabled =
-                        await SettingManager.GetSettingValueAsync<bool>(AbpZeroSettingNames.UserManagement.UserLockOut
-                            .IsEnabled)
+                    IsLockoutEnabled = false
                 };
 
                 foreach (var defaultRole in await _roleManager.Roles.Where(r => r.IsDefault).ToListAsync())
