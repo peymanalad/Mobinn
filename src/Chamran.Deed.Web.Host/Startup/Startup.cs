@@ -113,6 +113,13 @@ namespace Chamran.Deed.Web.Startup
             }
 
             IdentityRegistrar.Register(services);
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.Lockout.AllowedForNewUsers = false;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.Zero;
+                options.Lockout.MaxFailedAccessAttempts = int.MaxValue;
+            });
+
             AuthConfigurer.Configure(services, _appConfiguration);
 
             //Identity server

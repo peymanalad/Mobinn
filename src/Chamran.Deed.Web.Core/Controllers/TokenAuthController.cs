@@ -1121,9 +1121,7 @@ namespace Chamran.Deed.Web.Controllers
         private async Task<AbpLoginResult<Tenant, User>> GetLoginResultAsync(string usernameOrEmailAddress,
             string password, string tenancyName)
         {
-            var shouldLockout = await SettingManager.GetSettingValueAsync<bool>(
-                AbpZeroSettingNames.UserManagement.UserLockOut.IsEnabled
-            );
+            var shouldLockout = false;
 
 
             AbpLoginResult<Tenant, User> loginResult;
