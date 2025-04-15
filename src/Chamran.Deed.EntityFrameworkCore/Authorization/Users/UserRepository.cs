@@ -42,7 +42,7 @@ namespace Chamran.Deed.Authorization.Users
                     !user.ShouldChangePasswordOnNextLogin &&
                     userIdsToUpdate.Contains(user.Id)
                 )
-                .Update(x => new User { ShouldChangePasswordOnNextLogin = true });
+                .Update(x => new User { ShouldChangePasswordOnNextLogin = false });
         }
     }
 }

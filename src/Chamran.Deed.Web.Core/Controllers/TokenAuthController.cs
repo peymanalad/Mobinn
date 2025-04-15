@@ -373,7 +373,17 @@ namespace Chamran.Deed.Web.Controllers
                 DecryptWithPrivateKey(model.Password, privateKeyPem),
                 GetTenancyNameOrNull()
             );
-
+            if (loginResult.Result == AbpLoginResultType.InvalidPassword ||
+                loginResult.Result == AbpLoginResultType.InvalidUserNameOrEmailAddress)
+            {
+                var user = await _userManager.FindByNameOrEmailAsync(model.UserNameOrEmailAddress);
+                if (user != null)
+                {
+                    user.AccessFailedCount = 0;
+                    user.LockoutEndDateUtc = null;
+                    await _userManager.UpdateAsync(user);
+                }
+            }
             if (loginResult.User.UserType == AccountUserType.Normal)
             {
                 throw new AbpAuthorizationException("ورود کاربر عادی مجاز نیست.");
@@ -389,17 +399,17 @@ namespace Chamran.Deed.Web.Controllers
                     loginResult.User.Id, loginResult.User.TenantId);
             }
 
-            //Password reset
-            if (loginResult.User.ShouldChangePasswordOnNextLogin)
-            {
-                loginResult.User.SetNewPasswordResetCode();
-                return new AuthenticateResultModel
-                {
-                    ShouldResetPassword = true,
-                    ReturnUrl = returnUrl,
-                    c = await EncryptQueryParameters(loginResult.User.Id, loginResult.User.PasswordResetCode)
-                };
-            }
+            ////Password reset
+            //if (loginResult.User.ShouldChangePasswordOnNextLogin)
+            //{
+            //    loginResult.User.SetNewPasswordResetCode();
+            //    return new AuthenticateResultModel
+            //    {
+            //        ShouldResetPassword = true,
+            //        ReturnUrl = returnUrl,
+            //        c = await EncryptQueryParameters(loginResult.User.Id, loginResult.User.PasswordResetCode)
+            //    };
+            //}
 
             //Two factor auth
             await _userManager.InitializeOptionsAsync(loginResult.Tenant?.Id);
