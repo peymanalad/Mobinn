@@ -631,6 +631,8 @@ namespace Chamran.Deed.Authorization.Users
 
         public async Task<long> CreateOrUpdateUser(CreateOrUpdateUserInput input)
         {
+            if (AbpSession.UserId == null)
+                throw new UserFriendlyException("User Must be Logged in!");
             DecryptUserPassword(input);
             if (input.User.Id.HasValue)
             {
@@ -880,7 +882,7 @@ namespace Chamran.Deed.Authorization.Users
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Delete)]
         public async Task DeleteUser(EntityDto<long> input)
         {
-           
+
             if (input.Id == AbpSession.GetUserId())
             {
                 throw new UserFriendlyException(L("YouCanNotDeleteOwnAccount"));
@@ -956,9 +958,10 @@ namespace Chamran.Deed.Authorization.Users
         protected virtual async Task<long> UpdateUserAsync(CreateOrUpdateUserInput input)
         {
             Debug.Assert(input.User.Id != null, "input.User.Id should be set.");
-
             var user = await UserManager.FindByIdAsync(input.User.Id.Value.ToString());
             var currentUserType = user.UserType;
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            
             bool isSuperAdmin = user.UserType == AccountUserType.SuperAdmin;
             // Check if the username is already in use by another user
             if (await UserManager.Users.AnyAsync(u => u.UserName == input.User.UserName && u.Id != user.Id))
@@ -972,22 +975,26 @@ namespace Chamran.Deed.Authorization.Users
             {
                 throw new UserFriendlyException($"The phone number '{input.User.PhoneNumber}' is already in use by another user.");
             }
-
-
             //Update user properties
             ObjectMapper.Map(input.User, user); //Passwords is not mapped (see mapping configuration)
+            if (!(currentUser.UserType == AccountUserType.Admin || currentUser.UserType == AccountUserType.SuperAdmin))
+            {
+                user.UserType = currentUserType;
+            }
             if (isSuperAdmin)
             {
                 user.UserType = Accounts.Dto.AccountUserType.SuperAdmin;
                 user.IsActive = true;
                 user.IsSuperUser = true;
-
+                user.IsLockoutEnabled = false;
             }
             else
             {
-                if (input.User.UserType==AccountUserType.SuperAdmin || input.User.UserType == AccountUserType.Admin)
+                if (input.User.UserType == AccountUserType.SuperAdmin || input.User.UserType == AccountUserType.Admin)
                 {
                     user.UserType = currentUserType;
+                    user.IsActive = true;
+                    user.IsLockoutEnabled = false;
                 }
                 user.IsSuperUser = false;
             }
