@@ -184,8 +184,8 @@ namespace Chamran.Deed.Authorization.Users
             {
 
                 var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
-                    where x.UserId == currentUser.Id
-                    select x.OrganizationId;
+                                          where x.UserId == currentUser.Id
+                                          select x.OrganizationId;
                 if (!currentUserOrgQuery.Contains(input.OrganizationId))
                 {
                     throw new UserFriendlyException("سازمان انتخابی به این کاربر تعلق ندارد");
@@ -276,17 +276,17 @@ namespace Chamran.Deed.Authorization.Users
             var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
             if (currentUser.UserType != AccountUserType.SuperAdmin)
             {
-                
-                    var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
-                        where x.UserId == currentUser.Id
-                        select x.OrganizationId;
-                    var userQuery = from x in _groupMemberRepository.GetAll()
-                        where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
-                        select x;
-                    if (!userQuery.Any())
-                    {
-                        throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
-                    }
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                                          where x.UserId == currentUser.Id
+                                          select x.OrganizationId;
+                var userQuery = from x in _groupMemberRepository.GetAll()
+                                where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
+                                select x;
+                if (!userQuery.Any())
+                {
+                    throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
+                }
 
             }
 
@@ -322,11 +322,11 @@ namespace Chamran.Deed.Authorization.Users
             {
 
                 var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
-                    where x.UserId == currentUser.Id
-                    select x.OrganizationId;
+                                          where x.UserId == currentUser.Id
+                                          select x.OrganizationId;
                 var userQuery = from x in _groupMemberRepository.GetAll()
-                    where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
-                    select x;
+                                where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
+                                select x;
                 if (!userQuery.Any())
                 {
                     throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
@@ -378,11 +378,11 @@ namespace Chamran.Deed.Authorization.Users
             {
 
                 var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
-                    where x.UserId == currentUser.Id
-                    select x.OrganizationId;
+                                          where x.UserId == currentUser.Id
+                                          select x.OrganizationId;
                 var userQuery = from x in _groupMemberRepository.GetAll()
-                    where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
-                    select x;
+                                where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
+                                select x;
                 if (!userQuery.Any())
                 {
                     throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
@@ -442,11 +442,11 @@ namespace Chamran.Deed.Authorization.Users
             {
 
                 var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
-                    where x.UserId == currentUser.Id
-                    select x.OrganizationId;
+                                          where x.UserId == currentUser.Id
+                                          select x.OrganizationId;
                 var userQuery = from x in _groupMemberRepository.GetAll()
-                    where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
-                    select x;
+                                where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
+                                select x;
                 if (!userQuery.Any())
                 {
                     throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
@@ -497,11 +497,11 @@ namespace Chamran.Deed.Authorization.Users
             {
 
                 var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
-                    where x.UserId == currentUser.Id
-                    select x.OrganizationId;
+                                          where x.UserId == currentUser.Id
+                                          select x.OrganizationId;
                 var userQuery = from x in _groupMemberRepository.GetAll()
-                    where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
-                    select x;
+                                where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
+                                select x;
                 if (!userQuery.Any())
                 {
                     throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
@@ -559,11 +559,11 @@ namespace Chamran.Deed.Authorization.Users
             {
 
                 var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
-                    where x.UserId == currentUser.Id
-                    select x.OrganizationId;
+                                          where x.UserId == currentUser.Id
+                                          select x.OrganizationId;
                 var userQuery = from x in _groupMemberRepository.GetAll()
-                    where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
-                    select x;
+                                where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
+                                select x;
                 if (!userQuery.Any())
                 {
                     throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
@@ -628,8 +628,8 @@ namespace Chamran.Deed.Authorization.Users
                                           where x.UserId == currentUser.Id
                                           select x.OrganizationId;
                 var userQuery = from x in _groupMemberRepository.GetAll()
-                    where x.Id == userId && currentUserOrgQuery.Contains(x.OrganizationId)
-                    select x;
+                                where x.Id == userId && currentUserOrgQuery.Contains(x.OrganizationId)
+                                select x;
                 if (!userQuery.Any())
                 {
                     throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
@@ -658,17 +658,17 @@ namespace Chamran.Deed.Authorization.Users
                 if (input.Id.HasValue)
                 {
                     var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
-                        where x.UserId == currentUser.Id
-                        select x.OrganizationId;
+                                              where x.UserId == currentUser.Id
+                                              select x.OrganizationId;
                     var userQuery = from x in _groupMemberRepository.GetAll()
-                        where x.Id == input.Id.Value && currentUserOrgQuery.Contains(x.OrganizationId)
-                        select x;
+                                    where x.Id == input.Id.Value && currentUserOrgQuery.Contains(x.OrganizationId)
+                                    select x;
                     if (!userQuery.Any())
                     {
                         throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
                     }
                 }
-               
+
             }
 
             //Getting all available roles
@@ -1114,10 +1114,11 @@ namespace Chamran.Deed.Authorization.Users
         protected virtual async Task<long> UpdateUserAsync(CreateOrUpdateUserInput input)
         {
             Debug.Assert(input.User.Id != null, "input.User.Id should be set.");
+
             var user = await UserManager.FindByIdAsync(input.User.Id.Value.ToString());
             var currentUserType = user.UserType;
             var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
-            
+
             bool isSuperAdmin = user.UserType == AccountUserType.SuperAdmin;
             // Check if the username is already in use by another user
             if (await UserManager.Users.AnyAsync(u => u.UserName == input.User.UserName && u.Id != user.Id))
@@ -1143,6 +1144,7 @@ namespace Chamran.Deed.Authorization.Users
                 user.IsActive = true;
                 user.IsSuperUser = true;
                 user.IsLockoutEnabled = false;
+
             }
             else
             {
