@@ -179,6 +179,20 @@ namespace Chamran.Deed.Authorization.Users
         {
             if (AbpSession.UserId == null)
                 throw new UserFriendlyException("User Must be Logged in!");
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+                if (!currentUserOrgQuery.Contains(input.OrganizationId))
+                {
+                    throw new UserFriendlyException("سازمان انتخابی به این کاربر تعلق ندارد");
+                }
+
+            }
+
 
             var parameters = new[]
             {
@@ -258,6 +272,24 @@ namespace Chamran.Deed.Authorization.Users
 
         public async Task<PagedResultDto<LoginInfosDto>> GetUserLoginAttempts(GetUserInformationDto input)
         {
+
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+                
+                    var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                        where x.UserId == currentUser.Id
+                        select x.OrganizationId;
+                    var userQuery = from x in _groupMemberRepository.GetAll()
+                        where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
+                        select x;
+                    if (!userQuery.Any())
+                    {
+                        throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
+                    }
+
+            }
+
             var query = _userLoginAttemptRepository.GetAll().Where(x => x.UserId == input.UserId);
             var pagedSorted = await query
                 .OrderBy(input.Sorting ?? "CreationTime Desc")
@@ -283,6 +315,26 @@ namespace Chamran.Deed.Authorization.Users
 
         public async Task<PagedResultDto<BriefSeenPostsDto>> GetUserSeenPosts(GetUserInformationDto input)
         {
+
+
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+                var userQuery = from x in _groupMemberRepository.GetAll()
+                    where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
+                    select x;
+                if (!userQuery.Any())
+                {
+                    throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
+                }
+
+            }
+
+
             var query = from s in _seenRepository.GetAll()
                         where s.UserId == input.UserId
                         join p in _postRepository.GetAll() on s.PostId equals p.Id
@@ -321,6 +373,23 @@ namespace Chamran.Deed.Authorization.Users
 
         public async Task<PagedResultDto<BriefCommentsDto>> GetUserComments(GetUserInformationDto input)
         {
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+                var userQuery = from x in _groupMemberRepository.GetAll()
+                    where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
+                    select x;
+                if (!userQuery.Any())
+                {
+                    throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
+                }
+
+            }
+
             var query = from c in _commentRepository.GetAll()
                         where c.UserId == input.UserId
                         join p in _postRepository.GetAll() on c.PostId equals p.Id
@@ -366,6 +435,25 @@ namespace Chamran.Deed.Authorization.Users
 
         public async Task<PagedResultDto<BriefLikedPostsDto>> GetUserPostLikes(GetUserInformationDto input)
         {
+
+
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+                var userQuery = from x in _groupMemberRepository.GetAll()
+                    where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
+                    select x;
+                if (!userQuery.Any())
+                {
+                    throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
+                }
+
+            }
+
             var query = from l in _postLikeRepository.GetAll()
                         where l.UserId == input.UserId
                         join p in _postRepository.GetAll() on l.PostId equals p.Id
@@ -404,6 +492,23 @@ namespace Chamran.Deed.Authorization.Users
 
         public async Task<PagedResultDto<BriefCommentsDto>> GetUserCommentLikes(GetUserInformationDto input)
         {
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+                var userQuery = from x in _groupMemberRepository.GetAll()
+                    where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
+                    select x;
+                if (!userQuery.Any())
+                {
+                    throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
+                }
+
+            }
+
             var query = from c in _commentLikeRepository.GetAll().Include(x => x.CommentFk)
                         where c.UserId == input.UserId
                         join p in _postRepository.GetAll() on c.CommentFk.PostId equals p.Id
@@ -449,6 +554,23 @@ namespace Chamran.Deed.Authorization.Users
 
         public async Task<PagedResultDto<BriefCreatedPostsDto>> GetUserPosts(GetUserInformationDto input)
         {
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+                var userQuery = from x in _groupMemberRepository.GetAll()
+                    where x.Id == input.UserId && currentUserOrgQuery.Contains(x.OrganizationId)
+                    select x;
+                if (!userQuery.Any())
+                {
+                    throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
+                }
+
+            }
+
             var query = from p in _postRepository.GetAll()
                         where p.GroupMemberFk.UserId == input.UserId
                         //join p in _postRepository.GetAll() on s.PostId equals p.Id
@@ -497,8 +619,23 @@ namespace Chamran.Deed.Authorization.Users
             return _userListExcelExporter.ExportToFile(userListDtos);
         }
 
-        public Task<List<OrganizationDto>> GetListOfOrganizations(int userId)
+        public async Task<List<OrganizationDto>> GetListOfOrganizations(int userId)
         {
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                                          where x.UserId == currentUser.Id
+                                          select x.OrganizationId;
+                var userQuery = from x in _groupMemberRepository.GetAll()
+                    where x.Id == userId && currentUserOrgQuery.Contains(x.OrganizationId)
+                    select x;
+                if (!userQuery.Any())
+                {
+                    throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
+                }
+            }
+
             var result = new List<OrganizationDto>();
             var query = from x in _groupMemberRepository.GetAll().Include(x => x.OrganizationFk)
                         where x.UserId == userId
@@ -509,12 +646,31 @@ namespace Chamran.Deed.Authorization.Users
                     result.Add(ObjectMapper.Map<OrganizationDto>(row.OrganizationFk));
             }
 
-            return Task.FromResult(result);
+            return await Task.FromResult(result);
         }
 
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Create, AppPermissions.Pages_Administration_Users_Edit)]
         public async Task<GetUserForEditOutput> GetUserForEdit(NullableIdDto<long> input)
         {
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+                if (input.Id.HasValue)
+                {
+                    var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                        where x.UserId == currentUser.Id
+                        select x.OrganizationId;
+                    var userQuery = from x in _groupMemberRepository.GetAll()
+                        where x.Id == input.Id.Value && currentUserOrgQuery.Contains(x.OrganizationId)
+                        select x;
+                    if (!userQuery.Any())
+                    {
+                        throw new UserFriendlyException("کاربر انتخابی عضو هیچ یک از سازمان های شما نمی باشد");
+                    }
+                }
+               
+            }
+
             //Getting all available roles
             var userRoleDtos = await _roleManager.Roles
                 .OrderBy(r => r.DisplayName)
@@ -880,7 +1036,7 @@ namespace Chamran.Deed.Authorization.Users
         [AbpAuthorize(AppPermissions.Pages_Administration_Users_Delete)]
         public async Task DeleteUser(EntityDto<long> input)
         {
-           
+
             if (input.Id == AbpSession.GetUserId())
             {
                 throw new UserFriendlyException(L("YouCanNotDeleteOwnAccount"));
@@ -985,7 +1141,7 @@ namespace Chamran.Deed.Authorization.Users
             }
             else
             {
-                if (input.User.UserType==AccountUserType.SuperAdmin || input.User.UserType == AccountUserType.Admin)
+                if (input.User.UserType == AccountUserType.SuperAdmin || input.User.UserType == AccountUserType.Admin)
                 {
                     user.UserType = currentUserType;
                 }

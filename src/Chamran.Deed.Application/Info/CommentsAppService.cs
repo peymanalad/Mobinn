@@ -14,6 +14,8 @@ using Abp.Authorization;
 using Abp.Timing;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
+using Chamran.Deed.Authorization.Accounts.Dto;
+using Chamran.Deed.People;
 
 namespace Chamran.Deed.Info
 {
@@ -25,19 +27,40 @@ namespace Chamran.Deed.Info
         private readonly IRepository<Post, int> _lookup_postRepository;
         private readonly IRepository<User, long> _lookup_userRepository;
         private readonly IRepository<Comment, int> _lookup_commentRepository;
+        private readonly IRepository<User, long> _userRepository;
+        private readonly IRepository<GroupMember> _groupMemberRepository;
+        private readonly IRepository<Post> _postRepository;
 
-        public CommentsAppService(IRepository<Comment> commentRepository, ICommentsExcelExporter commentsExcelExporter, IRepository<Post, int> lookup_postRepository, IRepository<User, long> lookup_userRepository, IRepository<Comment, int> lookup_commentRepository)
+
+
+
+        public CommentsAppService(IRepository<Comment> commentRepository, ICommentsExcelExporter commentsExcelExporter, IRepository<Post, int> lookup_postRepository, IRepository<User, long> lookup_userRepository, IRepository<Comment, int> lookup_commentRepository, IRepository<User, long> userRepository, IRepository<GroupMember> groupMemberRepository, IRepository<Post> postRepository)
         {
             _commentRepository = commentRepository;
             _commentsExcelExporter = commentsExcelExporter;
             _lookup_postRepository = lookup_postRepository;
             _lookup_userRepository = lookup_userRepository;
             _lookup_commentRepository = lookup_commentRepository;
-
+            _userRepository = userRepository;
+            _groupMemberRepository = groupMemberRepository;
+            _postRepository = postRepository;
         }
 
         public async Task<PagedResultDto<GetCommentForViewDto>> GetAll(GetAllCommentsInput input)
         {
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+                if (!currentUserOrgQuery.Contains(input.OrganizationId))
+                {
+                    throw new UserFriendlyException("سازمان انتخابی به این کاربر تعلق ندارد");
+                }
+
+            }
 
             var filteredComments = _commentRepository.GetAll()
                         .Include(e => e.UserFk)
@@ -351,6 +374,24 @@ namespace Chamran.Deed.Info
         public async Task<PagedResultDto<GetCommentForViewDto>> GetListOfComments(GetCommentsOfPostInput input)
         {
             if (input.PostId <= 0) throw new UserFriendlyException("PostId should be greater than zero");
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+
+                var userQuery = from x in _groupMemberRepository.GetAll()
+                    join y in _postRepository.GetAll() on x.Id equals y.GroupMemberId
+                    where y.Id == input.PostId && currentUserOrgQuery.Contains(x.OrganizationId)
+                    select x;
+                if (!userQuery.Any())
+                {
+                    throw new UserFriendlyException("پست انتخابی متعلق به هیچ یک از سازمان های شما نمی باشد");
+                }
+
+            }
             var filteredComments = _commentRepository.GetAll().Where(x => x.PostId == input.PostId && !x.IsDeleted)
                 .Include(e => e.PostFk)
                 .Include(e => e.UserFk)

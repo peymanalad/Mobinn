@@ -58,6 +58,7 @@ namespace Chamran.Deed.Info
         private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
         private readonly ISmsSender _smsSender;
         private readonly IRepository<PostEditHistory> _postEditHistoryRespoRepository;
+        private readonly IRepository<GroupMember> _groupMemberRepository;
 
         private readonly ITempFileCacheManager _tempFileCacheManager;
         private readonly IBinaryObjectManager _binaryObjectManager;
@@ -79,7 +80,7 @@ namespace Chamran.Deed.Info
             IRepository<UserPostGroup, int> userPostGroupRepository, IUnitOfWorkManager unitOfWorkManager,
             IRepository<PostLike, int> postLikeRepository, IRepository<Seen, int> seenRepository, IRepository<AllowedUserPostGroup, int> allowedUserPostGroupRepository,
             IRepository<User, long> userRepository, IDbContextProvider<DeedDbContext> dbContextProvider,ISmsSender smsSender,
-            IRepository<PostEditHistory> postEditHistoryRespoRepository,IRepository<UserRole,long> userRoleRepository)
+            IRepository<PostEditHistory> postEditHistoryRespoRepository,IRepository<UserRole,long> userRoleRepository, IRepository<GroupMember> groupMemberRepository)
         {
             _postRepository = postRepository;
             _commentRepository = commentRepository;
@@ -102,12 +103,27 @@ namespace Chamran.Deed.Info
             //_postCategoryRepository = postCategoryRepository;
             //_dbContextProvider= dbContextProvider;
             _userRoleRepository = userRoleRepository;
-
+            _groupMemberRepository = groupMemberRepository;
         }
 
         public async Task<PagedResultDto<GetPostForViewDto>> GetAll(GetAllPostsInput input)
         {
-            User user = GetCurrentUser();
+
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+                if (!currentUserOrgQuery.Contains(input.OrganizationId))
+                {
+                    throw new UserFriendlyException("سازمان انتخابی به این کاربر تعلق ندارد");
+                }
+
+            }
+
+            //User user = GetCurrentUser();
             
             // Prepare parameters
             var parameters = new[]
@@ -239,6 +255,25 @@ namespace Chamran.Deed.Info
         [AbpAuthorize(AppPermissions.Pages_Posts_Edit)]
         public async Task<GetPostForEditOutput> GetPostForEdit(EntityDto input)
         {
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+
+                var userQuery = from x in _groupMemberRepository.GetAll()
+                    join y in _postRepository.GetAll() on x.Id equals y.GroupMemberId
+                    where y.Id == input.Id && currentUserOrgQuery.Contains(x.OrganizationId)
+                    select x;
+                if (!userQuery.Any())
+                {
+                    throw new UserFriendlyException("پست انتخابی متعلق به هیچ یک از سازمان های شما نمی باشد");
+                }
+
+            }
+
             var post = await _postRepository.FirstOrDefaultAsync(input.Id);
 
             var output = new GetPostForEditOutput { Post = ObjectMapper.Map<CreateOrEditPostDto>(post) };
@@ -1179,8 +1214,27 @@ namespace Chamran.Deed.Info
             }
         }
 
-        public Task<PagedResultDto<GetLikedUsersDto>> GetLikedUsers(GetLikedUsersInput input)
+        public async Task<PagedResultDto<GetLikedUsersDto>> GetLikedUsers(GetLikedUsersInput input)
         {
+
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+
+                var userQuery = from x in _groupMemberRepository.GetAll()
+                    join y in _postRepository.GetAll() on x.Id equals y.GroupMemberId
+                    where y.Id == input.PostId && currentUserOrgQuery.Contains(x.OrganizationId)
+                    select x;
+                if (!userQuery.Any())
+                {
+                    throw new UserFriendlyException("پست انتخابی متعلق به هیچ یک از سازمان های شما نمی باشد");
+                }
+
+            }
             var query = from pl in _postLikeRepository.GetAll().Include(x => x.UserFk)
 
                         where pl.PostId == input.PostId
@@ -1221,12 +1275,30 @@ namespace Chamran.Deed.Info
 
             }
 
-            return Task.FromResult(new PagedResultDto<GetLikedUsersDto>(queryCount, users));
+            return await Task.FromResult(new PagedResultDto<GetLikedUsersDto>(queryCount, users));
 
         }
 
-        public Task<PagedResultDto<GetSeenUsersDto>> GetSeenUsers(GetSeenUsersInput input)
+        public async Task<PagedResultDto<GetSeenUsersDto>> GetSeenUsers(GetSeenUsersInput input)
         {
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+
+                var userQuery = from x in _groupMemberRepository.GetAll()
+                    join y in _postRepository.GetAll() on x.Id equals y.GroupMemberId
+                    where y.Id == input.PostId && currentUserOrgQuery.Contains(x.OrganizationId)
+                    select x;
+                if (!userQuery.Any())
+                {
+                    throw new UserFriendlyException("پست انتخابی متعلق به هیچ یک از سازمان های شما نمی باشد");
+                }
+
+            }
             var query = from pl in _seenRepository.GetAll().Include(x => x.UserFk)
 
                         where pl.PostId == input.PostId
@@ -1268,7 +1340,7 @@ namespace Chamran.Deed.Info
 
             }
 
-            return Task.FromResult(new PagedResultDto<GetSeenUsersDto>(queryCount, users));
+            return await Task.FromResult(new PagedResultDto<GetSeenUsersDto>(queryCount, users));
 
         }
 
@@ -1404,6 +1476,21 @@ namespace Chamran.Deed.Info
 
         public async Task<OrganizationDashboardViewDto> GetOrganizationDashboardView(int? organizationId)
         {
+
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+                if (!currentUserOrgQuery.Contains(organizationId))
+                {
+                    throw new UserFriendlyException("سازمان انتخابی به این کاربر تعلق ندارد");
+                }
+
+            }
+
             if (organizationId == 0) organizationId = null;
             var last30Days = DateTime.Now.AddDays(-30);
 
