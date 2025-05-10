@@ -18,6 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Abp.Runtime.Session;
 using Chamran.Deed.Authorization.Accounts.Dto;
+using Chamran.Deed.People;
 
 namespace Chamran.Deed.Info
 {
@@ -28,18 +29,38 @@ namespace Chamran.Deed.Info
         private readonly IPostLikesExcelExporter _postLikesExcelExporter;
         private readonly IRepository<Post, int> _lookup_postRepository;
         private readonly IRepository<User, long> _lookup_userRepository;
+        private readonly IRepository<User, long> _userRepository;
+        private readonly IRepository<GroupMember> _groupMemberRepository;
 
-        public PostLikesAppService(IRepository<PostLike> postLikeRepository, IPostLikesExcelExporter postLikesExcelExporter, IRepository<Post, int> lookup_postRepository, IRepository<User, long> lookup_userRepository)
+
+        public PostLikesAppService(IRepository<PostLike> postLikeRepository, IPostLikesExcelExporter postLikesExcelExporter, IRepository<Post, int> lookup_postRepository, IRepository<User, long> lookup_userRepository, IRepository<User, long> userRepository, IRepository<GroupMember> groupMemberRepository)
         {
             _postLikeRepository = postLikeRepository;
             _postLikesExcelExporter = postLikesExcelExporter;
             _lookup_postRepository = lookup_postRepository;
             _lookup_userRepository = lookup_userRepository;
-
+            _userRepository = userRepository;
+            _groupMemberRepository = groupMemberRepository;
         }
 
         public async Task<PagedResultDto<GetPostLikeForViewDto>> GetAll(GetAllPostLikesInput input)
         {
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+                if (!currentUserOrgQuery.Contains(input.OrganizationId))
+                {
+                    throw new UserFriendlyException("سازمان انتخابی به این کاربر تعلق ندارد");
+                }
+
+            }
+
+
+
             var user = await UserManager.GetUserAsync(AbpSession.ToUserIdentifier());
             if ((user.IsSuperUser && user.UserType == AccountUserType.SuperAdmin) || user.UserType == AccountUserType.Admin)
             {

@@ -13,6 +13,7 @@ using Chamran.Deed.Authorization;
 using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
+using Chamran.Deed.Authorization.Accounts.Dto;
 using Chamran.Deed.Info;
 using Chamran.Deed.Migrations;
 
@@ -26,20 +27,35 @@ namespace Chamran.Deed.People
         private readonly IRepository<Organization, int> _lookup_organizationRepository;
         private readonly IRepository<User, long> _lookup_userRepository;
         private readonly IRepository<OrganizationUser, int> _organizationUsersRepository;
+        private readonly IRepository<User, long> _userRepository;
 
-        public GroupMembersAppService(IRepository<GroupMember> groupMemberRepository, IGroupMembersExcelExporter groupMembersExcelExporter, IRepository<User, long> lookup_userRepository, IRepository<Organization, int> lookupOrganizationRepository, IRepository<OrganizationUser, int> organizationUsersRepository)
+
+        public GroupMembersAppService(IRepository<GroupMember> groupMemberRepository, IGroupMembersExcelExporter groupMembersExcelExporter, IRepository<User, long> lookup_userRepository, IRepository<Organization, int> lookupOrganizationRepository, IRepository<OrganizationUser, int> organizationUsersRepository, IRepository<User, long> userRepository)
         {
             _groupMemberRepository = groupMemberRepository;
             _groupMembersExcelExporter = groupMembersExcelExporter;
             _lookup_userRepository = lookup_userRepository;
             _lookup_organizationRepository = lookupOrganizationRepository;
             _organizationUsersRepository = organizationUsersRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<PagedResultDto<GetGroupMemberForViewDto>> GetAll(GetAllGroupMembersInput input)
         {
             if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
-            var user = await _lookup_userRepository.GetAsync(AbpSession.UserId.Value);
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+                if (!currentUserOrgQuery.Contains(input.OrganizationId))
+                {
+                    throw new UserFriendlyException("سازمان انتخابی به این کاربر تعلق ندارد");
+                }
+
+            }
 
 
             var filteredGroupMembers = _groupMemberRepository.GetAll()

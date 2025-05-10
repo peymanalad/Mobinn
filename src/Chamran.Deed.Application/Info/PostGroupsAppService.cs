@@ -16,6 +16,7 @@ using Abp.Extensions;
 using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
+using Chamran.Deed.Authorization.Accounts.Dto;
 using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.Common;
 using Chamran.Deed.Storage;
@@ -51,7 +52,19 @@ namespace Chamran.Deed.Info
         public async Task<PagedResultDto<GetPostGroupForViewDto>> GetAll(GetAllPostGroupsInput input)
         {
             if (AbpSession.UserId == null) throw new UserFriendlyException("User Must be Logged in!");
-            var user = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
+            if (currentUser.UserType != AccountUserType.SuperAdmin)
+            {
+
+                var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
+                    where x.UserId == currentUser.Id
+                    select x.OrganizationId;
+                if (!currentUserOrgQuery.Contains(input.OrganizationId))
+                {
+                    throw new UserFriendlyException("سازمان انتخابی به این کاربر تعلق ندارد");
+                }
+
+            }
 
             var filteredPostGroups = _postGroupRepository.GetAll()
                 .Include(e => e.OrganizationFk)
@@ -85,7 +98,7 @@ namespace Chamran.Deed.Info
             //    filteredPostGroups = filteredPostGroups.Where(x => x.OrganizationId == orgEntity.Id);
 
             //}
-            if (!user.IsSuperUser)
+            if (!currentUser.IsSuperUser)
             {
                 var orgQuery =
                     from org in _lookup_organizationRepository.GetAll().Where(x => !x.IsDeleted)
