@@ -598,7 +598,6 @@ namespace Chamran.Deed.Info
                 input.PublisherUserId = AbpSession.UserId ?? throw new UserFriendlyException("کاربر وارد نشده است.");
                 input.CreatorUserId = post.CreatorUserId;
             }
-
             //if (input.DatePublished == null)
             //{
             //    input.PublisherUserId = post.PublisherUserId;
@@ -608,21 +607,23 @@ namespace Chamran.Deed.Info
                 input.PublisherUserId = post.PublisherUserId;
                 input.CreatorUserId = post.CreatorUserId;
             }
-            var changes = GetChanges(post, input);
+
+            // --- KEY FIX: Await GetChanges first, then GetCurrentUserName ---
+            var changes = await GetChanges(post, input);
             var currentUserName = await GetCurrentUserName();
-            if (await changes != "")
+
+            if (changes != "")
             {
                 post.EditHistories.Add(new PostEditHistory
                 {
                     EditorName = currentUserName,
                     EditTime = DateTime.Now,
-                    Changes = await changes
+                    Changes = changes
                 });
             }
 
-
             ObjectMapper.Map(input, post);
-            
+
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken))
