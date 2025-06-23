@@ -137,10 +137,10 @@ namespace Chamran.Deed.Web.Controllers
                 loginResult = await GetLoginResultAsync(model.UserNameOrEmailAddress, model.Password, model.TenancyName);
             }
 
-            if (loginResult.User.ShouldChangePasswordOnNextLogin)
-            {
-                throw new UserFriendlyException(L("RequiresPasswordChange"));
-            }
+            //if (loginResult.User.ShouldChangePasswordOnNextLogin)
+            //{
+            //    throw new UserFriendlyException(L("RequiresPasswordChange"));
+            //}
 
             var signInResult = await _signInManager.SignInOrTwoFactorAsync(loginResult, model.RememberMe);
 

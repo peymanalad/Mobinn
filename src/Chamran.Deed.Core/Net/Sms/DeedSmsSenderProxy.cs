@@ -4,7 +4,10 @@
 // </auto-generated>
 //----------------------
 
+using Newtonsoft.Json;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 #pragma warning disable 108 // Disable "CS0108 '{derivedDto}.ToJson()' hides inherited member '{dtoBase}.ToJson()'. Use the new keyword if hiding was intended."
@@ -178,7 +181,7 @@ namespace SmsBehestan
             var urlBuilder_ = new System.Text.StringBuilder();
             //urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/api/v1/sms/enqueue");
             //urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/services/dashboard/enqueue");
-            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/sendplus");
+            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/api/v1/sms/enqueue");
 
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -194,13 +197,28 @@ namespace SmsBehestan
                     dto.phone_number = msg.Recipient;
                     dto.appkey = "RVwFEFi4EJE";//APPKEY
                     dto.appname = "سامانه دید";
-                    var content_ = new System.Net.Http.StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(dto, _settings.Value));
+                    string otpTemplate = "رمز يکبار مصرف ورود:\n{otp}\nسامانه ديد\n{apiKey}\nلغو 11";
+                    string finalMessage = otpTemplate
+                        .Replace("{otp}", msg.Text)
+                        .Replace("{apiKey}", "RVwFEFi4EJE");
+
+                    var payload = new
+                    {
+                        messages = new[]
+                        {
+                            new
+                            {
+                                recipient = msg.Recipient,
+                                text = finalMessage,
+                                uid = 0
+                            }
+                        }
+                    };
+                    var content_ = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
                     request_.Method = new System.Net.Http.HttpMethod("POST");
                     request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("*/*"));
-
-                    //PrepareRequest(client_, request_, urlBuilder_);
 
                     var url_ = urlBuilder_.ToString();
                     request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);

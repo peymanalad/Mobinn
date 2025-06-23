@@ -357,7 +357,6 @@ namespace Chamran.Deed.Web.Controllers
 
 
             string privateKeyInput = Environment.GetEnvironmentVariable("PRIVATE_KEY_PATH");
-
             string privateKeyPem;
 
             if (System.IO.File.Exists(privateKeyInput))
