@@ -30,6 +30,7 @@ namespace Chamran.Deed.Authorization.Accounts.Validation
 
         private RSA LoadPrivateKey(string privateKeyInput)
         {
+
             string privateKeyPem = System.IO.File.Exists(privateKeyInput)
                 ? System.IO.File.ReadAllText(privateKeyInput)
                 : privateKeyInput;
