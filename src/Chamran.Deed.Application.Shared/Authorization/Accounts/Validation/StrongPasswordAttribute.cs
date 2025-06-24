@@ -19,7 +19,6 @@ namespace Chamran.Deed.Authorization.Accounts.Validation
         public StrongPasswordAttribute()
         {
             string privateKeyInput = Environment.GetEnvironmentVariable("PRIVATE_KEY_PATH");
-
             if (string.IsNullOrWhiteSpace(privateKeyInput))
             {
                 throw new InvalidOperationException("مسیر یا مقدار کلید خصوصی تنظیم نشده است.");

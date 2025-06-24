@@ -318,9 +318,7 @@ namespace Chamran.Deed.Authorization.Users.Profile
 
         static string DecryptWithPrivateKey(string encryptedText)
         {
-            //string privateKeyInput = Environment.GetEnvironmentVariable("PRIVATE_KEY_PATH");
-            string privateKeyPath = "C:\\Users\\nasser\\Desktop\\private_key.pem";
-            string privateKeyInput = File.ReadAllText(privateKeyPath);
+            string privateKeyInput = Environment.GetEnvironmentVariable("PRIVATE_KEY_PATH");
             if (!File.Exists(privateKeyInput))
             {
                 throw new FileNotFoundException("Private key file not found.", privateKeyInput);

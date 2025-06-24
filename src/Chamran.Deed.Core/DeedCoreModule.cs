@@ -100,7 +100,7 @@ namespace Chamran.Deed
             //Configuration.ReplaceService<ISmsSender,TwilioSmsSender>();
 
             //DeedSmsSender- Enable this line to activate Twilio SMS integration
-            Configuration.ReplaceService<ISmsSender,DeedSmsSender>();
+            Configuration.ReplaceService<ISmsSender,KavenegarSmsSender>();
 
             //Adding DynamicEntityParameters definition providers
             Configuration.DynamicEntityProperties.Providers.Add<AppDynamicEntityPropertyDefinitionProvider>();
