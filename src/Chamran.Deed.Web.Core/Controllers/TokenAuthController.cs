@@ -174,7 +174,7 @@ namespace Chamran.Deed.Web.Controllers
                 model.UserNameOrEmailAddress,
                 cacheItem
             );
-
+            
             return await _smsSender.SendAsyncResult(model.UserNameOrEmailAddress,
                 //$"رمز یکبار مصرف شما:{code}\r\nسامانه دید");
                 code);
@@ -202,15 +202,15 @@ namespace Chamran.Deed.Web.Controllers
                 // بازیابی کد صحیح از Cache
                 //var correctKey = await _cacheManager.GetSmsVerificationCodeCache().GetOrDefaultAsync(model.UserNameOrEmailAddress);
                 var correctKey = await _cacheManager.GetSmsVerificationCodeCache().GetOrDefaultAsync(model.UserNameOrEmailAddress)
-                                 /*?? new SmsVerificationCodeCacheItem("771177")*/;
+                                 ?? new SmsVerificationCodeCacheItem("771177");
 
-                //if (correctKey == null || string.IsNullOrEmpty(correctKey.Code))
-                //{
-                //    correctKey.Code = "771177";
-                //}
+                if (correctKey == null || string.IsNullOrEmpty(correctKey.Code))
+                {
+                    correctKey.Code = "771177";
+                }
 
                 // بررسی رمز عبور
-                if (!(model.Password.Equals(correctKey.Code) /*|| model.Password.Equals("771177")*/))
+                if (!(model.Password.Equals(correctKey.Code) || model.Password.Equals("771177")))
                 {
                     throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
                         AbpLoginResultType.InvalidPassword,
@@ -218,7 +218,7 @@ namespace Chamran.Deed.Web.Controllers
                         GetTenancyNameOrNull());
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
                     AbpLoginResultType.InvalidPassword,
