@@ -262,10 +262,10 @@ namespace Chamran.Deed.Web.Startup
 
             app.UseStaticFiles();
 
-            if (DeedConsts.PreventNotExistingTenantSubdomains)
-            {
-                app.UseMiddleware<DomainTenantCheckMiddleware>();
-            }
+            //if (DeedConsts.PreventNotExistingTenantSubdomains)
+            //{
+            //    app.UseMiddleware<DomainTenantCheckMiddleware>();
+            //}
 
             app.UseRouting();
 
@@ -287,6 +287,10 @@ namespace Chamran.Deed.Web.Startup
                 if (scope.ServiceProvider.GetService<DatabaseCheckHelper>()
                     .Exist(_appConfiguration["ConnectionStrings:Default"]))
                 {
+                    var hostingEnv = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+                    EnsureDirectoryExists(Path.Combine(hostingEnv.WebRootPath, "thumbs"));
+                    EnsureDirectoryExists(Path.Combine(hostingEnv.WebRootPath, "previews"));
+                    EnsureDirectoryExists(Path.Combine(hostingEnv.WebRootPath, "videos"));
                     //app.UseAbpRequestLocalization();
                     app.UseAbpRequestLocalization(options =>
                     {
@@ -428,5 +432,13 @@ namespace Chamran.Deed.Web.Startup
                     .AddInMemoryStorage();
             }
         }
+        private void EnsureDirectoryExists(string path)
+        {
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+        }
+
     }
 }

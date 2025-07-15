@@ -588,247 +588,369 @@ namespace Chamran.Deed.Info
         [AbpAuthorize(AppPermissions.Pages_OrganizationUsers)]
         public async Task<PagedResultDto<LeafUserDto>> GetAllUsersForLeaf(GetAllUsersForLeafInput input)
         {
+            if (AbpSession.UserId == null)
+                throw new UserFriendlyException("User is not logged in!");
+
+            var currentUserId = AbpSession.UserId.Value;
             var chartId = input.OrganizationChartId;
             var filterUserId = false;
-            if (input.OrganizationChartId <= 0)
+
+            if (chartId <= 0)
             {
-                if (AbpSession.UserId == null) throw new UserFriendlyException("User is not logged in!");
-                var userposition = await _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId && x.OrganizationChartFk.OrganizationId == input.OrganizationId);
-                //var userposition = await _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId && x.OrganizationChartFk.OrganizationId == input.OrganizationId);
-                if (userposition == null) throw new UserFriendlyException("کاربر در درخت سطوح دسترسی حضور ندارد");
-                chartId = userposition.OrganizationChartId;
+                var userPosition = await _organizationUserRepository.GetAll()
+                    .Include(x => x.OrganizationChartFk)
+                    .FirstOrDefaultAsync(x => x.UserId == currentUserId && x.OrganizationChartFk.OrganizationId == input.OrganizationId);
+
+                if (userPosition == null)
+                    throw new UserFriendlyException("کاربر در درخت سطوح دسترسی حضور ندارد");
+
+                chartId = userPosition.OrganizationChartId;
                 filterUserId = true;
             }
+
             var targetChart = await _lookup_organizationChartRepository.GetAsync(chartId);
             if (targetChart == null)
-            {
                 throw new UserFriendlyException("Organization chart not found.");
-            }
 
             var leafPath = targetChart.LeafPath;
+            var parentLeafPath = GetParentPath(leafPath);
 
-            //LAMBDA EDITION
-            //var usersInSameLeaf = _userRepository.GetAll()
-            //    .Join(_organizationUserRepository.GetAll(),
-            //        user => user.Id,
-            //        orgUser => orgUser.UserId,
-            //        (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
-            //    .Join(_lookup_organizationChartRepository.GetAll(),
-            //        join => join.OrganizationChartId,
-            //        chart => chart.Id,
-            //        (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
-            //    .Join(_groupMemberRepository.GetAll(),
-            //        join2 => join2.User.Id,
-            //        grp => grp.UserId,
-            //        (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
-            //    )
-            //    .Where(join => join.LeafPath == leafPath)
-            //    .WhereIf(filterUserId,x=>x.User.Id!=AbpSession.UserId)
-            //    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
-            //    .Select(x => new
-            //    {
-            //        x.User,
-            //        x.LeafPath,
-            //        x.MemberPosition,
-            //        LevelType = 0,
+            var query = from user in _userRepository.GetAll()
+                        join orgUser in _organizationUserRepository.GetAll() on user.Id equals orgUser.UserId
+                        join chart in _lookup_organizationChartRepository.GetAll() on orgUser.OrganizationChartId equals chart.Id
+                        join grp in _groupMemberRepository.GetAll() on user.Id equals grp.UserId
+                        where !orgUser.IsGlobal
+                        where chart.LeafPath == leafPath ||
+                              chart.LeafPath.StartsWith(leafPath + ".") ||
+                              chart.LeafPath == parentLeafPath
+                        select new
+                        {
+                            User = user,
+                            OrgUser = orgUser,
+                            chart.LeafPath,
+                            grp.MemberPosition,
+                            LevelType = chart.LeafPath == leafPath ? 0 : (chart.LeafPath == parentLeafPath ? 1 : 2)
+                        };
 
-            //    });
+            if (filterUserId)
+                query = query.Where(x => x.User.Id != currentUserId);
 
+            if (!string.IsNullOrWhiteSpace(input.Filter))
+                query = query.Where(x => x.User.Surname.Contains(input.Filter) || x.User.Name.Contains(input.Filter));
 
-            //var usersInChildrenLeaves = _userRepository.GetAll()
-            //    .Join(_organizationUserRepository.GetAll(),
-            //        user => user.Id,
-            //        orgUser => orgUser.UserId,
-            //        (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
-            //    .Join(_lookup_organizationChartRepository.GetAll(),
-            //        join => join.OrganizationChartId,
-            //        chart => chart.Id,
-            //        (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
-            //    .Join(_groupMemberRepository.GetAll(),
-            //        join2 => join2.User.Id,
-            //        grp => grp.UserId,
-            //        (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
-            //    )
-            //    .Where(join => join.LeafPath.StartsWith(leafPath) && join.LeafPath != leafPath)
-            //    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
-            //    .Select(x => new
-            //    {
-            //        x.User,
-            //        x.LeafPath,
-            //        x.MemberPosition,
-            //        LevelType = 2
-            //    });
+            var totalCount = await query.CountAsync();
 
-            //var parentLeafPathWithoutLastPart = GetParentPath(leafPath);
-            //var usersInOneLevelHigherParent = _userRepository.GetAll()
-            //    .Join(_organizationUserRepository.GetAll(),
-            //        user => user.Id,
-            //        orgUser => orgUser.UserId,
-            //        (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
-            //    .Join(_lookup_organizationChartRepository.GetAll(),
-            //        join => join.OrganizationChartId,
-            //        chart => chart.Id,
-            //        (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
-            //    .Join(_groupMemberRepository.GetAll(),
-            //        join2 => join2.User.Id,
-            //        grp => grp.UserId,
-            //        (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
-            //    )
-            //    .Where(join => join.LeafPath == parentLeafPathWithoutLastPart)
-            //    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
-            //    .Select(x => new
-            //    {
-            //        x.User,
-            //        x.LeafPath,
-            //        x.MemberPosition,
-            //        LevelType = 1
-            //    });
-
-            //var allUsers = usersInOneLevelHigherParent
-            //    .Union(usersInSameLeaf)
-            //    .Union(usersInChildrenLeaves);
-
-            var usersInSameLeaf = from user in _userRepository.GetAll()
-                                  join orgUser in _organizationUserRepository.GetAll()
-                                  on user.Id equals orgUser.UserId
-                                  join chart in _lookup_organizationChartRepository.GetAll()
-                                  on orgUser.OrganizationChartId equals chart.Id
-                                  join grp in _groupMemberRepository.GetAll()
-                                  on user.Id equals grp.UserId
-                                  where chart.LeafPath == leafPath
-                                  where !orgUser.IsGlobal
-                                  where !filterUserId || user.Id != AbpSession.UserId
-                                  where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
-                                  select new
-                                  {
-                                      User = user,
-                                      LeafPath = chart.LeafPath,
-                                      MemberPosition = grp.MemberPosition,
-                                      OrgUser = orgUser,
-                                      LevelType = 0
-                                  };
-
-            var usersInChildrenLeaves = from user in _userRepository.GetAll()
-                                        join orgUser in _organizationUserRepository.GetAll()
-                                        on user.Id equals orgUser.UserId
-                                        join chart in _lookup_organizationChartRepository.GetAll()
-                                        on orgUser.OrganizationChartId equals chart.Id
-                                        join grp in _groupMemberRepository.GetAll()
-                                        on user.Id equals grp.UserId
-                                        where !orgUser.IsGlobal
-                                        where chart.LeafPath.StartsWith(leafPath) && chart.LeafPath != leafPath
-                                        where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
-                                        select new
-                                        {
-                                            User = user,
-                                            LeafPath = chart.LeafPath,
-                                            MemberPosition = grp.MemberPosition,
-                                            OrgUser = orgUser,
-                                            LevelType = 2
-                                        };
-
-            var parentLeafPathWithoutLastPart = GetParentPath(leafPath);
-
-            var usersInOneLevelHigherParent = from user in _userRepository.GetAll()
-                                              join orgUser in _organizationUserRepository.GetAll()
-                                              on user.Id equals orgUser.UserId
-                                              join chart in _lookup_organizationChartRepository.GetAll()
-                                              on orgUser.OrganizationChartId equals chart.Id
-                                              join grp in _groupMemberRepository.GetAll()
-                                              on user.Id equals grp.UserId
-                                              where !orgUser.IsGlobal
-                                              where chart.LeafPath == parentLeafPathWithoutLastPart
-                                              where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
-                                              select new
-                                              {
-                                                  User = user,
-                                                  LeafPath = chart.LeafPath,
-                                                  MemberPosition = grp.MemberPosition,
-                                                  OrgUser = orgUser,
-                                                  LevelType = 1
-                                              };
-
-            var allUsers = usersInOneLevelHigherParent
-                .Union(usersInSameLeaf)
-                .Union(usersInChildrenLeaves);
-
-            //return allUsers;
-            var outputList = await allUsers
-    .PageBy(input)
-    .ToListAsync();
-            var leafUserDtoList = new List<LeafUserDto>();
-            foreach (var row in outputList)
-            {
-                leafUserDtoList.Add(new LeafUserDto()
+            var result = await query
+                .OrderBy(input.Sorting ?? "User.Name asc")
+                .PageBy(input)
+                .Select(x => new LeafUserDto
                 {
-                    UserId = row.User.Id,
-                    UserName = row.User.UserName,
-                    FirstName = row.User.Name,
-                    LastName = row.User.Surname,
+                    UserId = x.User.Id,
+                    UserName = x.User.UserName,
+                    FirstName = x.User.Name,
+                    LastName = x.User.Surname,
+                    ProfilePictureId = x.User.ProfilePictureId,
+                    LevelType = x.LevelType,
+                    MemberPosition = x.MemberPosition,
                     TenantId = 1,
-                    ProfilePictureId = row.User.ProfilePictureId,
-                    LevelType = row.LevelType,
-                    MemberPosition = row.MemberPosition,
-                    OrganizationUserId = row.OrgUser.Id
-                });
+                    OrganizationUserId = x.OrgUser.Id
+                })
+                .ToListAsync();
 
-
-            }
-            return new PagedResultDto<LeafUserDto>(
-                allUsers.Count(),
-                leafUserDtoList
-            );
-
-
+            return new PagedResultDto<LeafUserDto>(totalCount, result);
         }
+
+    //    public async Task<PagedResultDto<LeafUserDto>> GetAllUsersForLeaf(GetAllUsersForLeafInput input)
+    //    {
+    //        var chartId = input.OrganizationChartId;
+    //        var filterUserId = false;
+    //        if (input.OrganizationChartId <= 0)
+    //        {
+    //            if (AbpSession.UserId == null) throw new UserFriendlyException("User is not logged in!");
+    //            var userposition = await _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId && x.OrganizationChartFk.OrganizationId == input.OrganizationId);
+    //            //var userposition = await _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).FirstOrDefaultAsync(x => x.UserId == AbpSession.UserId && x.OrganizationChartFk.OrganizationId == input.OrganizationId);
+    //            if (userposition == null) throw new UserFriendlyException("کاربر در درخت سطوح دسترسی حضور ندارد");
+    //            chartId = userposition.OrganizationChartId;
+    //            filterUserId = true;
+    //        }
+    //        var targetChart = await _lookup_organizationChartRepository.GetAsync(chartId);
+    //        if (targetChart == null)
+    //        {
+    //            throw new UserFriendlyException("Organization chart not found.");
+    //        }
+
+    //        var leafPath = targetChart.LeafPath;
+
+    //        //LAMBDA EDITION
+    //        //var usersInSameLeaf = _userRepository.GetAll()
+    //        //    .Join(_organizationUserRepository.GetAll(),
+    //        //        user => user.Id,
+    //        //        orgUser => orgUser.UserId,
+    //        //        (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
+    //        //    .Join(_lookup_organizationChartRepository.GetAll(),
+    //        //        join => join.OrganizationChartId,
+    //        //        chart => chart.Id,
+    //        //        (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
+    //        //    .Join(_groupMemberRepository.GetAll(),
+    //        //        join2 => join2.User.Id,
+    //        //        grp => grp.UserId,
+    //        //        (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
+    //        //    )
+    //        //    .Where(join => join.LeafPath == leafPath)
+    //        //    .WhereIf(filterUserId,x=>x.User.Id!=AbpSession.UserId)
+    //        //    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
+    //        //    .Select(x => new
+    //        //    {
+    //        //        x.User,
+    //        //        x.LeafPath,
+    //        //        x.MemberPosition,
+    //        //        LevelType = 0,
+
+    //        //    });
+
+
+    //        //var usersInChildrenLeaves = _userRepository.GetAll()
+    //        //    .Join(_organizationUserRepository.GetAll(),
+    //        //        user => user.Id,
+    //        //        orgUser => orgUser.UserId,
+    //        //        (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
+    //        //    .Join(_lookup_organizationChartRepository.GetAll(),
+    //        //        join => join.OrganizationChartId,
+    //        //        chart => chart.Id,
+    //        //        (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
+    //        //    .Join(_groupMemberRepository.GetAll(),
+    //        //        join2 => join2.User.Id,
+    //        //        grp => grp.UserId,
+    //        //        (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
+    //        //    )
+    //        //    .Where(join => join.LeafPath.StartsWith(leafPath) && join.LeafPath != leafPath)
+    //        //    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
+    //        //    .Select(x => new
+    //        //    {
+    //        //        x.User,
+    //        //        x.LeafPath,
+    //        //        x.MemberPosition,
+    //        //        LevelType = 2
+    //        //    });
+
+    //        //var parentLeafPathWithoutLastPart = GetParentPath(leafPath);
+    //        //var usersInOneLevelHigherParent = _userRepository.GetAll()
+    //        //    .Join(_organizationUserRepository.GetAll(),
+    //        //        user => user.Id,
+    //        //        orgUser => orgUser.UserId,
+    //        //        (user, orgUser) => new { User = user, orgUser.OrganizationChartId })
+    //        //    .Join(_lookup_organizationChartRepository.GetAll(),
+    //        //        join => join.OrganizationChartId,
+    //        //        chart => chart.Id,
+    //        //        (join, chart) => new { User = join.User, LeafPath = chart.LeafPath })
+    //        //    .Join(_groupMemberRepository.GetAll(),
+    //        //        join2 => join2.User.Id,
+    //        //        grp => grp.UserId,
+    //        //        (join2, grp) => new { grp.MemberPosition, join2.LeafPath, join2.User }
+    //        //    )
+    //        //    .Where(join => join.LeafPath == parentLeafPathWithoutLastPart)
+    //        //    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), f => f.User.Surname.Contains(input.Filter) || f.User.Name.Contains(input.Filter))
+    //        //    .Select(x => new
+    //        //    {
+    //        //        x.User,
+    //        //        x.LeafPath,
+    //        //        x.MemberPosition,
+    //        //        LevelType = 1
+    //        //    });
+
+    //        //var allUsers = usersInOneLevelHigherParent
+    //        //    .Union(usersInSameLeaf)
+    //        //    .Union(usersInChildrenLeaves);
+
+    //        var usersInSameLeaf = from user in _userRepository.GetAll()
+    //                              join orgUser in _organizationUserRepository.GetAll()
+    //                              on user.Id equals orgUser.UserId
+    //                              join chart in _lookup_organizationChartRepository.GetAll()
+    //                              on orgUser.OrganizationChartId equals chart.Id
+    //                              join grp in _groupMemberRepository.GetAll()
+    //                              on user.Id equals grp.UserId
+    //                              where chart.LeafPath == leafPath
+    //                              where !orgUser.IsGlobal
+    //                              where !filterUserId || user.Id != AbpSession.UserId
+    //                              where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
+    //                              select new
+    //                              {
+    //                                  User = user,
+    //                                  LeafPath = chart.LeafPath,
+    //                                  MemberPosition = grp.MemberPosition,
+    //                                  OrgUser = orgUser,
+    //                                  LevelType = 0
+    //                              };
+
+    //        var usersInChildrenLeaves = from user in _userRepository.GetAll()
+    //                                    join orgUser in _organizationUserRepository.GetAll()
+    //                                    on user.Id equals orgUser.UserId
+    //                                    join chart in _lookup_organizationChartRepository.GetAll()
+    //                                    on orgUser.OrganizationChartId equals chart.Id
+    //                                    join grp in _groupMemberRepository.GetAll()
+    //                                    on user.Id equals grp.UserId
+    //                                    where !orgUser.IsGlobal
+    //                                    where chart.LeafPath.StartsWith(leafPath) && chart.LeafPath != leafPath
+    //                                    where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
+    //                                    select new
+    //                                    {
+    //                                        User = user,
+    //                                        LeafPath = chart.LeafPath,
+    //                                        MemberPosition = grp.MemberPosition,
+    //                                        OrgUser = orgUser,
+    //                                        LevelType = 2
+    //                                    };
+
+    //        var parentLeafPathWithoutLastPart = GetParentPath(leafPath);
+
+    //        var usersInOneLevelHigherParent = from user in _userRepository.GetAll()
+    //                                          join orgUser in _organizationUserRepository.GetAll()
+    //                                          on user.Id equals orgUser.UserId
+    //                                          join chart in _lookup_organizationChartRepository.GetAll()
+    //                                          on orgUser.OrganizationChartId equals chart.Id
+    //                                          join grp in _groupMemberRepository.GetAll()
+    //                                          on user.Id equals grp.UserId
+    //                                          where !orgUser.IsGlobal
+    //                                          where chart.LeafPath == parentLeafPathWithoutLastPart
+    //                                          where string.IsNullOrWhiteSpace(input.Filter) || user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
+    //                                          select new
+    //                                          {
+    //                                              User = user,
+    //                                              LeafPath = chart.LeafPath,
+    //                                              MemberPosition = grp.MemberPosition,
+    //                                              OrgUser = orgUser,
+    //                                              LevelType = 1
+    //                                          };
+
+    //        var allUsers = usersInOneLevelHigherParent
+    //            .Union(usersInSameLeaf)
+    //            .Union(usersInChildrenLeaves);
+
+    //        //return allUsers;
+    //        var outputList = await allUsers
+    //.PageBy(input)
+    //.ToListAsync();
+    //        var leafUserDtoList = new List<LeafUserDto>();
+    //        foreach (var row in outputList)
+    //        {
+    //            leafUserDtoList.Add(new LeafUserDto()
+    //            {
+    //                UserId = row.User.Id,
+    //                UserName = row.User.UserName,
+    //                FirstName = row.User.Name,
+    //                LastName = row.User.Surname,
+    //                TenantId = 1,
+    //                ProfilePictureId = row.User.ProfilePictureId,
+    //                LevelType = row.LevelType,
+    //                MemberPosition = row.MemberPosition,
+    //                OrganizationUserId = row.OrgUser.Id
+    //            });
+
+
+    //        }
+    //        return new PagedResultDto<LeafUserDto>(
+    //            allUsers.Count(),
+    //            leafUserDtoList
+    //        );
+
+
+    //    }
 
         [AbpAuthorize(AppPermissions.Pages_OrganizationUsers)]
-        public Task<PagedResultDto<SameLeafDto>> GetAllUsersInLeaf(GetAllUsersInLeafInput input)
+        public async Task<PagedResultDto<SameLeafDto>> GetAllUsersInLeaf(GetAllUsersInLeafInput input)
         {
             if (input.OrganizationChartId <= 0)
+                throw new UserFriendlyException("شناسه شاخه می‌بایست بزرگتر از صفر باشد");
+
+            var query = _organizationUserRepository.GetAll()
+                .Include(x => x.OrganizationChartFk)
+                .Include(x => x.UserFk)
+                .Where(x =>
+                    x.OrganizationChartId == input.OrganizationChartId &&
+                    x.OrganizationChartFk.OrganizationId == input.OrganizationId &&
+                    !x.IsGlobal);
+
+            // اعمال فیلتر اختیاری روی نام
+            if (!string.IsNullOrWhiteSpace(input.Filter))
             {
-                throw new UserFriendlyException("شناسه شاخه می بایست بزرگتر از صفر باشد");
+                query = query.Where(x =>
+                    x.UserFk.Name.Contains(input.Filter) || x.UserFk.Surname.Contains(input.Filter));
             }
 
-            var users = _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).Include(x => x.UserFk)
-                .Where(x => x.OrganizationChartId == input.OrganizationChartId && x.OrganizationChartFk.OrganizationId==input.OrganizationId && !x.IsGlobal);
-            var joindUsers = from x in users
-                             join y in _groupMemberRepository.GetAll().Where(x=>x.OrganizationId==input.OrganizationId) on x.UserId equals y.UserId into joiner
-                             from y in joiner.DefaultIfEmpty()
-                             select new
-                             {
-                                 x.Id,
-                                 x.UserFk.Name,
-                                 x.UserFk.Surname,
-                                 x.UserFk.UserName,
-                                 MemberPos = (int?)y.MemberPos,
-                                 y.MemberPosition,
-                                 x.UserId,
-
-                             };
-
-            var pagedAndFilteredOrganizationUsers = joindUsers
-                .OrderBy(input.Sorting ?? "id asc")
-                .PageBy(input);
-            var ls = new List<SameLeafDto>();
-            foreach (var row in pagedAndFilteredOrganizationUsers)
-            {
-                ls.Add(new SameLeafDto()
+            // Join با MemberPosition
+            var joinedQuery = from x in query
+                join y in _groupMemberRepository.GetAll()
+                        .Where(g => g.OrganizationId == input.OrganizationId)
+                    on x.UserId equals y.UserId into joiner
+                from y in joiner.DefaultIfEmpty()
+                select new SameLeafDto
                 {
-                    OrganizationUserId=row.Id,
-                    FirstName = row.Name,
-                    LastName = row.Surname,
-                    MemberPosition = row.MemberPosition,
-                    UserId = row.UserId,
-                    UserName = row.UserName
-                });
-            }
+                    OrganizationUserId = x.Id,
+                    FirstName = x.UserFk.Name,
+                    LastName = x.UserFk.Surname,
+                    UserName = x.UserFk.UserName,
+                    MemberPosition = y.MemberPosition,
+                    UserId = x.UserId
+                };
 
+            // محاسبه تعداد کل
+            var totalCount = await joinedQuery.CountAsync();
 
-            return Task.FromResult(new PagedResultDto<SameLeafDto>(
-                joindUsers.Count(),
-                ls
-            ));
+            // ترتیب (با fall-back به Id)
+            var sorted = joinedQuery.OrderBy(input.Sorting ?? "OrganizationUserId asc");
+
+            // صفحه‌بندی و اجرا
+            var result = await sorted.PageBy(input).ToListAsync();
+
+            return new PagedResultDto<SameLeafDto>(totalCount, result);
         }
+
+        //public Task<PagedResultDto<SameLeafDto>> GetAllUsersInLeaf(GetAllUsersInLeafInput input)
+        //{
+        //    if (input.OrganizationChartId <= 0)
+        //    {
+        //        throw new UserFriendlyException("شناسه شاخه می بایست بزرگتر از صفر باشد");
+        //    }
+
+        //    var users = _organizationUserRepository.GetAll().Include(x => x.OrganizationChartFk).Include(x => x.UserFk)
+        //        .Where(x => x.OrganizationChartId == input.OrganizationChartId && x.OrganizationChartFk.OrganizationId==input.OrganizationId && !x.IsGlobal);
+        //    var joindUsers = from x in users
+        //                     join y in _groupMemberRepository.GetAll().Where(x=>x.OrganizationId==input.OrganizationId) on x.UserId equals y.UserId into joiner
+        //                     from y in joiner.DefaultIfEmpty()
+        //                     select new
+        //                     {
+        //                         x.Id,
+        //                         x.UserFk.Name,
+        //                         x.UserFk.Surname,
+        //                         x.UserFk.UserName,
+        //                         MemberPos = (int?)y.MemberPos,
+        //                         y.MemberPosition,
+        //                         x.UserId,
+
+        //                     };
+
+        //    var pagedAndFilteredOrganizationUsers = joindUsers
+        //        .OrderBy(input.Sorting ?? "id asc")
+        //        .PageBy(input);
+        //    var ls = new List<SameLeafDto>();
+        //    foreach (var row in pagedAndFilteredOrganizationUsers)
+        //    {
+        //        ls.Add(new SameLeafDto()
+        //        {
+        //            OrganizationUserId=row.Id,
+        //            FirstName = row.Name,
+        //            LastName = row.Surname,
+        //            MemberPosition = row.MemberPosition,
+        //            UserId = row.UserId,
+        //            UserName = row.UserName
+        //        });
+        //    }
+
+
+        //    return Task.FromResult(new PagedResultDto<SameLeafDto>(
+        //        joindUsers.Count(),
+        //        ls
+        //    ));
+        //}
     }
 }

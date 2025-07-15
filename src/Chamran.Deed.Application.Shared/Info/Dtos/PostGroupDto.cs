@@ -25,8 +25,7 @@ namespace Chamran.Deed.Info.Dtos
 
         public string SubGroupFileFileName { get; set; }
 
-        public Guid? PostSubGroupLatestPic { get; set; }
-
-
+        public string PostSubGroupLatestPic { get; set; }
     }
+
 }

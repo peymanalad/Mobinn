@@ -6,6 +6,8 @@ using Abp.UI;
 using Abp.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Chamran.Deed.Storage;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace Chamran.Deed.Web.Controllers
 {
@@ -16,11 +18,13 @@ namespace Chamran.Deed.Web.Controllers
 
         private const long MaxPostFileLength = 157286400; //150MB
         private const string MaxPostFileLengthUserFriendlyValue = "150MB"; //150MB
-        private readonly string[] PostFileAllowedFileTypes = { "jpeg", "jpg", "png","mp4","mkv","3gp" };
+        private readonly string[] PostFileAllowedFileTypes = { "jpeg", "jpg", "png","mp4","mkv","3gp","pdf" };
+        private readonly IPostMediaProcessorAppService _postMediaProcessorAppService;
 
-        public PostsController(ITempFileCacheManager tempFileCacheManager)
+        public PostsController(ITempFileCacheManager tempFileCacheManager, IPostMediaProcessorAppService iPostMediaProcessorAppService)
         {
             _tempFileCacheManager = tempFileCacheManager;
+            _postMediaProcessorAppService = iPostMediaProcessorAppService;
         }
 
         public FileUploadCacheOutput UploadPostFileFile()
@@ -62,6 +66,12 @@ namespace Chamran.Deed.Web.Controllers
             }
         }
 
+        [HttpPost("regenerate-thumbnails-previews")]
+        public async Task<IActionResult> Regenerate()
+        {
+            await _postMediaProcessorAppService.RegenerateAllThumbnailsAndPreviewsAsync();
+            return Ok("تمام فایل‌ها پردازش شدند.");
+        }
         public string[] GetPostFileFileAllowedTypes()
         {
             return PostFileAllowedFileTypes;

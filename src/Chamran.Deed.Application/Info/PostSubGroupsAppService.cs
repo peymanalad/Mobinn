@@ -19,6 +19,7 @@ using Abp.UI;
 using Chamran.Deed.Authorization.Users;
 using Chamran.Deed.Common;
 using Chamran.Deed.Storage;
+using System.IO;
 
 namespace Chamran.Deed.Info
 {
@@ -119,7 +120,7 @@ namespace Chamran.Deed.Info
                         PostSubGroupDescription = o.PostSubGroupDescription,
                         SubGroupFile = o.GroupFile,
                         Id = o.Id,
-                        PostSubGroupLatestPic = o.PostSubGroupLatestPic
+                        //PostSubGroupLatestPic = o.PostSubGroupLatestPic
                     },
                      
                 };
@@ -133,6 +134,74 @@ namespace Chamran.Deed.Info
                 results
             );
 
+        }
+
+        public async Task<PagedResultDto<GetPostSubGroupForViewDto>> GetPostSubGroupsForExploreViewAsync(GetAllPostSubGroupsInput input)
+        {
+            try
+            {
+                var results = new List<GetPostSubGroupForViewDto>();
+
+                var subGroups = await _PostSubGroupRepository.GetAll()
+                    .Where(x => x.PostGroupId == input.PostGroupId && !x.IsDeleted)
+                    .WhereIf(!string.IsNullOrWhiteSpace(input.Filter), x => x.PostSubGroupDescription.Contains(input.Filter))
+                    .WhereIf(!string.IsNullOrWhiteSpace(input.PostSubGroupDescriptionFilter), x => x.PostSubGroupDescription.Contains(input.PostSubGroupDescriptionFilter))
+                    .OrderBy(input.Sorting ?? "id asc")
+                    .ToListAsync();
+
+                foreach (var subGroup in subGroups)
+                {
+                    string latestMedia = null;
+
+                    var latestPost = await _postRepository.GetAll()
+                        .Where(p => p.PostSubGroupId == subGroup.Id && !p.IsDeleted && p.IsPublished && p.PostFile.HasValue)
+                        .OrderByDescending(p => p.CreationTime)
+                        .FirstOrDefaultAsync();
+
+                    if (latestPost != null)
+                    {
+                        var ext = await GetFileExtensionAsync(latestPost.PostFile);
+                        bool isImage = ext is ".jpg" or ".jpeg" or ".png";
+                        bool isVideo = ext is ".mp4" or ".mov";
+
+                        if (isImage)
+                            latestMedia = $"/thumbnails/{latestPost.Id}.jpg";
+                        else if (isVideo)
+                            latestMedia = $"/previews/{latestPost.Id}.gif";
+                    }
+
+                    results.Add(new GetPostSubGroupForViewDto
+                    {
+                        PostSubGroup = new PostSubGroupDto
+                        {
+                            Id = subGroup.Id,
+                            PostSubGroupDescription = subGroup.PostSubGroupDescription,
+                            SubGroupFile = subGroup.GroupFile,
+                            SubGroupFileFileName = await GetBinaryFileName(subGroup.GroupFile),
+                            PostSubGroupLatestPic = latestMedia
+                        }
+                    });
+                }
+
+                return new PagedResultDto<GetPostSubGroupForViewDto>(results.Count, results);
+            }
+            catch (Exception ex)
+            {
+                throw new UserFriendlyException("خطا در دریافت زیر‌دسته‌ها", ex);
+            }
+        }
+
+
+
+        private async Task<string> GetFileExtensionAsync(Guid? fileId)
+        {
+            if (fileId == null) return null;
+
+            var file = await _binaryObjectManager.GetOrNullAsync(fileId.Value);
+            if (file == null || string.IsNullOrWhiteSpace(file.Description))
+                return null;
+
+            return Path.GetExtension(file.Description)?.ToLowerInvariant();
         }
 
         public async Task<GetPostSubGroupForViewDto> GetPostSubGroupForView(int id)

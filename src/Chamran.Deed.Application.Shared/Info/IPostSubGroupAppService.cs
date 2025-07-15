@@ -12,6 +12,8 @@ namespace Chamran.Deed.Info
     {
         Task<PagedResultDto<GetPostSubGroupForViewDto>> GetAll(GetAllPostSubGroupsInput input);
 
+        Task<PagedResultDto<GetPostSubGroupForViewDto>> GetPostSubGroupsForExploreViewAsync(GetAllPostSubGroupsInput input);
+
         Task<GetPostSubGroupForViewDto> GetPostSubGroupForView(int id);
 
         Task<GetPostSubGroupForEditOutput> GetPostSubGroupForEdit(EntityDto input);
