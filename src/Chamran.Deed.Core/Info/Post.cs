@@ -94,6 +94,9 @@ namespace Chamran.Deed.Info
 
         public virtual string PostRefLink { get; set; }
 
+        public virtual string PostFileThumb { get; set; }
+        public virtual string PostVideoPreview { get; set; }
+
         public virtual ICollection<PostLike> PostLikes { get; set; } // Collection of PostLikes
         public virtual ICollection<PostEditHistory> EditHistories { get; set; } = new List<PostEditHistory>();
 

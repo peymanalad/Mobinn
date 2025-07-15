@@ -2,18 +2,13 @@
 using System;
 using System.Threading.Tasks;
 using Chamran.Deed.Net.Sms;
-using Kavenegar;
-using SmsBehestan;
-using System.Collections.Generic;
-using Kavenegar.Core.Exceptions;
-using ApiException = Kavenegar.Core.Exceptions.ApiException;
+using System.Net.Http;
 
 
 public class KavenegarSmsSender : ISmsSender
 {
     private readonly ILogger<KavenegarSmsSender> _logger;
-    private readonly string _apiKey = "کلید API شما"; // TODO: از appsettings.json بخوانید
-    private readonly string _templateName = "verify"; // نام تمپلیت ساخته‌شده در کاوه‌نگار
+
 
     public KavenegarSmsSender(ILogger<KavenegarSmsSender> logger)
     {
@@ -31,25 +26,36 @@ public class KavenegarSmsSender : ISmsSender
         {
             string token = message;
             string appkey = "RVwFEFi4EJE";//APPKEY
-            var apiKey = Environment.GetEnvironmentVariable("KAVENEGAR_API_KEY");
+            //var apiKey = Environment.GetEnvironmentVariable("KAVENEGAR_API_KEY");
+            var apiKey = "6A596B434E3764674E57737079706F32306F34714F59417532734E416B4949575261636750646B654C70513D";
+            var sender = "20005209";
+            var tag = "otp";
             string appname = "سامانه مبین";
             string otpTemplate = "« {appName} »\nکد ورود به سیستم:\n{otp}\n{apiKey}\nلغو11";
             string finalMessage = otpTemplate
-                .Replace("{appName}",appname)
+                .Replace("{appName}", appname)
                 .Replace("{otp}", token)
                 .Replace("{apiKey}", "RVwFEFi4EJE");
-            Kavenegar.KavenegarApi api = new Kavenegar.KavenegarApi(apiKey);
-            var result = api.Send("2000660110", number, finalMessage);
-            return true;
+            var url = $"https://api.kavenegar.com/v1/{apiKey}/sms/send.json?receptor={number}&sender={sender}&message={finalMessage}&tag={tag}";
+            using var client = new HttpClient();
+            var response = await client.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("Kavenegar success: {Response}", content);
+                return true;
+            }
+            else
+            {
+                _logger.LogError("Kavenegar failed: Status={StatusCode}, Body={Response}",
+                    response.StatusCode, content);
+                return false;
+            }
         }
-        catch (ApiException ex)
+        catch (Exception ex)
         {
-            Console.Write("Message : " + ex.Message);
+            _logger.LogError(ex, "Error while sending SMS to Kavenegar");
+            return false;
         }
-        catch (KavenegarException ex)
-        {
-            Console.Write("Message : " + ex.Message);
-        }
-        return false; 
     }
 }

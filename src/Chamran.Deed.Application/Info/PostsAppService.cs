@@ -25,6 +25,7 @@ using Abp.Domain.Uow;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Globalization;
+using System.IO;
 using Abp.Auditing;
 using Abp.Authorization.Users;
 using AutoMapper.Internal.Mappers;
@@ -39,6 +40,12 @@ using Chamran.Deed.Net.Sms;
 using NPOI.SS.Formula.Functions;
 using Stripe.Identity;
 using Abp.Runtime.Session;
+using System.Diagnostics;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting.Internal;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Chamran.Deed.Info
 {
@@ -65,8 +72,9 @@ namespace Chamran.Deed.Info
         private readonly IRepository<Organization> organizationRepository;
         private readonly IAppNotifier _appNotifier;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
+        private readonly IWebHostEnvironment _hostingEnvironment;
 
-        private readonly IRepository<UserRole,long> _userRoleRepository;
+        private readonly IRepository<UserRole, long> _userRoleRepository;
         //private readonly IRepository<PostCategory> _postCategoryRepository;
         //private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
 
@@ -79,8 +87,9 @@ namespace Chamran.Deed.Info
             IBinaryObjectManager binaryObjectManager, IRepository<Organization> organization, IAppNotifier appNotifier,
             IRepository<UserPostGroup, int> userPostGroupRepository, IUnitOfWorkManager unitOfWorkManager,
             IRepository<PostLike, int> postLikeRepository, IRepository<Seen, int> seenRepository, IRepository<AllowedUserPostGroup, int> allowedUserPostGroupRepository,
-            IRepository<User, long> userRepository, IDbContextProvider<DeedDbContext> dbContextProvider,ISmsSender smsSender,
-            IRepository<PostEditHistory> postEditHistoryRespoRepository,IRepository<UserRole,long> userRoleRepository, IRepository<GroupMember> groupMemberRepository)
+            IRepository<User, long> userRepository, IDbContextProvider<DeedDbContext> dbContextProvider, ISmsSender smsSender,
+            IRepository<PostEditHistory> postEditHistoryRespoRepository, IRepository<UserRole, long> userRoleRepository, IRepository<GroupMember> groupMemberRepository
+            , IWebHostEnvironment hostingEnvironment)
         {
             _postRepository = postRepository;
             _commentRepository = commentRepository;
@@ -104,6 +113,7 @@ namespace Chamran.Deed.Info
             //_dbContextProvider= dbContextProvider;
             _userRoleRepository = userRoleRepository;
             _groupMemberRepository = groupMemberRepository;
+            _hostingEnvironment = hostingEnvironment;
         }
 
         public async Task<PagedResultDto<GetPostForViewDto>> GetAll(GetAllPostsInput input)
@@ -114,8 +124,8 @@ namespace Chamran.Deed.Info
             {
 
                 var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
-                    where x.UserId == currentUser.Id
-                    select x.OrganizationId;
+                                          where x.UserId == currentUser.Id
+                                          select x.OrganizationId;
                 if (!currentUserOrgQuery.Contains(input.OrganizationId))
                 {
                     throw new UserFriendlyException("سازمان انتخابی به این کاربر تعلق ندارد");
@@ -124,7 +134,7 @@ namespace Chamran.Deed.Info
             }
 
             //User user = GetCurrentUser();
-            
+
             // Prepare parameters
             var parameters = new[]
             {
@@ -260,13 +270,13 @@ namespace Chamran.Deed.Info
             {
 
                 var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
-                    where x.UserId == currentUser.Id
-                    select x.OrganizationId;
+                                          where x.UserId == currentUser.Id
+                                          select x.OrganizationId;
 
                 var userQuery = from x in _groupMemberRepository.GetAll()
-                    join y in _postRepository.GetAll() on x.Id equals y.GroupMemberId
-                    where y.Id == input.Id && currentUserOrgQuery.Contains(x.OrganizationId)
-                    select x;
+                                join y in _postRepository.GetAll() on x.Id equals y.GroupMemberId
+                                where y.Id == input.Id && currentUserOrgQuery.Contains(x.OrganizationId)
+                                select x;
                 if (!userQuery.Any())
                 {
                     throw new UserFriendlyException("پست انتخابی متعلق به هیچ یک از سازمان های شما نمی باشد");
@@ -327,119 +337,291 @@ namespace Chamran.Deed.Info
             }
         }
 
+        //[AbpAuthorize(AppPermissions.Pages_Posts_Create)]
+        //protected virtual async Task Create(CreateOrEditPostDto input)
+        //{
+        //    using var unitOfWork = _unitOfWorkManager.Begin();
+        //    var grpMemberId = await _lookup_groupMemberRepository.GetAll()
+        //        .Where(x => x.UserId == AbpSession.UserId)
+        //        .FirstOrDefaultAsync();
+
+        //    if (grpMemberId == null)
+        //    {
+        //        throw new UserFriendlyException("کاربر حاضر به هیچ سازمانی تعلق ندارد");
+        //    }
+
+        //    var post = ObjectMapper.Map<Post>(input);
+        //    var userRole = await _userRoleRepository.FirstOrDefaultAsync(ur => ur.UserId == AbpSession.UserId);
+        //    if (userRole == null)
+        //    {
+        //        Console.WriteLine("Current user role not found.");
+        //        return;
+        //    }
+
+        //    post.CreatorUserId = GetCurrentUserAsync().Result.Id;
+        //    post.GroupMemberId = grpMemberId.Id;
+
+        //    await _postRepository.InsertAsync(post);
+
+        //    post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken, post.Id);
+        //    post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2, post.Id);
+        //    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3, post.Id);
+        //    post.PostFile4 = await GetBinaryObjectFromCache(input.PostFileToken4, post.Id);
+        //    post.PostFile5 = await GetBinaryObjectFromCache(input.PostFileToken5, post.Id);
+        //    post.PostFile6 = await GetBinaryObjectFromCache(input.PostFileToken6, post.Id);
+        //    post.PostFile7 = await GetBinaryObjectFromCache(input.PostFileToken7, post.Id);
+        //    post.PostFile8 = await GetBinaryObjectFromCache(input.PostFileToken8, post.Id);
+        //    post.PostFile9 = await GetBinaryObjectFromCache(input.PostFileToken9, post.Id);
+        //    post.PostFile10 = await GetBinaryObjectFromCache(input.PostFileToken10, post.Id);
+        //    if (post.PostFile == null && post.PostFile2 == null && post.PostFile3 == null && post.PostFile4 == null &&
+        //        post.PostFile5 == null && post.PostFile6 == null && post.PostFile7 == null && post.PostFile8 == null &&
+        //        post.PostFile9 == null && post.PostFile10 == null)
+        //        throw new UserFriendlyException("پست ارسالی هیچش مدیایی ندارد");
+        //    //await _unitOfWorkManager.Current.SaveChangesAsync();
+
+        //    //For Creating Thumbnail(Pictures)
+        //    var file = post.AppBinaryObjectFk;
+        //    if (file != null && !string.IsNullOrEmpty(file.Description))
+        //    {
+        //        var ext = Path.GetExtension(file.Description).ToLowerInvariant();
+        //        var webRoot = _hostingEnvironment.WebRootPath;
+
+        //        if (ext is ".jpg" or ".jpeg" or ".png")
+        //        {
+        //            var thumbPath = await GenerateThumbnailAsync(file.Bytes, post.Id, webRoot);
+        //            post.PostFileThumb = thumbPath;
+        //        }
+        //        else if (ext is ".mp4" or ".mov")
+        //        {
+        //            var videosDir = Path.Combine(webRoot, "videos");
+        //            Directory.CreateDirectory(videosDir);
+
+        //            var fullPath = Path.Combine(videosDir, $"{post.Id}{ext}");
+        //            await File.WriteAllBytesAsync(fullPath, file.Bytes);
+
+        //            var previewPath = await GenerateVideoPreviewAsync(fullPath, webRoot, post.Id);
+        //            post.PostVideoPreview = previewPath;
+        //        }
+        //        else if (ext == ".pdf")
+        //        {
+        //            // Do nothing yet
+        //        }
+        //    }
+
+
+        //    try
+        //    {
+        //        await _unitOfWorkManager.Current.SaveChangesAsync();
+        //    }
+        //    catch (DbUpdateException ex)
+        //    {
+        //        Console.WriteLine($"DbUpdateException: {ex.Message}");
+
+        //        if (ex.InnerException != null)
+        //        {
+        //            Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+        //        }
+
+        //        if (ex.Entries != null && ex.Entries.Any())
+        //        {
+        //            foreach (var entry in ex.Entries)
+        //            {
+        //                Console.WriteLine($"Entity: {entry.Entity.GetType().Name}, State: {entry.State}");
+        //            }
+        //        }
+
+        //        throw; // برای مشاهده StackTrace
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"General Exception: {ex.Message}");
+        //        throw;
+        //    }
+
+
+        //    await unitOfWork.CompleteAsync();
+        //    if (post.PostGroupId.HasValue && post.CurrentPostStatus == PostStatus.Published)
+        //    {
+        //        await PublishNewPostNotifications(post/*, input.OrganizationId*/);
+        //    }
+
+        //    //var currentUser = GetCurrentUserAsync().Result;
+
+        //    //if (currentUser.UserType == AccountUserType.Distributer 
+        //    //    || currentUser.UserType == AccountUserType.Admin 
+        //    //    || currentUser.UserType == AccountUserType.SuperAdmin 
+        //    //    || currentUser.IsSuperUser)
+        //    //{
+        //    //    post.IsPublished = true;
+        //    //    post.CurrentPostStatus = PostStatus.Published;
+        //    //    //await SendSmsNotification(post,input.OrganizationId);
+
+        //    //}
+
+
+
+
+        //    //if (userRole.RoleId == 5 || userRole.RoleId == 2 || GetCurrentUserAsync().Result.IsSuperUser)
+        //    //{
+        //    //    await SendSmsNotification(post);
+        //    //}
+        //    //else if (userRole.RoleId == 4)
+        //    //{
+        //    //    post.IsPublished = false;
+        //    //    post.CurrentPostStatus = PostStatus.Pending;
+        //    //    await PublishNewPostNotifications(post,organizationId:input.OrganizationId);
+        //    //}
+        //    //else
+        //    //{
+        //    //    throw new UnauthorizedAccessException("شما اجازه انتشار خبر را نداريد.");
+        //    //}
+
+        //    //await SendSmsNotification(post,input.OrganizationId);
+        //    await SendSmsNotification(post);
+
+        //}
+
         [AbpAuthorize(AppPermissions.Pages_Posts_Create)]
         protected virtual async Task Create(CreateOrEditPostDto input)
         {
             using var unitOfWork = _unitOfWorkManager.Begin();
+
             var grpMemberId = await _lookup_groupMemberRepository.GetAll()
                 .Where(x => x.UserId == AbpSession.UserId)
+                .Select(x => x.Id)
                 .FirstOrDefaultAsync();
 
-            if (grpMemberId == null)
-            {
+            if (grpMemberId == 0)
                 throw new UserFriendlyException("کاربر حاضر به هیچ سازمانی تعلق ندارد");
-            }
 
             var post = ObjectMapper.Map<Post>(input);
-            var userRole = await _userRoleRepository.FirstOrDefaultAsync(ur => ur.UserId == AbpSession.UserId);
-            if (userRole == null)
-            {
-                Console.WriteLine("Current user role not found.");
-                return;
-            }
-
-            post.CreatorUserId = GetCurrentUserAsync().Result.Id;
-            post.GroupMemberId = grpMemberId.Id;
+            post.CreatorUserId = (await GetCurrentUserAsync()).Id;
+            post.GroupMemberId = grpMemberId;
 
             await _postRepository.InsertAsync(post);
+            await _unitOfWorkManager.Current.SaveChangesAsync();
 
-            post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken, post.Id);
-            post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2, post.Id);
-            post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3, post.Id);
-            post.PostFile4 = await GetBinaryObjectFromCache(input.PostFileToken4, post.Id);
-            post.PostFile5 = await GetBinaryObjectFromCache(input.PostFileToken5, post.Id);
-            post.PostFile6 = await GetBinaryObjectFromCache(input.PostFileToken6, post.Id);
-            post.PostFile7 = await GetBinaryObjectFromCache(input.PostFileToken7, post.Id);
-            post.PostFile8 = await GetBinaryObjectFromCache(input.PostFileToken8, post.Id);
-            post.PostFile9 = await GetBinaryObjectFromCache(input.PostFileToken9, post.Id);
-            post.PostFile10 = await GetBinaryObjectFromCache(input.PostFileToken10, post.Id);
-            if (post.PostFile == null && post.PostFile2 == null && post.PostFile3 == null && post.PostFile4 == null &&
-                post.PostFile5 == null && post.PostFile6 == null && post.PostFile7 == null && post.PostFile8 == null &&
-                post.PostFile9 == null && post.PostFile10 == null)
-                throw new UserFriendlyException("پست ارسالی هیچش مدیایی ندارد");
-            //await _unitOfWorkManager.Current.SaveChangesAsync();
+            var mainFile = await SaveAndGetBinaryObject(input.PostFileToken, post.Id);
+            if (mainFile == null)
+                throw new UserFriendlyException("فایل اصلی وجود ندارد");
 
-            try
+            post.PostFile = mainFile.Id;
+
+            var ext = Path.GetExtension(mainFile.Description ?? string.Empty).ToLowerInvariant();
+            var webRoot = _hostingEnvironment.WebRootPath;
+
+            if (ext is ".jpg" or ".jpeg" or ".png")
             {
-                await _unitOfWorkManager.Current.SaveChangesAsync();
+                post.PostFileThumb = await GenerateThumbnailAsync(mainFile.Bytes, post.Id, webRoot);
             }
-            catch (DbUpdateException ex)
+            else if (ext is ".mp4" or ".mov")
             {
-                Console.WriteLine($"DbUpdateException: {ex.Message}");
+                var videosDir = Path.Combine(webRoot, "videos");
+                Directory.CreateDirectory(videosDir);
 
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                }
+                var fullVideoPath = Path.Combine(videosDir, $"{post.Id}{ext}");
+                await File.WriteAllBytesAsync(fullVideoPath, mainFile.Bytes);
 
-                if (ex.Entries != null && ex.Entries.Any())
-                {
-                    foreach (var entry in ex.Entries)
-                    {
-                        Console.WriteLine($"Entity: {entry.Entity.GetType().Name}, State: {entry.State}");
-                    }
-                }
-
-                throw; // برای مشاهده StackTrace
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"General Exception: {ex.Message}");
-                throw;
+                post.PostVideoPreview = await GenerateVideoPreviewAsync(fullVideoPath, webRoot, post.Id);
             }
 
+            var allTokens = new[] {
+            input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
+            input.PostFileToken5, input.PostFileToken6, input.PostFileToken7,
+            input.PostFileToken8, input.PostFileToken9, input.PostFileToken10
+        };
 
+            var binaryIds = await Task.WhenAll(allTokens.Select((token, i) => GetBinaryId(token, post.Id)));
+
+            post.PostFile2 = binaryIds.ElementAtOrDefault(0);
+            post.PostFile3 = binaryIds.ElementAtOrDefault(1);
+            post.PostFile4 = binaryIds.ElementAtOrDefault(2);
+            post.PostFile5 = binaryIds.ElementAtOrDefault(3);
+            post.PostFile6 = binaryIds.ElementAtOrDefault(4);
+            post.PostFile7 = binaryIds.ElementAtOrDefault(5);
+            post.PostFile8 = binaryIds.ElementAtOrDefault(6);
+            post.PostFile9 = binaryIds.ElementAtOrDefault(7);
+            post.PostFile10 = binaryIds.ElementAtOrDefault(8);
+
+            await _unitOfWorkManager.Current.SaveChangesAsync();
             await unitOfWork.CompleteAsync();
+
             if (post.PostGroupId.HasValue && post.CurrentPostStatus == PostStatus.Published)
+                await PublishNewPostNotifications(post);
+
+            await SendSmsNotification(post);
+        }
+
+
+        private async Task<Guid?> GetBinaryId(string token, int postId)
+        {
+            if (string.IsNullOrEmpty(token)) return null;
+
+            var fileId = await GetBinaryObjectFromCache(token, postId);
+            return fileId;
+        }
+
+
+
+        private async Task<string> GenerateThumbnailAsync(byte[] imageBytes, int postId, string webRoot)
+        {
+            var thumbnailsDir = Path.Combine(webRoot, "thumbnails");
+            Directory.CreateDirectory(thumbnailsDir);
+
+            var thumbnailPath = Path.Combine(thumbnailsDir, $"{postId}.jpg");
+
+            using var inputStream = new MemoryStream(imageBytes);
+            using var image = SixLabors.ImageSharp.Image.Load(inputStream);
+
+            const int thumbnailWidth = 300;
+            var ratio = (double)thumbnailWidth / image.Width;
+            var thumbnailHeight = (int)(image.Height * ratio);
+
+            image.Mutate(x => x.Resize(thumbnailWidth, thumbnailHeight));
+
+            await using var outputStream = new FileStream(thumbnailPath, FileMode.Create);
+            await image.SaveAsJpegAsync(outputStream);
+
+            // نسبت به ریشه‌ی سایت
+            return $"/thumbnails/{postId}.jpg";
+        }
+
+        private async Task<string> GenerateVideoPreviewAsync(string inputPath, string webRoot, int postId)
+        {
+            var previewsDir = Path.Combine(webRoot, "previews");
+            Directory.CreateDirectory(previewsDir);
+
+            var previewPath = Path.Combine(previewsDir, $"{postId}.gif");
+
+            // ffmpeg command to generate GIF from the first 5 seconds
+            var ffmpegCmd = $"ffmpeg -y -i \"{inputPath}\" -ss 0 -t 5 -vf \"fps=10,scale=320:-1:flags=lanczos\" -loop 0 \"{previewPath}\"";
+
+            var processInfo = new ProcessStartInfo("bash", $"-c \"{ffmpegCmd}\"")
             {
-                await PublishNewPostNotifications(post/*, input.OrganizationId*/);
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(processInfo);
+            if (process == null)
+                throw new Exception("اجرای ffmpeg برای ساخت GIF ناموفق بود");
+
+            string stderr = await process.StandardError.ReadToEndAsync();
+            string stdout = await process.StandardOutput.ReadToEndAsync();
+            await process.WaitForExitAsync();
+
+            if (process.ExitCode != 0)
+            {
+                Console.WriteLine("FFmpeg error:\n" + stderr);
+                throw new Exception("خطا در ساخت پیش‌نمایش گیف ویدیو");
             }
 
-            //var currentUser = GetCurrentUserAsync().Result;
-
-            //if (currentUser.UserType == AccountUserType.Distributer 
-            //    || currentUser.UserType == AccountUserType.Admin 
-            //    || currentUser.UserType == AccountUserType.SuperAdmin 
-            //    || currentUser.IsSuperUser)
-            //{
-            //    post.IsPublished = true;
-            //    post.CurrentPostStatus = PostStatus.Published;
-            //    //await SendSmsNotification(post,input.OrganizationId);
-
-            //}
-
-
-
-
-            //if (userRole.RoleId == 5 || userRole.RoleId == 2 || GetCurrentUserAsync().Result.IsSuperUser)
-            //{
-            //    await SendSmsNotification(post);
-            //}
-            //else if (userRole.RoleId == 4)
-            //{
-            //    post.IsPublished = false;
-            //    post.CurrentPostStatus = PostStatus.Pending;
-            //    await PublishNewPostNotifications(post,organizationId:input.OrganizationId);
-            //}
-            //else
-            //{
-            //    throw new UnauthorizedAccessException("شما اجازه انتشار خبر را نداريد.");
-            //}
-
-            //await SendSmsNotification(post,input.OrganizationId);
-            await SendSmsNotification(post);
-
+            return $"/previews/{postId}.gif";
         }
+
+
 
         private async Task SendSmsNotification(Post post/*, int organization*/)
         {
@@ -459,73 +641,73 @@ namespace Chamran.Deed.Info
                 switch (post.CurrentPostStatus)
                 {
                     case PostStatus.Pending:
-                    {
-                        var monitorUsers = _userRepository.GetAll()
-                            .Where(x => x.UserType == AccountUserType.Monitor
-                                        && x.PhoneNumber.StartsWith("09")
-                                        && x.PhoneNumber.Length == 11);
-
-                        var organizationMemberIds = _lookup_groupMemberRepository.GetAll()
-                            .Where(gm => gm.OrganizationId == organizationId)
-                            .Select(gm => gm.UserId)
-                            .ToList();
-
-                        foreach (var monitorUser in monitorUsers)
                         {
-                            if (organizationMemberIds.Contains(monitorUser.Id))
-                            {
-                                await _smsSender.SendAsync(monitorUser.PhoneNumber, "پست جدیدی در انتظار بررسی است");
-                            }
-                        }
+                            var monitorUsers = _userRepository.GetAll()
+                                .Where(x => x.UserType == AccountUserType.Monitor
+                                            && x.PhoneNumber.StartsWith("09")
+                                            && x.PhoneNumber.Length == 11);
 
-                        break;
-                    }
+                            var organizationMemberIds = _lookup_groupMemberRepository.GetAll()
+                                .Where(gm => gm.OrganizationId == organizationId)
+                                .Select(gm => gm.UserId)
+                                .ToList();
+
+                            foreach (var monitorUser in monitorUsers)
+                            {
+                                if (organizationMemberIds.Contains(monitorUser.Id))
+                                {
+                                    await _smsSender.SendAsync(monitorUser.PhoneNumber, "پست جدیدی در انتظار بررسی است");
+                                }
+                            }
+
+                            break;
+                        }
                     case PostStatus.Revised:
-                    {
-                        var publisherUsers = _userRepository.GetAll()
-                            .Where(x => x.UserType == AccountUserType.Distributer
-                                        && x.PhoneNumber.StartsWith("09")
-                                        && x.PhoneNumber.Length == 11);
-
-                        var organizationMemberIds = _lookup_groupMemberRepository.GetAll()
-                            .Where(gm => gm.OrganizationId == organizationId)
-                            .Select(gm => gm.UserId)
-                            .ToList();
-
-                        foreach (var publisherUser in publisherUsers)
                         {
-                            if (organizationMemberIds.Contains(publisherUser.Id))
-                            {
-                                await _smsSender.SendAsync(publisherUser.PhoneNumber, "پست جدیدی در انتظار انتشار است");
-                            }
-                        }
+                            var publisherUsers = _userRepository.GetAll()
+                                .Where(x => x.UserType == AccountUserType.Distributer
+                                            && x.PhoneNumber.StartsWith("09")
+                                            && x.PhoneNumber.Length == 11);
 
-                        break;
-                    }
-                    //case PostStatus.Published:
-                    //    {
-                    //        var allOrganizationUsers = _lookup_groupMemberRepository.GetAll()
-                    //            .Join(_userRepository.GetAll()
-                    //                , g => g.UserId
-                    //                , u => u.Id
-                    //                , (g, u) => new { GroupMember = g, User = u })
-                    //            .Where(x => x.GroupMember.OrganizationId == organization
-                    //                && x.User.PhoneNumber.StartsWith("09")
-                    //                && x.User.PhoneNumber.Length == 11)
-                    //            .Select(x => x.User)
-                    //            .ToListAsync();
-                    //        foreach (var user in allOrganizationUsers.Result)
-                    //        {
-                    //            await _smsSender.SendAsync(user.PhoneNumber, "پست جديد منتشر شد.");
-                    //        }
-                    //        break;
-                    //    }
+                            var organizationMemberIds = _lookup_groupMemberRepository.GetAll()
+                                .Where(gm => gm.OrganizationId == organizationId)
+                                .Select(gm => gm.UserId)
+                                .ToList();
+
+                            foreach (var publisherUser in publisherUsers)
+                            {
+                                if (organizationMemberIds.Contains(publisherUser.Id))
+                                {
+                                    await _smsSender.SendAsync(publisherUser.PhoneNumber, "پست جدیدی در انتظار انتشار است");
+                                }
+                            }
+
+                            break;
+                        }
+                        //case PostStatus.Published:
+                        //    {
+                        //        var allOrganizationUsers = _lookup_groupMemberRepository.GetAll()
+                        //            .Join(_userRepository.GetAll()
+                        //                , g => g.UserId
+                        //                , u => u.Id
+                        //                , (g, u) => new { GroupMember = g, User = u })
+                        //            .Where(x => x.GroupMember.OrganizationId == organization
+                        //                && x.User.PhoneNumber.StartsWith("09")
+                        //                && x.User.PhoneNumber.Length == 11)
+                        //            .Select(x => x.User)
+                        //            .ToListAsync();
+                        //        foreach (var user in allOrganizationUsers.Result)
+                        //        {
+                        //            await _smsSender.SendAsync(user.PhoneNumber, "پست جديد منتشر شد.");
+                        //        }
+                        //        break;
+                        //    }
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                
+
             }
         }
 
@@ -561,12 +743,12 @@ namespace Chamran.Deed.Info
             }
 
             await _appNotifier.SendPostNotificationAsync(JsonConvert.SerializeObject(post, new JsonSerializerSettings
+            {
+                ContractResolver = new DefaultContractResolver
                 {
-                    ContractResolver = new DefaultContractResolver
-                    {
-                        NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
-                    }
-                }),
+                    NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
+                }
+            }),
                 userIds: ids.ToArray()
             );
 
@@ -749,7 +931,7 @@ namespace Chamran.Deed.Info
 
         [AbpAuthorize(AppPermissions.Pages_Posts_Delete)]
         public async Task Delete(EntityDto input)
-        { 
+        {
             await _postRepository.DeleteAsync(input.Id);
         }
 
@@ -877,6 +1059,24 @@ namespace Chamran.Deed.Info
             );
         }
 
+        private async Task<BinaryObject> SaveAndGetBinaryObject(string fileToken, int? refId)
+        {
+            if (fileToken.IsNullOrWhiteSpace())
+                return null;
+
+            var fileCache = _tempFileCacheManager.GetFileInfo(fileToken);
+            if (fileCache == null)
+                throw new UserFriendlyException("فایلی با این توکن یافت نشد: " + fileToken);
+
+            var storedFile = new BinaryObject(AbpSession.TenantId, fileCache.File, BinarySourceType.Post, fileCache.FileName);
+            if (refId != null)
+                storedFile.SourceId = refId;
+
+            await _binaryObjectManager.SaveAsync(storedFile);
+            return storedFile;
+        }
+
+
         private async Task<Guid?> GetBinaryObjectFromCache(string fileToken, int? refId)
         {
             try
@@ -934,51 +1134,104 @@ namespace Chamran.Deed.Info
             post.PostFile = null;
         }
 
+        //public async Task<PagedResultDto<GetPostCategoriesForViewDto>> GetPostCategoriesForView(int organizationId)
+        //{
+        //    try
+        //    {
+        //        var cat = new List<GetPostCategoriesForViewDto>();
+        //        var queryPostCat = await (from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
+        //                                      //join g in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationId equals g.Id into joiner1
+        //                                      //from g in joiner1.DefaultIfEmpty()
+        //                                      //join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
+        //                                      //from gm in joiner2.DefaultIfEmpty()
+        //                                      //where gm.UserId == AbpSession.UserId
+        //                                  where pc.OrganizationId == organizationId
+        //                                  orderby pc.Ordering
+        //                                  select new
+        //                                  {
+        //                                      pc.Id,
+        //                                      pc.PostGroupDescription,
+        //                                      PostGroupHeaderPicFile = pc.GroupFile,
+        //                                      PostGroupLatestPicFile = _postRepository.GetAll().Where(p => p.PostGroupId == pc.Id)
+        //                                          .OrderByDescending(p => p.CreationTime).FirstOrDefault().PostFile,
+
+        //                                  }).ToListAsync();
+
+        //        foreach (var postCategory in queryPostCat)
+        //        {
+        //            var filteredPostSubGroups = await _lookup_postSubGroupRepository.GetAll()
+        //                .Where(p => p.PostGroupId == postCategory.Id).CountAsync();
+
+        //            cat.Add(new GetPostCategoriesForViewDto
+        //            {
+        //                PostGroupLatestPicFile = postCategory.PostGroupLatestPicFile,
+        //                PostGroupHeaderPicFile = postCategory.PostGroupHeaderPicFile,
+        //                Id = postCategory.Id,
+        //                PostGroupDescription = postCategory.PostGroupDescription,
+        //                HasSubGroups = filteredPostSubGroups > 0,
+        //            });
+        //        }
+
+        //        return await Task.FromResult(new PagedResultDto<GetPostCategoriesForViewDto>(cat.Count, cat));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new UserFriendlyException(ex.Message);
+        //    }
+        //}
+
         public async Task<PagedResultDto<GetPostCategoriesForViewDto>> GetPostCategoriesForView(int organizationId)
         {
             try
             {
-                var cat = new List<GetPostCategoriesForViewDto>();
-                var queryPostCat = await (from pc in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted)
-                                       //join g in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pc.OrganizationId equals g.Id into joiner1
-                                       //from g in joiner1.DefaultIfEmpty()
-                                       //join gm in _lookup_groupMemberRepository.GetAll() on g.Id equals gm.OrganizationId into joiner2
-                                       //from gm in joiner2.DefaultIfEmpty()
-                                       //where gm.UserId == AbpSession.UserId
-                                   where pc.OrganizationId == organizationId
-                                   orderby pc.Ordering
-                                   select new
-                                   {
-                                       pc.Id,
-                                       pc.PostGroupDescription,
-                                       PostGroupHeaderPicFile = pc.GroupFile,
-                                       PostGroupLatestPicFile = _postRepository.GetAll().Where(p => p.PostGroupId == pc.Id)
-                                           .OrderByDescending(p => p.CreationTime).FirstOrDefault().PostFile,
-                                       
-                                   }).ToListAsync();
+                var postGroups = await _lookup_postGroupRepository.GetAll()
+                    .Where(pg => !pg.IsDeleted && pg.OrganizationId == organizationId)
+                    .OrderBy(pg => pg.Ordering)
+                    .ToListAsync();
 
-                foreach (var postCategory in queryPostCat)
+                var categories = new List<GetPostCategoriesForViewDto>();
+
+                foreach (var group in postGroups)
                 {
-                    var filteredPostSubGroups = await _lookup_postSubGroupRepository.GetAll()
-                        .Where(p => p.PostGroupId == postCategory.Id).CountAsync();
+                    var latestPost = await _postRepository.GetAll()
+                        .Where(p => p.PostGroupId == group.Id && p.IsPublished && !p.IsDeleted)
+                        .OrderByDescending(p => p.CreationTime)
+                        .FirstOrDefaultAsync();
 
-                    cat.Add(new GetPostCategoriesForViewDto
+                    string latestMedia = null;
+                    if (latestPost?.PostFile != null)
                     {
-                        PostGroupLatestPicFile = postCategory.PostGroupLatestPicFile,
-                        PostGroupHeaderPicFile = postCategory.PostGroupHeaderPicFile,
-                        Id = postCategory.Id,
-                        PostGroupDescription = postCategory.PostGroupDescription,
-                        HasSubGroups = filteredPostSubGroups > 0,
+                        var ext = await GetFileExtensionAsync(latestPost.PostFile);
+                        var isImage = ext is ".jpg" or ".jpeg" or ".png";
+                        var isVideo = ext is ".mp4" or ".mov";
+
+                        if (isImage)
+                            latestMedia = $"/thumbnails/{latestPost.Id}.jpg";
+                        else if (isVideo)
+                            latestMedia = $"/previews/{latestPost.Id}.gif";
+                    }
+
+                    var hasSubGroups = await _lookup_postSubGroupRepository.GetAll()
+                        .AnyAsync(x => x.PostGroupId == group.Id);
+
+                    categories.Add(new GetPostCategoriesForViewDto
+                    {
+                        Id = group.Id,
+                        PostGroupDescription = group.PostGroupDescription,
+                        PostGroupHeaderPicFile = group.GroupFile,
+                        PostGroupLatestPicFile = latestMedia,
+                        HasSubGroups = hasSubGroups
                     });
                 }
 
-                return await Task.FromResult(new PagedResultDto<GetPostCategoriesForViewDto>(cat.Count, cat));
+                return new PagedResultDto<GetPostCategoriesForViewDto>(categories.Count, categories);
             }
             catch (Exception ex)
             {
-                throw new UserFriendlyException(ex.Message);
+                throw new UserFriendlyException("خطا در دریافت دسته‌بندی‌ها", ex);
             }
         }
+
 
         public Task<PagedResultDto<GetPostsForViewDto>> GetPostsForView(int postGroupId)
         {
@@ -1001,16 +1254,16 @@ namespace Chamran.Deed.Info
                         GroupMemberId = post.GroupMemberId ?? 0,
                         IsSpecial = post.IsSpecial,
                         IsPublished = post.IsPublished,
-                        PostCaption = post.PostCaption,
-                        PostFile = post.PostFile,
-                        PostTitle = post.PostTitle
+                        //PostCaption = post.PostCaption,
+                        //PostFile = post.PostFile,
+                        //PostTitle = post.PostTitle
                     };
                     if (post.GroupMemberFk != null)
                     {
 
-                        datam.MemberFullName = post.GroupMemberFk.UserFk.FullName;
-                        datam.MemberPosition = post.GroupMemberFk.MemberPosition;
-                        datam.MemberUserName = post.GroupMemberFk.UserFk.UserName;
+                        //datam.MemberFullName = post.GroupMemberFk.UserFk.FullName;
+                        //datam.MemberPosition = post.GroupMemberFk.MemberPosition;
+                        //datam.MemberUserName = post.GroupMemberFk.UserFk.UserName;
                     }
 
                     res.Add(datam);
@@ -1026,194 +1279,314 @@ namespace Chamran.Deed.Info
             }
         }
 
-        public Task<PagedResultDto<GetPostsForViewDto>> GetPostsByGroupIdForView(GetPostsByGroupIdInput input)
+
+        public async Task<PagedResultDto<GetPostsForViewDto>> GetPostsByGroupIdForView(GetPostsByGroupIdInput input)
         {
             try
             {
-                var posts = new List<GetPostsForViewDto>();
-                var filteredPosts = from p in _postRepository.GetAll().Where(x => !x.IsDeleted)
-                        .Include(e => e.GroupMemberFk)
-                        .Include(e => e.PostGroupFk)
-                        .Include(e => e.GroupMemberFk.UserFk)
-                        .Include(e => e.AppBinaryObjectFk)
-                        .Include(e => e.AppBinaryObjectFk2)
-                        .Include(e => e.AppBinaryObjectFk3)
-                        .Include(e => e.AppBinaryObjectFk4)
-                        .Include(e => e.AppBinaryObjectFk5)
-                        .Include(e => e.AppBinaryObjectFk6)
-                        .Include(e => e.AppBinaryObjectFk7)
-                        .Include(e => e.AppBinaryObjectFk8)
-                        .Include(e => e.AppBinaryObjectFk9)
-                        .Include(e => e.AppBinaryObjectFk10)
-                        .Where(x => x.PostGroupFk.OrganizationId == input.OrganizationId)
-                        .Where(x=>x.IsPublished)
-                        .WhereIf(input.PostGroupId > 0, p => p.PostGroupId == input.PostGroupId)
-                        .WhereIf(input.PostSubGroupId > 0, p => p.PostSubGroupId == input.PostSubGroupId)
-                                    join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
-                                        pg.Id into joiner1
-                                    from pg in joiner1.DefaultIfEmpty()
-                                    join og in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
-                                        equals og.Id into joiner2
-                                    from og2 in joiner2.DefaultIfEmpty()
-                                        //join gm in _lookup_groupMemberRepository.GetAll() on og2.Id equals gm.OrganizationId into
-                                        //joiner3
-                                        //from gm2 in joiner3.DefaultIfEmpty()
-                                        //where gm2.UserId == AbpSession.UserId
-                                    select new
-                                    {
-                                        p.Id,
-                                        p.GroupMemberId,
-                                        p.IsSpecial,
-                                        p.IsPublished,
-                                        p.PostCaption,
-                                        p.CreationTime,
-                                        p.PostFile,
-                                        p.PostFile2,
-                                        p.PostFile3,
-                                        p.PostFile4,
-                                        p.PostFile5,
-                                        p.PostFile6,
-                                        p.PostFile7,
-                                        p.PostFile8,
-                                        p.PostFile9,
-                                        p.PostFile10,
-                                        p.PostTitle,
-                                        p.PostRefLink,
-                                        p.PostGroupId,
-                                        p.GroupMemberFk,
-                                        p.PostGroupFk,
-                                        p.PostSubGroupFk,
-                                        p.AppBinaryObjectFk,
-                                        p.AppBinaryObjectFk2,
-                                        p.AppBinaryObjectFk3,
-                                        p.AppBinaryObjectFk4,
-                                        p.AppBinaryObjectFk5,
-                                        p.AppBinaryObjectFk6,
-                                        p.AppBinaryObjectFk7,
-                                        p.AppBinaryObjectFk8,
-                                        p.AppBinaryObjectFk9,
-                                        p.AppBinaryObjectFk10,
+                var query = _postRepository.GetAll()
+                    .AsNoTracking()
+                    .Where(x => !x.IsDeleted && x.IsPublished)
+                    .Where(x => x.PostGroupFk != null && x.PostGroupFk.OrganizationId == input.OrganizationId)
+                    .WhereIf(input.PostGroupId > 0, x => x.PostGroupId == input.PostGroupId)
+                    .WhereIf(input.PostSubGroupId > 0, x => x.PostSubGroupId == input.PostSubGroupId)
+                    .Select(p => new
+                    {
+                        p.Id,
+                        p.GroupMemberId,
+                        p.IsSpecial,
+                        p.IsPublished,
+                        p.PostCaption,
+                        p.PostTitle,
+                        p.PostGroupId,
+                        p.PostRefLink,
+                        p.CreationTime,
 
-                                    };
-                var count = filteredPosts.Count();
-                var pagedAndFilteredPosts = filteredPosts
+                        p.PostFile,
+                        p.PostFile2,
+                        p.PostFile3,
+                        p.PostFile4,
+                        p.PostFile5,
+                        p.PostFile6,
+                        p.PostFile7,
+                        p.PostFile8,
+                        p.PostFile9,
+                        p.PostFile10,
+
+                        MemberFullName = p.GroupMemberFk.UserFk.FullName,
+                        MemberUserName = p.GroupMemberFk.UserFk.UserName,
+                        MemberPosition = p.GroupMemberFk.MemberPosition,
+
+                        GroupFile = p.PostGroupFk.GroupFile,
+                        GroupDescription = p.PostGroupFk.PostGroupDescription,
+                        PostSubGroupDescription = p.PostSubGroupFk.PostSubGroupDescription,
+                    });
+
+                var totalCount = await query.CountAsync();
+                var pagedItems = await query
                     .OrderBy(input.Sorting ?? "id desc")
-                    .PageBy(input);
+                    .PageBy(input)
+                    .ToListAsync();
 
-                foreach (var post in pagedAndFilteredPosts)
+                var result = new List<GetPostsForViewDto>();
+
+                foreach (var p in pagedItems)
                 {
-                    var datam = new GetPostsForViewDto
+                    // بررسی همه‌ی فایل‌ها
+                    var allFileIds = new[]
                     {
-                        //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
-                        Id = post.Id,
-                        GroupMemberId = post.GroupMemberId ?? 0,
-                        IsSpecial = post.IsSpecial,
-                        IsPublished = post.IsPublished,
-                        PostCaption = post.PostCaption,
-                        PostFile = post.PostFile,
-                        PostFile2 = post.PostFile2,
-                        PostFile3 = post.PostFile3,
-                        PostFile4 = post.PostFile4,
-                        PostFile5 = post.PostFile5,
-                        PostFile6 = post.PostFile6,
-                        PostFile7 = post.PostFile7,
-                        PostFile8 = post.PostFile8,
-                        PostFile9 = post.PostFile9,
-                        PostFile10 = post.PostFile10,
-                        PostTitle = post.PostTitle,
-                        PostGroupId = post.PostGroupId,
-                        PostRefLink = post.PostRefLink,
-                        CreationTime = post.CreationTime,
-                    };
-                    try
+                p.PostFile, p.PostFile2, p.PostFile3, p.PostFile4, p.PostFile5,
+                p.PostFile6, p.PostFile7, p.PostFile8, p.PostFile9, p.PostFile10
+            }.Where(x => x != null).ToList();
+
+                    var allExtensions = await Task.WhenAll(allFileIds.Select(x => GetFileExtensionAsync(x.Value)));
+
+                    bool hasPdf = allExtensions.Any(e => e != null && e.ToLowerInvariant() == ".pdf");
+
+                    string mainExt = allExtensions.FirstOrDefault(e => e != null)?.ToLowerInvariant();
+
+                    bool isImage = mainExt is ".jpg" or ".jpeg" or ".png";
+                    bool isVideo = mainExt is ".mp4" or ".mov";
+
+                    string thumbnailPath = isImage ? $"/thumbnails/{p.Id}.jpg" : null;
+                    string previewPath = isVideo ? $"/previews/{p.Id}.gif" : null;
+                    //string videoPath = isVideo ? $"/videos/{p.Id}{mainExt}" : null;
+
+                    result.Add(new GetPostsForViewDto
                     {
-                        if (post.GroupMemberFk != null)
-                        {
-                            datam.MemberFullName = post.GroupMemberFk.UserFk.FullName;
-                            datam.MemberPosition = post.GroupMemberFk.MemberPosition;
-                            datam.MemberUserName = post.GroupMemberFk.UserFk.UserName;
-                        }
+                        Id = p.Id,
+                        GroupMemberId = p.GroupMemberId ?? 0,
+                        IsSpecial = p.IsSpecial,
+                        IsPublished = p.IsPublished,
+                        //PostCaption = p.PostCaption,
+                        //PostTitle = p.PostTitle,
+                        PostGroupId = p.PostGroupId,
+                        //PostRefLink = p.PostRefLink,
+                        CreationTime = p.CreationTime,
 
-                        if (post.PostGroupFk != null)
-                        {
-                            datam.GroupFile = post.PostGroupFk.GroupFile;
-                            datam.GroupDescription = post.PostGroupFk.PostGroupDescription;
+                        ThumbnailPath = thumbnailPath,
+                        PreviewPath = previewPath,
+                        IsPdf = hasPdf,
 
-                        }
+                        //MemberFullName = p.MemberFullName,
+                        //MemberUserName = p.MemberUserName,
+                        //MemberPosition = p.MemberPosition,
 
-                        if (post.PostSubGroupFk != null)
-                        {
-                            datam.PostSubGroupDescription = post.PostSubGroupFk.PostSubGroupDescription;
-                        }
-
-                        if (post.AppBinaryObjectFk != null)
-                        {
-                            datam.Attachment1 = post.AppBinaryObjectFk.Description;
-                        }
-
-                        if (post.AppBinaryObjectFk2 != null)
-                        {
-                            datam.Attachment2 = post.AppBinaryObjectFk2.Description;
-                        }
-
-                        if (post.AppBinaryObjectFk3 != null)
-                        {
-                            datam.Attachment3 = post.AppBinaryObjectFk3.Description;
-                        }
-
-                        if (post.AppBinaryObjectFk4 != null)
-                        {
-                            datam.Attachment4 = post.AppBinaryObjectFk4.Description;
-                        }
-
-                        if (post.AppBinaryObjectFk5 != null)
-                        {
-                            datam.Attachment5 = post.AppBinaryObjectFk5.Description;
-                        }
-
-                        if (post.AppBinaryObjectFk6 != null)
-                        {
-                            datam.Attachment6 = post.AppBinaryObjectFk6.Description;
-                        }
-
-                        if (post.AppBinaryObjectFk7 != null)
-                        {
-                            datam.Attachment7 = post.AppBinaryObjectFk7.Description;
-                        }
-
-                        if (post.AppBinaryObjectFk8 != null)
-                        {
-                            datam.Attachment8 = post.AppBinaryObjectFk8.Description;
-                        }
-
-                        if (post.AppBinaryObjectFk9 != null)
-                        {
-                            datam.Attachment9 = post.AppBinaryObjectFk9.Description;
-                        }
-
-                        if (post.AppBinaryObjectFk10 != null)
-                        {
-                            datam.Attachment10 = post.AppBinaryObjectFk10.Description;
-                        }
-
-                    }
-                    catch (Exception)
-                    {
-                        //ignored
-                    }
-
-                    posts.Add(datam);
-
-
+                        //GroupFile = p.GroupFile,
+                        //GroupDescription = p.GroupDescription,
+                        //PostSubGroupDescription = p.PostSubGroupDescription
+                    });
                 }
 
-                return Task.FromResult(new PagedResultDto<GetPostsForViewDto>(count, posts));
+                return new PagedResultDto<GetPostsForViewDto>(totalCount, result);
             }
             catch (Exception ex)
             {
-                throw new UserFriendlyException(ex.Message);
+                throw new UserFriendlyException("خطا در دریافت پست‌ها", ex);
             }
         }
+
+        private async Task<string> GetFileExtensionAsync(Guid? fileId)
+        {
+            if (fileId == null) return null;
+
+            var file = await _binaryObjectManager.GetOrNullAsync(fileId.Value);
+            if (file == null || string.IsNullOrWhiteSpace(file.Description))
+                return null;
+
+            return Path.GetExtension(file.Description)?.ToLowerInvariant();
+        }
+
+
+
+        //public Task<PagedResultDto<GetPostsForViewDto>> GetPostsByGroupIdForView(GetPostsByGroupIdInput input)
+        //{
+        //    try
+        //    {
+        //        var posts = new List<GetPostsForViewDto>();
+        //        var filteredPosts = from p in _postRepository.GetAll().Where(x => !x.IsDeleted)
+        //                .Include(e => e.GroupMemberFk)
+        //                .Include(e => e.PostGroupFk)
+        //                .Include(e => e.GroupMemberFk.UserFk)
+        //                .Include(e => e.AppBinaryObjectFk)
+        //                .Include(e => e.AppBinaryObjectFk2)
+        //                .Include(e => e.AppBinaryObjectFk3)
+        //                .Include(e => e.AppBinaryObjectFk4)
+        //                .Include(e => e.AppBinaryObjectFk5)
+        //                .Include(e => e.AppBinaryObjectFk6)
+        //                .Include(e => e.AppBinaryObjectFk7)
+        //                .Include(e => e.AppBinaryObjectFk8)
+        //                .Include(e => e.AppBinaryObjectFk9)
+        //                .Include(e => e.AppBinaryObjectFk10)
+        //                .Where(x => x.PostGroupFk.OrganizationId == input.OrganizationId)
+        //                .Where(x => x.IsPublished)
+        //                .WhereIf(input.PostGroupId > 0, p => p.PostGroupId == input.PostGroupId)
+        //                .WhereIf(input.PostSubGroupId > 0, p => p.PostSubGroupId == input.PostSubGroupId)
+        //                            join pg in _lookup_postGroupRepository.GetAll().Where(x => !x.IsDeleted) on p.PostGroupId equals
+        //                                pg.Id into joiner1
+        //                            from pg in joiner1.DefaultIfEmpty()
+        //                            join og in organizationRepository.GetAll().Where(x => !x.IsDeleted) on pg.OrganizationId
+        //                                equals og.Id into joiner2
+        //                            from og2 in joiner2.DefaultIfEmpty()
+        //                                //join gm in _lookup_groupMemberRepository.GetAll() on og2.Id equals gm.OrganizationId into
+        //                                //joiner3
+        //                                //from gm2 in joiner3.DefaultIfEmpty()
+        //                                //where gm2.UserId == AbpSession.UserId
+        //                            select new
+        //                            {
+        //                                p.Id,
+        //                                p.GroupMemberId,
+        //                                p.IsSpecial,
+        //                                p.IsPublished,
+        //                                p.PostCaption,
+        //                                p.CreationTime,
+        //                                p.PostFile,
+        //                                p.PostFile2,
+        //                                p.PostFile3,
+        //                                p.PostFile4,
+        //                                p.PostFile5,
+        //                                p.PostFile6,
+        //                                p.PostFile7,
+        //                                p.PostFile8,
+        //                                p.PostFile9,
+        //                                p.PostFile10,
+        //                                p.PostTitle,
+        //                                p.PostRefLink,
+        //                                p.PostGroupId,
+        //                                p.GroupMemberFk,
+        //                                p.PostGroupFk,
+        //                                p.PostSubGroupFk,
+        //                                p.AppBinaryObjectFk,
+        //                                p.AppBinaryObjectFk2,
+        //                                p.AppBinaryObjectFk3,
+        //                                p.AppBinaryObjectFk4,
+        //                                p.AppBinaryObjectFk5,
+        //                                p.AppBinaryObjectFk6,
+        //                                p.AppBinaryObjectFk7,
+        //                                p.AppBinaryObjectFk8,
+        //                                p.AppBinaryObjectFk9,
+        //                                p.AppBinaryObjectFk10,
+
+        //                            };
+        //        var count = filteredPosts.Count();
+        //        var pagedAndFilteredPosts = filteredPosts
+        //            .OrderBy(input.Sorting ?? "id desc")
+        //            .PageBy(input);
+
+        //        foreach (var post in pagedAndFilteredPosts)
+        //        {
+        //            var datam = new GetPostsForViewDto
+        //            {
+        //                //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
+        //                Id = post.Id,
+        //                GroupMemberId = post.GroupMemberId ?? 0,
+        //                IsSpecial = post.IsSpecial,
+        //                IsPublished = post.IsPublished,
+        //                PostCaption = post.PostCaption,
+        //                PostFile = post.PostFile,
+        //                PostFile2 = post.PostFile2,
+        //                PostFile3 = post.PostFile3,
+        //                PostFile4 = post.PostFile4,
+        //                PostFile5 = post.PostFile5,
+        //                PostFile6 = post.PostFile6,
+        //                PostFile7 = post.PostFile7,
+        //                PostFile8 = post.PostFile8,
+        //                PostFile9 = post.PostFile9,
+        //                PostFile10 = post.PostFile10,
+        //                PostTitle = post.PostTitle,
+        //                PostGroupId = post.PostGroupId,
+        //                PostRefLink = post.PostRefLink,
+        //                CreationTime = post.CreationTime,
+        //            };
+        //            try
+        //            {
+        //                if (post.GroupMemberFk != null)
+        //                {
+        //                    datam.MemberFullName = post.GroupMemberFk.UserFk.FullName;
+        //                    datam.MemberPosition = post.GroupMemberFk.MemberPosition;
+        //                    datam.MemberUserName = post.GroupMemberFk.UserFk.UserName;
+        //                }
+
+        //                if (post.PostGroupFk != null)
+        //                {
+        //                    datam.GroupFile = post.PostGroupFk.GroupFile;
+        //                    datam.GroupDescription = post.PostGroupFk.PostGroupDescription;
+
+        //                }
+
+        //                if (post.PostSubGroupFk != null)
+        //                {
+        //                    datam.PostSubGroupDescription = post.PostSubGroupFk.PostSubGroupDescription;
+        //                }
+
+        //                if (post.AppBinaryObjectFk != null)
+        //                {
+        //                    datam.Attachment1 = post.AppBinaryObjectFk.Description;
+        //                }
+
+        //                if (post.AppBinaryObjectFk2 != null)
+        //                {
+        //                    datam.Attachment2 = post.AppBinaryObjectFk2.Description;
+        //                }
+
+        //                if (post.AppBinaryObjectFk3 != null)
+        //                {
+        //                    datam.Attachment3 = post.AppBinaryObjectFk3.Description;
+        //                }
+
+        //                if (post.AppBinaryObjectFk4 != null)
+        //                {
+        //                    datam.Attachment4 = post.AppBinaryObjectFk4.Description;
+        //                }
+
+        //                if (post.AppBinaryObjectFk5 != null)
+        //                {
+        //                    datam.Attachment5 = post.AppBinaryObjectFk5.Description;
+        //                }
+
+        //                if (post.AppBinaryObjectFk6 != null)
+        //                {
+        //                    datam.Attachment6 = post.AppBinaryObjectFk6.Description;
+        //                }
+
+        //                if (post.AppBinaryObjectFk7 != null)
+        //                {
+        //                    datam.Attachment7 = post.AppBinaryObjectFk7.Description;
+        //                }
+
+        //                if (post.AppBinaryObjectFk8 != null)
+        //                {
+        //                    datam.Attachment8 = post.AppBinaryObjectFk8.Description;
+        //                }
+
+        //                if (post.AppBinaryObjectFk9 != null)
+        //                {
+        //                    datam.Attachment9 = post.AppBinaryObjectFk9.Description;
+        //                }
+
+        //                if (post.AppBinaryObjectFk10 != null)
+        //                {
+        //                    datam.Attachment10 = post.AppBinaryObjectFk10.Description;
+        //                }
+
+        //            }
+        //            catch (Exception)
+        //            {
+        //                //ignored
+        //            }
+
+        //            posts.Add(datam);
+
+
+        //        }
+
+        //        return Task.FromResult(new PagedResultDto<GetPostsForViewDto>(count, posts));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new UserFriendlyException(ex.Message);
+        //    }
+        //}
 
         public async Task<PagedResultDto<GetLikedUsersDto>> GetLikedUsers(GetLikedUsersInput input)
         {
@@ -1223,13 +1596,13 @@ namespace Chamran.Deed.Info
             {
 
                 var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
-                    where x.UserId == currentUser.Id
-                    select x.OrganizationId;
+                                          where x.UserId == currentUser.Id
+                                          select x.OrganizationId;
 
                 var userQuery = from x in _groupMemberRepository.GetAll()
-                    join y in _postRepository.GetAll() on x.Id equals y.GroupMemberId
-                    where y.Id == input.PostId && currentUserOrgQuery.Contains(x.OrganizationId)
-                    select x;
+                                join y in _postRepository.GetAll() on x.Id equals y.GroupMemberId
+                                where y.Id == input.PostId && currentUserOrgQuery.Contains(x.OrganizationId)
+                                select x;
                 if (!userQuery.Any())
                 {
                     throw new UserFriendlyException("پست انتخابی متعلق به هیچ یک از سازمان های شما نمی باشد");
@@ -1287,13 +1660,13 @@ namespace Chamran.Deed.Info
             {
 
                 var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
-                    where x.UserId == currentUser.Id
-                    select x.OrganizationId;
+                                          where x.UserId == currentUser.Id
+                                          select x.OrganizationId;
 
                 var userQuery = from x in _groupMemberRepository.GetAll()
-                    join y in _postRepository.GetAll() on x.Id equals y.GroupMemberId
-                    where y.Id == input.PostId && currentUserOrgQuery.Contains(x.OrganizationId)
-                    select x;
+                                join y in _postRepository.GetAll() on x.Id equals y.GroupMemberId
+                                where y.Id == input.PostId && currentUserOrgQuery.Contains(x.OrganizationId)
+                                select x;
                 if (!userQuery.Any())
                 {
                     throw new UserFriendlyException("پست انتخابی متعلق به هیچ یک از سازمان های شما نمی باشد");
@@ -1483,8 +1856,8 @@ namespace Chamran.Deed.Info
             {
 
                 var currentUserOrgQuery = from x in _groupMemberRepository.GetAll()//.Include(x => x.OrganizationFk)
-                    where x.UserId == currentUser.Id
-                    select x.OrganizationId;
+                                          where x.UserId == currentUser.Id
+                                          select x.OrganizationId;
                 if (!currentUserOrgQuery.Contains(organizationId))
                 {
                     throw new UserFriendlyException("سازمان انتخابی به این کاربر تعلق ندارد");
@@ -1577,59 +1950,87 @@ namespace Chamran.Deed.Info
 
             if (post.PostCaption != input.PostCaption)
                 changes.Add($"متن از {post.PostCaption} به {input.PostCaption} تغییر کرد.");
-            //if (post.PostCaption != input.PostCaption)
-            //    changes.Add($"سازمان از {post.AppBinaryObjectFk4} به {input.PostCaption} تغییر کرد.");
+
             if (post.PostGroupId != input.PostGroupId)
             {
                 var newPostGroup = await _lookup_postGroupRepository.FirstOrDefaultAsync(pg => pg.Id == input.PostGroupId.Value);
                 string newGroupDescription = newPostGroup?.PostGroupDescription ?? "نامشخص";
-                changes.Add($"گروه خبری از {post.PostGroupFk.PostGroupDescription} به {input.PostCaption} تغییر کرد.");
+                string oldGroupDescription = post.PostGroupFk?.PostGroupDescription ?? "نامشخص";
+                changes.Add($"گروه خبری از {oldGroupDescription} به {newGroupDescription} تغییر کرد.");
             }
 
             if (post.PostSubGroupId != input.PostSubGroupId)
             {
                 var newSubGroup = await _lookup_postSubGroupRepository.FirstOrDefaultAsync(sg => sg.Id == input.PostSubGroupId);
                 string newSubGroupDescription = newSubGroup?.PostSubGroupDescription ?? "نامشخص";
-                changes.Add($"زیر گروه خبری از {post.PostSubGroupFk.PostSubGroupDescription} به {input.PostCaption} تغییر کرد.");
+                string oldSubGroupDescription = post.PostSubGroupFk?.PostSubGroupDescription ?? "نامشخص";
+                changes.Add($"زیر گروه خبری از {oldSubGroupDescription} به {newSubGroupDescription} تغییر کرد.");
             }
 
-            if (post.PostFile != input.PostFile)
-                changes.Add($"فایل اول از {post.PostFile} به {input.PostFile} تغییر کرد.");
-            if (post.PostFile2 != input.PostFile2)
-                changes.Add($"فایل دوم از {post.PostFile2} به {input.PostFile2} تغییر کرد.");
-            if (post.PostFile3 != input.PostFile3)
-                changes.Add($"فایل سوم از {post.PostFile3} به {input.PostFile3} تغییر کرد.");
-            if (post.PostFile4 != input.PostFile4)
-                changes.Add($"فایل چهارم از {post.PostFile4} به {input.PostFile4} تغییر کرد.");
-            if (post.PostFile5 != input.PostFile5)
-                changes.Add($"فایل پنجم از {post.PostFile5} به {input.PostFile5} تغییر کرد.");
-            if (post.PostFile6 != input.PostFile6)
-                changes.Add($"فایل ششم از {post.PostFile6} به {input.PostFile6} تغییر کرد.");
-            if (post.PostFile7 != input.PostFile7)
-                changes.Add($"فایل هفتم از {post.PostFile7} به {input.PostFile7} تغییر کرد.");
-            if (post.PostFile8 != input.PostFile8)
-                changes.Add($"فایل هشتم از {post.PostFile8} به {input.PostFile8} تغییر کرد.");
-            if (post.PostFile9 != input.PostFile9)
-                changes.Add($"فایل نهم از {post.PostFile9} به {input.PostFile9} تغییر کرد.");
-            if (post.PostFile10 != input.PostFile10)
-                changes.Add($"فایل دهم از {post.PostFile10} به {input.PostFile10} تغییر کرد.");
             if (post.PostRefLink != input.PostRefLink)
                 changes.Add($"لینک خبر از {post.PostRefLink} به {input.PostRefLink} تغییر کرد.");
+
             if (post.PostComment != input.PostComment)
                 changes.Add($"نظر از {post.PostComment} به {input.PostComment} تغییر کرد.");
-            //if (post.IsSpecial != input.IsSpecial)
-            //    changes.Add($"ویژه بودن خبر از {post.PostCaption} به {input.PostCaption} تغییر کرد.");
+
+            if (post.IsSpecial == false && input.IsSpecial == true)
+                changes.Add("اصالت خبر تائید شد.");
             if (post.IsSpecial == true && input.IsSpecial == false)
                 changes.Add("اصالت خبر رد شد.");
-            if (post.IsSpecial == false && input.IsSpecial == true)
-                changes.Add("اصالت خبر تائيد شد.");
-            if (post.IsPublished == true && input.IsPublished == false)
-                changes.Add("خبر از حالت انتشار خارج شد.");
+
             if (post.IsPublished == false && input.IsPublished == true)
                 changes.Add("خبر منتشر شد.");
+            if (post.IsPublished == true && input.IsPublished == false)
+                changes.Add("خبر از حالت انتشار خارج شد.");
+
+            var fileChangeSummary = GetFileChangeDescription(post, input);
+            if (!string.IsNullOrWhiteSpace(fileChangeSummary))
+                changes.Add(fileChangeSummary);
 
             return string.Join("\n", changes);
         }
+
+        private string GetFileChangeDescription(Post post, CreateOrEditPostDto input)
+        {
+            var oldFiles = new List<Guid?> {
+                post.PostFile, post.PostFile2, post.PostFile3, post.PostFile4, post.PostFile5,
+                post.PostFile6, post.PostFile7, post.PostFile8, post.PostFile9, post.PostFile10
+            };
+
+            var newFiles = new List<Guid?> {
+                input.PostFile, input.PostFile2, input.PostFile3, input.PostFile4, input.PostFile5,
+                input.PostFile6, input.PostFile7, input.PostFile8, input.PostFile9, input.PostFile10
+            };
+
+            int removed = 0;
+            int added = 0;
+
+            for (int i = 0; i < oldFiles.Count; i++)
+            {
+                var oldId = oldFiles[i];
+                var newId = newFiles[i];
+
+                if (oldId.HasValue && !newId.HasValue)
+                    removed++;
+                else if (!oldId.HasValue && newId.HasValue)
+                    added++;
+                else if (oldId.HasValue && newId.HasValue && oldId != newId)
+                {
+                    removed++;
+                    added++;
+                }
+            }
+
+            var parts = new List<string>();
+            if (removed > 0)
+                parts.Add($"{removed} فایل حذف شد");
+            if (added > 0)
+                parts.Add($"{added} فایل اضافه شد");
+
+            return string.Join(" و ", parts);
+        }
+
+
 
         private async Task<string> GetCurrentUserName()
         {
@@ -1640,8 +2041,8 @@ namespace Chamran.Deed.Info
         public async Task<List<User>> GetUsersByOrganizationAsync(int organizationId)
         {
             var users = await _lookup_groupMemberRepository.GetAll()
-                .Where(gm => gm.OrganizationId == organizationId) 
-                .Select(gm => gm.UserFk) 
+                .Where(gm => gm.OrganizationId == organizationId)
+                .Select(gm => gm.UserFk)
                 .ToListAsync();
 
             return users;
