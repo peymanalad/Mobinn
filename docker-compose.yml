@@ -1,0 +1,50 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: src/Chamran.Deed.Web.Host/Dockerfile
+    image: ${DC_IMAGE_NAME}:${DC_IMAGE_TAG}
+    container_name: mobinn-backend_app_${DC_DEPLOY_ENV}
+    ports:
+      - "${DC_APP_PORT}:80"
+    networks:
+      - mobinn-backend-app-network
+    restart: always
+    environment:
+      ASPNETCORE_URLS: "http://*:80"
+      ASPNETCORE_HTTP_PORTS: ""
+    env_file:
+      - ./.env
+    depends_on:
+      - mssql
+    volumes:
+      - ./data_backend:/App/UploadFiles
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  mssql:
+    image: microsoft.repo.stinascloud.ir/mssql/server:2022-latest
+    container_name: mobinn-mssql_${DC_DEPLOY_ENV}
+    ports:
+      - "1433:1433"
+    networks:
+      - mobinn-backend-app-network
+    restart: always
+    user: root
+    volumes:
+      - ./data:/var/opt/mssql/data
+      - ./log:/var/opt/mssql/log
+      - ./secrets:/var/opt/mssql/secrets
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
+      - MSSQL_PID=developer
+      - MSSQL_TCP_PORT=1433
+
+networks:
+  mobinn-backend-app-network:
+    driver: bridge
