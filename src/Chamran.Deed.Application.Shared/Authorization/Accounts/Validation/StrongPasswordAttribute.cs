@@ -33,8 +33,7 @@ namespace Chamran.Deed.Authorization.Accounts.Validation
             string privateKeyPem = System.IO.File.Exists(privateKeyInput)
                 ? System.IO.File.ReadAllText(privateKeyInput)
                 : privateKeyInput;
-
-            return ImportPrivateKeyFromPem(privateKeyPem);
+            return ImportPrivateKeyFromPem(privateKeyInput);
         }
 
         private RSA ImportPrivateKeyFromPem(string privateKeyPem)
