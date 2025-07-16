@@ -5,6 +5,11 @@
 # Logs
 Logs/
 
+.idea
+.env
+data
+log
+
 # Generated files
 project.lock.json
 .vs/
