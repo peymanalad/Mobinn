@@ -1,29 +1,36 @@
-#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
 
-FROM microsoft.repo.stinascloud.ir/dotnet/aspnet:7.0 AS base
-WORKDIR /app
+# Clear the package cache
+RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get clean
+
+# Install necessary packages for SkiaSharp
+RUN apt-get update && \
+    apt-get install -y libgdiplus libfontconfig1 libc6-dev libgl1-mesa-glx libegl1-mesa libgles2-mesa-dev libgbm-dev mesa-utils
+
+# Add environment variable for SkiaSharp
+ENV LD_LIBRARY_PATH=/usr/local/lib
+
+# Run ldconfig to refresh the linker cache
+RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/usr-local-lib.conf && ldconfig
+
+# Install nano, sudo, and openssh-server if needed
+RUN apt-get -o Acquire::Check-Valid-Until=false update && \
+    apt-get install -y sudo nano
+
+# Install tzdata package
+RUN apt-get install -y tzdata
+
+# Set the time zone
+ENV TZ=Asia/Tehran
+
+# Copy application to container
+COPY bin/Release/net7.0/publish/ App/
+WORKDIR /App
+
+# Expose ports
 EXPOSE 80
 EXPOSE 443
 
-FROM microsoft.repo.stinascloud.ir/dotnet/sdk:7.0 AS build
-WORKDIR /src
-COPY ["src/Chamran.Deed.Web.Host/Chamran.Deed.Web.Host.csproj", "src/Chamran.Deed.Web.Host/"]
-COPY ["src/Chamran.Deed.Web.Core/Chamran.Deed.Web.Core.csproj", "src/Chamran.Deed.Web.Core/"]
-COPY ["src/Chamran.Deed.Application/Chamran.Deed.Application.csproj", "src/Chamran.Deed.Application/"]
-COPY ["src/Chamran.Deed.Application.Shared/Chamran.Deed.Application.Shared.csproj", "src/Chamran.Deed.Application.Shared/"]
-COPY ["src/Chamran.Deed.Core.Shared/Chamran.Deed.Core.Shared.csproj", "src/Chamran.Deed.Core.Shared/"]
-COPY ["src/Chamran.Deed.Core/Chamran.Deed.Core.csproj", "src/Chamran.Deed.Core/"]
-COPY ["src/Chamran.Deed.EntityFrameworkCore/Chamran.Deed.EntityFrameworkCore.csproj", "src/Chamran.Deed.EntityFrameworkCore/"]
-COPY ["src/Chamran.Deed.GraphQL/Chamran.Deed.GraphQL.csproj", "src/Chamran.Deed.GraphQL/"]
-RUN dotnet restore "src/Chamran.Deed.Web.Host/Chamran.Deed.Web.Host.csproj" -s "https://nexus.repo.stinascloud.ir/repository/nuget/index.json"
-COPY . .
-WORKDIR "/src/src/Chamran.Deed.Web.Host"
-RUN dotnet build "Chamran.Deed.Web.Host.csproj" -c Release -o /app/build
-
-FROM build AS publish
-RUN dotnet publish "Chamran.Deed.Web.Host.csproj" -c Release -o /app/publish
-
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
+# Start application
 ENTRYPOINT ["dotnet", "Chamran.Deed.Web.Host.dll"]

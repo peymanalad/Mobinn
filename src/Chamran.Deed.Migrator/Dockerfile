@@ -11,7 +11,7 @@ COPY ["src/Chamran.Deed.Core/Chamran.Deed.Core.csproj", "src/Chamran.Deed.Core/"
 COPY ["src/Chamran.Deed.Core.Shared/Chamran.Deed.Core.Shared.csproj", "src/Chamran.Deed.Core.Shared/"]
 RUN dotnet restore "src/Chamran.Deed.Migrator/Chamran.Deed.Migrator.csproj"
 COPY . .
-WORKDIR "/src/src/Chamran.Deed.Migrator"
+WORKDIR "/src/Chamran.Deed.Migrator"
 RUN dotnet build "Chamran.Deed.Migrator.csproj" -c Release -o /app/build
 
 FROM build AS publish
