@@ -56,6 +56,7 @@ using System.Security.Cryptography;
 
 namespace Chamran.Deed.Web.Controllers
 {
+    [IgnoreAntiforgeryToken]
     [Route("api/[controller]/[action]")]
     public class TokenAuthController : DeedControllerBase
 
