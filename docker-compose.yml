@@ -9,7 +9,7 @@ services:
       - "${DC_APP_PORT}:80"
     networks:
       - mobinn-backend-app-network
-#    restart: always
+    restart: always
     environment:
       ASPNETCORE_URLS: "http://*:80"
       ASPNETCORE_HTTP_PORTS: ""
@@ -18,12 +18,12 @@ services:
     depends_on:
       - mssql
     volumes:
-#      - /var/dockers/deed/BinaryObjects:/App/BinaryObjects
-#      - /var/dockers/deed/private_key.pem:/var/dockers/deed/private_key.pem:ro
-#      - /var/dockers/deed/wwwroot:/App/wwwroot
-#      - /var/dockers/deed/wwwroot/thumbnails:/App/wwwroot/thumbnails
-#      - /var/dockers/deed/wwwroot/previews:/App/wwwroot/previews
-#      - /var/dockers/deed/wwwroot/Plugins:/App/wwwroot/Plugins
+      - ./BinaryObjects:/App/BinaryObjects
+      - ./private_key.pem:/var/dockers/deed/private_key.pem:ro
+      - ./wwwroot:/App/wwwroot
+      - ./wwwroot/thumbnails:/App/wwwroot/thumbnails
+      - ./wwwroot/previews:/App/wwwroot/previews
+      - ./wwwroot/Plugins:/App/wwwroot/Plugins
       - ./data_backend:/App/UploadFiles
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
