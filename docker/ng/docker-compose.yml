@@ -4,6 +4,8 @@ services:
 
     zero_host:
         image: zero/host
+        env_file:
+            - ${ENV_FILE:-.env}
         environment:
             - ASPNETCORE_ENVIRONMENT=Staging
         ports:
@@ -13,6 +15,8 @@ services:
 
     zero_ng:
         image: zero/ng
+        env_file:
+            - ${ENV_FILE:-.env}
         ports:
             - "9902:80"
         volumes:
@@ -20,6 +24,8 @@ services:
 
     zero_public:
         image: zero/public
+        env_file:
+            - ${ENV_FILE:-.env}
         environment:
             - ASPNETCORE_ENVIRONMENT=Staging
         ports:
