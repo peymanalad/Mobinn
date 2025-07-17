@@ -30,7 +30,7 @@ namespace Chamran.Deed.Web.Controllers
             }
 
             //var homePageUrl = _appConfiguration["App:HomePageUrl"];
-            var homePageUrl = Environment.GetEnvironmentVariable("App_HomePageUrl")
+            var homePageUrl = Environment.GetEnvironmentVariable("App_HomePageUrl");
 
             if (string.IsNullOrEmpty(homePageUrl))
             {
