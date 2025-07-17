@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.IO;
 using Abp.Extensions;
 using Abp.Reflection.Extensions;
 using Microsoft.Extensions.Configuration;
@@ -35,6 +37,17 @@ namespace Chamran.Deed.Configuration
                 builder = builder.AddJsonFile($"appsettings.{environmentName}.json", optional: true);
             }
 
+            LoadEnvFile(Path.Combine(path, ".env"));
+            if (!environmentName.IsNullOrWhiteSpace())
+            {
+                LoadEnvFile(Path.Combine(path, $".env.{environmentName}"));
+                var lower = environmentName.ToLowerInvariant();
+                if (lower != environmentName)
+                {
+                    LoadEnvFile(Path.Combine(path, $".env.{lower}"));
+                }
+            }
+
             builder = builder.AddEnvironmentVariables();
 
             if (addUserSecrets)
@@ -46,6 +59,33 @@ namespace Chamran.Deed.Configuration
             new AppAzureKeyVaultConfigurer().Configure(builder, builtConfig);
 
             return builder.Build();
+        }
+
+        private static void LoadEnvFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                return;
+            }
+
+            foreach (var line in File.ReadAllLines(filePath))
+            {
+                var trimmed = line.Trim();
+                if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("#"))
+                {
+                    continue;
+                }
+
+                var separatorIndex = trimmed.IndexOf('=');
+                if (separatorIndex <= 0)
+                {
+                    continue;
+                }
+
+                var key = trimmed.Substring(0, separatorIndex);
+                var value = trimmed.Substring(separatorIndex + 1);
+                Environment.SetEnvironmentVariable(key, value);
+            }
         }
     }
 }
