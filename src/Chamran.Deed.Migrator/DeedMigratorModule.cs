@@ -1,4 +1,5 @@
-﻿using Abp.AspNetZeroCore;
+﻿using System;
+using Abp.AspNetZeroCore;
 using Abp.Events.Bus;
 using Abp.Modules;
 using Abp.Reflection.Extensions;
@@ -27,9 +28,21 @@ namespace Chamran.Deed.Migrator
 
         public override void PreInitialize()
         {
-            Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
-                DeedConsts.ConnectionStringName
+            //Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
+            //    DeedConsts.ConnectionStringName
+            //    );
+            var envConn = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+            if (!string.IsNullOrWhiteSpace(envConn))
+            {
+                _appConfiguration["ConnectionStrings:Default"] = envConn;
+                Configuration.DefaultNameOrConnectionString = envConn;
+            }
+            else
+            {
+                Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
+                    DeedConsts.ConnectionStringName
                 );
+            }
             Configuration.Modules.AspNetZero().LicenseCode = _appConfiguration["AbpZeroLicenseCode"];
 
             Configuration.BackgroundJobs.IsJobExecutionEnabled = false;
