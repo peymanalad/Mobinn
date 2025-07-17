@@ -207,6 +207,15 @@ namespace Chamran.Deed.EntityFrameworkCore
                 .HasForeignKey(e => e.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            //modelBuilder.Entity<UserLocation>()
+            //    .Property(u => u.UserLong)
+            //    .HasPrecision(18, 10); 
+
+            //modelBuilder.Entity<SubscriptionPayment>()
+            //    .Property(p => p.Amount)
+            //    .HasPrecision(18, 2);
+
+
             //modelBuilder.Entity<AuditLog>(b =>
             //{
             //    b.Property(x => x.Parameters)
