@@ -66,9 +66,22 @@ namespace Chamran.Deed.Web
         public override void PreInitialize()
         {
             //Set default connection string
-            Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
-                DeedConsts.ConnectionStringName
-            );
+            //Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
+            //    DeedConsts.ConnectionStringName
+            //);
+
+            var envConn = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+            if (!string.IsNullOrWhiteSpace(envConn))
+            {
+                _appConfiguration["ConnectionStrings:Default"] = envConn;
+                Configuration.DefaultNameOrConnectionString = envConn;
+            }
+            else
+            {
+                Configuration.DefaultNameOrConnectionString = _appConfiguration.GetConnectionString(
+                    DeedConsts.ConnectionStringName
+                );
+            }
 
             //Use database for language management
             Configuration.Modules.Zero().LanguageManagement.EnableDbLocalization();
