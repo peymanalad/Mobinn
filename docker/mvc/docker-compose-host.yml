@@ -8,8 +8,9 @@ services:
     build:
       context: ../../
       dockerfile: src/MyCompanyName.AbpZeroTemplate.Web.Host/Dockerfile
+    env_file:
+      - ${ENV_FILE:-.env}
     environment:
-      - ConnectionStrings__Default=Server=mssqlDb;Database=AbpZeroTemplateDb;User=sa;Password=Super_Encrypted_Passw0rd!
       - Abp__RedisCache__ConnectionString=localhost:6379
     ports:
       - "44301:443"

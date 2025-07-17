@@ -3,6 +3,8 @@ version: '3.7'
 services:
 
   mycompanyname.abpzerotemplate.web.host:
+    env_file:
+      - ${ENV_FILE:-.env}
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:443;http://+:80

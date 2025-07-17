@@ -8,9 +8,10 @@ services:
     build:
       context: ../../
       dockerfile: src/MyCompanyName.AbpZeroTemplate.Migrator/Dockerfile
+    env_file:
+      - ${ENV_FILE:-.env}
     environment:
       - ASPNETCORE_Docker_Enabled=true
-      - ConnectionStrings__Default=Server=mssqlDb;Database=AbpZeroTemplateDb;User=sa;Password=Super_Encrypted_Passw0rd!
     networks:
       - mycompanyname.abpzerotemplate
       
