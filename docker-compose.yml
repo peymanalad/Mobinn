@@ -9,7 +9,7 @@ services:
       - "${DC_APP_PORT}:80"
     networks:
       - mobinn-backend-app-network
-#    restart: always
+    restart: always
     environment:
       ASPNETCORE_URLS: "http://*:80"
       ASPNETCORE_HTTP_PORTS: ""
