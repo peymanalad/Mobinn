@@ -78,32 +78,32 @@ build_and_push_image:
     name: $DEPLOY_ENV
     url: $ENDPOINT
 
-#deploy_to_stage:
-#  extends: .deploy_template
-#  variables:
-#    PROJECT_ENDPOINT_VARIABLES: $STAGE_ENV_FILE
-#    FOLDER_NAME: $CI_PROJECT_NAME-stage
-#    SERVER_HOST: $STAGE_SERVER_HOST
-#    DEPLOY_ENV: stage
-#    APP_PORT: $STAGE_PORT
-#    ENDPOINT: $STAGE_ENDPOINT
-#  rules:
-#    - if: $CI_COMMIT_BRANCH == "stage" || $CI_COMMIT_BRANCH == "develop"
-#      when: on_success
-#    - if: $TEST == "true"
-#      when: manual
-#
-#deploy_to_production:
-#  extends: .deploy_template
-#  variables:
-#    PROJECT_ENDPOINT_VARIABLES: $PRODUCTION_ENV_FILE
-#    FOLDER_NAME: $CI_PROJECT_NAME-production
-#    SERVER_HOST: $PRODUCTION_SERVER_HOST
-#    DEPLOY_ENV: production
-#    APP_PORT: $PRODUCTION_PORT
-#    ENDPOINT: $PRODUCTION_ENDPOINT
-#  rules:
-#    - if: $CI_COMMIT_BRANCH == "production"
-#      when: manual
-#    - if: $TEST == "true"
-#      when: manual
+deploy_to_stage:
+  extends: .deploy_template
+  variables:
+    PROJECT_ENDPOINT_VARIABLES: $STAGE_ENV_FILE
+    FOLDER_NAME: $CI_PROJECT_NAME-stage
+    SERVER_HOST: $STAGE_SERVER_HOST
+    DEPLOY_ENV: stage
+    APP_PORT: $STAGE_PORT
+    ENDPOINT: $STAGE_ENDPOINT
+  rules:
+    - if: $CI_COMMIT_BRANCH == "stage" || $CI_COMMIT_BRANCH == "develop"
+      when: on_success
+    - if: $TEST == "true"
+      when: manual
+
+deploy_to_production:
+  extends: .deploy_template
+  variables:
+    PROJECT_ENDPOINT_VARIABLES: $PRODUCTION_ENV_FILE
+    FOLDER_NAME: $CI_PROJECT_NAME-production
+    SERVER_HOST: $PRODUCTION_SERVER_HOST
+    DEPLOY_ENV: production
+    APP_PORT: $PRODUCTION_PORT
+    ENDPOINT: $PRODUCTION_ENDPOINT
+  rules:
+    - if: $CI_COMMIT_BRANCH == "production"
+      when: manual
+    - if: $TEST == "true"
+      when: manual
