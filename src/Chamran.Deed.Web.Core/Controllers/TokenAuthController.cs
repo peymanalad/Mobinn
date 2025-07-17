@@ -53,6 +53,7 @@ using Chamran.Deed.People;
 using Microsoft.EntityFrameworkCore;
 using IdentityModel.OidcClient;
 using System.Security.Cryptography;
+using Org.BouncyCastle.Crypto;
 
 namespace Chamran.Deed.Web.Controllers
 {
@@ -175,7 +176,7 @@ namespace Chamran.Deed.Web.Controllers
                 model.UserNameOrEmailAddress,
                 cacheItem
             );
-            
+
             return await _smsSender.SendAsyncResult(model.UserNameOrEmailAddress,
                 //$"رمز یکبار مصرف شما:{code}\r\nسامانه دید");
                 code);
@@ -358,18 +359,26 @@ namespace Chamran.Deed.Web.Controllers
 
 
             string privateKeyInput = Environment.GetEnvironmentVariable("PRIVATE_KEY_PATH");
+            if (string.IsNullOrWhiteSpace(privateKeyInput))
+            {
+                throw new UserFriendlyException("PRIVATE_KEY_PATH environment variable is not set or empty.");
+            }
             string privateKeyPem;
 
             if (System.IO.File.Exists(privateKeyInput))
             {
                 privateKeyPem = System.IO.File.ReadAllText(privateKeyInput);
             }
-            else
+            else if (IsPemFormat(privateKeyInput))
             {
                 privateKeyPem = privateKeyInput;
             }
+            else
+            {
+                throw new UserFriendlyException($"Private key file not found and content is not a valid PEM format: {privateKeyInput}");
+            }
             var loginResult = await GetLoginResultAsync(
-                model.UserNameOrEmailAddress, 
+                model.UserNameOrEmailAddress,
                 DecryptWithPrivateKey(model.Password, privateKeyPem),
                 GetTenancyNameOrNull()
             );
@@ -498,12 +507,34 @@ namespace Chamran.Deed.Web.Controllers
 
         static string DecryptWithPrivateKey(string encryptedText, string privateKeyPem)
         {
-            using (RSA rsa = RSA.Create())
+            if (string.IsNullOrWhiteSpace(privateKeyPem))
             {
-                rsa.ImportFromPem(privateKeyPem);
-                byte[] decryptedBytes = rsa.Decrypt(Convert.FromBase64String(encryptedText), RSAEncryptionPadding.Pkcs1);
-                return Encoding.UTF8.GetString(decryptedBytes);
+                throw new ArgumentException("Private key is empty", nameof(privateKeyPem));
             }
+
+            try
+            {
+                using (RSA rsa = RSA.Create())
+                {
+                    rsa.ImportFromPem(privateKeyPem);
+                    byte[] decryptedBytes = rsa.Decrypt(Convert.FromBase64String(encryptedText), RSAEncryptionPadding.Pkcs1);
+                    return Encoding.UTF8.GetString(decryptedBytes);
+                }
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is CryptographicException)
+            {
+                throw new UserFriendlyException("Failed to read RSA private key. Check PRIVATE_KEY_PATH configuration.", ex);
+            }
+        }
+
+        static bool IsPemFormat(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            return value.Contains("BEGIN") && value.Contains("END");
         }
 
 

@@ -1,4 +1,5 @@
-﻿using Abp.Auditing;
+﻿using System;
+using Abp.Auditing;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -28,7 +29,9 @@ namespace Chamran.Deed.Web.Controllers
                 return RedirectToAction("Index", "Ui");
             }
 
-            var homePageUrl = _appConfiguration["App:HomePageUrl"];
+            //var homePageUrl = _appConfiguration["App:HomePageUrl"];
+            var homePageUrl = Environment.GetEnvironmentVariable("App_HomePageUrl")
+
             if (string.IsNullOrEmpty(homePageUrl))
             {
                 return RedirectToAction("Index", "Ui");
