@@ -6,7 +6,6 @@
 Logs/
 
 .idea
-.env
 data
 log
 
