@@ -5,6 +5,7 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
+COPY common.props ./common.props
 COPY ["src/Chamran.Deed.Migrator/Chamran.Deed.Migrator.csproj", "src/Chamran.Deed.Migrator/"]
 COPY ["src/Chamran.Deed.EntityFrameworkCore/Chamran.Deed.EntityFrameworkCore.csproj", "src/Chamran.Deed.EntityFrameworkCore/"]
 COPY ["src/Chamran.Deed.Core/Chamran.Deed.Core.csproj", "src/Chamran.Deed.Core/"]
