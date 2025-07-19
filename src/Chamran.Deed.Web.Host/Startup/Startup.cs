@@ -349,8 +349,8 @@ namespace Chamran.Deed.Web.Startup
                         AppSettingProviders.Get(_appConfiguration, "App:SwaggerEndPoint"),
                         "Deed API V1"
                     );
-                    options.IndexStream = () => Assembly.GetExecutingAssembly()
-                        .GetManifestResourceStream("Chamran.Deed.Web.wwwroot.swagger.ui.index.html");
+                    //options.IndexStream = () => Assembly.GetExecutingAssembly()
+                    //    .GetManifestResourceStream("Chamran.Deed.Web.wwwroot.swagger.ui.index.html");
                     options.InjectBaseUrl(_appConfiguration["App:ServerRootAddress"]);
                 }); //URL: /swagger
             }
