@@ -9,7 +9,7 @@ RUN apt-get update && \
     apt-get install -y \
         libgdiplus libfontconfig1 libc6-dev libgl1-mesa-glx libegl1-mesa \
         libgles2-mesa-dev libgbm-dev mesa-utils \
-        ffmpeg sudo nano tzdata && \
+        ffmpeg imagemagick sudo vim nano tzdata && \
     rm -rf /var/lib/apt/lists/*
 
 ENV LD_LIBRARY_PATH=/usr/local/lib
