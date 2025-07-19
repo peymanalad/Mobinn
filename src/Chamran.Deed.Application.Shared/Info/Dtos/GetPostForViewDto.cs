@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Chamran.Deed.Info.Dtos
 {
@@ -21,6 +22,7 @@ namespace Chamran.Deed.Info.Dtos
         public string PublisherUserLastName { get; set; }
 
         public long? CreatorUserId { get; set; }
+        [NotMapped]
         public string CreatorUserFirstName { get; set; }
         public string CreatorUserLastName { get; set; }
         public string CreatorUserName { get; set; }
