@@ -118,7 +118,6 @@ namespace Chamran.Deed.Info
 
         public async Task<PagedResultDto<GetPostForViewDto>> GetAll(GetAllPostsInput input)
         {
-
             var currentUser = await _userRepository.GetAsync(AbpSession.UserId.Value);
             if (currentUser.UserType != AccountUserType.SuperAdmin)
             {
