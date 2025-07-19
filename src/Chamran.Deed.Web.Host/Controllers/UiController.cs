@@ -23,6 +23,7 @@ using System.Security.Claims;
 
 namespace Chamran.Deed.Web.Controllers
 {
+    [IgnoreAntiforgeryToken]
     public class UiController : DeedControllerBase
     {
         private readonly IPerRequestSessionCache _sessionCache;
