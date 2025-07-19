@@ -70,36 +70,30 @@ namespace Chamran.Deed.Web.Startup
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-
             LicenseHelper.StimulsoftRegister();
             RemoveLimits(services);
             IsWorkaroundInit(services);
-            //MVC
+
             services.AddControllersWithViews(options =>
             {
                 options.Filters.Add(new AbpAutoValidateAntiforgeryTokenAttribute());
             })
 #if DEBUG
-                .AddRazorRuntimeCompilation()
+            .AddRazorRuntimeCompilation()
 #endif
-                .AddNewtonsoftJson();
+            .AddNewtonsoftJson();
 
             services.AddSignalR();
 
-            //Configure CORS for angular2 UI
             services.AddCors(options =>
             {
                 options.AddPolicy(DefaultCorsPolicyName, builder =>
                 {
-                    //App:CorsOrigins in appsettings.json can contain more than one address with splitted by comma.
                     builder
-                        .WithOrigins(
-                            // App:CorsOrigins in appsettings.json can contain more than one address separated by comma.
-                            _appConfiguration["App:CorsOrigins"]
-                                .Split(",", StringSplitOptions.RemoveEmptyEntries)
-                                .Select(o => o.RemovePostFix("/"))
-                                .ToArray()
-                        )
+                        .WithOrigins(AppSettingProviders.Get(_appConfiguration, "App:CorsOrigins")
+                            .Split(",", StringSplitOptions.RemoveEmptyEntries)
+                            .Select(o => o.RemovePostFix("/"))
+                            .ToArray())
                         .SetIsOriginAllowedToAllowWildcardSubdomains()
                         .AllowAnyHeader()
                         .AllowAnyMethod()
@@ -107,7 +101,7 @@ namespace Chamran.Deed.Web.Startup
                 });
             });
 
-            if (bool.Parse(_appConfiguration["KestrelServer:IsEnabled"]))
+            if (bool.Parse(AppSettingProviders.Get(_appConfiguration, "KestrelServer:IsEnabled")))
             {
                 ConfigureKestrel(services);
             }
@@ -122,8 +116,7 @@ namespace Chamran.Deed.Web.Startup
 
             AuthConfigurer.Configure(services, _appConfiguration);
 
-            //Identity server
-            if (bool.Parse(_appConfiguration["IdentityServer:IsEnabled"]))
+            if (bool.Parse(AppSettingProviders.Get(_appConfiguration, "IdentityServer:IsEnabled")))
             {
                 IdentityServerRegistrar.Register(services, _appConfiguration, options =>
                     options.UserInteraction = new UserInteractionOptions()
@@ -143,23 +136,20 @@ namespace Chamran.Deed.Web.Startup
 
             if (WebConsts.SwaggerUiEnabled)
             {
-                //Swagger - Enable this line and the related lines in Configure method to enable swagger UI
                 ConfigureSwagger(services);
             }
 
-            //Recaptcha
             services.AddreCAPTCHAV3(x =>
             {
-                x.SiteKey = _appConfiguration["Recaptcha:SiteKey"];
-                x.SiteSecret = _appConfiguration["Recaptcha:SecretKey"];
+                x.SiteKey = AppSettingProviders.Get(_appConfiguration, "Recaptcha:SiteKey");
+                x.SiteSecret = AppSettingProviders.Get(_appConfiguration, "Recaptcha:SecretKey");
             });
 
             if (WebConsts.HangfireDashboardEnabled)
             {
-                //Hangfire(Enable to use Hangfire instead of default job manager)
                 services.AddHangfire(config =>
                 {
-                    config.UseSqlServerStorage(_appConfiguration.GetConnectionString("Default"));
+                    config.UseSqlServerStorage(AppSettingProviders.Get(_appConfiguration, "ConnectionStrings:Default"));
                 });
 
                 services.AddHangfireServer();
@@ -170,16 +160,13 @@ namespace Chamran.Deed.Web.Startup
                 services.AddAndConfigureGraphQL();
             }
 
-            if (bool.Parse(_appConfiguration["HealthChecks:HealthChecksEnabled"]))
+            if (bool.Parse(AppSettingProviders.Get(_appConfiguration, "HealthChecks:HealthChecksEnabled")))
             {
                 ConfigureHealthChecks(services);
             }
 
-
-            //Configure Abp and Dependency Injection
             return services.AddAbp<DeedWebHostModule>(options =>
             {
-                //Configure Log4Net logging
                 options.IocManager.IocContainer.AddFacility<LoggingFacility>(
                     f => f.UseAbpLog4Net().WithConfig(_hostingEnvironment.IsDevelopment()
                         ? "log4net.config"
@@ -358,7 +345,10 @@ namespace Chamran.Deed.Web.Startup
 
                 app.UseSwaggerUI(options =>
                 {
-                    options.SwaggerEndpoint(_appConfiguration["App:SwaggerEndPoint"], "Deed API V1");
+                    options.SwaggerEndpoint(
+                        AppSettingProviders.Get(_appConfiguration, "App:SwaggerEndPoint"),
+                        "Deed API V1"
+                    );
                     options.IndexStream = () => Assembly.GetExecutingAssembly()
                         .GetManifestResourceStream("Chamran.Deed.Web.wwwroot.swagger.ui.index.html");
                     options.InjectBaseUrl(_appConfiguration["App:ServerRootAddress"]);
