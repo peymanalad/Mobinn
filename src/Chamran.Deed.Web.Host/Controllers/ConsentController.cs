@@ -37,7 +37,7 @@ namespace Chamran.Deed.Web.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> Index(ConsentInputModel model)
         {
             var result = await ProcessConsent(model);

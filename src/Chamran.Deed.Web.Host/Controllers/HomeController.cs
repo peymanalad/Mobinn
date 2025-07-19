@@ -8,6 +8,7 @@ using Chamran.Deed.Configuration;
 
 namespace Chamran.Deed.Web.Controllers
 {
+    [IgnoreAntiforgeryToken]
     public class HomeController : DeedControllerBase
     {
         private readonly IWebHostEnvironment _webHostEnvironment;
