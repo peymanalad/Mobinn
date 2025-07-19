@@ -9,6 +9,7 @@ namespace Chamran.Deed.Web.Startup
     {
         public static void Main(string[] args)
         {
+            DotNetEnv.Env.TraversePath().Load();
             CurrentDirectoryHelpers.SetCurrentDirectory();
             CreateWebHostBuilder(args).Build().Run();
         }
