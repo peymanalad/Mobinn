@@ -1367,6 +1367,17 @@ namespace Chamran.Deed.Info
                         PreviewPath = previewPath,
                         IsPdf = hasPdf,
 
+                        PostFile = p.PostFile,
+                        PostFile2 = p.PostFile2,
+                        PostFile3 = p.PostFile3,
+                        PostFile4 = p.PostFile4,
+                        PostFile5 = p.PostFile5,
+                        PostFile6 = p.PostFile6,
+                        PostFile7 = p.PostFile7,
+                        PostFile8 = p.PostFile8,
+                        PostFile9 = p.PostFile9,
+                        PostFile10 = p.PostFile10
+
                         //MemberFullName = p.MemberFullName,
                         //MemberUserName = p.MemberUserName,
                         //MemberPosition = p.MemberPosition,
