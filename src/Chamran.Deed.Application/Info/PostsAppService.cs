@@ -1357,10 +1357,10 @@ namespace Chamran.Deed.Info
                         GroupMemberId = p.GroupMemberId ?? 0,
                         IsSpecial = p.IsSpecial,
                         IsPublished = p.IsPublished,
-                        //PostCaption = p.PostCaption,
-                        //PostTitle = p.PostTitle,
+                        PostCaption = p.PostCaption,
+                        PostTitle = p.PostTitle,
                         PostGroupId = p.PostGroupId,
-                        //PostRefLink = p.PostRefLink,
+                        PostRefLink = p.PostRefLink,
                         CreationTime = p.CreationTime,
 
                         ThumbnailPath = thumbnailPath,
@@ -1376,15 +1376,15 @@ namespace Chamran.Deed.Info
                         PostFile7 = p.PostFile7,
                         PostFile8 = p.PostFile8,
                         PostFile9 = p.PostFile9,
-                        PostFile10 = p.PostFile10
+                        PostFile10 = p.PostFile10,
 
-                        //MemberFullName = p.MemberFullName,
-                        //MemberUserName = p.MemberUserName,
-                        //MemberPosition = p.MemberPosition,
+                        MemberFullName = p.MemberFullName,
+                        MemberUserName = p.MemberUserName,
+                        MemberPosition = p.MemberPosition,
 
-                        //GroupFile = p.GroupFile,
-                        //GroupDescription = p.GroupDescription,
-                        //PostSubGroupDescription = p.PostSubGroupDescription
+                        GroupFile = p.GroupFile,
+                        GroupDescription = p.GroupDescription,
+                        PostSubGroupDescription = p.PostSubGroupDescription
                     });
                 }
 
