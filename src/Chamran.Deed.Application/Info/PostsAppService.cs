@@ -652,8 +652,8 @@ namespace Chamran.Deed.Info
                 {
                     case PostStatus.Pending:
                         {
-                            var monitorUsers = _userRepository.GetAll()
-                                .Where(x => x.UserType == AccountUserType.Monitor
+                            var publisherUsers = _userRepository.GetAll()
+                                .Where(x => x.UserType == AccountUserType.Distributer
                                             && x.PhoneNumber.StartsWith("09")
                                             && x.PhoneNumber.Length == 11);
 
@@ -662,11 +662,11 @@ namespace Chamran.Deed.Info
                                 .Select(gm => gm.UserId)
                                 .ToList();
 
-                            foreach (var monitorUser in monitorUsers)
+                            foreach (var publisherUser in publisherUsers)
                             {
-                                if (organizationMemberIds.Contains(monitorUser.Id))
+                                if (organizationMemberIds.Contains(publisherUser.Id))
                                 {
-                                    await _smsSender.SendAsync(monitorUser.PhoneNumber, "پست جدیدی در انتظار بررسی است");
+                                    await _smsSender.SendAsync(publisherUser.PhoneNumber, "پست جدیدی در انتظار بررسی است.");
                                 }
                             }
 
