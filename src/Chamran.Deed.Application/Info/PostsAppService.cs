@@ -493,9 +493,20 @@ namespace Chamran.Deed.Info
             if (grpMemberId == 0)
                 throw new UserFriendlyException("کاربر حاضر به هیچ سازمانی تعلق ندارد");
 
+            var currentUser = await GetCurrentUserAsync();
+            if (currentUser.UserType == AccountUserType.Normal)
+                throw new UserFriendlyException("شما اجازه ایجاد خبر را ندارید.");
+
             var post = ObjectMapper.Map<Post>(input);
-            post.CreatorUserId = (await GetCurrentUserAsync()).Id;
+            //post.CreatorUserId = (await GetCurrentUserAsync()).Id;
+            post.CreatorUserId = currentUser.Id;
             post.GroupMemberId = grpMemberId;
+
+            if (currentUser.UserType == AccountUserType.Creator)
+            {
+                post.IsPublished = false;
+                post.CurrentPostStatus = PostStatus.Pending;
+            }
 
             await _postRepository.InsertAsync(post);
             await _unitOfWorkManager.Current.SaveChangesAsync();
@@ -776,7 +787,12 @@ namespace Chamran.Deed.Info
             bool isPublishingNow = !post.IsPublished && input.IsPublished;
             if (isPublishingNow)
             {
-                input.PublisherUserId = AbpSession.UserId ?? throw new UserFriendlyException("کاربر وارد نشده است.");
+                //input.PublisherUserId = AbpSession.UserId ?? throw new UserFriendlyException("کاربر وارد نشده است.");
+                var currentUser = await GetCurrentUserAsync();
+                if (currentUser.UserType is not (AccountUserType.Distributer or AccountUserType.Admin or AccountUserType.SuperAdmin))
+                    throw new UserFriendlyException("شما اجازه انتشار خبر را ندارید.");
+
+                input.PublisherUserId = currentUser.Id;
                 input.CreatorUserId = post.CreatorUserId;
             }
             //if (input.DatePublished == null)

@@ -661,7 +661,8 @@ namespace Chamran.Deed.Authorization.Users
                                               where x.UserId == currentUser.Id
                                               select x.OrganizationId;
                     var userQuery = from x in _groupMemberRepository.GetAll()
-                                    where x.Id == input.Id.Value && currentUserOrgQuery.Contains(x.OrganizationId)
+                                        //where x.Id == input.Id.Value && currentUserOrgQuery.Contains(x.OrganizationId)
+                                        where x.UserId == input.Id.Value && currentUserOrgQuery.Contains(x.OrganizationId)
                                     select x;
                     if (!userQuery.Any())
                     {
