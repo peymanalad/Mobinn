@@ -32,6 +32,7 @@ namespace Chamran.Deed.Info
         public virtual Guid? PostFile8 { get; set; } //File, (BinaryObjectId)
         public virtual Guid? PostFile9 { get; set; } //File, (BinaryObjectId)
         public virtual Guid? PostFile10 { get; set; } //File, (BinaryObjectId)
+        public virtual Guid? PdfFile { get; set; } //File, (BinaryObjectId)
 
         public virtual string PostCaption { get; set; }
 
@@ -91,6 +92,10 @@ namespace Chamran.Deed.Info
 
         [ForeignKey("PostFile10")]
         public BinaryObject AppBinaryObjectFk10 { get; set; }
+
+
+        [ForeignKey("PdfFile")]
+        public BinaryObject PdfBinaryObjectFk { get; set; }
 
         public virtual string PostRefLink { get; set; }
 

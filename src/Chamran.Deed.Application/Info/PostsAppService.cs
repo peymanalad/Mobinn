@@ -320,7 +320,7 @@ namespace Chamran.Deed.Info
             output.PostFile8FileName = await GetBinaryFileName(post.PostFile8);
             output.PostFile9FileName = await GetBinaryFileName(post.PostFile9);
             output.PostFile10FileName = await GetBinaryFileName(post.PostFile10);
-
+            output.PdfFileFileName = await GetBinaryFileName(post.PdfFile);
             return output;
         }
 
@@ -485,6 +485,19 @@ namespace Chamran.Deed.Info
         {
             using var unitOfWork = _unitOfWorkManager.Begin();
 
+            var allTokensForCheck = new[] {
+                input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
+                input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
+                input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
+            };
+
+            var pdfCount = allTokensForCheck.Count(t => GetFileExtensionFromToken(t) == ".pdf");
+            if (pdfCount > 1)
+                throw new UserFriendlyException("حداکثر یک فایل PDF مجاز است");
+
+            if (GetFileExtensionFromToken(input.PostFileToken) == ".pdf")
+                throw new UserFriendlyException("فایل اصلی نمی‌تواند PDF باشد");
+
             var grpMemberId = await _lookup_groupMemberRepository.GetAll()
                 .Where(x => x.UserId == AbpSession.UserId)
                 .Select(x => x.Id)
@@ -533,6 +546,13 @@ namespace Chamran.Deed.Info
                 await File.WriteAllBytesAsync(fullVideoPath, mainFile.Bytes);
 
                 post.PostVideoPreview = await GenerateVideoPreviewAsync(fullVideoPath, webRoot, post.Id);
+            }
+
+            if (!string.IsNullOrEmpty(input.PdfFileToken))
+            {
+                var pdfFile = await SaveAndGetBinaryObject(input.PdfFileToken, post.Id);
+                if (pdfFile != null)
+                    post.PdfFile = pdfFile.Id;
             }
 
             var allTokens = new[] {
@@ -772,6 +792,20 @@ namespace Chamran.Deed.Info
                 throw new Exception("کاربر سازمان نمی تواند خالی باشد");
             }
             var post = await _postRepository.FirstOrDefaultAsync((int)input.Id);
+
+            var allTokensForCheck = new[] {
+                input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
+                input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
+                input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
+            };
+
+            var pdfCount = allTokensForCheck.Count(t => GetFileExtensionFromToken(t) == ".pdf");
+            if (pdfCount > 1)
+                throw new UserFriendlyException("حداکثر یک فایل PDF مجاز است");
+
+            if (GetFileExtensionFromToken(input.PostFileToken) == ".pdf")
+                throw new UserFriendlyException("فایل اصلی نمی‌تواند PDF باشد");
+
             bool shouldSendSmsNotification = post.CurrentPostStatus != input.CurrentPostStatus;
             //if (input.PublisherUserId == null)
             //{
@@ -925,6 +959,17 @@ namespace Chamran.Deed.Info
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken10))
                     post.PostFile10 = await GetBinaryObjectFromCache(input.PostFileToken10, post.Id);
+
+            }
+            catch (UserFriendlyException ex)
+            {
+                //ignore
+            }
+
+            try
+            {
+                if (!string.IsNullOrEmpty(input.PdfFileToken))
+                    post.PdfFile = await GetBinaryObjectFromCache(input.PdfFileToken, post.Id);
 
             }
             catch (UserFriendlyException ex)
@@ -1316,6 +1361,7 @@ namespace Chamran.Deed.Info
                         p.PostGroupId,
                         p.PostRefLink,
                         p.CreationTime,
+                        p.PdfFile,
 
                         p.PostFile,
                         p.PostFile2,
@@ -1358,10 +1404,14 @@ namespace Chamran.Deed.Info
 
                     bool hasPdf = allExtensions.Any(e => e != null && e.ToLowerInvariant() == ".pdf");
 
-                    string mainExt = allExtensions.FirstOrDefault(e => e != null)?.ToLowerInvariant();
+                    //string mainExt = allExtensions.FirstOrDefault(e => e != null)?.ToLowerInvariant();
+
+                    var nonPdfExts = allExtensions.Where(e => e != null && e.ToLowerInvariant() != ".pdf").ToList();
+                    string mainExt = nonPdfExts.FirstOrDefault();
 
                     bool isImage = mainExt is ".jpg" or ".jpeg" or ".png";
                     bool isVideo = mainExt is ".mp4" or ".mov";
+                    bool isSlide = nonPdfExts.Count > 1;
 
                     string thumbnailPath = isImage ? $"/thumbnails/{p.Id}.jpg" : null;
                     string previewPath = isVideo ? $"/previews/{p.Id}.gif" : null;
@@ -1382,6 +1432,8 @@ namespace Chamran.Deed.Info
                         ThumbnailPath = thumbnailPath,
                         PreviewPath = previewPath,
                         IsPdf = hasPdf,
+                        IsSlide = isSlide,
+                        IsVideo = isVideo,
 
                         PostFile = p.PostFile,
                         PostFile2 = p.PostFile2,
@@ -1393,6 +1445,7 @@ namespace Chamran.Deed.Info
                         PostFile8 = p.PostFile8,
                         PostFile9 = p.PostFile9,
                         PostFile10 = p.PostFile10,
+                        PdfFile = p.PdfFile,
 
                         MemberFullName = p.MemberFullName,
                         MemberUserName = p.MemberUserName,
@@ -1421,6 +1474,16 @@ namespace Chamran.Deed.Info
                 return null;
 
             return Path.GetExtension(file.Description)?.ToLowerInvariant();
+        }
+
+        private string GetFileExtensionFromToken(string token)
+        {
+            if (string.IsNullOrEmpty(token)) return null;
+
+            var info = _tempFileCacheManager.GetFileInfo(token);
+            if (info == null || string.IsNullOrWhiteSpace(info.FileName)) return null;
+
+            return Path.GetExtension(info.FileName)?.ToLowerInvariant();
         }
 
 
