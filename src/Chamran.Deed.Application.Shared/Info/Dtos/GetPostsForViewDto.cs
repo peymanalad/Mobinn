@@ -15,11 +15,13 @@ namespace Chamran.Deed.Info.Dtos
         public Guid? PostFile8 { get; set; }
         public Guid? PostFile9 { get; set; }
         public Guid? PostFile10 { get; set; }
-
+        public Guid? PdfFile { get; set; }
         public string ThumbnailPath { get; set; }
         public string PreviewPath { get; set; }
         //public string VideoPath { get; set; }
         public bool IsPdf { get; set; }
+        public bool IsSlide { get; set; }
+        public bool IsVideo { get; set; }
 
         public string PostCaption { get; set; }
         public int GroupMemberId { get; set; }
