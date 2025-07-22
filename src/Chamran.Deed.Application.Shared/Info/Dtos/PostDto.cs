@@ -8,9 +8,9 @@ namespace Chamran.Deed.Info.Dtos
     {
 
         public Guid? PostFile { get; set; }
-
+        public Guid? PdfFile { get; set; }
         public string PostFileFileName { get; set; }
-
+        public string PdfFileFileName { get; set; }
         public string PostCaption { get; set; }
 
         public bool IsSpecial { get; set; }

@@ -62,6 +62,9 @@ namespace Chamran.Deed.Info.Dtos
 
         public string PostFileToken10 { get; set; }
 
+        public Guid? PdfFile { get; set; }
+        public string PdfFileToken { get; set; }
+
         public string PostRefLink { get; set; }
 
         public long? PublisherUserId { get; set; }
