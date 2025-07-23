@@ -1,0 +1,541 @@
+[33mcommit 4f9b30ea059b39ce776462b19d9786b463cb2106[m[33m ([m[1;31mGithub/develop[m[33m)[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Jul 20 16:59:21 2025 +0330
+
+    Convert Time to Persian
+
+[33mcommit 24a64ea19deabb8cba35f50a9ddf2af4c34e1ebe[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Jul 20 13:06:50 2025 +0330
+
+    Add Fields to GetPostsForViewDto
+
+[33mcommit 69356f4812a4019fb1eb66e1b2480d389a70cfff[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Jul 20 11:08:59 2025 +0330
+
+    Add PostFile to GetPostsByGroupIdForView
+
+[33mcommit beb41fc8c4ad6ddf0483d48ee281603ba4cf0338[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sat Jul 19 18:12:16 2025 +0330
+
+    Change index.html and abp.js
+
+[33mcommit 63dc56cea75db0cddff580cabbe46f8542a2209d[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sat Jul 19 18:01:59 2025 +0330
+
+    Change Cors
+
+[33mcommit b709d414f0b98413707f60235686cc775bd2fa20[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sat Jul 19 17:54:39 2025 +0330
+
+    Change Posts GetAll
+
+[33mcommit 37384ac58055b1d82621c57be042655f0fa1a401[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sat Jul 19 16:47:37 2025 +0330
+
+    IgnoreAntiforgeryToken
+
+[33mcommit 1396d8a8d3fb02a77de907df997d37fc6457229c[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sat Jul 19 16:35:44 2025 +0330
+
+    Change AppSettingProviders
+
+[33mcommit 3c77fd07f7733a436e9dcad6bbd2944bab3ba08f[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sat Jul 19 16:27:54 2025 +0330
+
+    Create .env.sample
+
+[33mcommit de15c9cbeff728c6904f947f908310be799b0828[m
+Author: AmirDaryabak <amir.daryabak@gmail.com>
+Date:   Sat Jul 19 14:14:59 2025 +0330
+
+    [FEATURE] WIP update cicd pipeline
+
+[33mcommit b9037fa4b98eb995584e4364dc72e671916e7b24[m
+Author: AmirDaryabak <amir.daryabak@gmail.com>
+Date:   Sat Jul 19 12:08:18 2025 +0330
+
+    [FEATURE] WIP update cicd pipeline
+
+[33mcommit 484b565d6102297d95aca875380a131845bfb463[m
+Author: AmirDaryabak <amir.daryabak@gmail.com>
+Date:   Sat Jul 19 10:26:58 2025 +0330
+
+    [FEATURE] WIP update cicd pipeline
+
+[33mcommit db79930e96e9a1aea88ba38593879b18f862fa18[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jul 17 15:21:11 2025 +0330
+
+    Change HomeController
+
+[33mcommit 7b9a8140cc30a1e58f14b86b32dfc04e6c3acc1b[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jul 17 15:14:42 2025 +0330
+
+    Read HomeURL From .env
+
+[33mcommit 4b3ca41c377c9569e764f579ae841c6c4912d4a3[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jul 17 15:00:55 2025 +0330
+
+    Change CORS Origin
+
+[33mcommit a82bfd4f4d0fc0832fe024e66ff2ae37b7e78e7d[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jul 17 14:36:30 2025 +0330
+
+    IgnoreAntiforgeryToken
+
+[33mcommit 0b8479241a89e878f2f0b88444aa21affbee3817[m
+Merge: 4eb4497 797b501
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jul 17 14:24:35 2025 +0330
+
+    Merge remote-tracking branch 'GitLab/develop' into develop
+    
+    # Conflicts:
+    #       .env
+
+[33mcommit 4eb449791c691304a9b77e373e4442cf6dfabd9d[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jul 17 14:22:57 2025 +0330
+
+    Change HomeUrl
+
+[33mcommit 797b5015982b8a97fcaa3929758fa1a6ea14d4c7[m
+Author: AmirDaryabak <amir.daryabak@gmail.com>
+Date:   Thu Jul 17 14:03:07 2025 +0330
+
+    [FEATURE] WIP update cicd pipeline
+
+[33mcommit 9c203f4a4cbab57861664fcf18eba11ff2aaeb66[m
+Author: AmirDaryabak <amir.daryabak@gmail.com>
+Date:   Thu Jul 17 12:40:08 2025 +0330
+
+    [FEATURE] WIP update cicd pipeline
+
+[33mcommit 99330bf1af783228095ea185e4f48061cbc33bcc[m
+Author: AmirDaryabak <amir.daryabak@gmail.com>
+Date:   Thu Jul 17 12:33:18 2025 +0330
+
+    [FEATURE] WIP update cicd pipeline
+
+[33mcommit af0a5448cb0cc2017337695bddad2e215cadb698[m
+Merge: 62e9415 70af314
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jul 17 12:32:51 2025 +0330
+
+    Merge remote-tracking branch 'GitLab/develop' into develop
+
+[33mcommit 62e9415d358cc21253bd2d218f87e0aad77da3e6[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jul 17 12:31:43 2025 +0330
+
+    Change PreInitialize()
+
+[33mcommit 70af3145f1be7c272a76bd8dfbf6d659cf706d79[m
+Author: AmirDaryabak <amir.daryabak@gmail.com>
+Date:   Thu Jul 17 12:23:29 2025 +0330
+
+    [FEATURE] WIP update cicd pipeline
+
+[33mcommit 99c2d85b42920c79eb9e94cb0591c653d98bcbf4[m
+Author: AmirDaryabak <amir.daryabak@gmail.com>
+Date:   Thu Jul 17 12:21:32 2025 +0330
+
+    [FEATURE] WIP update cicd pipeline
+
+[33mcommit 8ac91a6ecf756f695b8d9dca2c04675e0a6a557b[m
+Merge: 275c45b 0951c88
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jul 17 11:53:33 2025 +0330
+
+    Merge remote-tracking branch 'GitLab/develop' into develop
+
+[33mcommit 275c45b0b446811d9cf63430c12fd48b31c63d9b[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jul 17 11:46:30 2025 +0330
+
+    Change Migrator Dockerfile
+
+[33mcommit 0951c888242fe0de3266e5b1ede377ab3331eb91[m
+Merge: c703e6d 4e2cf15
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jul 17 10:58:46 2025 +0330
+
+    Merge remote-tracking branch 'GitLab/develop' into develop
+    
+    # Conflicts:
+    #       .gitignore
+    #       docker-compose.yml
+
+[33mcommit c703e6dc9c581d7abb0a217f9413cb7e8ec22d00[m[33m ([m[1;31mGitLab/master[m[33m)[m
+Merge: 06ee29e 76cc2eb
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jul 17 10:49:05 2025 +0330
+
+    Raed From DB_CONNECTION_STRING in PreInitialize
+
+[33mcommit 06ee29e01ec1984a5e76cc0877c6ea37f2472a13[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jul 17 10:11:09 2025 +0330
+
+    Change .env Files
+
+[33mcommit f84d70577ebea6a665e6cb68c04260ecfd2c0bca[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jul 17 08:31:53 2025 +0330
+
+    Add .env
+
+[33mcommit 94abd9a4b5058b33b3c7a61eab2c055bfe4f9cbd[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Wed Jul 16 22:42:55 2025 +0330
+
+    change DockerFile
+
+[33mcommit 1e964080fa2a1ae3d8250bd89c4e21ef9ee66558[m
+Merge: d880b0c 4e2cf15
+Author: peyman <peyman.alad@gmail.com>
+Date:   Wed Jul 16 18:03:03 2025 +0330
+
+    Merge remote-tracking branch 'GitLab/develop'
+
+[33mcommit d880b0cb2d99a91711e475630b41f224db3ea645[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Wed Jul 16 18:01:39 2025 +0330
+
+    Change appsetting.json for Cors
+
+[33mcommit 9cc63423728bab7b23c1166adfe7b29017d9dae2[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Wed Jul 16 18:00:22 2025 +0330
+
+    ویرایش فایل gitignore
+
+[33mcommit 4e2cf158eceacec23625d5b2731fcaa9ad5ab757[m
+Author: AmirDaryabak <amir.daryabak@gmail.com>
+Date:   Wed Jul 16 17:56:21 2025 +0330
+
+    [FEATURE] WIP update cicd pipeline
+
+[33mcommit 76cc2ebea3cefff89939abf5dde5a50e8633fd06[m[33m ([m[1;31mGogs/master[m[33m)[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Tue Jul 15 13:32:08 2025 +0330
+
+    ChangeEnvironment
+
+[33mcommit 035ef851e2e06136daf86f37a890ab39bc36eca6[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Tue Jul 15 13:31:08 2025 +0330
+
+    Change environment
+
+[33mcommit 030872b94af8ff97c5eaf7eafd69805ac46d13bb[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Tue Jun 24 10:49:54 2025 +0330
+
+    Change Sms Panel To KaveNegar
+
+[33mcommit ec48e45dc5ee05724db4812f403d38d1359b5996[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Mon Jun 23 12:56:59 2025 +0330
+
+    Change Sms Service
+
+[33mcommit 799b8389a116a278de5e98654f357e5302ac8b9c[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Tue May 20 22:16:26 2025 +0330
+
+    TS error of EF
+
+[33mcommit c83d0574e6609c735c8d3df0c3c6d23edc0df456[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Sat May 10 07:48:20 2025 +0330
+
+    merge
+
+[33mcommit f39be04dfd7f42aabd15629174fb85a427971c43[m
+Merge: 30df08f 0fd55d7
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Sat May 10 07:39:05 2025 +0330
+
+    Merge branch 'master' of http://193.105.234.135:10080/YasnaSystem/iDeedDotnet
+
+[33mcommit 30df08f8afd0d0331e8ccf25b3c3d96600572e2a[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Sat May 10 07:38:42 2025 +0330
+
+    IDOR
+    Change Rule Type Problem
+
+[33mcommit 0fd55d774e5e7414861ff429a4c1c16672f29cee[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Thu May 8 21:47:50 2025 +0330
+
+    حذف اضافات
+
+[33mcommit 22ac652d7245ac6299aea7c42236bccfb4f441d7[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Thu May 8 18:09:55 2025 +0330
+
+    رفع مشکل تغییر سطوح دسترسی توسط کاربر غیر ادمین
+
+[33mcommit ae5d21c980b5f91ece60f77dabe19bee65e5b082[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Tue Apr 15 15:48:57 2025 +0330
+
+    رفع مشکل نهایی lock شدن
+
+[33mcommit 9d4fe131625ed22577c2ff04450c41fe53ff6893[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Tue Apr 15 15:11:05 2025 +0330
+
+    تغييرات براي lock نشدن يوزر و عوض نشدن رمز در لاگين بعدي
+
+[33mcommit bcb4d00a01a528d562fe0a19592d0fe1ac897d8c[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Tue Apr 15 10:34:23 2025 +0330
+
+    اضافه کردن CreatorUserId به Postdto
+
+[33mcommit 15ef301e2d243a0c21fa3686240a0aba69abe81f[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Mon Apr 14 14:34:22 2025 +0330
+
+    add CreatorName and publisherName
+
+[33mcommit d64fc25217096de8de91fe1d83f88fbfb146e36e[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Apr 13 20:10:45 2025 +0330
+
+    Hide databaseConnection
+
+[33mcommit b16bb177cb19424fa8d0a91e790293c32f511112[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Apr 13 20:09:26 2025 +0330
+
+    اضافه كردن فيلد Creator به Post
+
+[33mcommit b302ff79b83402534dcd0dc247f0da427e5d1219[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Apr 13 15:45:15 2025 +0330
+
+    اصلاح ايرادات ايجادكننده خبر
+
+[33mcommit dbf66e5ce39727e3a7669a96b6703ae0b71c0d6d[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Thu Mar 13 05:41:01 2025 +0330
+
+    سطوح دسترسی خود ABP امن شد
+
+[33mcommit bb464a319992456d291f194a335cb0c54a2e78a1[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Sun Mar 2 21:09:05 2025 +0330
+
+    باگ لیست کاربران برطرف شد
+
+[33mcommit c9d967ac0ddf35aff6cca12fc70cc06a0eef22a6[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Sun Mar 2 17:32:57 2025 +0330
+
+    اصلاحات مرحله دوم تست امنیتی
+
+[33mcommit 16736d144ea2ab41ea926db428f564608a13fa5d[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Tue Feb 11 11:43:07 2025 +0330
+
+    Comment ConnectionString and DeedSmsPanel
+
+[33mcommit 3e959b42bfb39f20a71ed71b804594b1a19bfe68[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Feb 9 12:44:31 2025 +0330
+
+    Restrict access for normal users
+    Password Decryption
+    Configure SMS environment
+    Disable Swagger and Hangfire
+    Fix the issue with CreateOrUpdateUser when password is not provided
+    Filter PostLikes
+
+[33mcommit 2084432b2eea3f9955d7d7e4741b57e77721016c[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Tue Feb 4 11:59:35 2025 +0330
+
+    Taghirate Amniati
+    mavarede 2,4,7,9,12,13,15
+
+[33mcommit 4fb916dc6efd42b2fe02acb06fc0d1611e130702[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jan 9 17:56:40 2025 +0330
+
+    Solve PostGroup GetAll and DeedChart GetAll Problems
+
+[33mcommit f67ba75924e9e4190ed81c144e33846d97355dff[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Thu Jan 9 16:16:39 2025 +0330
+
+    Change PostEditHistory EditorName to FullName
+
+[33mcommit c9e894ffa04c0ed94b1a963eb3393ddc487a200c[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Tue Dec 31 12:50:39 2024 +0330
+
+    Change Version to 23.34
+
+[33mcommit e31d58188e77f30a6f5705175a8b871c2c3d4322[m
+Merge: 975d550 52498f5
+Author: peyman <peyman.alad@gmail.com>
+Date:   Tue Dec 31 12:48:16 2024 +0330
+
+    Merge branch 'master' of http://193.105.234.135:10080/YasnaSystem/iDeedDotnet
+
+[33mcommit 975d5508a1f04570eca2ce420346cde15e823b7d[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Tue Dec 31 12:44:58 2024 +0330
+
+    Add List<OrganizationId> to GetAllPostGroupForLookupTable for Filter News in Panel
+    Add PostSubGroupLatestPic to PostSubGroup/GetAll for Loading SubCategoryPic
+
+[33mcommit 123b6e73abebc89b2550b665dbf21ea45c6e14cd[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Dec 29 13:19:16 2024 +0330
+
+    Change PostsAppService
+
+[33mcommit 52498f57406c09098c140930ad67819154ac7461[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Dec 29 13:19:16 2024 +0330
+
+    Change PostsAppService
+
+[33mcommit eaa7789f53dbfd93ad0c6fc0a738b3e3f52df692[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Dec 29 12:17:38 2024 +0330
+
+    Update Version to 23.32.4
+
+[33mcommit 4458b17edcf5bf20215dfff24ddad7b6abb0fe73[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Dec 29 12:08:08 2024 +0330
+
+    Add PostSubGroupId To GetPostsByGroupIdForView
+
+[33mcommit 4d90c05e0ec9227dc04a1725e1f2443e7b59343f[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Tue Dec 24 15:39:37 2024 +0330
+
+    Handle Missing PublisherUserId after Editing News.
+    Deleting User in Panel.
+    Adding SubGroupDescription in GetPostsByGroupIdForView
+
+[33mcommit 739859069a9f984759fb4f9e89a038510c9021cc[m
+Merge: 4c66fc2 c03f006
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Mon Dec 23 05:01:49 2024 +0330
+
+    Merge branch 'master' of http://193.105.234.135:10080/YasnaSystem/iDeedDotnet
+
+[33mcommit 4c66fc253d9a08275f0aff8cd5da9d287e35dd9f[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Mon Dec 23 05:01:27 2024 +0330
+
+    nothing changed by me
+
+[33mcommit c03f0064f59f6df5c8b294e89db2a4b2edb48f79[m
+Merge: acaaddb b2ee699
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Dec 22 17:20:52 2024 +0330
+
+    ChangeVersion to 23.32.00
+
+[33mcommit acaaddbc4e672ac3b39d3442d8fe21c7d2d7e87c[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Dec 22 17:11:10 2024 +0330
+
+    AddPostGroupDescription to GetPostsByGroupIdForView
+
+[33mcommit b2ee69950b3964e72ad7b094938f8339868f725a[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Dec 22 15:12:27 2024 +0330
+
+    ChangeVersion to 22.30.0
+
+[33mcommit fe934348df6a48669069516698299adcd424de80[m
+Author: peyman <peyman.alad@gmail.com>
+Date:   Sun Dec 22 14:57:38 2024 +0330
+
+    Add PostSubGroupDescription to Posts/GetPostsByGroupIdForView
+    Add HasSubGroups to Posts/GetPostCategoriesForView
+
+[33mcommit 113a1bb1e2b1b0dd53936891576ee5657a276970[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Mon Dec 9 20:59:19 2024 +0330
+
+    فیلتر گروه ها روی  AllowedUserPostGroup
+
+[33mcommit cae8e08eef8f4e596b646bd61acab12688fa6240[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Sun Dec 8 09:52:26 2024 +0330
+
+    گروه های مجاز برای ارسال خبر در سطح ثبت کننده و رصد
+    جلوگیری از شماره تلفن و نام کاربری تکراری
+
+[33mcommit 98063d48f4d3b229685bd184f6ce624f86e9042a[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Sun Dec 8 07:22:53 2024 +0330
+
+    اصلاحات لیست پست
+
+[33mcommit b4625e40e4f5691e26752f4c1ce1e00c67a1cfd8[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Fri Dec 6 09:09:51 2024 +0330
+
+    اصلاح سرور پیامک و راه اندازی مجدد
+
+[33mcommit f482882531f4b6158052e48ee47c7dcc616fb7be[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Fri Dec 6 03:10:37 2024 +0330
+
+    CurrentPostStatus
+
+[33mcommit d95b191afb3d54937508156e7fb323da7442f837[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Thu Dec 5 21:02:53 2024 +0330
+
+    رفع مشکلات
+
+[33mcommit d328a25d62ee8fd0cb59b45745eb1d09461ae776[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Thu Dec 5 18:10:32 2024 +0330
+
+    کاربر خبر نمی تواند خالی باشد
+
+[33mcommit 561f07b8281351e0ae70073ad88663cc1dc070fc[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Thu Dec 5 18:02:04 2024 +0330
+
+    نوع کاربر
+    ارسال پیامک برای رصد و انتشار
+
+[33mcommit 6151ada039f50cadc42638943b4424307954480f[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Thu Dec 5 16:45:24 2024 +0330
+
+    app/Posts/GetAllPostGroupForLookupTable
+    وقتی کوئری organizationId رو بهش ندی باید واسه همه سازمان ها رو بده
+
+[33mcommit fa573bb12ade0597aa9221d276df4829005fa526[m
+Author: Houman Masnavi <info@drmasnavi.ir>
+Date:   Thu Dec 5 14:11:28 2024 +0330
+
+    اصلاحات فیلتر پست
+    مشکل Join
