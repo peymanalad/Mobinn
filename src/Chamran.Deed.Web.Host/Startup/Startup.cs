@@ -101,7 +101,7 @@ namespace Chamran.Deed.Web.Startup
                 });
             });
 
-            if (bool.Parse(AppSettingProviders.Get(_appConfiguration, "KestrelServer:IsEnabled")))
+            if (AppSettingProvider.GetBool("KestrelServer__IsEnabled", _appConfiguration))
             {
                 ConfigureKestrel(services);
             }
