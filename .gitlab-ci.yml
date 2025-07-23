@@ -7,7 +7,8 @@ workflow:
 
 variables:
   PROJECT_DEFAULT_DIRECTORY: /opt/$CI_PROJECT_NAMESPACE
-  SERVER_USER: deed
+  STAGE_SERVER_USER: deed
+  PRODUCTION_SERVER_USER: ubuntu
   SSH_PORT: 22
   STAGE_PORT: 8020
   PRODUCTION_PORT: 8021
@@ -17,7 +18,7 @@ variables:
   PRODUCTION_SERVER_HOST: 188.121.118.222
   PRODUCTION_APP_API_BASE_URL: https://mobinn.ir
   PRODUCTION_ENDPOINT: https://mobinn.ir
-  SSH_COMMAND: ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i deploy-key.pem $SERVER_USER@$SERVER_HOST
+  SSH_COMMAND: ssh -o StrictHostKeyChecking=no -p $SSH_PORT -i deploy-key.pem
   SCP_COMMAND: scp -P $SSH_PORT -o StrictHostKeyChecking=no -i deploy-key.pem
 
 stages:
@@ -30,9 +31,14 @@ build_and_push_image:
     - builder
   before_script:
     - echo "$HARBOR_PASSWORD" | docker login --password-stdin --username "$HARBOR_USER" -- "$HARBOR_REGISTRY"
+    - echo "$ARVAN_PASSWORD" | docker login --password-stdin --username "$ARVAN_USER" -- "$ARVAN_REGISTRY"
   script:
-    - docker build -t $HARBOR_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_PIPELINE_IID -f ./src/Chamran.Deed.Web.Host/Dockerfile .
+    - docker build
+      -t $HARBOR_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_PIPELINE_IID
+      -t $ARVAN_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_PIPELINE_IID
+      -f ./src/Chamran.Deed.Web.Host/Dockerfile .
     - docker push $HARBOR_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_PIPELINE_IID
+    - docker push $ARVAN_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_PIPELINE_IID
   rules:
     - if: $CI_COMMIT_BRANCH == "production" || $CI_COMMIT_BRANCH == "stage" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
@@ -46,6 +52,10 @@ build_and_push_image:
   needs:
     - job: build_and_push_image
   variables:
+    SERVER_USER: ""
+    REGISTRY: ""
+    REGISTRY_USER: ""
+    REGISTRY_PASSWORD: ""
     PROJECT_ENDPOINT_VARIABLES: ""
     FOLDER_NAME: ""
     SERVER_HOST: ""
@@ -54,22 +64,22 @@ build_and_push_image:
     ENDPOINT: ""
     IMAGE_TAG_SUFFIX: ""
   before_script:
-    - echo "$HARBOR_PASSWORD" | docker login --password-stdin --username "$HARBOR_USER" -- "$HARBOR_REGISTRY"
-    - docker pull $HARBOR_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_PIPELINE_IID
+    - echo "$REGISTRY_PASSWORD" | docker login --password-stdin --username "$REGISTRY_USER" -- "$REGISTRY"
+    - docker pull $REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_PIPELINE_IID
     - cat $PROJECT_ENDPOINT_VARIABLES >> .env
     - echo "DC_DEPLOY_ENV=$DEPLOY_ENV" >> .env
     - echo "DC_APP_PORT=$APP_PORT" >> .env
     - echo "" >> .env
     - echo "DC_IMAGE_TAG=$CI_PIPELINE_IID" >> .env
-    - echo "DC_IMAGE_NAME=$HARBOR_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME" >> .env
+    - echo "DC_IMAGE_NAME=$REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME" >> .env
     - cat .env
     - cat $SSH_PRIVATE_KEY | awk '{gsub(/\\n/,"\n")}1' > deploy-key.pem
     - chmod 400 deploy-key.pem
   script:
-    - $SSH_COMMAND "sudo mkdir -p $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME/backup_compose_file && sudo chown -R $SERVER_USER:$SERVER_USER $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME/backup_compose_file"
+    - $SSH_COMMAND $SERVER_USER@$SERVER_HOST "sudo mkdir -p $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME/backup_compose_file && sudo chown -R $SERVER_USER:$SERVER_USER $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME/backup_compose_file"
     - $SCP_COMMAND .env ./docker-compose.yml ./deployments/scripts/update.sh $SERVER_USER@$SERVER_HOST:$PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME
-    - $SSH_COMMAND "
-      echo "$HARBOR_PASSWORD" | docker login --password-stdin --username "$HARBOR_USER" -- "$HARBOR_REGISTRY" &&
+    - $SSH_COMMAND $SERVER_USER@$SERVER_HOST "
+      echo "$REGISTRY_PASSWORD" | docker login --password-stdin --username "$REGISTRY_USER" -- "$REGISTRY" &&
       cd $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME &&
 
       docker compose -f docker-compose.yml up -d "
@@ -81,6 +91,10 @@ build_and_push_image:
 deploy_to_stage:
   extends: .deploy_template
   variables:
+    SERVER_USER: $STAGE_SERVER_USER
+    REGISTRY: $HARBOR_REGISTRY
+    REGISTRY_USER: $HARBOR_USER
+    REGISTRY_PASSWORD: $HARBOR_PASSWORD
     PROJECT_ENDPOINT_VARIABLES: $STAGE_ENV_FILE
     FOLDER_NAME: $CI_PROJECT_NAME-stage
     SERVER_HOST: $STAGE_SERVER_HOST
@@ -96,6 +110,10 @@ deploy_to_stage:
 deploy_to_production:
   extends: .deploy_template
   variables:
+    SERVER_USER: $PRODUCTION_SERVER_USER
+    REGISTRY: $ARVAN_REGISTRY
+    REGISTRY_USER: $ARVAN_USER
+    REGISTRY_PASSWORD: $ARVAN_PASSWORD
     PROJECT_ENDPOINT_VARIABLES: $PRODUCTION_ENV_FILE
     FOLDER_NAME: $CI_PROJECT_NAME-production
     SERVER_HOST: $PRODUCTION_SERVER_HOST
