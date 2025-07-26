@@ -35,6 +35,7 @@ services:
   mssql:
     image: microsoft.repo.stinascloud.ir/mssql/server:2022-latest
     container_name: mobinn-mssql_${DC_DEPLOY_ENV}
+    pull_policy: if_not_present
     ports:
       - "1433:1433"
     networks:
@@ -54,3 +55,4 @@ services:
 networks:
   mobinn-backend-app-network:
     driver: bridge
+    external: true
