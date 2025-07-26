@@ -73,6 +73,10 @@ build_and_push_migrator_image:
   needs:
     - job: build_and_push_migrator_image
   variables:
+    SERVER_USER: ""
+    REGISTRY: ""
+    REGISTRY_USER: ""
+    REGISTRY_PASSWORD: ""
     PROJECT_ENDPOINT_VARIABLES: ""
     FOLDER_NAME: ""
     SERVER_HOST: ""
@@ -97,7 +101,7 @@ build_and_push_migrator_image:
     - $SSH_COMMAND $SERVER_USER@$SERVER_HOST "sudo mkdir -p $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME/backup_compose_file && sudo chown -R $SERVER_USER:$SERVER_USER $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME/backup_compose_file"
     - $SCP_COMMAND .env ./docker-compose.yml ./deployments/scripts/update.sh ./deployments/scripts/migration.sh $SERVER_USER@$SERVER_HOST:$PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME
     - $SSH_COMMAND $SERVER_USER@$SERVER_HOST "
-      echo "$HARBOR_PASSWORD" | docker login --password-stdin --username "$HARBOR_USER" -- "$HARBOR_REGISTRY" &&
+      echo "$REGISTRY_PASSWORD" | docker login --password-stdin --username "$REGISTRY_USER" -- "$REGISTRY" &&
       cd $PROJECT_DEFAULT_DIRECTORY/$FOLDER_NAME &&
 
       ./migration.sh $DEPLOY_ENV "
