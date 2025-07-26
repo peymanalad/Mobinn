@@ -58,8 +58,8 @@ build_and_push_migrator_image:
       -t $HARBOR_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME-migrator:$CI_PIPELINE_IID
       -t $ARVAN_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME-migrator:$CI_PIPELINE_IID
       -f ./src/Chamran.Deed.Migrator/Dockerfile .
-    - docker push $HARBOR_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAMEmigrator:$CI_PIPELINE_IID
-    - docker push $ARVAN_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAMEmigrator:$CI_PIPELINE_IID
+    - docker push $HARBOR_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME-migrator:$CI_PIPELINE_IID
+    - docker push $ARVAN_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME-migrator:$CI_PIPELINE_IID
   rules:
     - if: $CI_COMMIT_BRANCH == "production" || $CI_COMMIT_BRANCH == "stage" || $CI_COMMIT_BRANCH == "develop"
       when: on_success
