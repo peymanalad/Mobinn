@@ -868,8 +868,9 @@ namespace Chamran.Deed.Info
                 });
             }
 
+            input.PdfFile = post.PdfFile;
             ObjectMapper.Map(input, post);
-
+            post.PdfFile = input.PdfFile;
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken))
@@ -2128,12 +2129,12 @@ namespace Chamran.Deed.Info
         {
             var oldFiles = new List<Guid?> {
                 post.PostFile, post.PostFile2, post.PostFile3, post.PostFile4, post.PostFile5,
-                post.PostFile6, post.PostFile7, post.PostFile8, post.PostFile9, post.PostFile10
+                post.PostFile6, post.PostFile7, post.PostFile8, post.PostFile9, post.PostFile10,post.PostFile
             };
 
             var newFiles = new List<Guid?> {
                 input.PostFile, input.PostFile2, input.PostFile3, input.PostFile4, input.PostFile5,
-                input.PostFile6, input.PostFile7, input.PostFile8, input.PostFile9, input.PostFile10
+                input.PostFile6, input.PostFile7, input.PostFile8, input.PostFile9, input.PostFile10,input.PdfFile
             };
 
             int removed = 0;
