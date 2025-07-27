@@ -164,6 +164,12 @@ namespace Chamran.Deed.Info
                     .AsNoTracking()
                     .ToListAsync();
 
+                var postIds = queryResult.Select(p => p.Id).ToList();
+                var pdfLookup = await _postRepository.GetAll()
+                    .Where(p => postIds.Contains(p.Id))
+                    .Select(p => new { p.Id, p.PdfFile })
+                    .ToDictionaryAsync(x => x.Id, x => x.PdfFile);
+
                 // Count the total results (without paging)
                 var totalCount = queryResult.Count;
 
@@ -196,6 +202,7 @@ namespace Chamran.Deed.Info
                         CreatorUserLastName = post.First().CreatorUserLastName,
                         CreatorUserName = post.First().CreatorUserName,
                         PostSubGroupId = post.First().PostSubGroupId,
+                        PdfFile = pdfLookup.ContainsKey(post.Key) ? pdfLookup[post.Key] : null
                     },
                     GroupMemberMemberPosition = post.First().GroupMemberMemberPosition ?? "",
                     PostGroupPostGroupDescription = post.First().PostGroupPostGroupDescription ?? "",
@@ -221,6 +228,12 @@ namespace Chamran.Deed.Info
                             Changes = e.Changes,
                         }).ToList()
                 }).ToList();
+
+                foreach (var item in result)
+                {
+                    if (item.Post.PdfFile.HasValue)
+                        item.Post.PdfFileFileName = await GetBinaryFileName(item.Post.PdfFile);
+                }
 
                 // Return paged result
                 return new PagedResultDto<GetPostForViewDto>(totalCount, result);
@@ -1399,12 +1412,14 @@ namespace Chamran.Deed.Info
                     var allFileIds = new[]
                     {
                 p.PostFile, p.PostFile2, p.PostFile3, p.PostFile4, p.PostFile5,
-                p.PostFile6, p.PostFile7, p.PostFile8, p.PostFile9, p.PostFile10
+                p.PostFile6, p.PostFile7, p.PostFile8, p.PostFile9, p.PostFile10,p.PdfFile
             }.Where(x => x != null).ToList();
 
                     var allExtensions = await Task.WhenAll(allFileIds.Select(x => GetFileExtensionAsync(x.Value)));
 
-                    bool hasPdf = allExtensions.Any(e => e != null && e.ToLowerInvariant() == ".pdf");
+                    //bool hasPdf = allExtensions.Any(e => e != null && e.ToLowerInvariant() == ".pdf");
+                    bool hasPdf = p.PdfFile != null ||
+                                  allExtensions.Any(e => e != null && e.ToLowerInvariant() == ".pdf");
 
                     //string mainExt = allExtensions.FirstOrDefault(e => e != null)?.ToLowerInvariant();
 
