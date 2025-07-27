@@ -1,6 +1,6 @@
 ﻿#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM microsoft.repo.stinascloud.ir/dotnet/aspnet:6.0 AS base
+FROM microsoft.repo.stinascloud.ir/dotnet/aspnet:7.0 AS base
 WORKDIR /app
 
 FROM microsoft.repo.stinascloud.ir/dotnet/sdk:7.0 AS build
