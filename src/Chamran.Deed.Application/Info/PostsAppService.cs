@@ -485,6 +485,8 @@ namespace Chamran.Deed.Info
         {
             using var unitOfWork = _unitOfWorkManager.Begin();
 
+            NormalizePdfFileToken(input);
+
             var allTokensForCheck = new[] {
                 input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
                 input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
@@ -1486,6 +1488,34 @@ namespace Chamran.Deed.Info
             return Path.GetExtension(info.FileName)?.ToLowerInvariant();
         }
 
+        private void NormalizePdfFileToken(CreateOrEditPostDto input)
+        {
+            bool pdfSet = !string.IsNullOrWhiteSpace(input.PdfFileToken);
+
+            void HandleToken(ref string token)
+            {
+                if (GetFileExtensionFromToken(token) == ".pdf")
+                {
+                    if (!pdfSet)
+                    {
+                        input.PdfFileToken = token;
+                        pdfSet = true;
+                    }
+                    token = null;
+                }
+            }
+
+            var t1 = input.PostFileToken; HandleToken(ref t1); input.PostFileToken = t1;
+            var t2 = input.PostFileToken2; HandleToken(ref t2); input.PostFileToken2 = t2;
+            var t3 = input.PostFileToken3; HandleToken(ref t3); input.PostFileToken3 = t3;
+            var t4 = input.PostFileToken4; HandleToken(ref t4); input.PostFileToken4 = t4;
+            var t5 = input.PostFileToken5; HandleToken(ref t5); input.PostFileToken5 = t5;
+            var t6 = input.PostFileToken6; HandleToken(ref t6); input.PostFileToken6 = t6;
+            var t7 = input.PostFileToken7; HandleToken(ref t7); input.PostFileToken7 = t7;
+            var t8 = input.PostFileToken8; HandleToken(ref t8); input.PostFileToken8 = t8;
+            var t9 = input.PostFileToken9; HandleToken(ref t9); input.PostFileToken9 = t9;
+            var t10 = input.PostFileToken10; HandleToken(ref t10); input.PostFileToken10 = t10;
+        }
 
 
         //public Task<PagedResultDto<GetPostsForViewDto>> GetPostsByGroupIdForView(GetPostsByGroupIdInput input)
