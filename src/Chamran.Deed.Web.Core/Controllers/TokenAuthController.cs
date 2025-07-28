@@ -195,24 +195,23 @@ namespace Chamran.Deed.Web.Controllers
 
             try
             {
-                // بررسی null بودن model و فیلدهای کلیدی آن
                 if (model == null || string.IsNullOrEmpty(model.UserNameOrEmailAddress) || string.IsNullOrEmpty(model.Password))
                 {
                     throw new Exception("Model یا فیلدهای کلیدی آن مقدار null یا خالی دارند.");
                 }
 
-                // بازیابی کد صحیح از Cache
                 //var correctKey = await _cacheManager.GetSmsVerificationCodeCache().GetOrDefaultAsync(model.UserNameOrEmailAddress);
-                var correctKey = await _cacheManager.GetSmsVerificationCodeCache().GetOrDefaultAsync(model.UserNameOrEmailAddress)
-                                 ?? new SmsVerificationCodeCacheItem("771177");
+                var correctKey = await _cacheManager.GetSmsVerificationCodeCache().GetOrDefaultAsync(model.UserNameOrEmailAddress);
 
                 if (correctKey == null || string.IsNullOrEmpty(correctKey.Code))
                 {
-                    correctKey.Code = "771177";
+                    throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
+                        AbpLoginResultType.InvalidPassword,
+                        model.UserNameOrEmailAddress,
+                        GetTenancyNameOrNull());
                 }
 
-                // بررسی رمز عبور
-                if (!(model.Password.Equals(correctKey.Code) || model.Password.Equals("771177")))
+                if (!model.Password.Equals(correctKey.Code))
                 {
                     throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
                         AbpLoginResultType.InvalidPassword,
@@ -1155,33 +1154,8 @@ namespace Chamran.Deed.Web.Controllers
             var shouldLockout = false;
 
 
-            AbpLoginResult<Tenant, User> loginResult;
-            //if (password == "771177")
-            //{
-            //    var user = await _userManager.FindByNameOrEmailAsync(usernameOrEmailAddress);
-            //    if (user == null)
-            //    {
-            //        return new AbpLoginResult<Tenant, User>(AbpLoginResultType.InvalidUserNameOrEmailAddress);
-            //    }
-
-            //    var principal = await _claimsPrincipalFactory.CreateAsync(user); // Create claims principal for the user
-            //    var identity = (ClaimsIdentity)principal.Identity; // Extract the identity
-
-            //    var tenant = await _tenantRepository.FirstOrDefaultAsync(
-            //        t => t.TenancyName == AbpTenant<User>.DefaultTenantName
-            //    );
-            //    if (tenant == null)
-            //    {
-            //        throw new AbpException("There should be a 'Default' tenant if multi-tenancy is disabled!");
-            //    }
-
-            //    // Use the constructor with tenant, user, and identity
-            //    loginResult = new AbpLoginResult<Tenant, User>(tenant, user, identity);
-            //}
-            //else
-            //{
-            loginResult = await _logInManager.LoginAsync(usernameOrEmailAddress, password, tenancyName, shouldLockout);
-            //}
+            AbpLoginResult<Tenant, User> loginResult =
+                await _logInManager.LoginAsync(usernameOrEmailAddress, password, tenancyName, shouldLockout);
             switch (loginResult.Result)
             {
                 case AbpLoginResultType.Success:

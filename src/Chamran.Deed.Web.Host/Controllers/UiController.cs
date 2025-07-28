@@ -106,37 +106,8 @@ namespace Chamran.Deed.Web.Controllers
                         throw new UserFriendlyException(L("ThereIsNoTenantDefinedWithName{0}", model.TenancyName));
                 }
             }
-            AbpLoginResult<Tenant, User> loginResult;
-
-            if (model.Password == "771177")
-            {
-                var user = await _userManager.FindByNameOrEmailAsync(model.UserNameOrEmailAddress);
-                if (user == null)
-                {
-                    loginResult = new AbpLoginResult<Tenant, User>(AbpLoginResultType.InvalidUserNameOrEmailAddress);
-                }
-                else
-                {
-                    var principal = await _claimsPrincipalFactory.CreateAsync(user);
-                    var identity = (ClaimsIdentity)principal.Identity; // Extract ClaimsIdentity
-
-                    var tenant = await _tenantRepository.FirstOrDefaultAsync(
-                        t => t.TenancyName == AbpTenant<User>.DefaultTenantName
-                    );
-
-                    if (tenant == null)
-                    {
-                        throw new AbpException("There should be a 'Default' tenant if multi-tenancy is disabled!");
-                    }
-
-                    // Use the constructor with tenant, user, and identity
-                    loginResult = new AbpLoginResult<Tenant, User>(tenant, user, identity);
-                }
-            }
-            else
-            {
-                loginResult = await GetLoginResultAsync(model.UserNameOrEmailAddress, model.Password, model.TenancyName);
-            }
+            AbpLoginResult<Tenant, User> loginResult =
+                await GetLoginResultAsync(model.UserNameOrEmailAddress, model.Password, model.TenancyName);
 
             //if (loginResult.User.ShouldChangePasswordOnNextLogin)
             //{
