@@ -565,23 +565,33 @@ namespace Chamran.Deed.Info
                 post.PostVideoPreview = await GenerateVideoPreviewAsync(fullVideoPath, webRoot, post.Id);
             }
 
+            Guid? pdfId = null;
             if (!string.IsNullOrWhiteSpace(input.PdfFileToken))
             {
                 var pdfFile = await SaveAndGetBinaryObject(input.PdfFileToken, post.Id);
                 if (pdfFile == null)
                     throw new UserFriendlyException("فایل PDF معتبر نیست یا در حافظه موقت یافت نشد.");
-
-                post.PdfFile = pdfFile.Id;
+                pdfId = pdfFile.Id;
+                post.PdfFile = pdfId;
             }
 
-            var allTokens = new[] {
-            input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
-            input.PostFileToken5, input.PostFileToken6, input.PostFileToken7,
-            input.PostFileToken8, input.PostFileToken9, input.PostFileToken10,
-            input.PdfFileToken
-        };
+            //if (!string.IsNullOrWhiteSpace(input.PdfFileToken))
+            //{
+            //    var pdfFile = await SaveAndGetBinaryObject(input.PdfFileToken, post.Id);
+            //    if (pdfFile == null)
+            //        throw new UserFriendlyException("فایل PDF معتبر نیست یا در حافظه موقت یافت نشد.");
 
-            var binaryIds = await Task.WhenAll(allTokens.Select((token, i) => GetBinaryId(token, post.Id)));
+            //    post.PdfFile = pdfFile.Id;
+            //}
+
+            var fileTokens = new[] {
+                input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
+                input.PostFileToken5, input.PostFileToken6, input.PostFileToken7,
+                input.PostFileToken8, input.PostFileToken9, input.PostFileToken10
+            };
+
+            var binaryIds = await Task.WhenAll(fileTokens.Select(token => GetBinaryId(token, post.Id)));
+
 
             post.PostFile2 = binaryIds.ElementAtOrDefault(0);
             post.PostFile3 = binaryIds.ElementAtOrDefault(1);
@@ -592,7 +602,9 @@ namespace Chamran.Deed.Info
             post.PostFile8 = binaryIds.ElementAtOrDefault(6);
             post.PostFile9 = binaryIds.ElementAtOrDefault(7);
             post.PostFile10 = binaryIds.ElementAtOrDefault(8);
-            post.PdfFile = binaryIds.ElementAtOrDefault(9);
+
+            if (pdfId != null && pdfId != Guid.Empty)
+                post.PdfFile = pdfId;
 
             await _unitOfWorkManager.Current.SaveChangesAsync();
             await unitOfWork.CompleteAsync();
