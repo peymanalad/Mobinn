@@ -16,7 +16,7 @@ namespace Chamran.Deed.Storage
 
         public void SetFile(string token, byte[] content)
         {
-            _cache.Set(token, new TempFileInfo(content), TimeSpan.FromMinutes(1)); // expire time is 1 min by default
+            _cache.Set(token, new TempFileInfo(content), TimeSpan.FromMinutes(3)); // expire time is 1 min by default
         }
 
         public byte[] GetFile(string token)
@@ -27,7 +27,7 @@ namespace Chamran.Deed.Storage
 
         public void SetFile(string token, TempFileInfo info)
         {
-            _cache.Set(token, info, TimeSpan.FromMinutes(1)); // expire time is 1 min by default
+            _cache.Set(token, info, TimeSpan.FromMinutes(3)); // expire time is 1 min by default
         }
 
         public TempFileInfo GetFileInfo(string token)

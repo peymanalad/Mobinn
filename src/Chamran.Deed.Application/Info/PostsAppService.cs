@@ -563,11 +563,13 @@ namespace Chamran.Deed.Info
                 post.PostVideoPreview = await GenerateVideoPreviewAsync(fullVideoPath, webRoot, post.Id);
             }
 
-            if (!string.IsNullOrEmpty(input.PdfFileToken))
+            if (!string.IsNullOrWhiteSpace(input.PdfFileToken))
             {
                 var pdfFile = await SaveAndGetBinaryObject(input.PdfFileToken, post.Id);
-                if (pdfFile != null)
-                    post.PdfFile = pdfFile.Id;
+                if (pdfFile == null)
+                    throw new UserFriendlyException("فایل PDF معتبر نیست یا در حافظه موقت یافت نشد.");
+
+                post.PdfFile = pdfFile.Id;
             }
 
             var allTokens = new[] {
