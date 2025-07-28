@@ -575,7 +575,8 @@ namespace Chamran.Deed.Info
             var allTokens = new[] {
             input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
             input.PostFileToken5, input.PostFileToken6, input.PostFileToken7,
-            input.PostFileToken8, input.PostFileToken9, input.PostFileToken10
+            input.PostFileToken8, input.PostFileToken9, input.PostFileToken10,
+            input.PdfFileToken
         };
 
             var binaryIds = await Task.WhenAll(allTokens.Select((token, i) => GetBinaryId(token, post.Id)));
@@ -589,6 +590,7 @@ namespace Chamran.Deed.Info
             post.PostFile8 = binaryIds.ElementAtOrDefault(6);
             post.PostFile9 = binaryIds.ElementAtOrDefault(7);
             post.PostFile10 = binaryIds.ElementAtOrDefault(8);
+            post.PdfFile = binaryIds.ElementAtOrDefault(9);
 
             await _unitOfWorkManager.Current.SaveChangesAsync();
             await unitOfWork.CompleteAsync();
