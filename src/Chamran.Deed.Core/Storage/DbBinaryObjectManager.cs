@@ -9,11 +9,9 @@ namespace Chamran.Deed.Storage
     public class DbBinaryObjectManager : IBinaryObjectManager, ITransientDependency
     {
         private readonly string _baseFolder;
-        private readonly IRepository<BinaryObject, Guid> _binaryObjectRepository;
 
-        public DbBinaryObjectManager(IRepository<BinaryObject, Guid> binaryObjectRepository)
+        public DbBinaryObjectManager()
         {
-            _binaryObjectRepository = binaryObjectRepository;
             _baseFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BinaryObjects");
             if (!Directory.Exists(_baseFolder))
             {
@@ -48,10 +46,6 @@ namespace Chamran.Deed.Storage
 
             var filePath = GetFilePath(file.Id, file.Description);
             await File.WriteAllBytesAsync(filePath, file.Bytes);
-
-            //avoid storing large bytes in the database
-            file.Bytes = Array.Empty<byte>();
-            await _binaryObjectRepository.InsertAsync(file);
         }
 
         public async Task DeleteAsync(Guid id)
@@ -70,7 +64,6 @@ namespace Chamran.Deed.Storage
                     }
                 }
             }
-            await _binaryObjectRepository.DeleteAsync(id);
         }
 
         private string GetDirectoryPath(Guid id)
