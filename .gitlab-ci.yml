@@ -85,15 +85,15 @@ build_and_push_migrator_image:
     ENDPOINT: ""
     IMAGE_TAG_SUFFIX: ""
   before_script:
-    - echo "$HARBOR_PASSWORD" | docker login --password-stdin --username "$HARBOR_USER" -- "$HARBOR_REGISTRY"
-    - docker pull $HARBOR_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME-migrator:$CI_PIPELINE_IID
+    - echo "$REGISTRY_PASSWORD" | docker login --password-stdin --username "$REGISTRY_USER" -- "$REGISTRY"
+    - docker pull $REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME-migrator:$CI_PIPELINE_IID
     - cat $PROJECT_ENDPOINT_VARIABLES >> .env
     - echo "" >> .env
     - echo "DC_DEPLOY_ENV=$DEPLOY_ENV" >> .env
     - echo "DC_APP_PORT=$APP_PORT" >> .env
     - echo "" >> .env
     - echo "DC_IMAGE_TAG=$CI_PIPELINE_IID" >> .env
-    - echo "DC_IMAGE_NAME=$HARBOR_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME" >> .env
+    - echo "DC_IMAGE_NAME=$REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME" >> .env
     - cat .env
     - cat $SSH_PRIVATE_KEY | awk '{gsub(/\\n/,"\n")}1' > deploy-key.pem
     - chmod 400 deploy-key.pem
@@ -114,6 +114,8 @@ build_and_push_migrator_image:
     - job: build_and_push_image
     - job: build_and_push_migrator_image
     - job: migrate_stage
+      optional: true
+    - job: migrate_production
       optional: true
   variables:
     SERVER_USER: ""
@@ -173,7 +175,7 @@ migrate_stage:
       when: manual
 
 migrate_production:
-  extends: .deploy_template
+  extends: .run_migrations
   variables:
     SERVER_USER: $PRODUCTION_SERVER_USER
     REGISTRY: $ARVAN_REGISTRY
