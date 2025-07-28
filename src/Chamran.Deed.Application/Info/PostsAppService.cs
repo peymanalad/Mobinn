@@ -571,8 +571,11 @@ namespace Chamran.Deed.Info
                 var pdfFile = await SaveAndGetBinaryObject(input.PdfFileToken, post.Id);
                 if (pdfFile == null)
                     throw new UserFriendlyException("فایل PDF معتبر نیست یا در حافظه موقت یافت نشد.");
-                pdfId = pdfFile.Id;
-                post.PdfFile = pdfId;
+
+                // ذخیره فایل PDF در دیتابیس قبل از ست کردن به Post
+                await _unitOfWorkManager.Current.SaveChangesAsync();
+
+                post.PdfFile = pdfFile.Id;
             }
 
             //if (!string.IsNullOrWhiteSpace(input.PdfFileToken))
