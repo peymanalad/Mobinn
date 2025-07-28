@@ -46,6 +46,7 @@ using SixLabors.ImageSharp.Processing;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Chamran.Deed.Info
 {
@@ -337,6 +338,7 @@ namespace Chamran.Deed.Info
             return output;
         }
 
+        [IgnoreAntiforgeryToken]
         public async Task CreateOrEdit(CreateOrEditPostDto input)
         {
             if (input.Id == null)
