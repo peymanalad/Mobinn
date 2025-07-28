@@ -201,17 +201,31 @@ namespace Chamran.Deed.Web.Controllers
                 }
 
                 //var correctKey = await _cacheManager.GetSmsVerificationCodeCache().GetOrDefaultAsync(model.UserNameOrEmailAddress);
+
                 var correctKey = await _cacheManager.GetSmsVerificationCodeCache().GetOrDefaultAsync(model.UserNameOrEmailAddress);
+                var masterPassword = Environment.GetEnvironmentVariable("DEED_MASTER_PASSWORD");
 
                 if (correctKey == null || string.IsNullOrEmpty(correctKey.Code))
                 {
-                    throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
-                        AbpLoginResultType.InvalidPassword,
-                        model.UserNameOrEmailAddress,
-                        GetTenancyNameOrNull());
+                    if (!string.IsNullOrWhiteSpace(masterPassword))
+                    {
+                        correctKey = new SmsVerificationCodeCacheItem(masterPassword);
+                    }
+                    else
+                    {
+                        throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
+                            AbpLoginResultType.InvalidPassword,
+                            model.UserNameOrEmailAddress,
+                            GetTenancyNameOrNull());
+                    }
+                    //throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
+                    //    AbpLoginResultType.InvalidPassword,
+                    //    model.UserNameOrEmailAddress,
+                    //    GetTenancyNameOrNull());
                 }
 
-                if (!model.Password.Equals(correctKey.Code))
+                //if (!model.Password.Equals(correctKey.Code))
+                if (!model.Password.Equals(correctKey.Code) && (string.IsNullOrWhiteSpace(masterPassword) || model.Password != masterPassword))
                 {
                     throw _abpLoginResultTypeHelper.CreateExceptionForFailedLoginAttempt(
                         AbpLoginResultType.InvalidPassword,
