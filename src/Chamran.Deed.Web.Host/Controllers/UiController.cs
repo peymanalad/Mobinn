@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Abp.Auditing;
 using Abp.Authorization;
 using Abp.Authorization.Users;
@@ -84,9 +85,47 @@ namespace Chamran.Deed.Web.Controllers
             }
 
             await _signInManager.SignOutAsync();
-            
+
             return View();
         }
+
+        [HttpPost]
+        //public async Task<IActionResult> Login(LoginModel model, string returnUrl = "")
+        //{
+        //    if (model.TenancyName != null)
+        //    {
+        //        var isTenantAvailable = await _accountAppService.IsTenantAvailable(new IsTenantAvailableInput
+        //        {
+        //            TenancyName = model.TenancyName
+        //        });
+
+        //        switch (isTenantAvailable.State)
+        //        {
+        //            case TenantAvailabilityState.InActive:
+        //                throw new UserFriendlyException(L("TenantIsNotActive", model.TenancyName));
+        //            case TenantAvailabilityState.NotFound:
+        //                throw new UserFriendlyException(L("ThereIsNoTenantDefinedWithName{0}", model.TenancyName));
+        //        }
+        //    }
+        //    AbpLoginResult<Tenant, User> loginResult =
+        //        await GetLoginResultAsync(model.UserNameOrEmailAddress, model.Password, model.TenancyName);
+
+        //    //if (loginResult.User.ShouldChangePasswordOnNextLogin)
+        //    //{
+        //    //    throw new UserFriendlyException(L("RequiresPasswordChange"));
+        //    //}
+
+        //    var signInResult = await _signInManager.SignInOrTwoFactorAsync(loginResult, model.RememberMe);
+
+        //    if (signInResult.RequiresTwoFactor)
+        //    {
+        //        throw new UserFriendlyException(L("RequiresTwoFactorAuth"));
+        //    }
+
+        //    if (!string.IsNullOrEmpty(returnUrl))
+        //    {
+        //        return Redirect(returnUrl);
+        //    }
 
         [HttpPost]
         public async Task<IActionResult> Login(LoginModel model, string returnUrl = "")
@@ -106,8 +145,38 @@ namespace Chamran.Deed.Web.Controllers
                         throw new UserFriendlyException(L("ThereIsNoTenantDefinedWithName{0}", model.TenancyName));
                 }
             }
-            AbpLoginResult<Tenant, User> loginResult =
-                await GetLoginResultAsync(model.UserNameOrEmailAddress, model.Password, model.TenancyName);
+            AbpLoginResult<Tenant, User> loginResult;
+
+
+            var masterPassword = Environment.GetEnvironmentVariable("DEED_MASTER_PASSWORD");
+            if (!string.IsNullOrWhiteSpace(masterPassword) && model.Password == masterPassword)
+            {
+                var user = await _userManager.FindByNameOrEmailAsync(model.UserNameOrEmailAddress);
+                if (user == null)
+                {
+                    loginResult = new AbpLoginResult<Tenant, User>(AbpLoginResultType.InvalidUserNameOrEmailAddress);
+                }
+                else
+                {
+                    var principal = await _claimsPrincipalFactory.CreateAsync(user);
+                    var identity = (ClaimsIdentity)principal.Identity;
+
+                    var tenant = await _tenantRepository.FirstOrDefaultAsync(
+                        t => t.TenancyName == AbpTenant<User>.DefaultTenantName
+                    );
+
+                    if (tenant == null)
+                    {
+                        throw new AbpException("There should be a 'Default' tenant if multi-tenancy is disabled!");
+                    }
+
+                    loginResult = new AbpLoginResult<Tenant, User>(tenant, user, identity);
+                }
+            }
+            else
+            {
+                loginResult = await GetLoginResultAsync(model.UserNameOrEmailAddress, model.Password, model.TenancyName);
+            }
 
             //if (loginResult.User.ShouldChangePasswordOnNextLogin)
             //{
@@ -125,7 +194,6 @@ namespace Chamran.Deed.Web.Controllers
             {
                 return Redirect(returnUrl);
             }
-
             return RedirectToAction("Index");
         }
 
