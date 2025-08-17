@@ -32,10 +32,6 @@ namespace Chamran.Deed.Web.Controllers
         public Task<StatisticResultDto> GetNewUsers([FromQuery] GetLoginStatsInput input)
             => _statisticsAppService.GetNewUsers(input);
 
-        [HttpGet("users/churn-risk")]
-        public Task<StatisticResultDto> GetChurnRisk([FromQuery] GetLoginStatsInput input)
-            => _statisticsAppService.GetChurnRisk(input);
-
         [HttpGet("users/by-role")]
         public Task<StatisticResultDto> GetUserRoleDistribution([FromQuery] GetLoginStatsInput input)
             => _statisticsAppService.GetUserRoleDistribution(input);
