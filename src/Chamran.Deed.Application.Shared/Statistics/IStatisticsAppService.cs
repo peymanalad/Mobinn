@@ -10,7 +10,7 @@ namespace Chamran.Deed.Statistics
 
         Task<StatisticResultDto> GetActiveUsers(GetLoginStatsInput input);
         Task<StatisticResultDto> GetNewUsers(GetLoginStatsInput input);
-        Task<StatisticResultDto> GetChurnRisk(GetLoginStatsInput input);
+        //Task<StatisticResultDto> GetChurnRisk(GetLoginStatsInput input);
         Task<StatisticResultDto> GetUserRoleDistribution(GetLoginStatsInput input);
         Task<StatisticResultDto> GetServiceCallCounts(GetLoginStatsInput input);
         Task<StatisticResultDto> GetServiceLatency(GetLoginStatsInput input);
