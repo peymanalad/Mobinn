@@ -10,12 +10,10 @@ namespace Chamran.Deed.Statistics
 
         Task<StatisticResultDto> GetActiveUsers(GetLoginStatsInput input);
         Task<StatisticResultDto> GetNewUsers(GetLoginStatsInput input);
-        //Task<StatisticResultDto> GetChurnRisk(GetLoginStatsInput input);
         Task<StatisticResultDto> GetUserRoleDistribution(GetLoginStatsInput input);
         Task<StatisticResultDto> GetServiceCallCounts(GetLoginStatsInput input);
         Task<StatisticResultDto> GetServiceLatency(GetLoginStatsInput input);
         Task<StatisticResultDto> GetServiceErrorRates(GetLoginStatsInput input);
-        Task<StatisticResultDto> GetSearchStats(GetLoginStatsInput input);
         Task<StatisticResultDto> GetUsageHeatmap(GetLoginStatsInput input);
         Task<StatisticResultDto> GetOrganizationGrowth(GetLoginStatsInput input);
         Task<StatisticResultDto> GetPostsStats(GetLoginStatsInput input);
@@ -24,8 +22,6 @@ namespace Chamran.Deed.Statistics
         Task<StatisticResultDto> GetNotificationStats(GetLoginStatsInput input);
         Task<StatisticResultDto> GetOtpStats(GetLoginStatsInput input);
         Task<StatisticResultDto> GetSlowQueries(GetLoginStatsInput input);
-        Task<StatisticResultDto> GetQueueStatus(GetLoginStatsInput input);
-        Task<StatisticResultDto> GetStorageCapacity(GetLoginStatsInput input);
         Task<StatisticResultDto> GetClientDistribution(GetLoginStatsInput input);
     }
 }
