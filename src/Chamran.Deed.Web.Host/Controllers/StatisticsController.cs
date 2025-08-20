@@ -48,10 +48,6 @@ namespace Chamran.Deed.Web.Controllers
         public Task<StatisticResultDto> GetServiceErrorRates([FromQuery] GetLoginStatsInput input)
             => _statisticsAppService.GetServiceErrorRates(input);
 
-        [HttpGet("search")]
-        public Task<StatisticResultDto> GetSearchStats([FromQuery] GetLoginStatsInput input)
-            => _statisticsAppService.GetSearchStats(input);
-
         [HttpGet("usage/heatmap")]
         public Task<StatisticResultDto> GetUsageHeatmap([FromQuery] GetLoginStatsInput input)
             => _statisticsAppService.GetUsageHeatmap(input);
@@ -83,14 +79,6 @@ namespace Chamran.Deed.Web.Controllers
         [HttpGet("db/slow-queries")]
         public Task<StatisticResultDto> GetSlowQueries([FromQuery] GetLoginStatsInput input)
             => _statisticsAppService.GetSlowQueries(input);
-
-        [HttpGet("queues")]
-        public Task<StatisticResultDto> GetQueueStatus([FromQuery] GetLoginStatsInput input)
-            => _statisticsAppService.GetQueueStatus(input);
-
-        [HttpGet("storage")]
-        public Task<StatisticResultDto> GetStorageCapacity([FromQuery] GetLoginStatsInput input)
-            => _statisticsAppService.GetStorageCapacity(input);
 
         [HttpGet("clients/devices")]
         public Task<StatisticResultDto> GetClientDistribution([FromQuery] GetLoginStatsInput input)
