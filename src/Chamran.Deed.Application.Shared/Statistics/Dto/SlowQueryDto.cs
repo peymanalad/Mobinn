@@ -6,6 +6,6 @@ namespace Chamran.Deed.Statistics.Dto
     {
         public string ServiceName { get; set; }
         public string MethodName { get; set; }
-        public int ExecutionDuration { get; set; }
+        public double ExecutionDurationSeconds { get; set; }
     }
 }

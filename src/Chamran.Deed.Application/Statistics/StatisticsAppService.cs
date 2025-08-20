@@ -32,7 +32,6 @@ namespace Chamran.Deed.Statistics
         private readonly IRepository<PostLike> _postLikeRepository;
         private readonly IRepository<UserNotificationInfo, Guid> _userNotificationRepository;
         private readonly IRepository<FCMQueue, int> _fcmQueueRepository;
-        private readonly IRepository<BinaryObject, Guid> _binaryObjectRepository;
 
         public StatisticsAppService(
             IRepository<UserLoginAttempt, long> loginAttemptRepository,
@@ -44,8 +43,7 @@ namespace Chamran.Deed.Statistics
             IRepository<Post> postRepository,
             IRepository<PostLike> postLikeRepository,
             IRepository<UserNotificationInfo, Guid> userNotificationRepository,
-            IRepository<FCMQueue, int> fcmQueueRepository,
-            IRepository<BinaryObject, Guid> binaryObjectRepository)
+            IRepository<FCMQueue, int> fcmQueueRepository)
         {
             _loginAttemptRepository = loginAttemptRepository;
             _userRepository = userRepository;
@@ -57,7 +55,6 @@ namespace Chamran.Deed.Statistics
             _postLikeRepository = postLikeRepository;
             _userNotificationRepository = userNotificationRepository;
             _fcmQueueRepository = fcmQueueRepository;
-            _binaryObjectRepository = binaryObjectRepository;
         }
 
         public async Task<LoginStatsDto> GetLoginStats(GetLoginStatsInput input)
@@ -73,8 +70,7 @@ namespace Chamran.Deed.Statistics
             var total = data.Count;
             var successful = data.Count(l => l.Result == AbpLoginResultType.Success);
             var failed = total - successful;
-            var rate = total == 0 ? 0 : (double)successful / total;
-
+            var rate = total == 0 ? 0 : (double)successful / total * 100;
             var groups = data
                 .GroupBy(l => Truncate(l.CreationTime, input.Interval))
                 .Select(g => new LoginStatsItemDto
@@ -83,13 +79,13 @@ namespace Chamran.Deed.Statistics
                     Total = g.Count(),
                     Successful = g.Count(x => x.Result == AbpLoginResultType.Success)
                 })
-                .OrderBy(g => g.PeriodStart)
+                .OrderByDescending(g => g.PeriodStart)
                 .ToList();
 
             foreach (var item in groups)
             {
                 item.Failed = item.Total - item.Successful;
-                item.SuccessRate = item.Total == 0 ? 0 : (double)item.Successful / item.Total;
+                item.SuccessRate = item.Total == 0 ? 0 : (double)item.Successful / item.Total * 100;
             }
 
             return new LoginStatsDto
@@ -154,7 +150,7 @@ namespace Chamran.Deed.Statistics
                     PeriodStart = g.Key,
                     Count = g.Select(x => x.UserId).Distinct().Count()
                 })
-                .OrderBy(g => g.PeriodStart)
+                .OrderByDescending(g => g.PeriodStart)
                 .ToList();
 
             var total = groups.Sum(g => g.Count);
@@ -186,7 +182,7 @@ namespace Chamran.Deed.Statistics
                     PeriodStart = g.Key,
                     Count = g.Count()
                 })
-                .OrderBy(g => g.PeriodStart)
+                .OrderByDescending(g => g.PeriodStart)
                 .ToList();
 
             var total = groups.Sum(g => g.Count);
@@ -201,35 +197,6 @@ namespace Chamran.Deed.Statistics
                 }
             };
         }
-
-        public async Task<StatisticResultDto> GetChurnRisk(GetLoginStatsInput input)
-        {
-            var threshold = input.StartDate ?? DateTime.UtcNow.AddDays(-30);
-
-            var activeUserIds = await _loginAttemptRepository.GetAll()
-                .Where(l => l.CreationTime >= threshold)
-                .Where(l => l.Result == AbpLoginResultType.Success)
-                .Where(l => l.UserId.HasValue)
-                .Select(l => l.UserId.Value)
-                .Distinct()
-                .ToListAsync();
-
-            var inactiveUsers = await _userRepository.GetAll()
-                .Where(u => !activeUserIds.Contains(u.Id))
-                .Select(u => new { u.Id, u.UserName })
-                .ToListAsync();
-
-            return new StatisticResultDto
-            {
-                Metric = "ChurnRisk",
-                Data = new Dictionary<string, object>
-                {
-                    { "count", inactiveUsers.Count },
-                    { "users", inactiveUsers }
-                }
-            };
-        }
-
         public async Task<StatisticResultDto> GetUserRoleDistribution(GetLoginStatsInput input)
         {
             var query = from ur in _userRoleRepository.GetAll()
@@ -300,7 +267,6 @@ namespace Chamran.Deed.Statistics
                     };
                 })
                 .OrderByDescending(x => x.P95)
-                .Take(input.Top)
                 .ToList();
 
             return new StatisticResultDto
@@ -393,44 +359,6 @@ namespace Chamran.Deed.Statistics
             };
         }
 
-
-        public async Task<StatisticResultDto> GetSearchStats(GetLoginStatsInput input)
-        {
-            var baseQuery = _auditLogRepository.GetAll()
-                .WhereIf(input.StartDate.HasValue, l => l.ExecutionTime >= input.StartDate.Value)
-                .WhereIf(input.EndDate.HasValue, l => l.ExecutionTime <= input.EndDate.Value)
-                .Where(l => l.ServiceName != null && l.ServiceName.Contains("Search"));
-
-            var data = await baseQuery
-                .Select(l => new { l.ExecutionTime, l.ReturnValue })
-                .ToListAsync();
-
-            var total = data.Count;
-            var noResult = data.Count(x => string.IsNullOrEmpty(x.ReturnValue) || x.ReturnValue == "[]" || x.ReturnValue.Contains("\"totalCount\":0"));
-
-            var groups = data
-                .GroupBy(x => Truncate(x.ExecutionTime, input.Interval))
-                .Select(g => new CountPerPeriodDto
-                {
-                    PeriodStart = g.Key,
-                    Count = g.Count()
-                })
-                .OrderBy(g => g.PeriodStart)
-                .ToList();
-
-            return new StatisticResultDto
-            {
-                Metric = "SearchStats",
-                Data = new Dictionary<string, object>
-                {
-                    { "total", total },
-                    { "noResult", noResult },
-                    { "noResultRate", total == 0 ? 0 : (double)noResult / total },
-                    { "items", groups }
-                }
-            };
-        }
-
         public async Task<StatisticResultDto> GetUsageHeatmap(GetLoginStatsInput input)
         {
             var timestamps = await _auditLogRepository.GetAll()
@@ -445,10 +373,10 @@ namespace Chamran.Deed.Statistics
                 {
                     DayOfWeek = (int)g.Key.DayOfWeek,
                     Hour = g.Key.Hour,
-                    Count = g.Count()
+                    RequestCount = g.Count()
                 })
-                .OrderBy(x => x.DayOfWeek)
-                .ThenBy(x => x.Hour)
+                .OrderByDescending(x => x.DayOfWeek)
+                .ThenByDescending(x => x.Hour)
                 .ToList();
 
             return new StatisticResultDto
@@ -476,7 +404,7 @@ namespace Chamran.Deed.Statistics
                     PeriodStart = g.Key,
                     Count = g.Count()
                 })
-                .OrderBy(g => g.PeriodStart)
+                .OrderByDescending(g => g.PeriodStart)
                 .ToList();
 
             var total = groups.Sum(g => g.Count);
@@ -514,7 +442,7 @@ namespace Chamran.Deed.Statistics
                     PeriodStart = g.Key,
                     Count = g.Count()
                 })
-                .OrderBy(g => g.PeriodStart)
+                .OrderByDescending(g => g.PeriodStart)
                 .ToList();
 
             var perOrg = posts
@@ -558,7 +486,7 @@ namespace Chamran.Deed.Statistics
                 .ToList();
 
             var rates = items
-                .Select(i => new { key = i.Key, rate = total == 0 ? 0 : (double)i.Value / total })
+                .Select(i => new { key = i.Key, rate = total == 0 ? 0 : (double)i.Value / total * 100 })
                 .ToList();
 
             return new StatisticResultDto
@@ -675,7 +603,7 @@ namespace Chamran.Deed.Statistics
                     { "sent", sent },
                     { "success", success },
                     { "fail", fail },
-                    { "successRate", sent == 0 ? 0 : (double)success / sent }
+                    { "successRate", sent == 0 ? 0 : (double)success / sent * 100 }
                 }
             };
         }
@@ -691,7 +619,7 @@ namespace Chamran.Deed.Statistics
                 {
                     ServiceName = l.ServiceName,
                     MethodName = l.MethodName,
-                    ExecutionDuration = l.ExecutionDuration
+                    ExecutionDurationSeconds = l.ExecutionDuration / 1000.0
                 })
                 .ToListAsync();
 
@@ -705,107 +633,7 @@ namespace Chamran.Deed.Statistics
             };
         }
 
-        public async Task<StatisticResultDto> GetQueueStatus(GetLoginStatsInput input)
-        {
-            var baseQuery = _fcmQueueRepository.GetAll()
-                .WhereIf(input.StartDate.HasValue, q => q.CreationTime >= input.StartDate.Value)
-                .WhereIf(input.EndDate.HasValue, q => q.CreationTime <= input.EndDate.Value);
 
-            var sentDelays = await baseQuery
-                .Where(q => q.IsSent)
-                .Select(q => (int?)EF.Functions.DateDiffSecond(q.CreationTime, q.SentTime))
-                .ToListAsync();
-
-            var success = sentDelays.Count;
-            var pending = await baseQuery.CountAsync(q => !q.IsSent);
-            var avgDelay = sentDelays.Where(d => d.HasValue).Any() ? sentDelays.Where(d => d.HasValue).Average(d => d.Value) : 0;
-
-            return new StatisticResultDto
-            {
-                Metric = "QueueStatus",
-                Data = new Dictionary<string, object>
-                {
-                    { "success", success },
-                    { "pending", pending },
-                    { "averageDelaySeconds", avgDelay }
-                }
-            };
-        }
-
-        public async Task<StatisticResultDto> GetStorageCapacity(GetLoginStatsInput input)
-        {
-            var posts = await _postRepository.GetAll()
-                .WhereIf(input.StartDate.HasValue, p => p.CreationTime >= input.StartDate.Value)
-                .WhereIf(input.EndDate.HasValue, p => p.CreationTime <= input.EndDate.Value)
-                .Select(p => new
-                {
-                    p.CreationTime,
-                    OrgName = p.PostGroupFk.OrganizationFk.OrganizationName,
-                    p.PostFile,
-                    p.PostFile2,
-                    p.PostFile3,
-                    p.PostFile4,
-                    p.PostFile5,
-                    p.PostFile6,
-                    p.PostFile7,
-                    p.PostFile8,
-                    p.PostFile9,
-                    p.PostFile10,
-                    p.PdfFile
-                })
-                .ToListAsync();
-
-            var allIds = posts
-                .SelectMany(p => new Guid?[] { p.PostFile, p.PostFile2, p.PostFile3, p.PostFile4, p.PostFile5, p.PostFile6, p.PostFile7, p.PostFile8, p.PostFile9, p.PostFile10, p.PdfFile })
-                .Where(id => id.HasValue)
-                .Select(id => id.Value)
-                .Distinct()
-                .ToList();
-
-            var sizes = await _binaryObjectRepository.GetAll()
-                .Where(b => allIds.Contains(b.Id))
-                .Select(b => new { b.Id, Size = b.Bytes.Length })
-                .ToDictionaryAsync(x => x.Id, x => (long)x.Size);
-
-            long total = 0;
-            var periodDict = new Dictionary<DateTime, long>();
-            var orgDict = new Dictionary<string, long>();
-
-            foreach (var p in posts)
-            {
-                var ids = new Guid?[] { p.PostFile, p.PostFile2, p.PostFile3, p.PostFile4, p.PostFile5, p.PostFile6, p.PostFile7, p.PostFile8, p.PostFile9, p.PostFile10, p.PdfFile };
-                long size = ids.Where(id => id.HasValue && sizes.ContainsKey(id.Value)).Sum(id => sizes[id.Value]);
-                total += size;
-
-                var period = Truncate(p.CreationTime, input.Interval);
-                periodDict[period] = periodDict.ContainsKey(period) ? periodDict[period] + size : size;
-
-                var org = p.OrgName ?? "Unknown";
-                orgDict[org] = orgDict.ContainsKey(org) ? orgDict[org] + size : size;
-            }
-
-            var growth = periodDict
-                .OrderBy(g => g.Key)
-                .Select(g => new CountPerPeriodDto { PeriodStart = g.Key, Count = (int)(g.Value / 1_000_000) })
-                .ToList();
-
-            var topOrgs = orgDict
-                .Select(g => new KeyValueStatDto { Key = g.Key, Value = (int)(g.Value / 1_000_000) })
-                .OrderByDescending(g => g.Value)
-                .Take(input.Top)
-                .ToList();
-
-            return new StatisticResultDto
-            {
-                Metric = "StorageCapacity",
-                Data = new Dictionary<string, object>
-                {
-                    { "totalSizeMB", (int)(total / 1_000_000) },
-                    { "growth", growth },
-                    { "topOrganizations", topOrgs }
-                }
-            };
-        }
 
         private static (string Browser, string OS, string Version) ParseUserAgent(string agent)
         {
