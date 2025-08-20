@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Chamran.Deed.Web.Helpers;
+using Sentry;
+using System;
+using Sentry.Profiling;
 
 namespace Chamran.Deed.Web.Startup
 {
@@ -16,7 +19,9 @@ namespace Chamran.Deed.Web.Startup
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args)
         {
-            return new WebHostBuilder()
+            var sentryDsn = Environment.GetEnvironmentVariable("SENTRY_DSN") ?? string.Empty;
+
+            var builder = new WebHostBuilder()
                 .UseKestrel(opt =>
                 {
 
@@ -29,9 +34,41 @@ namespace Chamran.Deed.Web.Startup
                 .ConfigureLogging((context, logging) =>
                 {
                     //logging.AddFilter("Microsoft.EntityFrameworkCore.Database", LogLevel.Debug);
-                    logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+                    //logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+                    if (!string.IsNullOrWhiteSpace(sentryDsn))
+                    {
+                        //    options.Dsn = sentryDsn;
+                        //    options.MinimumEventLevel = LogLevel.Debug;
+                        //    options.MinimumBreadcrumbLevel = LogLevel.Debug;
+                        //});
+                        logging.AddSentry(options =>
+                        {
+                            options.Dsn = sentryDsn;
+                            options.MinimumEventLevel = LogLevel.Warning;
+                            options.MinimumBreadcrumbLevel = LogLevel.Information;
+                        });
+                    }
                 })
-                .UseIIS()
+                .UseIIS();
+            if (!string.IsNullOrWhiteSpace(sentryDsn))
+            {
+                builder = builder.UseSentry(o =>
+                {
+                    o.Dsn = sentryDsn;
+                    o.Debug = false;
+                    o.DiagnosticLevel = SentryLevel.Info;
+                    o.TracesSampleRate = 1.0;
+                    o.ProfilesSampleRate = 1.0;
+                    o.AutoSessionTracking = false;
+                    o.AddIntegration(new ProfilingIntegration(TimeSpan.FromSeconds(30)));
+
+                    o.Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+                    //})
+                });
+            }
+            return builder
+
+
                 .UseIISIntegration()
                 .UseStartup<Startup>();
         }
