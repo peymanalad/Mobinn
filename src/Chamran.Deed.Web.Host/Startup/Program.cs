@@ -59,8 +59,6 @@ namespace Chamran.Deed.Web.Startup
                     o.TracesSampleRate = 1.0;
                     o.ProfilesSampleRate = 1.0;
                     o.AutoSessionTracking = false;
-
-                    o.Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
                     //})
                 });
             }
