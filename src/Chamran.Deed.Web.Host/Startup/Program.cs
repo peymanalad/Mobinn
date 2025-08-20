@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Chamran.Deed.Web.Helpers;
 using Sentry;
 using System;
-using Sentry.Profiling;
 
 namespace Chamran.Deed.Web.Startup
 {
@@ -60,9 +59,6 @@ namespace Chamran.Deed.Web.Startup
                     o.TracesSampleRate = 1.0;
                     o.ProfilesSampleRate = 1.0;
                     o.AutoSessionTracking = false;
-                    o.AddIntegration(new ProfilingIntegration(TimeSpan.FromSeconds(30)));
-
-                    o.Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
                     //})
                 });
             }
