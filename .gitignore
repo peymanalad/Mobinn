@@ -143,3 +143,4 @@ src/MyCompanyName.AbpZeroTemplate.Web.Public/wwwroot/Common/**/*.min.*
 src/MyCompanyName.AbpZeroTemplate.Web.Public/node_modulessrc/Chamran.Deed.EntityFrameworkCore/ideed_28.11.tar
 src/Chamran.Deed.EntityFrameworkCore/ideed_28.11.tar
 nul
+*.tar
