@@ -5,15 +5,15 @@ WORKDIR /App
 EXPOSE 80
 EXPOSE 443
 
-    RUN apt-get update && \
-        apt-get install -y \
-            libgdiplus libfontconfig1 libc6-dev libgl1-mesa-glx libegl1-mesa \
-            libgles2-mesa-dev libgbm-dev mesa-utils \
-            ffmpeg imagemagick sudo vim nano tzdata && \
-        rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y \
+        libgdiplus libfontconfig1 libc6-dev libgl1-mesa-glx libegl1-mesa \
+        libgles2-mesa-dev libgbm-dev mesa-utils \
+        ffmpeg imagemagick sudo vim nano tzdata && \
+    rm -rf /var/lib/apt/lists/*
 
-    ENV LD_LIBRARY_PATH=/usr/local/lib
-    RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/usr-local-lib.conf && ldconfig
+ENV LD_LIBRARY_PATH=/usr/local/lib
+RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/usr-local-lib.conf && ldconfig
 
 FROM microsoft.repo.stinascloud.ir/dotnet/sdk:7.0 AS build
 WORKDIR /src
