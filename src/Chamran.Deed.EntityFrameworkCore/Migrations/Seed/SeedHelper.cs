@@ -20,6 +20,7 @@ namespace Chamran.Deed.Migrations.Seed
 
         public static void SeedHostDb(DeedDbContext context)
         {
+            context.Database.Migrate();
             context.SuppressAutoSetTenantId = true;
 
             //Host seed
