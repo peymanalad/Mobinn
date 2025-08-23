@@ -502,18 +502,18 @@ namespace Chamran.Deed.Info
 
             NormalizePdfFileToken(input);
 
-            var allTokensForCheck = new[] {
-                input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
-                input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
-                input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
-            };
+            //var allTokensForCheck = new[] {
+            //    input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
+            //    input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
+            //    input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
+            //};
 
-            var pdfCount = allTokensForCheck.Count(t => GetFileExtensionFromToken(t) == ".pdf");
-            if (pdfCount > 1)
-                throw new UserFriendlyException("حداکثر یک فایل PDF مجاز است");
+            //var pdfCount = allTokensForCheck.Count(t => GetFileExtensionFromToken(t) == ".pdf");
+            //if (pdfCount > 1)
+            //    throw new UserFriendlyException("حداکثر یک فایل PDF مجاز است");
 
-            if (GetFileExtensionFromToken(input.PostFileToken) == ".pdf")
-                throw new UserFriendlyException("فایل اصلی نمی‌تواند PDF باشد");
+            //if (GetFileExtensionFromToken(input.PostFileToken) == ".pdf")
+            //    throw new UserFriendlyException("فایل اصلی نمی‌تواند PDF باشد");
 
             var grpMemberId = await _lookup_groupMemberRepository.GetAll()
                 .Where(x => x.UserId == AbpSession.UserId)
@@ -541,7 +541,39 @@ namespace Chamran.Deed.Info
             await _postRepository.InsertAsync(post);
             await _unitOfWorkManager.Current.SaveChangesAsync();
 
-            var mainFile = await SaveAndGetBinaryObject(input.PostFileToken, post.Id);
+            //var mainFile = await SaveAndGetBinaryObject(input.PostFileToken, post.Id);
+            await ProcessMainFileAsync(post, input.PostFileToken, required: true);
+            await ProcessPdfFileAsync(post, input.PdfFileToken);
+            await ProcessAdditionalFilesAsync(post, input);
+
+            await _unitOfWorkManager.Current.SaveChangesAsync();
+            await unitOfWork.CompleteAsync();
+
+            if (post.PostGroupId.HasValue && post.CurrentPostStatus == PostStatus.Published)
+                await PublishNewPostNotifications(post);
+
+            await SendSmsNotification(post);
+        }
+
+
+        private async Task<Guid?> GetBinaryId(string token, int postId)
+        {
+            if (string.IsNullOrEmpty(token)) return null;
+
+            var fileId = await GetBinaryObjectFromCache(token, postId);
+            return fileId;
+        }
+
+        private async Task ProcessMainFileAsync(Post post, string token, bool required)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                if (required && !post.PostFile.HasValue)
+                    throw new UserFriendlyException("فایل اصلی وجود ندارد");
+                return;
+            }
+
+            var mainFile = await SaveAndGetBinaryObject(token, post.Id);
             if (mainFile == null)
                 throw new UserFriendlyException("فایل اصلی وجود ندارد");
 
@@ -565,66 +597,105 @@ namespace Chamran.Deed.Info
                 post.PostVideoPreview = await GenerateVideoPreviewAsync(fullVideoPath, webRoot, post.Id);
             }
 
-            Guid? pdfId = null;
-            if (!string.IsNullOrWhiteSpace(input.PdfFileToken))
-            {
-                var pdfFile = await SaveAndGetBinaryObject(input.PdfFileToken, post.Id);
-                if (pdfFile == null)
-                    throw new UserFriendlyException("فایل PDF معتبر نیست یا در حافظه موقت یافت نشد.");
-
-                // ذخیره فایل PDF در دیتابیس قبل از ست کردن به Post
-                await _unitOfWorkManager.Current.SaveChangesAsync();
-
-                post.PdfFile = pdfFile.Id;
-            }
-
+            //Guid? pdfId = null;
             //if (!string.IsNullOrWhiteSpace(input.PdfFileToken))
             //{
             //    var pdfFile = await SaveAndGetBinaryObject(input.PdfFileToken, post.Id);
             //    if (pdfFile == null)
             //        throw new UserFriendlyException("فایل PDF معتبر نیست یا در حافظه موقت یافت نشد.");
 
+            //    // ذخیره فایل PDF در دیتابیس قبل از ست کردن به Post
+            //    await _unitOfWorkManager.Current.SaveChangesAsync();
+
             //    post.PdfFile = pdfFile.Id;
             //}
 
-            var fileTokens = new[] {
-                input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
-                input.PostFileToken5, input.PostFileToken6, input.PostFileToken7,
-                input.PostFileToken8, input.PostFileToken9, input.PostFileToken10
-            };
+            ////if (!string.IsNullOrWhiteSpace(input.PdfFileToken))
+            ////{
+            ////    var pdfFile = await SaveAndGetBinaryObject(input.PdfFileToken, post.Id);
+            ////    if (pdfFile == null)
+            ////        throw new UserFriendlyException("فایل PDF معتبر نیست یا در حافظه موقت یافت نشد.");
 
-            var binaryIds = await Task.WhenAll(fileTokens.Select(token => GetBinaryId(token, post.Id)));
+            ////    post.PdfFile = pdfFile.Id;
+            ////}
+
+            //var fileTokens = new[] {
+            //    input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
+            //    input.PostFileToken5, input.PostFileToken6, input.PostFileToken7,
+            //    input.PostFileToken8, input.PostFileToken9, input.PostFileToken10
+            //};
+
+            //var binaryIds = await Task.WhenAll(fileTokens.Select(token => GetBinaryId(token, post.Id)));
 
 
-            post.PostFile2 = binaryIds.ElementAtOrDefault(0);
-            post.PostFile3 = binaryIds.ElementAtOrDefault(1);
-            post.PostFile4 = binaryIds.ElementAtOrDefault(2);
-            post.PostFile5 = binaryIds.ElementAtOrDefault(3);
-            post.PostFile6 = binaryIds.ElementAtOrDefault(4);
-            post.PostFile7 = binaryIds.ElementAtOrDefault(5);
-            post.PostFile8 = binaryIds.ElementAtOrDefault(6);
-            post.PostFile9 = binaryIds.ElementAtOrDefault(7);
-            post.PostFile10 = binaryIds.ElementAtOrDefault(8);
+            //post.PostFile2 = binaryIds.ElementAtOrDefault(0);
+            //post.PostFile3 = binaryIds.ElementAtOrDefault(1);
+            //post.PostFile4 = binaryIds.ElementAtOrDefault(2);
+            //post.PostFile5 = binaryIds.ElementAtOrDefault(3);
+            //post.PostFile6 = binaryIds.ElementAtOrDefault(4);
+            //post.PostFile7 = binaryIds.ElementAtOrDefault(5);
+            //post.PostFile8 = binaryIds.ElementAtOrDefault(6);
+            //post.PostFile9 = binaryIds.ElementAtOrDefault(7);
+            //post.PostFile10 = binaryIds.ElementAtOrDefault(8);
 
-            if (pdfId != null && pdfId != Guid.Empty)
-                post.PdfFile = pdfId;
+            //if (pdfId != null && pdfId != Guid.Empty)
+            //    post.PdfFile = pdfId;
 
-            await _unitOfWorkManager.Current.SaveChangesAsync();
-            await unitOfWork.CompleteAsync();
+            //await _unitOfWorkManager.Current.SaveChangesAsync();
+            //await unitOfWork.CompleteAsync();
 
-            if (post.PostGroupId.HasValue && post.CurrentPostStatus == PostStatus.Published)
-                await PublishNewPostNotifications(post);
+            //if (post.PostGroupId.HasValue && post.CurrentPostStatus == PostStatus.Published)
+            //    await PublishNewPostNotifications(post);
 
-            await SendSmsNotification(post);
+            //await SendSmsNotification(post);
+
+        }
+        private async Task ProcessPdfFileAsync(Post post, string token)
+        {
+            var pdfId = await GetBinaryId(token, post.Id);
+            if (pdfId.HasValue)
+                post.PdfFile = pdfId.Value;
         }
 
 
-        private async Task<Guid?> GetBinaryId(string token, int postId)
+        //private async Task<Guid?> GetBinaryId(string token, int postId)
+        private async Task ProcessAdditionalFilesAsync(Post post, CreateOrEditPostDto input)
         {
-            if (string.IsNullOrEmpty(token)) return null;
+            //if (string.IsNullOrEmpty(token)) return null;
+            var tokens = new[]
+{
+                input.PostFileToken2,
+                input.PostFileToken3,
+                input.PostFileToken4,
+                input.PostFileToken5,
+                input.PostFileToken6,
+                input.PostFileToken7,
+                input.PostFileToken8,
+                input.PostFileToken9,
+                input.PostFileToken10
+            };
 
-            var fileId = await GetBinaryObjectFromCache(token, postId);
-            return fileId;
+            //var fileId = await GetBinaryObjectFromCache(token, postId);
+            //return fileId;
+            var setters = new Action<Guid?>[]
+{
+                id => post.PostFile2 = id,
+                id => post.PostFile3 = id,
+                id => post.PostFile4 = id,
+                id => post.PostFile5 = id,
+                id => post.PostFile6 = id,
+                id => post.PostFile7 = id,
+                id => post.PostFile8 = id,
+                id => post.PostFile9 = id,
+                id => post.PostFile10 = id
+};
+
+            for (int i = 0; i < tokens.Length; i++)
+            {
+                var id = await GetBinaryId(tokens[i], post.Id);
+                if (id.HasValue)
+                    setters[i](id.Value);
+            }
         }
 
 
@@ -829,18 +900,19 @@ namespace Chamran.Deed.Info
             }
             var post = await _postRepository.FirstOrDefaultAsync((int)input.Id);
 
-            var allTokensForCheck = new[] {
-                input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
-                input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
-                input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
-            };
+            //var allTokensForCheck = new[] {
+            //    input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
+            //    input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
+            //    input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
+            //};
 
-            var pdfCount = allTokensForCheck.Count(t => GetFileExtensionFromToken(t) == ".pdf");
-            if (pdfCount > 1)
-                throw new UserFriendlyException("حداکثر یک فایل PDF مجاز است");
+            //var pdfCount = allTokensForCheck.Count(t => GetFileExtensionFromToken(t) == ".pdf");
+            //if (pdfCount > 1)
+            //    throw new UserFriendlyException("حداکثر یک فایل PDF مجاز است");
 
-            if (GetFileExtensionFromToken(input.PostFileToken) == ".pdf")
-                throw new UserFriendlyException("فایل اصلی نمی‌تواند PDF باشد");
+            //if (GetFileExtensionFromToken(input.PostFileToken) == ".pdf")
+            //    throw new UserFriendlyException("فایل اصلی نمی‌تواند PDF باشد");
+            NormalizePdfFileToken(input);
 
             bool shouldSendSmsNotification = post.CurrentPostStatus != input.CurrentPostStatus;
             //if (input.PublisherUserId == null)
@@ -889,130 +961,133 @@ namespace Chamran.Deed.Info
                 });
             }
 
-            input.PdfFile = post.PdfFile;
+            //input.PdfFile = post.PdfFile;
             ObjectMapper.Map(input, post);
-            post.PdfFile = input.PdfFile;
-            try
-            {
-                if (!string.IsNullOrEmpty(input.PostFileToken))
-                    post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken, post.Id);
+            //post.PdfFile = input.PdfFile;
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken))
+            //        post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken, post.Id);
 
-            }
-            catch (UserFriendlyException ex)
-            {
-                //ignore
-            }
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-            try
-            {
-                if (!string.IsNullOrEmpty(input.PostFileToken2))
-                    post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2, post.Id);
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken2))
+            //        post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2, post.Id);
 
 
-            }
-            catch (UserFriendlyException ex)
-            {
-                //ignore
-            }
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-            try
-            {
-                if (!string.IsNullOrEmpty(input.PostFileToken3))
-                    post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3, post.Id);
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken3))
+            //        post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3, post.Id);
 
-            }
-            catch (UserFriendlyException ex)
-            {
-                //ignore
-            }
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-            try
-            {
-                if (!string.IsNullOrEmpty(input.PostFileToken4))
-                    post.PostFile4 = await GetBinaryObjectFromCache(input.PostFileToken4, post.Id);
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken4))
+            //        post.PostFile4 = await GetBinaryObjectFromCache(input.PostFileToken4, post.Id);
 
-            }
-            catch (UserFriendlyException ex)
-            {
-                //ignore
-            }
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-            try
-            {
-                if (!string.IsNullOrEmpty(input.PostFileToken5))
-                    post.PostFile5 = await GetBinaryObjectFromCache(input.PostFileToken5, post.Id);
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken5))
+            //        post.PostFile5 = await GetBinaryObjectFromCache(input.PostFileToken5, post.Id);
 
-            }
-            catch (UserFriendlyException ex)
-            {
-                //ignore
-            }
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-            try
-            {
-                if (!string.IsNullOrEmpty(input.PostFileToken6))
-                    post.PostFile6 = await GetBinaryObjectFromCache(input.PostFileToken6, post.Id);
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken6))
+            //        post.PostFile6 = await GetBinaryObjectFromCache(input.PostFileToken6, post.Id);
 
-            }
-            catch (UserFriendlyException ex)
-            {
-                //ignore
-            }
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-            try
-            {
-                if (!string.IsNullOrEmpty(input.PostFileToken7))
-                    post.PostFile7 = await GetBinaryObjectFromCache(input.PostFileToken7, post.Id);
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken7))
+            //        post.PostFile7 = await GetBinaryObjectFromCache(input.PostFileToken7, post.Id);
 
-            }
-            catch (UserFriendlyException ex)
-            {
-                //ignore
-            }
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-            try
-            {
-                if (!string.IsNullOrEmpty(input.PostFileToken8))
-                    post.PostFile8 = await GetBinaryObjectFromCache(input.PostFileToken8, post.Id);
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken8))
+            //        post.PostFile8 = await GetBinaryObjectFromCache(input.PostFileToken8, post.Id);
 
-            }
-            catch (UserFriendlyException ex)
-            {
-                //ignore
-            }
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-            try
-            {
-                if (!string.IsNullOrEmpty(input.PostFileToken9))
-                    post.PostFile9 = await GetBinaryObjectFromCache(input.PostFileToken9, post.Id);
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken9))
+            //        post.PostFile9 = await GetBinaryObjectFromCache(input.PostFileToken9, post.Id);
 
-            }
-            catch (UserFriendlyException ex)
-            {
-                //ignore
-            }
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-            try
-            {
-                if (!string.IsNullOrEmpty(input.PostFileToken10))
-                    post.PostFile10 = await GetBinaryObjectFromCache(input.PostFileToken10, post.Id);
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken10))
+            //        post.PostFile10 = await GetBinaryObjectFromCache(input.PostFileToken10, post.Id);
 
-            }
-            catch (UserFriendlyException ex)
-            {
-                //ignore
-            }
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-            try
-            {
-                if (!string.IsNullOrEmpty(input.PdfFileToken))
-                    post.PdfFile = await GetBinaryObjectFromCache(input.PdfFileToken, post.Id);
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PdfFileToken))
+            //        post.PdfFile = await GetBinaryObjectFromCache(input.PdfFileToken, post.Id);
 
-            }
-            catch (UserFriendlyException ex)
-            {
-                //ignore
-            }
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
+            await ProcessMainFileAsync(post, input.PostFileToken, required: false);
+            await ProcessPdfFileAsync(post, input.PdfFileToken);
+            await ProcessAdditionalFilesAsync(post, input);
 
             if (shouldSendSmsNotification)
             {
@@ -1023,6 +1098,8 @@ namespace Chamran.Deed.Info
 
             if (post.PostGroupId.HasValue && post.CurrentPostStatus == PostStatus.Published)
                 await PublishNewPostNotifications(post/*,input.OrganizationId*/);
+
+            await _unitOfWorkManager.Current.SaveChangesAsync();
 
         }
 

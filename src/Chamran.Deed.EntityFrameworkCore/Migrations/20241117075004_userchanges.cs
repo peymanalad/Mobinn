@@ -51,12 +51,12 @@ namespace Chamran.Deed.Migrations
                 nullable: false,
                 defaultValue: 0);
 
-            //migrationBuilder.AddColumn<string>(
-            //    name: "TargetNotifiers",
-            //    table: "AbpNotificationSubscriptions",
-            //    type: "nvarchar(1024)",
-            //    maxLength: 1024,
-            //    nullable: true);
+            migrationBuilder.AddColumn<string>(
+                name: "TargetNotifiers",
+                table: "AbpNotificationSubscriptions",
+                type: "nvarchar(1024)",
+                maxLength: 1024,
+                nullable: true);
 
             migrationBuilder.CreateTable(
                 name: "PostSubGroups",
@@ -142,9 +142,9 @@ namespace Chamran.Deed.Migrations
                 name: "UserType",
                 table: "AbpUsers");
 
-            //migrationBuilder.DropColumn(
-            //    name: "TargetNotifiers",
-            //    table: "AbpNotificationSubscriptions");
+            migrationBuilder.DropColumn(
+                name: "TargetNotifiers",
+                table: "AbpNotificationSubscriptions");
         }
     }
 }

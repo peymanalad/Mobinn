@@ -52,6 +52,8 @@ using Chamran.Deed.Web.MiddleWares;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Http.Features;
+using Abp.Runtime.Session;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Chamran.Deed.Web.Startup
 {
@@ -76,7 +78,8 @@ namespace Chamran.Deed.Web.Startup
 
             services.AddControllersWithViews(options =>
             {
-                options.Filters.Add(new AbpAutoValidateAntiforgeryTokenAttribute());
+                //options.Filters.Add(new AbpAutoValidateAntiforgeryTokenAttribute());
+                options.Filters.Add(new IgnoreAntiforgeryTokenAttribute());
             })
 #if DEBUG
             .AddRazorRuntimeCompilation()
@@ -279,11 +282,19 @@ namespace Chamran.Deed.Web.Startup
                     EnsureDirectoryExists(Path.Combine(hostingEnv.WebRootPath, "previews"));
                     EnsureDirectoryExists(Path.Combine(hostingEnv.WebRootPath, "videos"));
                     //app.UseAbpRequestLocalization();
-                    app.UseAbpRequestLocalization(options =>
+                    //app.UseAbpRequestLocalization(options =>
+                    var session = app.ApplicationServices.GetRequiredService<IAbpSession>();
+                    using (session.Use(null, null))
                     {
-                        var headerProvider = options.RequestCultureProviders.OfType<AbpLocalizationHeaderRequestCultureProvider>().First();
-                        headerProvider.HeaderName = "-AspNetCore-Culture";
-                    });
+                        //    var headerProvider = options.RequestCultureProviders.OfType<AbpLocalizationHeaderRequestCultureProvider>().First();
+                        //    headerProvider.HeaderName = "-AspNetCore-Culture";
+                        //});
+                        app.UseAbpRequestLocalization(options =>
+                        {
+                            var headerProvider = options.RequestCultureProviders.OfType<AbpLocalizationHeaderRequestCultureProvider>().First();
+                            headerProvider.HeaderName = "-AspNetCore-Culture";
+                        });
+                    }
                 }
             }
 

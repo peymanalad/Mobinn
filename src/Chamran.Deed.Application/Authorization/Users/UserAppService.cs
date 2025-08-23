@@ -155,6 +155,7 @@ namespace Chamran.Deed.Authorization.Users
         }
 
         [HttpPost]
+        [IgnoreAntiforgeryToken]
         public async Task<PagedResultDto<UserListDto>> GetUsers(GetUsersInput input)
         {
             var query = GetUsersFilteredQuery(input);
