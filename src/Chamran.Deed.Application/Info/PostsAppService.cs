@@ -555,11 +555,11 @@ namespace Chamran.Deed.Info
                 if (isPdf)
                 {
                     if (!firstPdfId.HasValue)
-                        firstPdfId = id.Value;    
-                    continue;                   
+                        firstPdfId = id.Value;
+                    continue;
                 }
 
-                if (!seen.Add(id.Value)) continue; 
+                if (!seen.Add(id.Value)) continue;
                 media.Add((id.Value, ext, bytes));
             }
 
@@ -661,7 +661,7 @@ namespace Chamran.Deed.Info
                         var pdfId = await GetBinaryId(tok, post.Id);
                         if (pdfId.HasValue) firstPdfId = pdfId.Value;
                     }
-                    continue; 
+                    continue;
                 }
 
                 var bin = await SaveAndGetBinaryObject(tok, post.Id);
@@ -674,7 +674,7 @@ namespace Chamran.Deed.Info
                 if (IsPdf(bin.Bytes) || ext == ".pdf")
                 {
                     if (!firstPdfId.HasValue)
-                        firstPdfId = bin.Id; 
+                        firstPdfId = bin.Id;
                     continue;
                 }
 
@@ -996,7 +996,10 @@ namespace Chamran.Deed.Info
             var psi = new ProcessStartInfo
             {
                 FileName = "/usr/bin/ffmpeg",
-                Arguments = $"-y -hide_banner -loglevel error -i \"{inputPath}\" -ss 0 -t 5 -vf \"fps=10,scale=320:-1:flags=lanczos\" -loop 0 \"{tempPath}\"",
+                Arguments = $@"-y -hide_banner -loglevel error -ss 0 -t 5 -i ""{inputPath}"" 
+               -filter_complex ""fps=10,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen=stats_mode=full[p];[s1][p]paletteuse=new=1"" 
+               -f gif -loop 0 ""{tempPath}""";
+
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -1014,9 +1017,9 @@ namespace Chamran.Deed.Info
             if (File.Exists(finalPath)) File.Delete(finalPath);
             File.Move(tempPath, finalPath);
 
-            // ✅ مسیر برای URL
             return $"/previews/{postId}.gif";
         }
+
 
         //private async Task<string> GenerateThumbnailAsync(byte[] imageBytes, int postId, string webRoot)
         //{
@@ -1616,7 +1619,7 @@ namespace Chamran.Deed.Info
                 var isPdf = ext == ".pdf" || LooksLikePdf(bytes);
 
                 var storedFile = new BinaryObject(AbpSession.TenantId, bytes, BinarySourceType.Post, fileCache.FileName);
-                if (refId != null) storedFile.SourceId = refId;  
+                if (refId != null) storedFile.SourceId = refId;
                 await _binaryObjectManager.SaveAsync(storedFile);
 
                 return (storedFile.Id, isPdf, ext, bytes);
