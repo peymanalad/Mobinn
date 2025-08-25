@@ -933,7 +933,6 @@ namespace Chamran.Deed.Info
 
         private static string ResolveWebRoot(string webRoot)
         {
-            // اگر هاستینگ وب‌روت نداد، پیش‌فرض: /App/wwwroot (داخل کانتینر)
             var baseRoot = string.IsNullOrWhiteSpace(webRoot)
                 ? Path.Combine(AppContext.BaseDirectory, "wwwroot")
                 : webRoot;
@@ -953,25 +952,25 @@ namespace Chamran.Deed.Info
             var tempPath = finalPath + ".tmp";
 
             using var ms = new MemoryStream(imageBytes);
-            using var img = await Image.LoadAsync(ms);
+            using var img = Image.Load(ms); // نسخه‌های قدیمی سازگارتر از LoadAsync هستند
 
+            // چرخش صحیح طبق EXIF
             img.Mutate(x => x.AutoOrient());
 
             const int targetWidth = 300;
-            var ratio = (double)targetWidth / img.Width;
-            var targetHeight = Math.Max(1, (int)(img.Height * ratio));
+            var targetHeight = Math.Max(1, (int)(img.Height * (targetWidth / (double)img.Width)));
 
             img.Mutate(x => x.Resize(new ResizeOptions
             {
                 Size = new Size(targetWidth, targetHeight),
-                Mode = ResizeMode.Max,
-                Sampler = KnownResamplers.Lanczos3
+                Mode = ResizeMode.Max
             }));
 
-            var encoder = new JpegEncoder { Quality = 80 };
-
             await using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 64 * 1024, useAsync: true))
-                await img.SaveAsJpegAsync(fs, encoder);
+            {
+                // ✅ بدون encoder و بدون Quality — سازگار با همه‌ی نسخه‌های ImageSharp
+                await img.SaveAsJpegAsync(fs);
+            }
 
             if (File.Exists(finalPath)) File.Delete(finalPath);
             File.Move(tempPath, finalPath);
