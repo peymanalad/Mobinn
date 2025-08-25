@@ -526,7 +526,7 @@ namespace Chamran.Deed.Info
                 }
 
                 await _postRepository.InsertAsync(post);
-                await ProcessAllFilesAsync(post, input, mainRequired: true, ct);
+                await ProcessAllFilesAsync(post, input, mainRequired: true);
 
                 await _unitOfWorkManager.Current.SaveChangesAsync();
                 await unitOfWork.CompleteAsync();
