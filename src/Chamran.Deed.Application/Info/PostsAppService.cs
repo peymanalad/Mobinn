@@ -996,9 +996,14 @@ namespace Chamran.Deed.Info
             var psi = new ProcessStartInfo
             {
                 FileName = "/usr/bin/ffmpeg",
-                Arguments = $@"-y -hide_banner -loglevel error -ss 0 -t 5 -i ""{inputPath}"" 
-               -filter_complex ""fps=10,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen=stats_mode=full[p];[s1][p]paletteuse=new=1"" 
-               -f gif -loop 0 ""{tempPath}""";
+                Arguments =
+                    "-y -hide_banner -loglevel error -ss 0 -t 5 " +
+                    $"-i \"{inputPath}\" " +
+                    "-filter_complex \"fps=10,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen=stats_mode=full[p];[s1][p]paletteuse=new=1\" " +
+                    "-f gif -loop 0 " +
+                    $"\"{tempPath}\"",
+
+
 
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
