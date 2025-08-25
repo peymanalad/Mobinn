@@ -933,15 +933,17 @@ namespace Chamran.Deed.Info
         }
 
 
-        private static string ResolveWebRoot(string webRoot)
+        private string ResolveWebRoot(string webRoot)
         {
-            var baseRoot = string.IsNullOrWhiteSpace(webRoot)
-                ? Path.Combine(AppContext.BaseDirectory, "wwwroot")
-                : webRoot;
+            if (string.IsNullOrWhiteSpace(webRoot))
+                webRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
 
-            Directory.CreateDirectory(baseRoot);
-            return baseRoot;
+            if (!Path.IsPathRooted(webRoot))
+                webRoot = Path.GetFullPath(webRoot);
+
+            return webRoot;
         }
+
 
         private async Task<string> GenerateThumbnailAsync(byte[] imageBytes, int postId, string webRoot)
         {
@@ -980,6 +982,7 @@ namespace Chamran.Deed.Info
             return $"/thumbnails/{postId}.jpg";
         }
 
+
         private async Task<string> GenerateVideoPreviewAsync(string inputPath, string webRoot, int postId)
         {
             var baseRoot = ResolveWebRoot(webRoot);
@@ -992,7 +995,7 @@ namespace Chamran.Deed.Info
 
             var psi = new ProcessStartInfo
             {
-                FileName = "/usr/bin/ffmpeg", // همینی که داخل کانتینر داری
+                FileName = "/usr/bin/ffmpeg",
                 Arguments = $"-y -hide_banner -loglevel error -i \"{inputPath}\" -ss 0 -t 5 -vf \"fps=10,scale=320:-1:flags=lanczos\" -loop 0 \"{tempPath}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -1011,6 +1014,7 @@ namespace Chamran.Deed.Info
             if (File.Exists(finalPath)) File.Delete(finalPath);
             File.Move(tempPath, finalPath);
 
+            // ✅ مسیر برای URL
             return $"/previews/{postId}.gif";
         }
 
