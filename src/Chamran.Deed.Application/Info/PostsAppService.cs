@@ -1634,9 +1634,18 @@ namespace Chamran.Deed.Info
 
         private bool IsPdfToken(string token)
         {
-            if (string.IsNullOrWhiteSpace(token)) return false;
+            if (string.IsNullOrWhiteSpace(token))
+                return false;
+
             var info = _tempFileCacheManager.GetFileInfo(token);
-            return IsPdf(info?.File);
+            if (info == null)
+                return false;
+
+            if (!string.IsNullOrWhiteSpace(info.FileName) &&
+                Path.GetExtension(info.FileName)?.Equals(".pdf", StringComparison.OrdinalIgnoreCase) == true)
+                return true;
+
+            return IsPdf(info.File);
         }
 
         private static bool IsPdf(byte[] bytes)
@@ -1645,6 +1654,7 @@ namespace Chamran.Deed.Info
                    bytes[0] == 0x25 && bytes[1] == 0x50 &&
                    bytes[2] == 0x44 && bytes[3] == 0x46;
         }
+
 
 
         private void NormalizePdfFileToken(CreateOrEditPostDto input)
