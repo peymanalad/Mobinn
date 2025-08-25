@@ -523,8 +523,9 @@ namespace Chamran.Deed.Info
             post.GroupMemberId = grpMember.Id;
 
             await _postRepository.InsertAsync(post);
+            await _unitOfWorkManager.Current.SaveChangesAsync();
 
-            // فقط از Tokenها استفاده می‌کنیم (PDF جدا، مدیا جدا)
+            ResetMediaSlotsForCreate(post);
             var tokens = new[]
             {
         input.PostFileToken,
@@ -595,7 +596,8 @@ namespace Chamran.Deed.Info
                 return;
 
             var ext = (Path.GetExtension(file.Description) ?? string.Empty).ToLowerInvariant();
-            var webRoot = _hostingEnvironment.WebRootPath;
+            //var webRoot = _hostingEnvironment.WebRootPath;
+            var webRoot = ResolveWebRoot(_hostingEnvironment.WebRootPath);
 
             if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".webp")
             {
