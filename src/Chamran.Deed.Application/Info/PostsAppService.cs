@@ -48,6 +48,7 @@ using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading;
+using SixLabors.ImageSharp.Formats.Jpeg;
 
 namespace Chamran.Deed.Info
 {
@@ -930,64 +931,145 @@ namespace Chamran.Deed.Info
         }
 
 
+        private static string ResolveWebRoot(string webRoot)
+        {
+            // اگر هاستینگ وب‌روت نداد، پیش‌فرض: /App/wwwroot (داخل کانتینر)
+            var baseRoot = string.IsNullOrWhiteSpace(webRoot)
+                ? Path.Combine(AppContext.BaseDirectory, "wwwroot")
+                : webRoot;
+
+            Directory.CreateDirectory(baseRoot);
+            return baseRoot;
+        }
 
         private async Task<string> GenerateThumbnailAsync(byte[] imageBytes, int postId, string webRoot)
         {
-            var thumbnailsDir = Path.Combine(webRoot, "thumbnails");
+            var baseRoot = ResolveWebRoot(webRoot);
+
+            var thumbnailsDir = Path.Combine(baseRoot, "thumbnails");
             Directory.CreateDirectory(thumbnailsDir);
 
-            var thumbnailPath = Path.Combine(thumbnailsDir, $"{postId}.jpg");
+            var finalPath = Path.Combine(thumbnailsDir, $"{postId}.jpg");
+            var tempPath = finalPath + ".tmp";
 
-            using var inputStream = new MemoryStream(imageBytes);
-            using var image = SixLabors.ImageSharp.Image.Load(inputStream);
+            using var ms = new MemoryStream(imageBytes);
+            using var img = await Image.LoadAsync(ms);
 
-            const int thumbnailWidth = 300;
-            var ratio = (double)thumbnailWidth / image.Width;
-            var thumbnailHeight = (int)(image.Height * ratio);
+            img.Mutate(x => x.AutoOrient());
 
-            image.Mutate(x => x.Resize(thumbnailWidth, thumbnailHeight));
+            const int targetWidth = 300;
+            var ratio = (double)targetWidth / img.Width;
+            var targetHeight = Math.Max(1, (int)(img.Height * ratio));
 
-            await using var outputStream = new FileStream(thumbnailPath, FileMode.Create);
-            await image.SaveAsJpegAsync(outputStream);
+            img.Mutate(x => x.Resize(new ResizeOptions
+            {
+                Size = new Size(targetWidth, targetHeight),
+                Mode = ResizeMode.Max,
+                Sampler = KnownResamplers.Lanczos3
+            }));
 
-            // نسبت به ریشه‌ی سایت
+            var encoder = new JpegEncoder { Quality = 80, Subsample = JpegSubsample.Ratio420 };
+
+            await using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 64 * 1024, useAsync: true))
+                await img.SaveAsJpegAsync(fs, encoder);
+
+            if (File.Exists(finalPath)) File.Delete(finalPath);
+            File.Move(tempPath, finalPath);
+
             return $"/thumbnails/{postId}.jpg";
         }
 
         private async Task<string> GenerateVideoPreviewAsync(string inputPath, string webRoot, int postId)
         {
-            var previewsDir = Path.Combine(webRoot, "previews");
+            var baseRoot = ResolveWebRoot(webRoot);
+
+            var previewsDir = Path.Combine(baseRoot, "previews");
             Directory.CreateDirectory(previewsDir);
 
-            var previewPath = Path.Combine(previewsDir, $"{postId}.gif");
+            var finalPath = Path.Combine(previewsDir, $"{postId}.gif");
+            var tempPath = finalPath + ".tmp";
 
-            // ffmpeg command to generate GIF from the first 5 seconds
-            var ffmpegCmd = $"ffmpeg -y -i \"{inputPath}\" -ss 0 -t 5 -vf \"fps=10,scale=320:-1:flags=lanczos\" -loop 0 \"{previewPath}\"";
-
-            var processInfo = new ProcessStartInfo("bash", $"-c \"{ffmpegCmd}\"")
+            var psi = new ProcessStartInfo
             {
+                FileName = "/usr/bin/ffmpeg", // همینی که داخل کانتینر داری
+                Arguments = $"-y -hide_banner -loglevel error -i \"{inputPath}\" -ss 0 -t 5 -vf \"fps=10,scale=320:-1:flags=lanczos\" -loop 0 \"{tempPath}\"",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
 
-            using var process = Process.Start(processInfo);
-            if (process == null)
-                throw new Exception("اجرای ffmpeg برای ساخت GIF ناموفق بود");
+            using var proc = Process.Start(psi) ?? throw new Exception("اجرای ffmpeg ناموفق بود");
+            var stderrTask = proc.StandardError.ReadToEndAsync();
+            await proc.WaitForExitAsync();
 
-            string stderr = await process.StandardError.ReadToEndAsync();
-            string stdout = await process.StandardOutput.ReadToEndAsync();
-            await process.WaitForExitAsync();
+            var stderr = await stderrTask;
+            if (proc.ExitCode != 0)
+                throw new Exception($"ffmpeg exit code {proc.ExitCode}. stderr: {stderr}");
 
-            if (process.ExitCode != 0)
-            {
-                Console.WriteLine("FFmpeg error:\n" + stderr);
-                throw new Exception("خطا در ساخت پیش‌نمایش گیف ویدیو");
-            }
+            if (File.Exists(finalPath)) File.Delete(finalPath);
+            File.Move(tempPath, finalPath);
 
             return $"/previews/{postId}.gif";
         }
+
+        //private async Task<string> GenerateThumbnailAsync(byte[] imageBytes, int postId, string webRoot)
+        //{
+        //    var thumbnailsDir = Path.Combine(webRoot, "thumbnails");
+        //    Directory.CreateDirectory(thumbnailsDir);
+
+        //    var thumbnailPath = Path.Combine(thumbnailsDir, $"{postId}.jpg");
+
+        //    using var inputStream = new MemoryStream(imageBytes);
+        //    using var image = SixLabors.ImageSharp.Image.Load(inputStream);
+
+        //    const int thumbnailWidth = 300;
+        //    var ratio = (double)thumbnailWidth / image.Width;
+        //    var thumbnailHeight = (int)(image.Height * ratio);
+
+        //    image.Mutate(x => x.Resize(thumbnailWidth, thumbnailHeight));
+
+        //    await using var outputStream = new FileStream(thumbnailPath, FileMode.Create);
+        //    await image.SaveAsJpegAsync(outputStream);
+
+        //    // نسبت به ریشه‌ی سایت
+        //    return $"/thumbnails/{postId}.jpg";
+        //}
+
+        //private async Task<string> GenerateVideoPreviewAsync(string inputPath, string webRoot, int postId)
+        //{
+        //    var previewsDir = Path.Combine(webRoot, "previews");
+        //    Directory.CreateDirectory(previewsDir);
+
+        //    var previewPath = Path.Combine(previewsDir, $"{postId}.gif");
+
+        //    // ffmpeg command to generate GIF from the first 5 seconds
+        //    var ffmpegCmd = $"ffmpeg -y -i \"{inputPath}\" -ss 0 -t 5 -vf \"fps=10,scale=320:-1:flags=lanczos\" -loop 0 \"{previewPath}\"";
+
+        //    var processInfo = new ProcessStartInfo("bash", $"-c \"{ffmpegCmd}\"")
+        //    {
+        //        RedirectStandardOutput = true,
+        //        RedirectStandardError = true,
+        //        UseShellExecute = false,
+        //        CreateNoWindow = true
+        //    };
+
+        //    using var process = Process.Start(processInfo);
+        //    if (process == null)
+        //        throw new Exception("اجرای ffmpeg برای ساخت GIF ناموفق بود");
+
+        //    string stderr = await process.StandardError.ReadToEndAsync();
+        //    string stdout = await process.StandardOutput.ReadToEndAsync();
+        //    await process.WaitForExitAsync();
+
+        //    if (process.ExitCode != 0)
+        //    {
+        //        Console.WriteLine("FFmpeg error:\n" + stderr);
+        //        throw new Exception("خطا در ساخت پیش‌نمایش گیف ویدیو");
+        //    }
+
+        //    return $"/previews/{postId}.gif";
+        //}
 
 
 
