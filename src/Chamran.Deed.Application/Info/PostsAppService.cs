@@ -663,7 +663,7 @@ namespace Chamran.Deed.Info
         {
             //if (string.IsNullOrEmpty(token)) return null;
             var tokens = new[]
-{
+            {
                 input.PostFileToken2,
                 input.PostFileToken3,
                 input.PostFileToken4,
@@ -678,7 +678,7 @@ namespace Chamran.Deed.Info
             //var fileId = await GetBinaryObjectFromCache(token, postId);
             //return fileId;
             var setters = new Action<Guid?>[]
-{
+            {
                 id => post.PostFile2 = id,
                 id => post.PostFile3 = id,
                 id => post.PostFile4 = id,
@@ -688,13 +688,33 @@ namespace Chamran.Deed.Info
                 id => post.PostFile8 = id,
                 id => post.PostFile9 = id,
                 id => post.PostFile10 = id
-};
+            };
 
-            for (int i = 0; i < tokens.Length; i++)
+            //for (int i = 0; i < tokens.Length; i++)
+            var fileIndex = 0;
+            for (var i = 0; i < tokens.Length; i++)
             {
-                var id = await GetBinaryId(tokens[i], post.Id);
-                if (id.HasValue)
-                    setters[i](id.Value);
+                //var id = await GetBinaryId(tokens[i], post.Id);
+                //if (id.HasValue)
+                //    setters[i](id.Value);
+                var token = tokens[i];
+                if (string.IsNullOrWhiteSpace(token))
+                    continue;
+
+                if (GetFileExtensionFromToken(token) == ".pdf")
+                {
+                    if (!post.PdfFile.HasValue)
+                    {
+                        var pdfId = await GetBinaryId(token, post.Id);
+                        if (pdfId.HasValue)
+                            post.PdfFile = pdfId.Value;
+                    }
+                    continue;
+                }
+
+                var id = await GetBinaryId(token, post.Id);
+                if (id.HasValue && fileIndex < setters.Length)
+                    setters[fileIndex++](id.Value);
             }
         }
 
@@ -1241,6 +1261,9 @@ namespace Chamran.Deed.Info
             var fileCache = _tempFileCacheManager.GetFileInfo(fileToken);
             if (fileCache == null)
                 throw new UserFriendlyException("فایلی با این توکن یافت نشد: " + fileToken);
+
+            if (fileCache.File.Length > BinaryObjectConsts.BytesMaxSize)
+                throw new UserFriendlyException("لطفا فایل با حداکثر حجم 10 مگابایت انتخاب کنید");
 
             var storedFile = new BinaryObject(AbpSession.TenantId, fileCache.File, BinarySourceType.Post, fileCache.FileName);
             if (refId != null)
