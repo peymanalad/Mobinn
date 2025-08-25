@@ -121,3 +121,4 @@ src/MyCompanyName.AbpZeroTemplate.Web.Public/wwwroot/view-resources/**/*.min.*
 src/MyCompanyName.AbpZeroTemplate.Web.Public/wwwroot/view-resources/Views/_Bundles
 x64/
 ~$*
+src/Chamran.Deed.EntityFrameworkCore/ideed_28.11.tar
