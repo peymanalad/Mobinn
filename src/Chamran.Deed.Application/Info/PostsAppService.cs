@@ -968,7 +968,7 @@ namespace Chamran.Deed.Info
                 Sampler = KnownResamplers.Lanczos3
             }));
 
-            var encoder = new JpegEncoder { Quality = 80, Subsample = JpegSubsample.Ratio420 };
+            var encoder = new JpegEncoder { Quality = 80 };
 
             await using (var fs = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 64 * 1024, useAsync: true))
                 await img.SaveAsJpegAsync(fs, encoder);
