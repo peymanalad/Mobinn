@@ -577,6 +577,13 @@ namespace Chamran.Deed.Info
             if (mainFile == null)
                 throw new UserFriendlyException("فایل اصلی وجود ندارد");
 
+            if (IsPdf(mainFile.Bytes))
+            {
+                if (!post.PdfFile.HasValue)
+                    post.PdfFile = mainFile.Id;
+                return;
+            }
+
             post.PostFile = mainFile.Id;
 
             var ext = Path.GetExtension(mainFile.Description ?? string.Empty).ToLowerInvariant();
@@ -701,7 +708,7 @@ namespace Chamran.Deed.Info
                 if (string.IsNullOrWhiteSpace(token))
                     continue;
 
-                if (GetFileExtensionFromToken(token) == ".pdf")
+                if (IsPdfToken(token))
                 {
                     if (!post.PdfFile.HasValue)
                     {
@@ -1625,13 +1632,29 @@ namespace Chamran.Deed.Info
             return Path.GetExtension(info.FileName)?.ToLowerInvariant();
         }
 
+        private bool IsPdfToken(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token)) return false;
+            var info = _tempFileCacheManager.GetFileInfo(token);
+            return IsPdf(info?.File);
+        }
+
+        private static bool IsPdf(byte[] bytes)
+        {
+            return bytes != null && bytes.Length > 4 &&
+                   bytes[0] == 0x25 && bytes[1] == 0x50 &&
+                   bytes[2] == 0x44 && bytes[3] == 0x46;
+        }
+
+
         private void NormalizePdfFileToken(CreateOrEditPostDto input)
         {
             bool pdfSet = !string.IsNullOrWhiteSpace(input.PdfFileToken);
 
             void HandleToken(ref string token)
             {
-                if (GetFileExtensionFromToken(token) == ".pdf")
+                //if (GetFileExtensionFromToken(token) == ".pdf")
+                if (IsPdfToken(token))
                 {
                     if (!pdfSet)
                     {
