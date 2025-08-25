@@ -545,72 +545,82 @@ namespace Chamran.Deed.Info
             }
         }
 
-        private async Task ProcessAllFilesAsync(Post post, CreateOrEditPostDto input, bool mainRequired, CancellationToken ct = default)
+        private async Task ProcessAllFilesAsync(Post post, CreateOrEditPostDto input, bool mainRequired)
         {
-            var orderedTokens = new List<(string token, bool explicitPdf)>
-    {
-        (input.PostFileToken, false),
-        (input.PostFileToken2, false),
-        (input.PostFileToken3, false),
-        (input.PostFileToken4, false),
-        (input.PostFileToken5, false),
-        (input.PostFileToken6, false),
-        (input.PostFileToken7, false),
-        (input.PostFileToken8, false),
-        (input.PostFileToken9, false),
-        (input.PostFileToken10, false),
-        (input.PdfFileToken, true) 
-    };
+            var tokensOrdered = new List<(string token, bool explicitPdf)>
+                {
+                    (input.PostFileToken,  false),
+                    (input.PostFileToken2, false),
+                    (input.PostFileToken3, false),
+                    (input.PostFileToken4, false),
+                    (input.PostFileToken5, false),
+                    (input.PostFileToken6, false),
+                    (input.PostFileToken7, false),
+                    (input.PostFileToken8, false),
+                    (input.PostFileToken9, false),
+                    (input.PostFileToken10,false),
+                    (input.PdfFileToken,   true)
+                };
 
-            var sawAnyMedia = post.PostFile.HasValue; 
-            var firstMediaHandled = post.PostFile.HasValue; 
+            Guid? firstPdfId = null;
+            var media = new List<(Guid id, string ext, byte[] bytes)>();
+            var seen = new HashSet<Guid>();
 
-            foreach (var (token, explicitPdf) in orderedTokens)
+            foreach (var (tok, explicitPdf) in tokensOrdered)
             {
-                if (string.IsNullOrWhiteSpace(token))
+                if (string.IsNullOrWhiteSpace(tok))
                     continue;
 
-                if (explicitPdf || IsPdfToken(token))
+                if (explicitPdf || IsPdfToken(tok))
                 {
-                    if (!post.PdfFile.HasValue)
+                    if (!firstPdfId.HasValue)
                     {
-                        var pdfId = await GetBinaryId(token, post.Id);
-                        if (pdfId.HasValue)
-                            post.PdfFile = pdfId.Value;  
+                        var pdfId = await GetBinaryId(tok, post.Id);
+                        if (pdfId.HasValue) firstPdfId = pdfId.Value;
                     }
                     continue; 
                 }
 
-                var bin = await SaveAndGetBinaryObject(token, post.Id);
+                var bin = await SaveAndGetBinaryObject(tok, post.Id);
                 if (bin == null || bin.Bytes == null || bin.Bytes.Length == 0)
                     continue;
 
                 var ext = (Path.GetExtension(bin.Description ?? string.Empty) ?? string.Empty)
                           .Trim().ToLowerInvariant();
+
                 if (IsPdf(bin.Bytes) || ext == ".pdf")
                 {
-                    if (!post.PdfFile.HasValue)
-                        post.PdfFile = bin.Id;
+                    if (!firstPdfId.HasValue)
+                        firstPdfId = bin.Id; 
                     continue;
                 }
 
-                var idx = GetNextMediaIndex(post);
-                if (idx == -1)
-                    break; 
+                if (!seen.Add(bin.Id))
+                    continue;
 
-                SetMediaByIndex(post, idx, bin.Id);
-                sawAnyMedia = true;
-
-                if (!firstMediaHandled && idx == 0)
-                {
-                    await BuildThumbOrPreviewForFirstMediaAsync(post, bin, ext, ct);
-                    firstMediaHandled = true;
-                }
+                media.Add((bin.Id, ext, bin.Bytes));
             }
 
-            if (mainRequired && !sawAnyMedia && !post.PdfFile.HasValue)
+            if (!post.PdfFile.HasValue && firstPdfId.HasValue)
+                post.PdfFile = firstPdfId.Value;
+
+            var slot = GetNextMediaIndex(post);
+            for (int i = 0; i < media.Count && slot != -1; i++)
+            {
+                var m = media[i];
+                SetMediaByIndex(post, slot, m.id);
+
+                if (slot == 0)
+                    await BuildThumbOrPreviewForFirstMediaAsync(post, m.bytes, m.ext);
+
+                slot = GetNextMediaIndex(post);
+            }
+
+            bool hasAnyMedia = post.PostFile.HasValue;
+            if (mainRequired && !hasAnyMedia && !post.PdfFile.HasValue)
                 throw new UserFriendlyException("فایل اصلی وجود ندارد");
         }
+
 
         private static int GetNextMediaIndex(Post post)
         {
@@ -644,22 +654,28 @@ namespace Chamran.Deed.Info
             }
         }
 
-        private async Task BuildThumbOrPreviewForFirstMediaAsync(Post post, BinaryObject bin, string ext, CancellationToken ct)
+        private async Task BuildThumbOrPreviewForFirstMediaAsync(Post post, byte[] bytes, string ext)
         {
             var webRoot = _hostingEnvironment.WebRootPath;
+
             if (ext is ".jpg" or ".jpeg" or ".png" or ".webp")
             {
-                post.PostFileThumb = await GenerateThumbnailAsync(bin.Bytes, post.Id, webRoot);
+                post.PostFileThumb = await GenerateThumbnailAsync(bytes, post.Id, webRoot);
+                return;
             }
-            else if (ext is ".mp4" or ".mov" or ".m4v" or ".avi" or ".mkv")
+
+            if (ext is ".mp4" or ".mov" or ".m4v" or ".avi" or ".mkv")
             {
-                var tempVideosDir = Path.Combine(webRoot, "videos");
-                Directory.CreateDirectory(tempVideosDir);
-                var fullVideoPath = Path.Combine(tempVideosDir, $"{post.Id}{ext}");
-                await File.WriteAllBytesAsync(fullVideoPath, bin.Bytes, ct);
+                var videosDir = Path.Combine(webRoot, "videos");
+                Directory.CreateDirectory(videosDir);
+
+                var fullVideoPath = Path.Combine(videosDir, $"{post.Id}{ext}");
+                await File.WriteAllBytesAsync(fullVideoPath, bytes);
+
                 post.PostVideoPreview = await GenerateVideoPreviewAsync(fullVideoPath, webRoot, post.Id);
             }
         }
+
 
 
 
