@@ -526,6 +526,7 @@ namespace Chamran.Deed.Info
                 }
 
                 await _postRepository.InsertAsync(post);
+                ResetMediaSlotsForCreate(post);
                 await ProcessAllFilesAsync(post, input, mainRequired: true);
 
                 await _unitOfWorkManager.Current.SaveChangesAsync();
@@ -544,6 +545,17 @@ namespace Chamran.Deed.Info
                 throw new UserFriendlyException("خطای غیرمنتظره در ایجاد پست.");
             }
         }
+
+        private static void ResetMediaSlotsForCreate(Post post)
+        {
+            post.PostFile = post.PostFile2 = post.PostFile3 = post.PostFile4 = post.PostFile5 =
+            post.PostFile6 = post.PostFile7 = post.PostFile8 = post.PostFile9 = post.PostFile10 = null;
+
+            post.PostFileThumb = null;
+            post.PostVideoPreview = null;
+            post.PdfFile = null; // چون در Create با توکن‌ها دوباره ست می‌کنیم
+        }
+
 
         private async Task ProcessAllFilesAsync(Post post, CreateOrEditPostDto input, bool mainRequired)
         {
