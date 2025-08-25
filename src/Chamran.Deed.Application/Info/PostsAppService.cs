@@ -497,54 +497,122 @@ namespace Chamran.Deed.Info
         //}
 
         [AbpAuthorize(AppPermissions.Pages_Posts_Create)]
-        protected virtual async Task Create(CreateOrEditPostDto input, CancellationToken ct = default)
+        protected virtual async Task Create(CreateOrEditPostDto input)
         {
             using var unitOfWork = _unitOfWorkManager.Begin();
-            try
+
+            var grpMember = await _lookup_groupMemberRepository.GetAll()
+                .Where(x => x.UserId == AbpSession.UserId)
+                .FirstOrDefaultAsync();
+
+            if (grpMember == null)
+                throw new UserFriendlyException("کاربر حاضر به هیچ سازمانی تعلق ندارد");
+
+            var post = ObjectMapper.Map<Post>(input);
+
+            var userRole = await _userRoleRepository.FirstOrDefaultAsync(ur => ur.UserId == AbpSession.UserId);
+            if (userRole == null)
             {
-                NormalizePdfFileToken(input);
-                var grpMemberId = await _lookup_groupMemberRepository.GetAll()
-                    .Where(x => x.UserId == AbpSession.UserId)
-                    .Select(x => x.Id)
-                    .FirstOrDefaultAsync();
+                Console.WriteLine("Current user role not found.");
+                return;
+            }
 
-                if (grpMemberId == 0)
-                    throw new UserFriendlyException("کاربر حاضر به هیچ سازمانی تعلق ندارد");
+            var currentUser = await GetCurrentUserAsync();
+            post.CreatorUserId = currentUser.Id;
+            post.GroupMemberId = grpMember.Id;
 
-                var currentUser = await GetCurrentUserAsync();
-                if (currentUser.UserType == AccountUserType.Normal)
-                    throw new UserFriendlyException("شما اجازه ایجاد خبر را ندارید.");
+            await _postRepository.InsertAsync(post);
 
-                var post = ObjectMapper.Map<Post>(input);
-                post.CreatorUserId = currentUser.Id;
-                post.GroupMemberId = grpMemberId;
+            // فقط از Tokenها استفاده می‌کنیم (PDF جدا، مدیا جدا)
+            var tokens = new[]
+            {
+        input.PostFileToken,
+        input.PostFileToken2,
+        input.PostFileToken3,
+        input.PostFileToken4,
+        input.PostFileToken5,
+        input.PostFileToken6,
+        input.PostFileToken7,
+        input.PostFileToken8,
+        input.PostFileToken9,
+        input.PostFileToken10,
+        input.PdfFileToken
+    };
 
-                if (currentUser.UserType == AccountUserType.Creator)
+            Guid? firstPdfId = null;
+            var media = new List<(Guid id, string ext, byte[] bytes)>();
+            var seen = new HashSet<Guid>();
+
+            foreach (var tok in tokens)
+            {
+                if (string.IsNullOrWhiteSpace(tok)) continue;
+
+                var (id, isPdf, ext, bytes) = await GetBinaryObjectFromCacheDetailed(tok, post.Id);
+                if (id == null) continue;
+
+                if (isPdf)
                 {
-                    post.IsPublished = false;
-                    post.CurrentPostStatus = PostStatus.Pending;
+                    if (!firstPdfId.HasValue)
+                        firstPdfId = id.Value;    
+                    continue;                   
                 }
 
-                await _postRepository.InsertAsync(post);
-                ResetMediaSlotsForCreate(post);
-                await ProcessAllFilesAsync(post, input, mainRequired: true);
-
-                await _unitOfWorkManager.Current.SaveChangesAsync();
-                await unitOfWork.CompleteAsync();
-
-                if (post.PostGroupId.HasValue && post.CurrentPostStatus == PostStatus.Published)
-                    await PublishNewPostNotifications(post);
-
-                await SendSmsNotification(post);
+                if (!seen.Add(id.Value)) continue; 
+                media.Add((id.Value, ext, bytes));
             }
-            catch (UserFriendlyException) { throw; }
-            catch (OperationCanceledException) { throw new UserFriendlyException("عملیات ایجاد پست لغو شد."); }
-            catch (Exception ex)
-            {
-                Logger?.Error("Create(Post) failed", ex);
-                throw new UserFriendlyException("خطای غیرمنتظره در ایجاد پست.");
-            }
+
+            if (media.Count == 0 && !firstPdfId.HasValue)
+                throw new UserFriendlyException("پست ارسالی هیچش مدیایی ندارد");
+
+            if (firstPdfId.HasValue)
+                post.PdfFile = firstPdfId.Value;
+
+            if (media.Count > 0) post.PostFile = media[0].id;
+            if (media.Count > 1) post.PostFile2 = media[1].id;
+            if (media.Count > 2) post.PostFile3 = media[2].id;
+            if (media.Count > 3) post.PostFile4 = media[3].id;
+            if (media.Count > 4) post.PostFile5 = media[4].id;
+            if (media.Count > 5) post.PostFile6 = media[5].id;
+            if (media.Count > 6) post.PostFile7 = media[6].id;
+            if (media.Count > 7) post.PostFile8 = media[7].id;
+            if (media.Count > 8) post.PostFile9 = media[8].id;
+            if (media.Count > 9) post.PostFile10 = media[9].id;
+
+            await BuildPreviewFromFirstMediaIdAsync(post);
+
+            await _unitOfWorkManager.Current.SaveChangesAsync();
+            await unitOfWork.CompleteAsync();
         }
+
+        private async Task BuildPreviewFromFirstMediaIdAsync(Post post)
+        {
+            if (!post.PostFile.HasValue)
+                return;
+
+            var file = await _binaryObjectManager.GetOrNullAsync(post.PostFile.Value);
+            if (file == null || string.IsNullOrEmpty(file.Description) || file.Bytes == null || file.Bytes.Length == 0)
+                return;
+
+            var ext = (Path.GetExtension(file.Description) ?? string.Empty).ToLowerInvariant();
+            var webRoot = _hostingEnvironment.WebRootPath;
+
+            if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".webp")
+            {
+                post.PostFileThumb = await GenerateThumbnailAsync(file.Bytes, post.Id, webRoot);
+            }
+            else if (ext == ".mp4" || ext == ".mov")
+            {
+                var videosDir = Path.Combine(webRoot, "videos");
+                Directory.CreateDirectory(videosDir);
+
+                var fullPath = Path.Combine(videosDir, $"{post.Id}{ext}");
+                await File.WriteAllBytesAsync(fullPath, file.Bytes);
+
+                post.PostVideoPreview = await GenerateVideoPreviewAsync(fullPath, webRoot, post.Id);
+            }
+            // اگر PDF بود، کاری نکن
+        }
+
 
         private static void ResetMediaSlotsForCreate(Post post)
         {
@@ -1444,6 +1512,40 @@ namespace Chamran.Deed.Info
                 return null;
             }
         }
+
+        private async Task<(Guid? id, bool isPdf, string ext, byte[] bytes)> GetBinaryObjectFromCacheDetailed(string fileToken, int? refId)
+        {
+            try
+            {
+                if (fileToken.IsNullOrWhiteSpace())
+                    return (null, false, "", Array.Empty<byte>());
+
+                var fileCache = _tempFileCacheManager.GetFileInfo(fileToken);
+                if (fileCache == null)
+                    throw new UserFriendlyException("There is no such file with the token: " + fileToken);
+
+                var ext = (Path.GetExtension(fileCache.FileName) ?? string.Empty).Trim().ToLowerInvariant();
+                var bytes = fileCache.File ?? Array.Empty<byte>();
+                var isPdf = ext == ".pdf" || LooksLikePdf(bytes);
+
+                var storedFile = new BinaryObject(AbpSession.TenantId, bytes, BinarySourceType.Post, fileCache.FileName);
+                if (refId != null) storedFile.SourceId = refId;  
+                await _binaryObjectManager.SaveAsync(storedFile);
+
+                return (storedFile.Id, isPdf, ext, bytes);
+            }
+            catch
+            {
+                return (null, false, "", Array.Empty<byte>());
+            }
+        }
+
+        private static bool LooksLikePdf(byte[] bytes)
+        {
+            return bytes != null && bytes.Length >= 4
+                   && bytes[0] == 0x25 && bytes[1] == 0x50 && bytes[2] == 0x44 && bytes[3] == 0x46;
+        }
+
 
         private async Task<string> GetBinaryFileName(Guid? fileId)
         {
