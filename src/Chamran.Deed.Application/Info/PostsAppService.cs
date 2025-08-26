@@ -759,10 +759,6 @@ namespace Chamran.Deed.Info
             }
         }
 
-
-
-
-
         private async Task<Guid?> GetBinaryId(string token, int postId)
         {
             if (string.IsNullOrEmpty(token)) return null;
@@ -871,7 +867,6 @@ namespace Chamran.Deed.Info
                 post.PdfFile = pdfId.Value;
         }
 
-
         //private async Task<Guid?> GetBinaryId(string token, int postId)
         private async Task ProcessAdditionalFilesAsync(Post post, CreateOrEditPostDto input)
         {
@@ -931,7 +926,6 @@ namespace Chamran.Deed.Info
                     setters[fileIndex++](id.Value);
             }
         }
-
 
         private string ResolveWebRoot(string webRoot)
         {
@@ -1226,19 +1220,20 @@ namespace Chamran.Deed.Info
             }
             var post = await _postRepository.FirstOrDefaultAsync((int)input.Id);
 
-            //var allTokensForCheck = new[] {
-            //    input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
-            //    input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
-            //    input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
-            //};
-
-            //var pdfCount = allTokensForCheck.Count(t => GetFileExtensionFromToken(t) == ".pdf");
-            //if (pdfCount > 1)
-            //    throw new UserFriendlyException("حداکثر یک فایل PDF مجاز است");
-
-            //if (GetFileExtensionFromToken(input.PostFileToken) == ".pdf")
-            //    throw new UserFriendlyException("فایل اصلی نمی‌تواند PDF باشد");
             NormalizePdfFileToken(input);
+
+            var allTokensForCheck = new[] {
+                input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
+                input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
+                input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
+            };
+
+            var pdfCount = allTokensForCheck.Count(t => GetFileExtensionFromToken(t) == ".pdf");
+            if (pdfCount > 1)
+                throw new UserFriendlyException("حداکثر یک فایل PDF مجاز است");
+
+            if (GetFileExtensionFromToken(input.PostFileToken) == ".pdf")
+                throw new UserFriendlyException("فایل اصلی نمی‌تواند PDF باشد");
 
             bool shouldSendSmsNotification = post.CurrentPostStatus != input.CurrentPostStatus;
             //if (input.PublisherUserId == null)
