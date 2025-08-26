@@ -2016,16 +2016,6 @@ namespace Chamran.Deed.Info
                 }
             }
 
-            //var t1 = input.PostFileToken; HandleToken(ref t1); input.PostFileToken = t1;
-            //var t2 = input.PostFileToken2; HandleToken(ref t2); input.PostFileToken2 = t2;
-            //var t3 = input.PostFileToken3; HandleToken(ref t3); input.PostFileToken3 = t3;
-            //var t4 = input.PostFileToken4; HandleToken(ref t4); input.PostFileToken4 = t4;
-            //var t5 = input.PostFileToken5; HandleToken(ref t5); input.PostFileToken5 = t5;
-            //var t6 = input.PostFileToken6; HandleToken(ref t6); input.PostFileToken6 = t6;
-            //var t7 = input.PostFileToken7; HandleToken(ref t7); input.PostFileToken7 = t7;
-            //var t8 = input.PostFileToken8; HandleToken(ref t8); input.PostFileToken8 = t8;
-            //var t9 = input.PostFileToken9; HandleToken(ref t9); input.PostFileToken9 = t9;
-            //var t10 = input.PostFileToken10; HandleToken(ref t10); input.PostFileToken10 = t10;
             var f1 = input.PostFile; var t1 = input.PostFileToken; Handle(ref f1, ref t1); input.PostFile = f1; input.PostFileToken = t1;
             var f2 = input.PostFile2; var t2 = input.PostFileToken2; Handle(ref f2, ref t2); input.PostFile2 = f2; input.PostFileToken2 = t2;
             var f3 = input.PostFile3; var t3 = input.PostFileToken3; Handle(ref f3, ref t3); input.PostFile3 = f3; input.PostFileToken3 = t3;
@@ -2036,6 +2026,71 @@ namespace Chamran.Deed.Info
             var f8 = input.PostFile8; var t8 = input.PostFileToken8; Handle(ref f8, ref t8); input.PostFile8 = f8; input.PostFileToken8 = t8;
             var f9 = input.PostFile9; var t9 = input.PostFileToken9; Handle(ref f9, ref t9); input.PostFile9 = f9; input.PostFileToken9 = t9;
             var f10 = input.PostFile10; var t10 = input.PostFileToken10; Handle(ref f10, ref t10); input.PostFile10 = f10; input.PostFileToken10 = t10;
+        }
+
+        private async Task EnsurePdfIsIsolatedAsync(Post post)
+        {
+            var slots = new[]
+            {
+                post.PostFile2, post.PostFile3, post.PostFile4, post.PostFile5,
+                post.PostFile6, post.PostFile7, post.PostFile8, post.PostFile9, post.PostFile10
+            };
+
+            for (int i = 0; i < slots.Length; i++)
+            {
+                var id = slots[i];
+                if (!id.HasValue)
+                    continue;
+
+                if (post.PdfFile.HasValue && id.Value == post.PdfFile.Value)
+                {
+                    SetPostFile(post, i + 2, null);
+                    continue;
+                }
+
+                if (await IsPdfAsync(id.Value))
+                {
+                    if (!post.PdfFile.HasValue)
+                        post.PdfFile = id;
+
+                    SetPostFile(post, i + 2, null);
+                }
+            }
+        }
+
+        //var t1 = input.PostFileToken; HandleToken(ref t1); input.PostFileToken = t1;
+        //var t2 = input.PostFileToken2; HandleToken(ref t2); input.PostFileToken2 = t2;
+        //var t3 = input.PostFileToken3; HandleToken(ref t3); input.PostFileToken3 = t3;
+        //var t4 = input.PostFileToken4; HandleToken(ref t4); input.PostFileToken4 = t4;
+        //var t5 = input.PostFileToken5; HandleToken(ref t5); input.PostFileToken5 = t5;
+        //var t6 = input.PostFileToken6; HandleToken(ref t6); input.PostFileToken6 = t6;
+        //var t7 = input.PostFileToken7; HandleToken(ref t7); input.PostFileToken7 = t7;
+        //var t8 = input.PostFileToken8; HandleToken(ref t8); input.PostFileToken8 = t8;
+        //var t9 = input.PostFileToken9; HandleToken(ref t9); input.PostFileToken9 = t9;
+        //var t10 = input.PostFileToken10; HandleToken(ref t10); input.PostFileToken10 = t10;
+
+        private async Task<bool> IsPdfAsync(Guid fileId)
+        {
+            var file = await _binaryObjectManager.GetOrNullAsync(fileId);
+            var ext = Path.GetExtension(file?.Description ?? string.Empty).ToLowerInvariant();
+            return ext == ".pdf";
+        }
+
+        private static void SetPostFile(Post post, int index, Guid? value)
+        {
+            switch (index)
+            {
+                case 1: post.PostFile = value; break;
+                case 2: post.PostFile2 = value; break;
+                case 3: post.PostFile3 = value; break;
+                case 4: post.PostFile4 = value; break;
+                case 5: post.PostFile5 = value; break;
+                case 6: post.PostFile6 = value; break;
+                case 7: post.PostFile7 = value; break;
+                case 8: post.PostFile8 = value; break;
+                case 9: post.PostFile9 = value; break;
+                case 10: post.PostFile10 = value; break;
+            }
         }
 
 
