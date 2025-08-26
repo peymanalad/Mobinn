@@ -737,6 +737,42 @@ namespace Chamran.Deed.Info
             }
         }
 
+
+        private static Guid? GetMediaByIndex(Post post, int idx)
+        {
+            return idx switch
+            {
+                0 => post.PostFile,
+                1 => post.PostFile2,
+                2 => post.PostFile3,
+                3 => post.PostFile4,
+                4 => post.PostFile5,
+                5 => post.PostFile6,
+                6 => post.PostFile7,
+                7 => post.PostFile8,
+                8 => post.PostFile9,
+                9 => post.PostFile10,
+                _ => null
+            };
+        }
+
+        private static void ClearMediaByIndex(Post post, int idx)
+        {
+            switch (idx)
+            {
+                case 0: post.PostFile = null; break;
+                case 1: post.PostFile2 = null; break;
+                case 2: post.PostFile3 = null; break;
+                case 3: post.PostFile4 = null; break;
+                case 4: post.PostFile5 = null; break;
+                case 5: post.PostFile6 = null; break;
+                case 6: post.PostFile7 = null; break;
+                case 7: post.PostFile8 = null; break;
+                case 8: post.PostFile9 = null; break;
+                case 9: post.PostFile10 = null; break;
+            }
+        }
+
         private async Task BuildThumbOrPreviewForFirstMediaAsync(Post post, byte[] bytes, string ext)
         {
             var webRoot = _hostingEnvironment.WebRootPath;
@@ -756,6 +792,36 @@ namespace Chamran.Deed.Info
                 await File.WriteAllBytesAsync(fullVideoPath, bytes);
 
                 post.PostVideoPreview = await GenerateVideoPreviewAsync(fullVideoPath, webRoot, post.Id);
+            }
+        }
+
+
+        private async Task StripPdfFromPostFilesAsync(Post post)
+        {
+            bool pdfSet = post.PdfFile.HasValue;
+
+            for (int idx = 0; idx < 10; idx++)
+            {
+                var id = GetMediaByIndex(post, idx);
+                if (!id.HasValue)
+                    continue;
+
+                var file = await _binaryObjectManager.GetOrNullAsync(id.Value);
+                if (file == null)
+                    continue;
+
+                var ext = (Path.GetExtension(file.Description ?? string.Empty) ?? string.Empty)
+                    .Trim().ToLowerInvariant();
+
+                if (IsPdf(file.Bytes) || ext == ".pdf")
+                {
+                    if (!pdfSet)
+                    {
+                        post.PdfFile = id.Value;
+                        pdfSet = true;
+                    }
+                    ClearMediaByIndex(post, idx);
+                }
             }
         }
 
@@ -1284,6 +1350,7 @@ namespace Chamran.Deed.Info
 
             //input.PdfFile = post.PdfFile;
             ObjectMapper.Map(input, post);
+            await StripPdfFromPostFilesAsync(post);
             //post.PdfFile = input.PdfFile;
             //try
             //{
