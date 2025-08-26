@@ -1219,36 +1219,35 @@ namespace Chamran.Deed.Info
 
             var post = await _postRepository.FirstOrDefaultAsync((int)input.Id);
 
-            // توکن PDF رو نرمالایز کن (اگه unchanged باشه باید خالی بمونه)
             NormalizePdfFileToken(input);
 
-            // --- دسته‌بندی سبک با نگاه به پسوند (بدون ایجاد فایل جدید) ---
-            var incoming = new[] {
+            // فقط توکن‌ها (نه Guid ها) را برای اعتبارسنجی و پردازش در نظر بگیر
+            var tokenList = new[] {
         input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
         input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
         input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
     };
 
-            var pdfTokens = new List<string>();
-            var mediaTokens = new List<string>();
-            foreach (var t in incoming)
-            {
-                if (string.IsNullOrWhiteSpace(t)) continue;
-                var ext = GetFileExtensionFromToken(t)?.ToLowerInvariant();
-                if (ext == ".pdf") pdfTokens.Add(t); else mediaTokens.Add(t);
-            }
-
-            if (pdfTokens.Count > 1)
+            bool hasAnyToken = tokenList.Any(t => !string.IsNullOrWhiteSpace(t));
+            int pdfCount = tokenList.Count(t => GetFileExtensionFromToken(t)?.ToLowerInvariant() == ".pdf");
+            if (pdfCount > 1)
                 throw new UserFriendlyException("حداکثر یک فایل PDF مجاز است");
 
-            // فایل اصلی (PostFileToken) نباید PDF باشد
             if (!string.IsNullOrWhiteSpace(input.PostFileToken) &&
                 GetFileExtensionFromToken(input.PostFileToken)?.ToLowerInvariant() == ".pdf")
                 throw new UserFriendlyException("فایل اصلی نمی‌تواند PDF باشد");
 
+            // اگر توکن داریم، اجازه نده فیلدهای Guid فایل‌ها از DTO مپ شوند
+            if (hasAnyToken)
+            {
+                input.PostFile = null; input.PostFile2 = null; input.PostFile3 = null; input.PostFile4 = null; input.PostFile5 = null;
+                input.PostFile6 = null; input.PostFile7 = null; input.PostFile8 = null; input.PostFile9 = null; input.PostFile10 = null;
+                input.PdfFile = null;
+            }
+
             bool shouldSendSmsNotification = post.CurrentPostStatus != input.CurrentPostStatus;
 
-            // --- مجوز انتشار (مثل قبل) ---
+            // پابلیش (همان قبلی)
             bool isPublishingNow = !post.IsPublished && input.IsPublished;
             if (isPublishingNow)
             {
@@ -1265,7 +1264,7 @@ namespace Chamran.Deed.Info
                 input.CreatorUserId = post.CreatorUserId;
             }
 
-            // --- تاریخچه و Map ---
+            // تاریخچه
             var changes = await GetChanges(post, input);
             var currentUserName = await GetCurrentUserName();
             if (!string.IsNullOrEmpty(changes))
@@ -1278,39 +1277,51 @@ namespace Chamran.Deed.Info
                 });
             }
 
+            // مپ فیلدهای غیر فایل
             ObjectMapper.Map(input, post);
 
-            // --- فایل‌ها: دقیقاً مثل Create، اما بدون مرحلهٔ دوباره‌کاری ---
-            var anyToken = pdfTokens.Count > 0 || mediaTokens.Count > 0;
-
-            if (anyToken)
+            // اگر توکن داریم، حالا خودمان فایل‌ها را ست کنیم (مثل Create)
+            if (hasAnyToken)
             {
-                // اول PDF: فقط اگر واقعاً PDF جدیدی آمده باشد
-                if (pdfTokens.Count == 1)
+                Guid? pdfId = null;
+                var mediaIds = new List<Guid>(10);
+                var seen = new HashSet<Guid>();
+
+                var orderedTokens = new[] {
+            input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
+            input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
+            input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
+        };
+
+                foreach (var tok in orderedTokens)
                 {
-                    // فقط همین یک توکن PDF را persist کن
-                    var (pdfId, isPdf, _ext, _bytes) = await GetBinaryObjectFromCacheDetailed(pdfTokens[0], post.Id);
-                    if (pdfId != null && isPdf)
-                        post.PdfFile = pdfId.Value; // جایگزین/ست جدید
+                    if (string.IsNullOrWhiteSpace(tok)) continue;
+
+                    var ext = GetFileExtensionFromToken(tok)?.ToLowerInvariant();
+                    var (id, isPdf, _ext, _bytes) = await GetBinaryObjectFromCacheDetailed(tok, post.Id);
+                    if (id == null) continue;
+
+                    if (isPdf || ext == ".pdf")
+                    {
+                        if (!pdfId.HasValue) pdfId = id.Value; // فقط اولین PDF
+                        continue;
+                    }
+
+                    if (seen.Add(id.Value))
+                        mediaIds.Add(id.Value);
+
+                    if (mediaIds.Count == 10) break;
                 }
 
-                // بعد مدیا: اگر مدیایی آمده، اسلات‌ها را ریست و دوباره بچین
-                if (mediaTokens.Count > 0)
+                // PDF را ست کن (اگر آمده)
+                if (pdfId.HasValue)
+                    post.PdfFile = pdfId.Value;
+
+                // فقط اگر مدیای جدید آمده، اسلات‌ها را ریست و پر کن
+                if (mediaIds.Count > 0)
                 {
-                    // ریست فقط وقتی که مدیای جدید داریم
                     post.PostFile = null; post.PostFile2 = null; post.PostFile3 = null; post.PostFile4 = null; post.PostFile5 = null;
                     post.PostFile6 = null; post.PostFile7 = null; post.PostFile8 = null; post.PostFile9 = null; post.PostFile10 = null;
-
-                    var seen = new HashSet<Guid>();
-                    var mediaIds = new List<Guid>(10);
-
-                    foreach (var tok in mediaTokens)
-                    {
-                        var (id, isPdf, _ext, _bytes) = await GetBinaryObjectFromCacheDetailed(tok, post.Id);
-                        if (id == null || isPdf) continue;        // PDF هرگز وارد اسلات‌های مدیا نشود
-                        if (seen.Add(id.Value)) mediaIds.Add(id.Value);
-                        if (mediaIds.Count == 10) break;
-                    }
 
                     if (mediaIds.Count > 0) post.PostFile = mediaIds[0];
                     if (mediaIds.Count > 1) post.PostFile2 = mediaIds[1];
@@ -1323,14 +1334,12 @@ namespace Chamran.Deed.Info
                     if (mediaIds.Count > 8) post.PostFile9 = mediaIds[8];
                     if (mediaIds.Count > 9) post.PostFile10 = mediaIds[9];
 
-                    // وقتی مدیا عوض شده، پیش‌نمایش را از اولین مدیا بساز
-                    if (mediaIds.Count > 0)
-                        await BuildPreviewFromFirstMediaIdAsync(post);
+                    await BuildPreviewFromFirstMediaIdAsync(post);
                 }
-                // اگر فقط PDF بود و مدیا نبود: مدیای قبلی دست‌نخورده بماند (preview هم لازم نیست آپدیت شود)
+                // اگر فقط PDF آمده و مدیا نیامده، مدیای فعلی دست‌نخورده می‌ماند.
             }
 
-            // ❗️مهم: این خط را یا حذف کن یا ProcessAllFilesAsync را طوری اصلاح کن که PDF را نادیده بگیرد و دوباره‌کاری نکند.
+            // توجه: این را حذف/غیرفعال کن چون دوباره‌سازی می‌کند.
             // await ProcessAllFilesAsync(post, input, mainRequired: false);
 
             if (shouldSendSmsNotification)
