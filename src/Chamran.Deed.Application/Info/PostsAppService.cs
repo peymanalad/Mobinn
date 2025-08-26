@@ -1222,6 +1222,11 @@ namespace Chamran.Deed.Info
 
             NormalizePdfFileToken(input);
 
+            if (string.IsNullOrEmpty(input.PdfFileToken) && input.PdfFile == null)
+            {
+                input.PdfFile = post.PdfFile;
+            }
+
             var allTokensForCheck = new[] {
                 input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
                 input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
@@ -2629,7 +2634,7 @@ namespace Chamran.Deed.Info
         {
             var oldFiles = new List<Guid?> {
                 post.PostFile, post.PostFile2, post.PostFile3, post.PostFile4, post.PostFile5,
-                post.PostFile6, post.PostFile7, post.PostFile8, post.PostFile9, post.PostFile10,post.PostFile
+                post.PostFile6, post.PostFile7, post.PostFile8, post.PostFile9, post.PostFile10, post.PdfFile
             };
 
             var newFiles = new List<Guid?> {
