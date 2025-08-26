@@ -1215,42 +1215,42 @@ namespace Chamran.Deed.Info
         protected virtual async Task Update(CreateOrEditPostDto input)
         {
             if (input.GroupMemberId == null)
+            {
                 throw new Exception("کاربر سازمان نمی تواند خالی باشد");
-
+            }
             var post = await _postRepository.FirstOrDefaultAsync((int)input.Id);
 
             NormalizePdfFileToken(input);
 
-            // فقط توکن‌ها (نه Guid ها) را برای اعتبارسنجی و پردازش در نظر بگیر
-            var tokenList = new[] {
-        input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
-        input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
-        input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
-    };
+            var allTokensForCheck = new[] {
+                input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
+                input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
+                input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
+            };
 
-            bool hasAnyToken = tokenList.Any(t => !string.IsNullOrWhiteSpace(t));
-            int pdfCount = tokenList.Count(t => GetFileExtensionFromToken(t)?.ToLowerInvariant() == ".pdf");
+            var pdfCount = allTokensForCheck.Count(t => GetFileExtensionFromToken(t) == ".pdf");
             if (pdfCount > 1)
                 throw new UserFriendlyException("حداکثر یک فایل PDF مجاز است");
 
-            if (!string.IsNullOrWhiteSpace(input.PostFileToken) &&
-                GetFileExtensionFromToken(input.PostFileToken)?.ToLowerInvariant() == ".pdf")
+            if (GetFileExtensionFromToken(input.PostFileToken) == ".pdf")
                 throw new UserFriendlyException("فایل اصلی نمی‌تواند PDF باشد");
 
-            // اگر توکن داریم، اجازه نده فیلدهای Guid فایل‌ها از DTO مپ شوند
-            if (hasAnyToken)
-            {
-                input.PostFile = null; input.PostFile2 = null; input.PostFile3 = null; input.PostFile4 = null; input.PostFile5 = null;
-                input.PostFile6 = null; input.PostFile7 = null; input.PostFile8 = null; input.PostFile9 = null; input.PostFile10 = null;
-                input.PdfFile = null;
-            }
-
             bool shouldSendSmsNotification = post.CurrentPostStatus != input.CurrentPostStatus;
+            //if (input.PublisherUserId == null)
+            //{
+            //    input.PublisherUserId = post.PublisherUserId;
+            //}
 
-            // پابلیش (همان قبلی)
+            //if (input.CreatorUserId == null)
+            //{
+            //    input.PublisherUserId = post.PublisherUserId;
+
+            //}
+
             bool isPublishingNow = !post.IsPublished && input.IsPublished;
             if (isPublishingNow)
             {
+                //input.PublisherUserId = AbpSession.UserId ?? throw new UserFriendlyException("کاربر وارد نشده است.");
                 var currentUser = await GetCurrentUserAsync();
                 if (currentUser.UserType is not (AccountUserType.Distributer or AccountUserType.Admin or AccountUserType.SuperAdmin))
                     throw new UserFriendlyException("شما اجازه انتشار خبر را ندارید.");
@@ -1258,16 +1258,21 @@ namespace Chamran.Deed.Info
                 input.PublisherUserId = currentUser.Id;
                 input.CreatorUserId = post.CreatorUserId;
             }
+            //if (input.DatePublished == null)
+            //{
+            //    input.PublisherUserId = post.PublisherUserId;
+            //}
             else
             {
                 input.PublisherUserId = post.PublisherUserId;
                 input.CreatorUserId = post.CreatorUserId;
             }
 
-            // تاریخچه
+            // --- KEY FIX: Await GetChanges first, then GetCurrentUserName ---
             var changes = await GetChanges(post, input);
             var currentUserName = await GetCurrentUserName();
-            if (!string.IsNullOrEmpty(changes))
+
+            if (changes != "")
             {
                 post.EditHistories.Add(new PostEditHistory
                 {
@@ -1277,292 +1282,148 @@ namespace Chamran.Deed.Info
                 });
             }
 
-            // مپ فیلدهای غیر فایل
+            //input.PdfFile = post.PdfFile;
             ObjectMapper.Map(input, post);
+            //post.PdfFile = input.PdfFile;
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken))
+            //        post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken, post.Id);
 
-            // اگر توکن داریم، حالا خودمان فایل‌ها را ست کنیم (مثل Create)
-            if (hasAnyToken)
-            {
-                Guid? pdfId = null;
-                var mediaIds = new List<Guid>(10);
-                var seen = new HashSet<Guid>();
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-                var orderedTokens = new[] {
-            input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
-            input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
-            input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
-        };
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken2))
+            //        post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2, post.Id);
 
-                foreach (var tok in orderedTokens)
-                {
-                    if (string.IsNullOrWhiteSpace(tok)) continue;
 
-                    var ext = GetFileExtensionFromToken(tok)?.ToLowerInvariant();
-                    var (id, isPdf, _ext, _bytes) = await GetBinaryObjectFromCacheDetailed(tok, post.Id);
-                    if (id == null) continue;
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-                    if (isPdf || ext == ".pdf")
-                    {
-                        if (!pdfId.HasValue) pdfId = id.Value; // فقط اولین PDF
-                        continue;
-                    }
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken3))
+            //        post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3, post.Id);
 
-                    if (seen.Add(id.Value))
-                        mediaIds.Add(id.Value);
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-                    if (mediaIds.Count == 10) break;
-                }
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken4))
+            //        post.PostFile4 = await GetBinaryObjectFromCache(input.PostFileToken4, post.Id);
 
-                // PDF را ست کن (اگر آمده)
-                if (pdfId.HasValue)
-                    post.PdfFile = pdfId.Value;
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-                // فقط اگر مدیای جدید آمده، اسلات‌ها را ریست و پر کن
-                if (mediaIds.Count > 0)
-                {
-                    post.PostFile = null; post.PostFile2 = null; post.PostFile3 = null; post.PostFile4 = null; post.PostFile5 = null;
-                    post.PostFile6 = null; post.PostFile7 = null; post.PostFile8 = null; post.PostFile9 = null; post.PostFile10 = null;
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken5))
+            //        post.PostFile5 = await GetBinaryObjectFromCache(input.PostFileToken5, post.Id);
 
-                    if (mediaIds.Count > 0) post.PostFile = mediaIds[0];
-                    if (mediaIds.Count > 1) post.PostFile2 = mediaIds[1];
-                    if (mediaIds.Count > 2) post.PostFile3 = mediaIds[2];
-                    if (mediaIds.Count > 3) post.PostFile4 = mediaIds[3];
-                    if (mediaIds.Count > 4) post.PostFile5 = mediaIds[4];
-                    if (mediaIds.Count > 5) post.PostFile6 = mediaIds[5];
-                    if (mediaIds.Count > 6) post.PostFile7 = mediaIds[6];
-                    if (mediaIds.Count > 7) post.PostFile8 = mediaIds[7];
-                    if (mediaIds.Count > 8) post.PostFile9 = mediaIds[8];
-                    if (mediaIds.Count > 9) post.PostFile10 = mediaIds[9];
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
 
-                    await BuildPreviewFromFirstMediaIdAsync(post);
-                }
-                // اگر فقط PDF آمده و مدیا نیامده، مدیای فعلی دست‌نخورده می‌ماند.
-            }
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken6))
+            //        post.PostFile6 = await GetBinaryObjectFromCache(input.PostFileToken6, post.Id);
 
-            // توجه: این را حذف/غیرفعال کن چون دوباره‌سازی می‌کند.
-            // await ProcessAllFilesAsync(post, input, mainRequired: false);
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
+
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken7))
+            //        post.PostFile7 = await GetBinaryObjectFromCache(input.PostFileToken7, post.Id);
+
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
+
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken8))
+            //        post.PostFile8 = await GetBinaryObjectFromCache(input.PostFileToken8, post.Id);
+
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
+
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken9))
+            //        post.PostFile9 = await GetBinaryObjectFromCache(input.PostFileToken9, post.Id);
+
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
+
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PostFileToken10))
+            //        post.PostFile10 = await GetBinaryObjectFromCache(input.PostFileToken10, post.Id);
+
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
+
+            //try
+            //{
+            //    if (!string.IsNullOrEmpty(input.PdfFileToken))
+            //        post.PdfFile = await GetBinaryObjectFromCache(input.PdfFileToken, post.Id);
+
+            //}
+            //catch (UserFriendlyException ex)
+            //{
+            //    //ignore
+            //}
+            //await ProcessMainFileAsync(post, input.PostFileToken, required: false);
+            //await ProcessPdfFileAsync(post, input.PdfFileToken);
+            //await ProcessAdditionalFilesAsync(post, input);
+            await ProcessAllFilesAsync(post, input, mainRequired: false);
 
             if (shouldSendSmsNotification)
+            {
+                //await SendSmsNotification(post,input.OrganizationId);
                 await SendSmsNotification(post);
 
+            }
+
             if (post.PostGroupId.HasValue && post.CurrentPostStatus == PostStatus.Published)
-                await PublishNewPostNotifications(post);
+                await PublishNewPostNotifications(post/*,input.OrganizationId*/);
 
             await _unitOfWorkManager.Current.SaveChangesAsync();
+
         }
-
-        //protected virtual async Task Update(CreateOrEditPostDto input)
-        //{
-        //    if (input.GroupMemberId == null)
-        //    {
-        //        throw new Exception("کاربر سازمان نمی تواند خالی باشد");
-        //    }
-        //    var post = await _postRepository.FirstOrDefaultAsync((int)input.Id);
-
-        //    NormalizePdfFileToken(input);
-
-        //    var allTokensForCheck = new[] {
-        //        input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
-        //        input.PostFileToken5, input.PostFileToken6, input.PostFileToken7, input.PostFileToken8,
-        //        input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
-        //    };
-
-        //    var pdfCount = allTokensForCheck.Count(t => GetFileExtensionFromToken(t) == ".pdf");
-        //    if (pdfCount > 1)
-        //        throw new UserFriendlyException("حداکثر یک فایل PDF مجاز است");
-
-        //    if (GetFileExtensionFromToken(input.PostFileToken) == ".pdf")
-        //        throw new UserFriendlyException("فایل اصلی نمی‌تواند PDF باشد");
-
-        //    bool shouldSendSmsNotification = post.CurrentPostStatus != input.CurrentPostStatus;
-        //    //if (input.PublisherUserId == null)
-        //    //{
-        //    //    input.PublisherUserId = post.PublisherUserId;
-        //    //}
-
-        //    //if (input.CreatorUserId == null)
-        //    //{
-        //    //    input.PublisherUserId = post.PublisherUserId;
-
-        //    //}
-
-        //    bool isPublishingNow = !post.IsPublished && input.IsPublished;
-        //    if (isPublishingNow)
-        //    {
-        //        //input.PublisherUserId = AbpSession.UserId ?? throw new UserFriendlyException("کاربر وارد نشده است.");
-        //        var currentUser = await GetCurrentUserAsync();
-        //        if (currentUser.UserType is not (AccountUserType.Distributer or AccountUserType.Admin or AccountUserType.SuperAdmin))
-        //            throw new UserFriendlyException("شما اجازه انتشار خبر را ندارید.");
-
-        //        input.PublisherUserId = currentUser.Id;
-        //        input.CreatorUserId = post.CreatorUserId;
-        //    }
-        //    //if (input.DatePublished == null)
-        //    //{
-        //    //    input.PublisherUserId = post.PublisherUserId;
-        //    //}
-        //    else
-        //    {
-        //        input.PublisherUserId = post.PublisherUserId;
-        //        input.CreatorUserId = post.CreatorUserId;
-        //    }
-
-        //    // --- KEY FIX: Await GetChanges first, then GetCurrentUserName ---
-        //    var changes = await GetChanges(post, input);
-        //    var currentUserName = await GetCurrentUserName();
-
-        //    if (changes != "")
-        //    {
-        //        post.EditHistories.Add(new PostEditHistory
-        //        {
-        //            EditorName = currentUserName,
-        //            EditTime = DateTime.Now,
-        //            Changes = changes
-        //        });
-        //    }
-
-        //    //input.PdfFile = post.PdfFile;
-        //    ObjectMapper.Map(input, post);
-        //    //post.PdfFile = input.PdfFile;
-        //    //try
-        //    //{
-        //    //    if (!string.IsNullOrEmpty(input.PostFileToken))
-        //    //        post.PostFile = await GetBinaryObjectFromCache(input.PostFileToken, post.Id);
-
-        //    //}
-        //    //catch (UserFriendlyException ex)
-        //    //{
-        //    //    //ignore
-        //    //}
-
-        //    //try
-        //    //{
-        //    //    if (!string.IsNullOrEmpty(input.PostFileToken2))
-        //    //        post.PostFile2 = await GetBinaryObjectFromCache(input.PostFileToken2, post.Id);
-
-
-        //    //}
-        //    //catch (UserFriendlyException ex)
-        //    //{
-        //    //    //ignore
-        //    //}
-
-        //    //try
-        //    //{
-        //    //    if (!string.IsNullOrEmpty(input.PostFileToken3))
-        //    //        post.PostFile3 = await GetBinaryObjectFromCache(input.PostFileToken3, post.Id);
-
-        //    //}
-        //    //catch (UserFriendlyException ex)
-        //    //{
-        //    //    //ignore
-        //    //}
-
-        //    //try
-        //    //{
-        //    //    if (!string.IsNullOrEmpty(input.PostFileToken4))
-        //    //        post.PostFile4 = await GetBinaryObjectFromCache(input.PostFileToken4, post.Id);
-
-        //    //}
-        //    //catch (UserFriendlyException ex)
-        //    //{
-        //    //    //ignore
-        //    //}
-
-        //    //try
-        //    //{
-        //    //    if (!string.IsNullOrEmpty(input.PostFileToken5))
-        //    //        post.PostFile5 = await GetBinaryObjectFromCache(input.PostFileToken5, post.Id);
-
-        //    //}
-        //    //catch (UserFriendlyException ex)
-        //    //{
-        //    //    //ignore
-        //    //}
-
-        //    //try
-        //    //{
-        //    //    if (!string.IsNullOrEmpty(input.PostFileToken6))
-        //    //        post.PostFile6 = await GetBinaryObjectFromCache(input.PostFileToken6, post.Id);
-
-        //    //}
-        //    //catch (UserFriendlyException ex)
-        //    //{
-        //    //    //ignore
-        //    //}
-
-        //    //try
-        //    //{
-        //    //    if (!string.IsNullOrEmpty(input.PostFileToken7))
-        //    //        post.PostFile7 = await GetBinaryObjectFromCache(input.PostFileToken7, post.Id);
-
-        //    //}
-        //    //catch (UserFriendlyException ex)
-        //    //{
-        //    //    //ignore
-        //    //}
-
-        //    //try
-        //    //{
-        //    //    if (!string.IsNullOrEmpty(input.PostFileToken8))
-        //    //        post.PostFile8 = await GetBinaryObjectFromCache(input.PostFileToken8, post.Id);
-
-        //    //}
-        //    //catch (UserFriendlyException ex)
-        //    //{
-        //    //    //ignore
-        //    //}
-
-        //    //try
-        //    //{
-        //    //    if (!string.IsNullOrEmpty(input.PostFileToken9))
-        //    //        post.PostFile9 = await GetBinaryObjectFromCache(input.PostFileToken9, post.Id);
-
-        //    //}
-        //    //catch (UserFriendlyException ex)
-        //    //{
-        //    //    //ignore
-        //    //}
-
-        //    //try
-        //    //{
-        //    //    if (!string.IsNullOrEmpty(input.PostFileToken10))
-        //    //        post.PostFile10 = await GetBinaryObjectFromCache(input.PostFileToken10, post.Id);
-
-        //    //}
-        //    //catch (UserFriendlyException ex)
-        //    //{
-        //    //    //ignore
-        //    //}
-
-        //    //try
-        //    //{
-        //    //    if (!string.IsNullOrEmpty(input.PdfFileToken))
-        //    //        post.PdfFile = await GetBinaryObjectFromCache(input.PdfFileToken, post.Id);
-
-        //    //}
-        //    //catch (UserFriendlyException ex)
-        //    //{
-        //    //    //ignore
-        //    //}
-        //    //await ProcessMainFileAsync(post, input.PostFileToken, required: false);
-        //    //await ProcessPdfFileAsync(post, input.PdfFileToken);
-        //    //await ProcessAdditionalFilesAsync(post, input);
-        //    await ProcessAllFilesAsync(post, input, mainRequired: false);
-
-        //    if (shouldSendSmsNotification)
-        //    {
-        //        //await SendSmsNotification(post,input.OrganizationId);
-        //        await SendSmsNotification(post);
-
-        //    }
-
-        //    if (post.PostGroupId.HasValue && post.CurrentPostStatus == PostStatus.Published)
-        //        await PublishNewPostNotifications(post/*,input.OrganizationId*/);
-
-        //    await _unitOfWorkManager.Current.SaveChangesAsync();
-
-        //}
 
         [AbpAuthorize(AppPermissions.Pages_Posts_Delete)]
         public async Task Delete(EntityDto input)
@@ -2129,7 +1990,8 @@ namespace Chamran.Deed.Info
         {
             bool pdfSet = !string.IsNullOrWhiteSpace(input.PdfFileToken);
 
-            void HandleToken(ref string token)
+            //void HandleToken(ref string token)
+            void Handle(ref Guid? file, ref string token)
             {
                 //if (GetFileExtensionFromToken(token) == ".pdf")
                 if (IsPdfToken(token))
@@ -2140,19 +2002,30 @@ namespace Chamran.Deed.Info
                         pdfSet = true;
                     }
                     token = null;
+                    file = null;
                 }
             }
 
-            var t1 = input.PostFileToken; HandleToken(ref t1); input.PostFileToken = t1;
-            var t2 = input.PostFileToken2; HandleToken(ref t2); input.PostFileToken2 = t2;
-            var t3 = input.PostFileToken3; HandleToken(ref t3); input.PostFileToken3 = t3;
-            var t4 = input.PostFileToken4; HandleToken(ref t4); input.PostFileToken4 = t4;
-            var t5 = input.PostFileToken5; HandleToken(ref t5); input.PostFileToken5 = t5;
-            var t6 = input.PostFileToken6; HandleToken(ref t6); input.PostFileToken6 = t6;
-            var t7 = input.PostFileToken7; HandleToken(ref t7); input.PostFileToken7 = t7;
-            var t8 = input.PostFileToken8; HandleToken(ref t8); input.PostFileToken8 = t8;
-            var t9 = input.PostFileToken9; HandleToken(ref t9); input.PostFileToken9 = t9;
-            var t10 = input.PostFileToken10; HandleToken(ref t10); input.PostFileToken10 = t10;
+            //var t1 = input.PostFileToken; HandleToken(ref t1); input.PostFileToken = t1;
+            //var t2 = input.PostFileToken2; HandleToken(ref t2); input.PostFileToken2 = t2;
+            //var t3 = input.PostFileToken3; HandleToken(ref t3); input.PostFileToken3 = t3;
+            //var t4 = input.PostFileToken4; HandleToken(ref t4); input.PostFileToken4 = t4;
+            //var t5 = input.PostFileToken5; HandleToken(ref t5); input.PostFileToken5 = t5;
+            //var t6 = input.PostFileToken6; HandleToken(ref t6); input.PostFileToken6 = t6;
+            //var t7 = input.PostFileToken7; HandleToken(ref t7); input.PostFileToken7 = t7;
+            //var t8 = input.PostFileToken8; HandleToken(ref t8); input.PostFileToken8 = t8;
+            //var t9 = input.PostFileToken9; HandleToken(ref t9); input.PostFileToken9 = t9;
+            //var t10 = input.PostFileToken10; HandleToken(ref t10); input.PostFileToken10 = t10;
+            var f1 = input.PostFile; var t1 = input.PostFileToken; Handle(ref f1, ref t1); input.PostFile = f1; input.PostFileToken = t1;
+            var f2 = input.PostFile2; var t2 = input.PostFileToken2; Handle(ref f2, ref t2); input.PostFile2 = f2; input.PostFileToken2 = t2;
+            var f3 = input.PostFile3; var t3 = input.PostFileToken3; Handle(ref f3, ref t3); input.PostFile3 = f3; input.PostFileToken3 = t3;
+            var f4 = input.PostFile4; var t4 = input.PostFileToken4; Handle(ref f4, ref t4); input.PostFile4 = f4; input.PostFileToken4 = t4;
+            var f5 = input.PostFile5; var t5 = input.PostFileToken5; Handle(ref f5, ref t5); input.PostFile5 = f5; input.PostFileToken5 = t5;
+            var f6 = input.PostFile6; var t6 = input.PostFileToken6; Handle(ref f6, ref t6); input.PostFile6 = f6; input.PostFileToken6 = t6;
+            var f7 = input.PostFile7; var t7 = input.PostFileToken7; Handle(ref f7, ref t7); input.PostFile7 = f7; input.PostFileToken7 = t7;
+            var f8 = input.PostFile8; var t8 = input.PostFileToken8; Handle(ref f8, ref t8); input.PostFile8 = f8; input.PostFileToken8 = t8;
+            var f9 = input.PostFile9; var t9 = input.PostFileToken9; Handle(ref f9, ref t9); input.PostFile9 = f9; input.PostFileToken9 = t9;
+            var f10 = input.PostFile10; var t10 = input.PostFileToken10; Handle(ref f10, ref t10); input.PostFile10 = f10; input.PostFileToken10 = t10;
         }
 
 
