@@ -1220,12 +1220,13 @@ namespace Chamran.Deed.Info
             }
             var post = await _postRepository.FirstOrDefaultAsync((int)input.Id);
 
-            NormalizePdfFileToken(input);
+            await NormalizePdfFileTokenAsync(input);
 
             if (string.IsNullOrEmpty(input.PdfFileToken) && input.PdfFile == null)
             {
                 input.PdfFile = post.PdfFile;
             }
+
 
             var allTokensForCheck = new[] {
                 input.PostFileToken, input.PostFileToken2, input.PostFileToken3, input.PostFileToken4,
@@ -1233,11 +1234,12 @@ namespace Chamran.Deed.Info
                 input.PostFileToken9, input.PostFileToken10, input.PdfFileToken
             };
 
-            var pdfCount = allTokensForCheck.Count(t => GetFileExtensionFromToken(t) == ".pdf");
+            var pdfExtensions = await Task.WhenAll(allTokensForCheck.Select(t => GetFileExtensionFromTokenAsync(t)));
+            var pdfCount = pdfExtensions.Count(ext => ext == ".pdf");
             if (pdfCount > 1)
                 throw new UserFriendlyException("حداکثر یک فایل PDF مجاز است");
 
-            if (GetFileExtensionFromToken(input.PostFileToken) == ".pdf")
+            if (await GetFileExtensionFromTokenAsync(input.PostFileToken) == ".pdf")
                 throw new UserFriendlyException("فایل اصلی نمی‌تواند PDF باشد");
 
             bool shouldSendSmsNotification = post.CurrentPostStatus != input.CurrentPostStatus;
@@ -1416,6 +1418,9 @@ namespace Chamran.Deed.Info
             {
                 //ignore
             }
+            await EnsurePdfIsIsolatedAsync(post);
+            RemoveDuplicateMedia(post);
+
             //await ProcessMainFileAsync(post, input.PostFileToken, required: false);
             //await ProcessPdfFileAsync(post, input.PdfFileToken);
             //await ProcessAdditionalFilesAsync(post, input);
@@ -1599,6 +1604,17 @@ namespace Chamran.Deed.Info
 
                 if (fileCache == null)
                 {
+                    if (Guid.TryParse(fileToken, out var existingId))
+                    {
+                        var existing = await _binaryObjectManager.GetOrNullAsync(existingId);
+                        if (existing != null)
+                        {
+                            if (refId != null)
+                                existing.SourceId = refId;
+                            return existingId;
+                        }
+                    }
+
                     throw new UserFriendlyException("There is no such file with the token: " + fileToken);
                 }
 
@@ -1961,14 +1977,25 @@ namespace Chamran.Deed.Info
             return Path.GetExtension(file.Description)?.ToLowerInvariant();
         }
 
-        private string GetFileExtensionFromToken(string token)
+        private async Task<string> GetFileExtensionFromTokenAsync(string token)
         {
-            if (string.IsNullOrEmpty(token)) return null;
+            if (string.IsNullOrWhiteSpace(token)) return null;
 
             var info = _tempFileCacheManager.GetFileInfo(token);
-            if (info == null || string.IsNullOrWhiteSpace(info.FileName)) return null;
+            if (info != null && !string.IsNullOrWhiteSpace(info.FileName))
+            {
+                return Path.GetExtension(info.FileName)?.ToLowerInvariant();
+            }
 
-            return Path.GetExtension(info.FileName)?.ToLowerInvariant();
+            if (Guid.TryParse(token, out var id))
+            {
+                var file = await _binaryObjectManager.GetOrNullAsync(id);
+                if (file != null && !string.IsNullOrWhiteSpace(file.Description))
+                {
+                    return Path.GetExtension(file.Description)?.ToLowerInvariant();
+                }
+            }
+            return null;
         }
 
         private bool IsPdfToken(string token)
@@ -1996,19 +2023,22 @@ namespace Chamran.Deed.Info
 
 
 
-        private void NormalizePdfFileToken(CreateOrEditPostDto input)
+        private async Task NormalizePdfFileTokenAsync(CreateOrEditPostDto input)
         {
-            bool pdfSet = !string.IsNullOrWhiteSpace(input.PdfFileToken);
+            bool pdfSet = !string.IsNullOrWhiteSpace(input.PdfFileToken) || input.PdfFile != null;
 
             //void HandleToken(ref string token)
-            void Handle(ref Guid? file, ref string token)
+            void Handle(ref Guid? file, ref string token, string ext)
             {
                 //if (GetFileExtensionFromToken(token) == ".pdf")
-                if (IsPdfToken(token))
+                if (ext == ".pdf")
                 {
                     if (!pdfSet)
                     {
-                        input.PdfFileToken = token;
+                        if (!string.IsNullOrEmpty(token))
+                            input.PdfFileToken = token;
+                        else if (file.HasValue)
+                            input.PdfFile = file; 
                         pdfSet = true;
                     }
                     token = null;
@@ -2016,16 +2046,16 @@ namespace Chamran.Deed.Info
                 }
             }
 
-            var f1 = input.PostFile; var t1 = input.PostFileToken; Handle(ref f1, ref t1); input.PostFile = f1; input.PostFileToken = t1;
-            var f2 = input.PostFile2; var t2 = input.PostFileToken2; Handle(ref f2, ref t2); input.PostFile2 = f2; input.PostFileToken2 = t2;
-            var f3 = input.PostFile3; var t3 = input.PostFileToken3; Handle(ref f3, ref t3); input.PostFile3 = f3; input.PostFileToken3 = t3;
-            var f4 = input.PostFile4; var t4 = input.PostFileToken4; Handle(ref f4, ref t4); input.PostFile4 = f4; input.PostFileToken4 = t4;
-            var f5 = input.PostFile5; var t5 = input.PostFileToken5; Handle(ref f5, ref t5); input.PostFile5 = f5; input.PostFileToken5 = t5;
-            var f6 = input.PostFile6; var t6 = input.PostFileToken6; Handle(ref f6, ref t6); input.PostFile6 = f6; input.PostFileToken6 = t6;
-            var f7 = input.PostFile7; var t7 = input.PostFileToken7; Handle(ref f7, ref t7); input.PostFile7 = f7; input.PostFileToken7 = t7;
-            var f8 = input.PostFile8; var t8 = input.PostFileToken8; Handle(ref f8, ref t8); input.PostFile8 = f8; input.PostFileToken8 = t8;
-            var f9 = input.PostFile9; var t9 = input.PostFileToken9; Handle(ref f9, ref t9); input.PostFile9 = f9; input.PostFileToken9 = t9;
-            var f10 = input.PostFile10; var t10 = input.PostFileToken10; Handle(ref f10, ref t10); input.PostFile10 = f10; input.PostFileToken10 = t10;
+            var f1 = input.PostFile; var t1 = input.PostFileToken; var e1 = await GetFileExtensionFromTokenAsync(t1 ?? f1?.ToString()); Handle(ref f1, ref t1, e1); input.PostFile = f1; input.PostFileToken = t1;
+            var f2 = input.PostFile2; var t2 = input.PostFileToken2; var e2 = await GetFileExtensionFromTokenAsync(t2 ?? f2?.ToString()); Handle(ref f2, ref t2, e2); input.PostFile2 = f2; input.PostFileToken2 = t2;
+            var f3 = input.PostFile3; var t3 = input.PostFileToken3; var e3 = await GetFileExtensionFromTokenAsync(t3 ?? f3?.ToString()); Handle(ref f3, ref t3, e3); input.PostFile3 = f3; input.PostFileToken3 = t3;
+            var f4 = input.PostFile4; var t4 = input.PostFileToken4; var e4 = await GetFileExtensionFromTokenAsync(t4 ?? f4?.ToString()); Handle(ref f4, ref t4, e4); input.PostFile4 = f4; input.PostFileToken4 = t4;
+            var f5 = input.PostFile5; var t5 = input.PostFileToken5; var e5 = await GetFileExtensionFromTokenAsync(t5 ?? f5?.ToString()); Handle(ref f5, ref t5, e5); input.PostFile5 = f5; input.PostFileToken5 = t5;
+            var f6 = input.PostFile6; var t6 = input.PostFileToken6; var e6 = await GetFileExtensionFromTokenAsync(t6 ?? f6?.ToString()); Handle(ref f6, ref t6, e6); input.PostFile6 = f6; input.PostFileToken6 = t6;
+            var f7 = input.PostFile7; var t7 = input.PostFileToken7; var e7 = await GetFileExtensionFromTokenAsync(t7 ?? f7?.ToString()); Handle(ref f7, ref t7, e7); input.PostFile7 = f7; input.PostFileToken7 = t7;
+            var f8 = input.PostFile8; var t8 = input.PostFileToken8; var e8 = await GetFileExtensionFromTokenAsync(t8 ?? f8?.ToString()); Handle(ref f8, ref t8, e8); input.PostFile8 = f8; input.PostFileToken8 = t8;
+            var f9 = input.PostFile9; var t9 = input.PostFileToken9; var e9 = await GetFileExtensionFromTokenAsync(t9 ?? f9?.ToString()); Handle(ref f9, ref t9, e9); input.PostFile9 = f9; input.PostFileToken9 = t9;
+            var f10 = input.PostFile10; var t10 = input.PostFileToken10; var e10 = await GetFileExtensionFromTokenAsync(t10 ?? f10?.ToString()); Handle(ref f10, ref t10, e10); input.PostFile10 = f10; input.PostFileToken10 = t10;
         }
 
         private async Task EnsurePdfIsIsolatedAsync(Post post)
@@ -2058,17 +2088,6 @@ namespace Chamran.Deed.Info
             }
         }
 
-        //var t1 = input.PostFileToken; HandleToken(ref t1); input.PostFileToken = t1;
-        //var t2 = input.PostFileToken2; HandleToken(ref t2); input.PostFileToken2 = t2;
-        //var t3 = input.PostFileToken3; HandleToken(ref t3); input.PostFileToken3 = t3;
-        //var t4 = input.PostFileToken4; HandleToken(ref t4); input.PostFileToken4 = t4;
-        //var t5 = input.PostFileToken5; HandleToken(ref t5); input.PostFileToken5 = t5;
-        //var t6 = input.PostFileToken6; HandleToken(ref t6); input.PostFileToken6 = t6;
-        //var t7 = input.PostFileToken7; HandleToken(ref t7); input.PostFileToken7 = t7;
-        //var t8 = input.PostFileToken8; HandleToken(ref t8); input.PostFileToken8 = t8;
-        //var t9 = input.PostFileToken9; HandleToken(ref t9); input.PostFileToken9 = t9;
-        //var t10 = input.PostFileToken10; HandleToken(ref t10); input.PostFileToken10 = t10;
-
         private async Task<bool> IsPdfAsync(Guid fileId)
         {
             var file = await _binaryObjectManager.GetOrNullAsync(fileId);
@@ -2091,6 +2110,29 @@ namespace Chamran.Deed.Info
                 case 9: post.PostFile9 = value; break;
                 case 10: post.PostFile10 = value; break;
             }
+        }
+
+        private static void RemoveDuplicateMedia(Post post)
+        {
+            var seen = new HashSet<Guid>();
+
+            void Dedup(int index, Guid? value)
+            {
+                if (!value.HasValue) return;
+                if (!seen.Add(value.Value))
+                    SetPostFile(post, index, null);
+            }
+
+            Dedup(1, post.PostFile);
+            Dedup(2, post.PostFile2);
+            Dedup(3, post.PostFile3);
+            Dedup(4, post.PostFile4);
+            Dedup(5, post.PostFile5);
+            Dedup(6, post.PostFile6);
+            Dedup(7, post.PostFile7);
+            Dedup(8, post.PostFile8);
+            Dedup(9, post.PostFile9);
+            Dedup(10, post.PostFile10);
         }
 
 
@@ -2162,126 +2204,126 @@ namespace Chamran.Deed.Info
         //                                p.AppBinaryObjectFk9,
         //                                p.AppBinaryObjectFk10,
 
-        //                            };
-        //        var count = filteredPosts.Count();
-        //        var pagedAndFilteredPosts = filteredPosts
-        //            .OrderBy(input.Sorting ?? "id desc")
-        //            .PageBy(input);
+            //                            };
+            //        var count = filteredPosts.Count();
+            //        var pagedAndFilteredPosts = filteredPosts
+            //            .OrderBy(input.Sorting ?? "id desc")
+            //            .PageBy(input);
 
-        //        foreach (var post in pagedAndFilteredPosts)
-        //        {
-        //            var datam = new GetPostsForViewDto
-        //            {
-        //                //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
-        //                Id = post.Id,
-        //                GroupMemberId = post.GroupMemberId ?? 0,
-        //                IsSpecial = post.IsSpecial,
-        //                IsPublished = post.IsPublished,
-        //                PostCaption = post.PostCaption,
-        //                PostFile = post.PostFile,
-        //                PostFile2 = post.PostFile2,
-        //                PostFile3 = post.PostFile3,
-        //                PostFile4 = post.PostFile4,
-        //                PostFile5 = post.PostFile5,
-        //                PostFile6 = post.PostFile6,
-        //                PostFile7 = post.PostFile7,
-        //                PostFile8 = post.PostFile8,
-        //                PostFile9 = post.PostFile9,
-        //                PostFile10 = post.PostFile10,
-        //                PostTitle = post.PostTitle,
-        //                PostGroupId = post.PostGroupId,
-        //                PostRefLink = post.PostRefLink,
-        //                CreationTime = post.CreationTime,
-        //            };
-        //            try
-        //            {
-        //                if (post.GroupMemberFk != null)
-        //                {
-        //                    datam.MemberFullName = post.GroupMemberFk.UserFk.FullName;
-        //                    datam.MemberPosition = post.GroupMemberFk.MemberPosition;
-        //                    datam.MemberUserName = post.GroupMemberFk.UserFk.UserName;
-        //                }
+            //        foreach (var post in pagedAndFilteredPosts)
+            //        {
+            //            var datam = new GetPostsForViewDto
+            //            {
+            //                //Base64Image = "data:image/png;base64,"+Convert.ToBase64String(postCategory.Bytes, 0, postCategory.Bytes.Length) ,
+            //                Id = post.Id,
+            //                GroupMemberId = post.GroupMemberId ?? 0,
+            //                IsSpecial = post.IsSpecial,
+            //                IsPublished = post.IsPublished,
+            //                PostCaption = post.PostCaption,
+            //                PostFile = post.PostFile,
+            //                PostFile2 = post.PostFile2,
+            //                PostFile3 = post.PostFile3,
+            //                PostFile4 = post.PostFile4,
+            //                PostFile5 = post.PostFile5,
+            //                PostFile6 = post.PostFile6,
+            //                PostFile7 = post.PostFile7,
+            //                PostFile8 = post.PostFile8,
+            //                PostFile9 = post.PostFile9,
+            //                PostFile10 = post.PostFile10,
+            //                PostTitle = post.PostTitle,
+            //                PostGroupId = post.PostGroupId,
+            //                PostRefLink = post.PostRefLink,
+            //                CreationTime = post.CreationTime,
+            //            };
+            //            try
+            //            {
+            //                if (post.GroupMemberFk != null)
+            //                {
+            //                    datam.MemberFullName = post.GroupMemberFk.UserFk.FullName;
+            //                    datam.MemberPosition = post.GroupMemberFk.MemberPosition;
+            //                    datam.MemberUserName = post.GroupMemberFk.UserFk.UserName;
+            //                }
 
-        //                if (post.PostGroupFk != null)
-        //                {
-        //                    datam.GroupFile = post.PostGroupFk.GroupFile;
-        //                    datam.GroupDescription = post.PostGroupFk.PostGroupDescription;
+            //                if (post.PostGroupFk != null)
+            //                {
+            //                    datam.GroupFile = post.PostGroupFk.GroupFile;
+            //                    datam.GroupDescription = post.PostGroupFk.PostGroupDescription;
 
-        //                }
+            //                }
 
-        //                if (post.PostSubGroupFk != null)
-        //                {
-        //                    datam.PostSubGroupDescription = post.PostSubGroupFk.PostSubGroupDescription;
-        //                }
+            //                if (post.PostSubGroupFk != null)
+            //                {
+            //                    datam.PostSubGroupDescription = post.PostSubGroupFk.PostSubGroupDescription;
+            //                }
 
-        //                if (post.AppBinaryObjectFk != null)
-        //                {
-        //                    datam.Attachment1 = post.AppBinaryObjectFk.Description;
-        //                }
+            //                if (post.AppBinaryObjectFk != null)
+            //                {
+            //                    datam.Attachment1 = post.AppBinaryObjectFk.Description;
+            //                }
 
-        //                if (post.AppBinaryObjectFk2 != null)
-        //                {
-        //                    datam.Attachment2 = post.AppBinaryObjectFk2.Description;
-        //                }
+            //                if (post.AppBinaryObjectFk2 != null)
+            //                {
+            //                    datam.Attachment2 = post.AppBinaryObjectFk2.Description;
+            //                }
 
-        //                if (post.AppBinaryObjectFk3 != null)
-        //                {
-        //                    datam.Attachment3 = post.AppBinaryObjectFk3.Description;
-        //                }
+            //                if (post.AppBinaryObjectFk3 != null)
+            //                {
+            //                    datam.Attachment3 = post.AppBinaryObjectFk3.Description;
+            //                }
 
-        //                if (post.AppBinaryObjectFk4 != null)
-        //                {
-        //                    datam.Attachment4 = post.AppBinaryObjectFk4.Description;
-        //                }
+            //                if (post.AppBinaryObjectFk4 != null)
+            //                {
+            //                    datam.Attachment4 = post.AppBinaryObjectFk4.Description;
+            //                }
 
-        //                if (post.AppBinaryObjectFk5 != null)
-        //                {
-        //                    datam.Attachment5 = post.AppBinaryObjectFk5.Description;
-        //                }
+            //                if (post.AppBinaryObjectFk5 != null)
+            //                {
+            //                    datam.Attachment5 = post.AppBinaryObjectFk5.Description;
+            //                }
 
-        //                if (post.AppBinaryObjectFk6 != null)
-        //                {
-        //                    datam.Attachment6 = post.AppBinaryObjectFk6.Description;
-        //                }
+            //                if (post.AppBinaryObjectFk6 != null)
+            //                {
+            //                    datam.Attachment6 = post.AppBinaryObjectFk6.Description;
+            //                }
 
-        //                if (post.AppBinaryObjectFk7 != null)
-        //                {
-        //                    datam.Attachment7 = post.AppBinaryObjectFk7.Description;
-        //                }
+            //                if (post.AppBinaryObjectFk7 != null)
+            //                {
+            //                    datam.Attachment7 = post.AppBinaryObjectFk7.Description;
+            //                }
 
-        //                if (post.AppBinaryObjectFk8 != null)
-        //                {
-        //                    datam.Attachment8 = post.AppBinaryObjectFk8.Description;
-        //                }
+            //                if (post.AppBinaryObjectFk8 != null)
+            //                {
+            //                    datam.Attachment8 = post.AppBinaryObjectFk8.Description;
+            //                }
 
-        //                if (post.AppBinaryObjectFk9 != null)
-        //                {
-        //                    datam.Attachment9 = post.AppBinaryObjectFk9.Description;
-        //                }
+            //                if (post.AppBinaryObjectFk9 != null)
+            //                {
+            //                    datam.Attachment9 = post.AppBinaryObjectFk9.Description;
+            //                }
 
-        //                if (post.AppBinaryObjectFk10 != null)
-        //                {
-        //                    datam.Attachment10 = post.AppBinaryObjectFk10.Description;
-        //                }
+            //                if (post.AppBinaryObjectFk10 != null)
+            //                {
+            //                    datam.Attachment10 = post.AppBinaryObjectFk10.Description;
+            //                }
 
-        //            }
-        //            catch (Exception)
-        //            {
-        //                //ignored
-        //            }
+            //            }
+            //            catch (Exception)
+            //            {
+            //                //ignored
+            //            }
 
-        //            posts.Add(datam);
+            //            posts.Add(datam);
 
 
-        //        }
+            //        }
 
-        //        return Task.FromResult(new PagedResultDto<GetPostsForViewDto>(count, posts));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw new UserFriendlyException(ex.Message);
-        //    }
-        //}
+            //        return Task.FromResult(new PagedResultDto<GetPostsForViewDto>(count, posts));
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        throw new UserFriendlyException(ex.Message);
+            //    }
+            //}
 
         public async Task<PagedResultDto<GetLikedUsersDto>> GetLikedUsers(GetLikedUsersInput input)
         {
