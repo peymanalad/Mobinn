@@ -648,6 +648,7 @@ namespace Chamran.Deed.Info
             Guid? firstPdfId = null;
             var media = new List<(Guid id, string ext, byte[] bytes)>();
             var seen = new HashSet<Guid>();
+            var seenHashes = new HashSet<string>();
 
             foreach (var (tok, explicitPdf) in tokensOrdered)
             {
@@ -678,7 +679,8 @@ namespace Chamran.Deed.Info
                     continue;
                 }
 
-                if (!seen.Add(bin.Id))
+                var hash = Convert.ToBase64String(System.Security.Cryptography.SHA256.HashData(bin.Bytes));
+                if (!seen.Add(bin.Id) || !seenHashes.Add(hash))
                     continue;
 
                 media.Add((bin.Id, ext, bin.Bytes));
