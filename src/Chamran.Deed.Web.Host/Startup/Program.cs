@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Chamran.Deed.Web.Helpers;
 using Sentry;
+using Sentry.EntityFramework;
 using System;
 
 namespace Chamran.Deed.Web.Startup
@@ -23,11 +24,9 @@ namespace Chamran.Deed.Web.Startup
             var builder = new WebHostBuilder()
                 .UseKestrel(opt =>
                 {
-
                     opt.AddServerHeader = false;
                     opt.Limits.MaxRequestLineSize = 524288000;
                     opt.Limits.MaxRequestBufferSize = 524288000;
-
                 })
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .ConfigureLogging((context, logging) =>
@@ -49,6 +48,7 @@ namespace Chamran.Deed.Web.Startup
                     }
                 })
                 .UseIIS();
+
             if (!string.IsNullOrWhiteSpace(sentryDsn))
             {
                 builder = builder.UseSentry(o =>
@@ -60,7 +60,6 @@ namespace Chamran.Deed.Web.Startup
                     o.ProfilesSampleRate = 1.0;
                     o.AddEntityFramework();
                     o.AutoSessionTracking = false;
-                    //})
                 });
             }
             return builder
