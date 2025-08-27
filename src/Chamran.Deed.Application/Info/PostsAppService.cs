@@ -1426,7 +1426,8 @@ namespace Chamran.Deed.Info
             //await ProcessMainFileAsync(post, input.PostFileToken, required: false);
             //await ProcessPdfFileAsync(post, input.PdfFileToken);
             //await ProcessAdditionalFilesAsync(post, input);
-            await ProcessAllFilesAsync(post, input, mainRequired: false);
+            //await ProcessAllFilesAsync(post, input, mainRequired: false);
+            await BuildPreviewFromFirstMediaIdAsync(post);
 
             if (shouldSendSmsNotification)
             {
