@@ -54,6 +54,7 @@ namespace Chamran.Deed.Web.Startup
                 builder = builder.UseSentry(o =>
                 {
                     o.Dsn = sentryDsn;
+                    o.EnableTracing = true;
                     o.Debug = false;
                     o.DiagnosticLevel = SentryLevel.Info;
                     o.TracesSampleRate = 1.0;
