@@ -1224,10 +1224,10 @@ namespace Chamran.Deed.Info
 
             await NormalizePdfFileTokenAsync(input);
 
-            if (string.IsNullOrEmpty(input.PdfFileToken) && input.PdfFile == null)
-            {
-                input.PdfFile = post.PdfFile;
-            }
+            //if (string.IsNullOrEmpty(input.PdfFileToken) && input.PdfFile == null)
+            //{
+            //    input.PdfFile = post.PdfFile;
+            //}
 
 
             var allTokensForCheck = new[] {
@@ -1292,13 +1292,18 @@ namespace Chamran.Deed.Info
             }
 
             //input.PdfFile = post.PdfFile;
-            var existingPdfFile = post.PdfFile;
+            //var existingPdfFile = post.PdfFile;
             ObjectMapper.Map(input, post);
             if (string.IsNullOrEmpty(input.PdfFileToken) && input.PdfFile == null)
             {
-                post.PdfFile = existingPdfFile;
+                //post.PdfFile = existingPdfFile;
+                post.PdfFile = null;
             }
-            post.PdfFile = input.PdfFile;
+            else
+            {
+                post.PdfFile = input.PdfFile;
+            }
+            //post.PdfFile = input.PdfFile;
             try
             {
                 if (!string.IsNullOrEmpty(input.PostFileToken))
