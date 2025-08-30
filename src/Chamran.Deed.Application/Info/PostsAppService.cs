@@ -1294,13 +1294,13 @@ namespace Chamran.Deed.Info
             //input.PdfFile = post.PdfFile;
             //var existingPdfFile = post.PdfFile;
             ObjectMapper.Map(input, post);
-            if (string.IsNullOrEmpty(input.PdfFileToken) && input.PdfFile == null)
+            if (string.IsNullOrWhiteSpace(input.PdfFileToken) && !input.PdfFile.HasValue)
             {
-                //post.PdfFile = existingPdfFile;
                 post.PdfFile = null;
             }
-            else
+            else if (input.PdfFile.HasValue)
             {
+                //post.PdfFile = existingPdfFile;
                 post.PdfFile = input.PdfFile;
             }
             //post.PdfFile = input.PdfFile;
