@@ -40,6 +40,7 @@
     <!--<PackageReference Include="Abp.AspNetZeroCore" Version="4.1.0" />-->
     <PackageReference Include="SkiaSharp" Version="2.88.7" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.7" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.300.26" />
   </ItemGroup>
 
   <ItemGroup>
