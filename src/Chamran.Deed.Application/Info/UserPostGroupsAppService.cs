@@ -15,6 +15,7 @@ using Abp.Timing;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Chamran.Deed.People;
+using Chamran.Deed.Timing;
 
 namespace Chamran.Deed.Info
 {
@@ -346,7 +347,8 @@ namespace Chamran.Deed.Info
                 {
                     UserId = (long)AbpSession.UserId,
                     PostGroupId = row,
-                    CreationTime = Clock.Now,
+                    //CreationTime = Clock.Now,
+                    CreationTime = IranTimeZoneHelper.Now,
                     CreatorUserId = AbpSession.UserId,
                 });
             }

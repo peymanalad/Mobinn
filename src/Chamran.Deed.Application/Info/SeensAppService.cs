@@ -14,6 +14,7 @@ using Abp.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Abp.Timing;
+using Chamran.Deed.Timing;
 
 namespace Chamran.Deed.Info
 {
@@ -49,7 +50,8 @@ namespace Chamran.Deed.Info
                 {
                     UserId = userId,
                     PostId = postId,
-                    SeenTime = Clock.Now
+                    //SeenTime = Clock.Now
+                    SeenTime = IranTimeZoneHelper.Now
                 };
 
                 await _seenRepository.InsertAsync(seen);

@@ -16,6 +16,7 @@ using Abp.Authorization;
 using Abp.Timing;
 using Microsoft.EntityFrameworkCore;
 using Abp.UI;
+using Chamran.Deed.Timing;
 
 namespace Chamran.Deed.Info
 {
@@ -312,7 +313,8 @@ namespace Chamran.Deed.Info
             {
                 UserId = AbpSession.UserId.Value,
                 CommentId = commentId,
-                LikeTime = Clock.Now,
+                //LikeTime = Clock.Now,
+                LikeTime = IranTimeZoneHelper.Now,
             };
             await _commentLikeRepository.InsertAsync(seen);
         }

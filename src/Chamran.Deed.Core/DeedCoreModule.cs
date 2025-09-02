@@ -49,6 +49,7 @@ using Chamran.Deed.Net.Sms;
 using Chamran.Deed.Notifications;
 using Chamran.Deed.WebHooks;
 using Newtonsoft.Json;
+using Chamran.Deed.Timing;
 
 namespace Chamran.Deed
 {
@@ -68,6 +69,7 @@ namespace Chamran.Deed
             AppContext.SetSwitch("Microsoft.EntityFrameworkCore.Issue9825", true);
 
             Configuration.Auditing.IsEnabledForAnonymousUsers = true;
+            Clock.Provider = new IranClockProvider();
 
             //Declare entity types
             Configuration.Modules.Zero().EntityTypes.Tenant = typeof(Tenant);

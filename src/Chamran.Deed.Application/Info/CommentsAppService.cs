@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Abp.UI;
 using Chamran.Deed.Authorization.Accounts.Dto;
 using Chamran.Deed.People;
+using Chamran.Deed.Timing;
 
 namespace Chamran.Deed.Info
 {
@@ -364,7 +365,8 @@ namespace Chamran.Deed.Info
             if (AbpSession.UserId == null) throw new UserFriendlyException("Not Logged In!");
             var comment = ObjectMapper.Map<Comment>(input);
             comment.UserId = AbpSession.UserId.Value;
-            comment.InsertDate = Clock.Now;
+            //comment.InsertDate = Clock.Now;
+            comment.InsertDate = IranTimeZoneHelper.Now;
             var res=await _commentRepository.InsertAsync(comment);
             await CurrentUnitOfWork.SaveChangesAsync(); // Save changes to generate the identity value
             return res.Id;
