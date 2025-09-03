@@ -13,12 +13,9 @@ namespace Chamran.Deed.Info.Dtos
 
         public Guid SharedTaskId { get; set; }
 
-        public int PostId { get; set; }
-
-        public long IssuerId { get; set; }
-
-        public long ReceiverId { get; set; }
-
+        public int? PostId { get; set; }
+        public long? IssuerId { get; set; }
+        public long? ReceiverId { get; set; }
         public int? ParentId { get; set; }
         public bool IsPrivate{ get; set; }
         public bool ReturnedToParent  { get; set; }

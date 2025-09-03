@@ -497,19 +497,38 @@ ORDER BY
         [AbpAuthorize(AppPermissions.Pages_TaskEntries_Create)]
         protected virtual async Task Create(CreateOrEditTaskEntryDto input)
         {
+            if (!input.PostId.HasValue)
+            {
+                throw new UserFriendlyException("PostId is required");
+            }
+
+            if (!input.ReceiverId.HasValue)
+            {
+                throw new UserFriendlyException("ReceiverId is required");
+            }
+
+            if (AbpSession.UserId == null)
+            {
+                throw new UserFriendlyException("IssuerId is required");
+            }
+
+            input.IssuerId = AbpSession.UserId.Value;
+
             var taskEntry = ObjectMapper.Map<TaskEntry>(input);
+            taskEntry.IssuerId = AbpSession.UserId.Value;
             await _taskEntryRepository.InsertAsync(taskEntry);
             var taskEntryNotification = ObjectMapper.Map<TaskEntryNotificationDto>(input);
 
 
-            await _appNotifier.SendTaskNotificationAsync(JsonConvert.SerializeObject(taskEntryNotification, new JsonSerializerSettings
+            await _appNotifier.SendTaskNotificationAsync(
+                JsonConvert.SerializeObject(taskEntryNotification, new JsonSerializerSettings
                 {
                     ContractResolver = new DefaultContractResolver
                     {
-                        NamingStrategy = new CamelCaseNamingStrategy() // Use PascalCaseNamingStrategy for Pascal case
+                        NamingStrategy = new CamelCaseNamingStrategy()
                     }
                 }),
-                userIds: new[] { new UserIdentifier(AbpSession.TenantId, input.ReceiverId) },
+                userIds: new[] { new UserIdentifier(AbpSession.TenantId, input.ReceiverId.Value) },
                 NotificationSeverity.Info
             );
 
