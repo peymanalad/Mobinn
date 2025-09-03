@@ -632,37 +632,61 @@ namespace Chamran.Deed.Info
                               chart.LeafPath == parentLeafPath
                         select new
                         {
-                            User = user,
-                            OrgUser = orgUser,
+                            UserId = user.Id,
+                            user.UserName,
+                            user.Name,
+                            user.Surname,
+                            user.ProfilePictureId,
+                            OrgUserId = orgUser.Id,
                             chart.LeafPath,
                             grp.MemberPosition,
                             LevelType = chart.LeafPath == leafPath ? 0 : (chart.LeafPath == parentLeafPath ? 1 : 2)
                         })
-                        .GroupBy(u => u.User.Id)
-                        .Select(g => g.FirstOrDefault());
+                        .GroupBy(x => new
+                        {
+                            x.UserId,
+                            x.UserName,
+                            x.Name,
+                            x.Surname,
+                            x.ProfilePictureId,
+                            x.OrgUserId,
+                            x.LeafPath,
+                            x.LevelType
+                        })
+                        .Select(g => new
+                        {
+                            g.Key.UserId,
+                            g.Key.UserName,
+                            g.Key.Name,
+                            g.Key.Surname,
+                            g.Key.ProfilePictureId,
+                            g.Key.OrgUserId,
+                            g.Key.LeafPath,
+                            MemberPosition = g.Max(x => x.MemberPosition),
+                            g.Key.LevelType
+                        });
 
             if (filterUserId)
-                query = query.Where(x => x.User.Id != currentUserId);
-
+                query = query.Where(x => x.UserId != currentUserId);
             if (!string.IsNullOrWhiteSpace(input.Filter))
-                query = query.Where(x => x.User.Surname.Contains(input.Filter) || x.User.Name.Contains(input.Filter));
+                query = query.Where(x => x.Surname.Contains(input.Filter) || x.Name.Contains(input.Filter));
 
             var totalCount = await query.CountAsync();
 
             var result = await query
-                .OrderBy(input.Sorting ?? "User.Name asc")
+                .OrderBy((input.Sorting ?? "Name asc").Replace("User.", string.Empty))
                 .PageBy(input)
                 .Select(x => new LeafUserDto
                 {
-                    UserId = x.User.Id,
-                    UserName = x.User.UserName,
-                    FirstName = x.User.Name,
-                    LastName = x.User.Surname,
-                    ProfilePictureId = x.User.ProfilePictureId,
+                    UserId = x.UserId,
+                    UserName = x.UserName,
+                    FirstName = x.Name,
+                    LastName = x.Surname,
+                    ProfilePictureId = x.ProfilePictureId,
                     LevelType = x.LevelType,
                     MemberPosition = x.MemberPosition,
                     TenantId = 1,
-                    OrganizationUserId = x.OrgUser.Id
+                    OrganizationUserId = x.OrgUserId
                 })
                 .ToListAsync();
 
