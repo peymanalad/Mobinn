@@ -402,8 +402,8 @@ namespace Chamran.Deed.Info
                      on user.Id equals orgUser.UserId
                  join chart in _lookup_organizationChartRepository.GetAll()
                      on orgUser.OrganizationChartId equals chart.Id
-                 join grp in _groupMemberRepository.GetAll()
-                     on user.Id equals grp.UserId
+                 join grp in _groupMemberRepository.GetAll().Where(g => g.OrganizationId == input.OrganizationId)
+                    on user.Id equals grp.UserId
                  where chart.LeafPath == leafPath && user.Id != AbpSession.UserId
                  where !orgUser.IsGlobal
                  where string.IsNullOrWhiteSpace(input.Filter) ||
@@ -413,7 +413,9 @@ namespace Chamran.Deed.Info
                      User = user,
                      LeafPath = chart.LeafPath,
                      MemberPosition = grp.MemberPosition
-                 });
+                 })
+                .GroupBy(u => u.User.Id)
+                .Select(g => g.FirstOrDefault());
 
             //return usersInSameLeaf;
             var outputList = await usersInSameLeaf
@@ -462,7 +464,8 @@ namespace Chamran.Deed.Info
                                          join orgUser in _organizationUserRepository.GetAll() on user.Id equals orgUser.UserId
                                          join chart in _lookup_organizationChartRepository.GetAll() on orgUser.OrganizationChartId equals chart
                                              .Id
-                                         join grp in _groupMemberRepository.GetAll() on user.Id equals grp.UserId
+                                         join grp in _groupMemberRepository.GetAll().Where(g => g.OrganizationId == input.OrganizationId)
+                                             on user.Id equals grp.UserId
                                          where chart.LeafPath.StartsWith(leafPath) && chart.LeafPath != leafPath
                                          where !orgUser.IsGlobal
                                          where string.IsNullOrWhiteSpace(input.Filter) ||
@@ -472,7 +475,9 @@ namespace Chamran.Deed.Info
                                              user,
                                              chart.LeafPath,
                                              grp.MemberPosition
-                                         });
+                                         })
+                .GroupBy(u => u.user.Id)
+                .Select(g => g.FirstOrDefault());
 
             //return usersInChildrenLeaves;
             var outputList = await usersInChildrenLeaves
@@ -525,8 +530,8 @@ namespace Chamran.Deed.Info
                 join orgUser in _organizationUserRepository.GetAll() on user.Id equals orgUser.UserId
                 join chart in _lookup_organizationChartRepository.GetAll() on orgUser.OrganizationChartId equals chart
                     .Id
-                join grp in _groupMemberRepository.GetAll() on user.Id equals grp.UserId
-                where chart.LeafPath == parentLeafPathWithoutLastPart
+                                               join grp in _groupMemberRepository.GetAll().Where(g => g.OrganizationId == input.OrganizationId) on user.Id equals grp.UserId
+                                               where chart.LeafPath == parentLeafPathWithoutLastPart
                                                where !orgUser.IsGlobal
                 where string.IsNullOrWhiteSpace(input.Filter) ||
                       user.Surname.Contains(input.Filter) || user.Name.Contains(input.Filter)
@@ -535,7 +540,9 @@ namespace Chamran.Deed.Info
                     user,
                     chart.LeafPath,
                     grp.MemberPosition
-                });
+                })
+                .GroupBy(u => u.user.Id)
+                .Select(g => g.FirstOrDefault());
 
             //return usersInOneLevelHigherParent;
             var outputList = await usersInOneLevelHigherParent
@@ -615,11 +622,11 @@ namespace Chamran.Deed.Info
             var leafPath = targetChart.LeafPath;
             var parentLeafPath = GetParentPath(leafPath);
 
-            var query = from user in _userRepository.GetAll()
-                        join orgUser in _organizationUserRepository.GetAll() on user.Id equals orgUser.UserId
+            var query = (from user in _userRepository.GetAll()
+                         join orgUser in _organizationUserRepository.GetAll() on user.Id equals orgUser.UserId
                         join chart in _lookup_organizationChartRepository.GetAll() on orgUser.OrganizationChartId equals chart.Id
-                        join grp in _groupMemberRepository.GetAll() on user.Id equals grp.UserId
-                        where !orgUser.IsGlobal
+                         join grp in _groupMemberRepository.GetAll().Where(g => g.OrganizationId == input.OrganizationId) on user.Id equals grp.UserId
+                         where !orgUser.IsGlobal
                         where chart.LeafPath == leafPath ||
                               chart.LeafPath.StartsWith(leafPath + ".") ||
                               chart.LeafPath == parentLeafPath
@@ -630,7 +637,9 @@ namespace Chamran.Deed.Info
                             chart.LeafPath,
                             grp.MemberPosition,
                             LevelType = chart.LeafPath == leafPath ? 0 : (chart.LeafPath == parentLeafPath ? 1 : 2)
-                        };
+                        })
+                        .GroupBy(u => u.User.Id)
+                        .Select(g => g.FirstOrDefault());
 
             if (filterUserId)
                 query = query.Where(x => x.User.Id != currentUserId);
