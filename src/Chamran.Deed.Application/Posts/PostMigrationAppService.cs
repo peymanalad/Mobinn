@@ -91,43 +91,56 @@ namespace Chamran.Deed.Posts
 
         private async Task<string> GenerateVideoPreviewAsync(byte[] videoBytes, string ext, int postId)
         {
-            var tempDir = Path.GetTempPath();
-            var inputPath = Path.Combine(tempDir, $"{Guid.NewGuid()}{ext}");
-            var outputPath = Path.Combine(tempDir, $"{Guid.NewGuid()}.gif");
+            //var tempDir = Path.GetTempPath();
+            //var inputPath = Path.Combine(tempDir, $"{Guid.NewGuid()}{ext}");
+            //var outputPath = Path.Combine(tempDir, $"{Guid.NewGuid()}.gif");
 
-            await File.WriteAllBytesAsync(inputPath, videoBytes);
+            //await File.WriteAllBytesAsync(inputPath, videoBytes);
 
-            var psi = new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = "ffmpeg",
-                Arguments =
-                    "-y -hide_banner -loglevel error -ss 0 -t 5 " +
-                    $"-i \"{inputPath}\" " +
-                    "-filter_complex \"fps=10,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen=stats_mode=full[p];[s1][p]paletteuse=new=1\" " +
-                    "-f gif -loop 0 " +
-                    $"\"{outputPath}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
+            //var psi = new System.Diagnostics.ProcessStartInfo
+            //{
+            //    FileName = "ffmpeg",
+            //    Arguments =
+            //        "-y -hide_banner -loglevel error -ss 0 -t 5 " +
+            //        $"-i \"{inputPath}\" " +
+            //        "-filter_complex \"fps=10,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen=stats_mode=full[p];[s1][p]paletteuse=new=1\" " +
+            //        "-f gif -loop 0 " +
+            //        $"\"{outputPath}\"",
+            //    RedirectStandardOutput = true,
+            //    RedirectStandardError = true,
+            //    UseShellExecute = false,
+            //    CreateNoWindow = true
+            //};
 
-            using var proc = System.Diagnostics.Process.Start(psi);
-            if (proc != null)
-            {
-                await proc.WaitForExitAsync();
-                if (proc.ExitCode != 0)
-                {
-                    var err = await proc.StandardError.ReadToEndAsync();
-                    throw new Exception($"ffmpeg failed: {err}");
-                }
-            }
+            //using var proc = System.Diagnostics.Process.Start(psi);
+            //if (proc != null)
+            //{
+            //    await proc.WaitForExitAsync();
+            //    if (proc.ExitCode != 0)
+            //    {
+            //        var err = await proc.StandardError.ReadToEndAsync();
+            //        throw new Exception($"ffmpeg failed: {err}");
+            //    }
+            //}
 
-            var bytes = await File.ReadAllBytesAsync(outputPath);
-            File.Delete(inputPath);
-            File.Delete(outputPath);
+            //var bytes = await File.ReadAllBytesAsync(outputPath);
+            //File.Delete(inputPath);
+            //File.Delete(outputPath);
 
-            var binary = new BinaryObject(AbpSession.TenantId, bytes, BinarySourceType.Post, $"preview_{postId}.gif");
+            //var binary = new BinaryObject(AbpSession.TenantId, bytes, BinarySourceType.Post, $"preview_{postId}.gif");
+            await Task.Yield();
+            using var inputStream = new MemoryStream(videoBytes);
+            using var outputStream = new MemoryStream();
+
+            await FFMpegArguments
+                .FromPipeInput(new StreamPipeSource(inputStream))
+                .OutputToPipe(new StreamPipeSink(outputStream), options => options
+                    .WithVideoCodec("gif")
+                    .WithCustomArgument("-vf \"fps=10,scale=320:-1:flags=lanczos\" -t 5 -loop 0")
+                    .ForceFormat("gif"))
+                .ProcessAsynchronously();
+
+            var binary = new BinaryObject(AbpSession.TenantId, outputStream.ToArray(), BinarySourceType.Post, $"preview_{postId}.gif");
             await _binaryObjectManager.SaveAsync(binary);
 
             return binary.Id.ToString();

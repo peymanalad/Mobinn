@@ -130,56 +130,69 @@ public class PostMediaProcessorAppService : DeedAppServiceBase, IPostMediaProces
     {
         //var previewPath = Path.Combine(_env.WebRootPath, "previews", $"preview_{postId}.mp4");
         //if (File.Exists(previewPath)) return;
-        var tempDir = Path.GetTempPath();
-        var inputPath = Path.Combine(tempDir, $"{Guid.NewGuid()}{ext}");
-        var outputPath = Path.Combine(tempDir, $"{Guid.NewGuid()}.gif");
+        //var tempDir = Path.GetTempPath();
+        //var inputPath = Path.Combine(tempDir, $"{Guid.NewGuid()}{ext}");
+        //var outputPath = Path.Combine(tempDir, $"{Guid.NewGuid()}.gif");
 
-        //var args = $"-y -i \"{sourcePath}\" -ss 00:00:01.000 -t 00:00:02.000 -c:v libx264 -preset ultrafast -an \"{previewPath}\"";
-        await File.WriteAllBytesAsync(inputPath, sourceBytes);
+        ////var args = $"-y -i \"{sourcePath}\" -ss 00:00:01.000 -t 00:00:02.000 -c:v libx264 -preset ultrafast -an \"{previewPath}\"";
+        //await File.WriteAllBytesAsync(inputPath, sourceBytes);
 
-        //var startInfo = new ProcessStartInfo
-        var psi = new ProcessStartInfo
-        {
-            FileName = "ffmpeg",
-            //Arguments = args,
-            Arguments =
-                "-y -hide_banner -loglevel error -ss 0 -t 5 " +
-                $"-i \"{inputPath}\" " +
-                "-filter_complex \"fps=10,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen=stats_mode=full[p];[s1][p]paletteuse=new=1\" " +
-                "-f gif -loop 0 " +
-                $"\"{outputPath}\"",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
+        ////var startInfo = new ProcessStartInfo
+        //var psi = new ProcessStartInfo
+        //{
+        //    FileName = "ffmpeg",
+        //    //Arguments = args,
+        //    Arguments =
+        //        "-y -hide_banner -loglevel error -ss 0 -t 5 " +
+        //        $"-i \"{inputPath}\" " +
+        //        "-filter_complex \"fps=10,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen=stats_mode=full[p];[s1][p]paletteuse=new=1\" " +
+        //        "-f gif -loop 0 " +
+        //        $"\"{outputPath}\"",
+        //    RedirectStandardOutput = true,
+        //    RedirectStandardError = true,
+        //    UseShellExecute = false,
+        //    CreateNoWindow = true
+        //};
 
-        //    await RunProcessAsync(startInfo);
+        ////    await RunProcessAsync(startInfo);
+        ////}
+
+        ////private async Task RunProcessAsync(ProcessStartInfo startInfo)
+        ////{
+        ////    using var process = new Process { StartInfo = startInfo };
+        ////    process.Start();
+        //using var proc = Process.Start(psi);
+        //if (proc != null)
+        //{
+        //    await proc.WaitForExitAsync();
+        //    if (proc.ExitCode != 0)
+        //    {
+        //        var err = await proc.StandardError.ReadToEndAsync();
+        //        throw new UserFriendlyException($"Thumbnail/Preview generation failed:\n{err}");
+        //    }
         //}
 
-        //private async Task RunProcessAsync(ProcessStartInfo startInfo)
-        //{
-        //    using var process = new Process { StartInfo = startInfo };
-        //    process.Start();
-        using var proc = Process.Start(psi);
-        if (proc != null)
-        {
-            await proc.WaitForExitAsync();
-            if (proc.ExitCode != 0)
-            {
-                var err = await proc.StandardError.ReadToEndAsync();
-                throw new UserFriendlyException($"Thumbnail/Preview generation failed:\n{err}");
-            }
-        }
+        ////string stderr = await process.StandardError.ReadToEndAsync();
+        ////string stdout = await process.StandardOutput.ReadToEndAsync();
+        //var bytes = await File.ReadAllBytesAsync(outputPath);
+        //File.Delete(inputPath);
+        //File.Delete(outputPath);
 
-        //string stderr = await process.StandardError.ReadToEndAsync();
-        //string stdout = await process.StandardOutput.ReadToEndAsync();
-        var bytes = await File.ReadAllBytesAsync(outputPath);
-        File.Delete(inputPath);
-        File.Delete(outputPath);
+        ////await process.WaitForExitAsync();
+        //var binary = new BinaryObject(AbpSession.TenantId, bytes, BinarySourceType.Post, $"preview_{postId}.gif");
+        await Task.Yield();
+        using var inputStream = new MemoryStream(sourceBytes);
+        using var outputStream = new MemoryStream();
 
-        //await process.WaitForExitAsync();
-        var binary = new BinaryObject(AbpSession.TenantId, bytes, BinarySourceType.Post, $"preview_{postId}.gif");
+        await FFMpegArguments
+            .FromPipeInput(new StreamPipeSource(inputStream))
+            .OutputToPipe(new StreamPipeSink(outputStream), options => options
+                .WithVideoCodec("gif")
+                .WithCustomArgument("-vf \"fps=10,scale=320:-1:flags=lanczos\" -t 5 -loop 0")
+                .ForceFormat("gif"))
+            .ProcessAsynchronously();
+
+        var binary = new BinaryObject(AbpSession.TenantId, outputStream.ToArray(), BinarySourceType.Post, $"preview_{postId}.gif");
         await _binaryObjectManager.SaveAsync(binary);
 
         //if (process.ExitCode != 0)

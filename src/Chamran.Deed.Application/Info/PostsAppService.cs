@@ -51,6 +51,8 @@ using System.Threading;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using static System.Net.Mime.MediaTypeNames;
 using Microsoft.Extensions.Caching.Distributed;
+using FFMpegCore;
+using FFMpegCore.Pipes;
 
 namespace Chamran.Deed.Info
 {
@@ -1001,51 +1003,64 @@ namespace Chamran.Deed.Info
         private async Task<string> GenerateVideoPreviewAsync(byte[] videoBytes, string ext, int postId)
         {
             //var baseRoot = ResolveWebRoot(webRoot);
-            var tempDir = Path.GetTempPath();
-            var inputPath = Path.Combine(tempDir, $"{Guid.NewGuid()}{ext}");
-            var outputPath = Path.Combine(tempDir, $"{Guid.NewGuid()}.gif");
+            //var tempDir = Path.GetTempPath();
+            //var inputPath = Path.Combine(tempDir, $"{Guid.NewGuid()}{ext}");
+            //var outputPath = Path.Combine(tempDir, $"{Guid.NewGuid()}.gif");
 
-            //var previewsDir = Path.Combine(baseRoot, "previews");
-            //Directory.CreateDirectory(previewsDir);
+            ////var previewsDir = Path.Combine(baseRoot, "previews");
+            ////Directory.CreateDirectory(previewsDir);
 
-            //var finalPath = Path.Combine(previewsDir, $"{postId}.gif");
-            //var tempPath = finalPath + ".tmp";
-            await File.WriteAllBytesAsync(inputPath, videoBytes);
+            ////var finalPath = Path.Combine(previewsDir, $"{postId}.gif");
+            ////var tempPath = finalPath + ".tmp";
+            //await File.WriteAllBytesAsync(inputPath, videoBytes);
 
-            var psi = new ProcessStartInfo
-            {
-                FileName = "/usr/bin/ffmpeg",
-                Arguments =
-                    "-y -hide_banner -loglevel error -ss 0 -t 5 " +
-                    $"-i \"{inputPath}\" " +
-                    "-filter_complex \"fps=10,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen=stats_mode=full[p];[s1][p]paletteuse=new=1\" " +
-                    "-f gif -loop 0 " +
-                                        //$"\"{tempPath}\"",
-                                        $"\"{outputPath}\"",
+            //var psi = new ProcessStartInfo
+            //{
+            //    FileName = "/usr/bin/ffmpeg",
+            //    Arguments =
+            //        "-y -hide_banner -loglevel error -ss 0 -t 5 " +
+            //        $"-i \"{inputPath}\" " +
+            //        "-filter_complex \"fps=10,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen=stats_mode=full[p];[s1][p]paletteuse=new=1\" " +
+            //        "-f gif -loop 0 " +
+            //                            //$"\"{tempPath}\"",
+            //                            $"\"{outputPath}\"",
 
 
 
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
+            //    RedirectStandardOutput = true,
+            //    RedirectStandardError = true,
+            //    UseShellExecute = false,
+            //    CreateNoWindow = true
+            //};
 
-            using var proc = Process.Start(psi) ?? throw new Exception("اجرای ffmpeg ناموفق بود");
-            var stderrTask = proc.StandardError.ReadToEndAsync();
-            await proc.WaitForExitAsync();
+            //using var proc = Process.Start(psi) ?? throw new Exception("اجرای ffmpeg ناموفق بود");
+            //var stderrTask = proc.StandardError.ReadToEndAsync();
+            //await proc.WaitForExitAsync();
 
-            var stderr = await stderrTask;
-            if (proc.ExitCode != 0)
-                throw new Exception($"ffmpeg exit code {proc.ExitCode}. stderr: {stderr}");
+            //var stderr = await stderrTask;
+            //if (proc.ExitCode != 0)
+            //    throw new Exception($"ffmpeg exit code {proc.ExitCode}. stderr: {stderr}");
 
-            //if (File.Exists(finalPath)) File.Delete(finalPath);
-            //File.Move(tempPath, finalPath);
-            var bytes = await File.ReadAllBytesAsync(outputPath);
-            File.Delete(inputPath);
-            File.Delete(outputPath);
+            ////if (File.Exists(finalPath)) File.Delete(finalPath);
+            ////File.Move(tempPath, finalPath);
+            //var bytes = await File.ReadAllBytesAsync(outputPath);
+            //File.Delete(inputPath);
+            //File.Delete(outputPath);
 
-            var binary = new BinaryObject(AbpSession.TenantId, bytes, BinarySourceType.Post, $"preview_{postId}.gif");
+            //var binary = new BinaryObject(AbpSession.TenantId, bytes, BinarySourceType.Post, $"preview_{postId}.gif");
+            await Task.Yield(); // ensure method remains async if FFMpeg fails fast
+            using var inputStream = new MemoryStream(videoBytes);
+            using var outputStream = new MemoryStream();
+
+            await FFMpegArguments
+                .FromPipeInput(new StreamPipeSource(inputStream))
+                .OutputToPipe(new StreamPipeSink(outputStream), options => options
+                    .WithVideoCodec("gif")
+                    .WithCustomArgument("-vf \"fps=10,scale=320:-1:flags=lanczos\" -t 5 -loop 0")
+                    .ForceFormat("gif"))
+                .ProcessAsynchronously();
+
+            var binary = new BinaryObject(AbpSession.TenantId, outputStream.ToArray(), BinarySourceType.Post, $"preview_{postId}.gif");
             await _binaryObjectManager.SaveAsync(binary);
 
             //return $"/previews/{postId}.gif";
