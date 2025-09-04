@@ -197,7 +197,24 @@ namespace Chamran.Deed.Web.Controllers
 
             Response.Headers["ETag"] = etag;
             Response.Headers["Cache-Control"] = "public,max-age=31536000";
-            return File(fileObject.Bytes, MimeTypeNames.ImageJpeg);
+            //return File(fileObject.Bytes, MimeTypeNames.ImageJpeg);
+            var stream = await _binaryObjectManager.GetStreamAsync(id);
+            if (stream == null)
+            {
+                return StatusCode((int)HttpStatusCode.NotFound);
+            }
+
+            if (stream.CanSeek)
+            {
+                Response.Headers["Content-Length"] = stream.Length.ToString();
+            }
+
+            Response.Headers["Accept-Ranges"] = "bytes";
+
+            return new FileStreamResult(stream, contentType)
+            {
+                FileDownloadName = fileName
+            };
             //http://192.168.1.89:8089/File/GetContent?id=6FBAE131-2182-87FC-B93A-3A09C55AD962
 
 
