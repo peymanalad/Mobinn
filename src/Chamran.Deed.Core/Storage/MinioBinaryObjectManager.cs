@@ -96,6 +96,38 @@ namespace Chamran.Deed.Storage
             return null;
         }
 
+        public async Task<Stream> GetStreamAsync(Guid id)
+        {
+            await _ensureBucket.Value.ConfigureAwait(false);
+            var baseKey = id.ToString("N");
+            var candidates = new[]
+            {
+                baseKey,
+                baseKey + ".jpg",
+                baseKey + ".png",
+                baseKey + ".jpeg",
+                baseKey + ".gif",
+                baseKey + ".pdf",
+                baseKey + ".mp4"
+            };
+
+            foreach (var key in candidates)
+            {
+                try
+                {
+                    var response = await _s3Client.GetObjectAsync(_bucketName, key).ConfigureAwait(false);
+                    return response.ResponseStream;
+                }
+                catch (AmazonS3Exception ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+                {
+                    continue;
+                }
+            }
+
+            return null;
+        }
+
+
         public async Task SaveAsync(BinaryObject file)
         {
             await _ensureBucket.Value.ConfigureAwait(false);

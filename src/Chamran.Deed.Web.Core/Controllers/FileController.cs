@@ -184,6 +184,47 @@ namespace Chamran.Deed.Web.Controllers
         [DisableAuditing]
         [OutputCache(Duration = 0, NoStore = true)]
         [ResponseCache(Duration = 0, NoStore = true)]
+        public async Task<IActionResult> GetContentStream(Guid id, string contentType, string fileName)
+        {
+            var stream = await _binaryObjectManager.GetStreamAsync(id);
+            if (stream == null)
+            {
+                return NotFound();
+            }
+
+            if (fileName.IsNullOrEmpty())
+            {
+                fileName = id.ToString();
+            }
+
+            if (contentType.IsNullOrEmpty())
+            {
+                if (!Path.GetExtension(fileName).IsNullOrEmpty())
+                {
+                    contentType = _mimeTypeMap.GetMimeType(fileName);
+                }
+                else
+                {
+                    contentType = "application/octet-stream";
+                }
+            }
+
+            if (stream.CanSeek)
+            {
+                Response.Headers["Content-Length"] = stream.Length.ToString();
+            }
+
+            Response.Headers["Content-Type"] = contentType;
+
+            return new FileStreamResult(stream, contentType)
+            {
+                FileDownloadName = fileName
+            };
+        }
+
+        [DisableAuditing]
+        [OutputCache(Duration = 0, NoStore = true)]
+        [ResponseCache(Duration = 0, NoStore = true)]
         [DontWrapResult]
         public async Task<string> GetBase64ImageSource(Guid id, string contentType, string fileName)
         {
