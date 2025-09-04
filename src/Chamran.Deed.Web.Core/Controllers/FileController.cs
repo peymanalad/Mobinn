@@ -18,6 +18,7 @@ using Chamran.Deed.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace Chamran.Deed.Web.Controllers
 {
@@ -88,7 +89,15 @@ namespace Chamran.Deed.Web.Controllers
             }
 
             // Set the Cache-Control header
-            Response.Headers.Add("Cache-Control", "max-age=31536000");
+            //Response.Headers.Add("Cache-Control", "max-age=31536000");
+            var etag = "\"" + Convert.ToBase64String(SHA256.Create().ComputeHash(fileObject.Bytes)) + "\"";
+            if (Request.Headers.TryGetValue("If-None-Match", out var noneMatch) && noneMatch == etag)
+            {
+                return StatusCode((int)HttpStatusCode.NotModified);
+            }
+
+            Response.Headers["ETag"] = etag;
+            Response.Headers["Cache-Control"] = "public,max-age=31536000";
 
             return File(fileObject.Bytes, contentType, fileName);
         }
@@ -138,14 +147,17 @@ namespace Chamran.Deed.Web.Controllers
 
 
         [DisableAuditing]
-        [OutputCache(Duration = 0, NoStore = true)]
-        [ResponseCache(Duration = 0, NoStore = true)]
-        public async Task<FileResult> GetContent(Guid id, string contentType, string fileName)
+        //[OutputCache(Duration = 0, NoStore = true)]
+        //[ResponseCache(Duration = 0, NoStore = true)]
+        //public async Task<FileResult> GetContent(Guid id, string contentType, string fileName)
+        public async Task<IActionResult> GetContent(Guid id, string contentType, string fileName)
         {
             var fileObject = await _binaryObjectManager.GetOrNullAsync(id);
             if (fileObject == null)
             {
-                return null; //StatusCode((int)HttpStatusCode.NotFound);
+                //return null; //StatusCode((int)HttpStatusCode.NotFound);
+                return StatusCode((int)HttpStatusCode.NotFound);
+
             }
 
             if (fileName.IsNullOrEmpty())
@@ -157,7 +169,8 @@ namespace Chamran.Deed.Web.Controllers
                 }
                 else
                 {
-                    return null; //StatusCode((int)HttpStatusCode.BadRequest);
+                    //return null; //StatusCode((int)HttpStatusCode.BadRequest);
+                    return StatusCode((int)HttpStatusCode.BadRequest);
                 }
             }
 
@@ -169,12 +182,21 @@ namespace Chamran.Deed.Web.Controllers
                 }
                 else
                 {
-                    return null; //StatusCode((int)HttpStatusCode.BadRequest);
+                    //return null; //StatusCode((int)HttpStatusCode.BadRequest);
+                    return StatusCode((int)HttpStatusCode.BadRequest);
                 }
             }
 
             //var data = Convert.ToBase64String(fileObject.Bytes);
             //return File(Convert.FromBase64String(data), MimeTypeNames.ImageJpeg);
+            var etag = "\"" + Convert.ToBase64String(SHA256.Create().ComputeHash(fileObject.Bytes)) + "\"";
+            if (Request.Headers.TryGetValue("If-None-Match", out var noneMatch) && noneMatch == etag)
+            {
+                return StatusCode((int)HttpStatusCode.NotModified);
+            }
+
+            Response.Headers["ETag"] = etag;
+            Response.Headers["Cache-Control"] = "public,max-age=31536000";
             return File(fileObject.Bytes, MimeTypeNames.ImageJpeg);
             //http://192.168.1.89:8089/File/GetContent?id=6FBAE131-2182-87FC-B93A-3A09C55AD962
 
