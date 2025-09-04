@@ -22,11 +22,24 @@ namespace Chamran.Deed.Storage
         public MinioBinaryObjectManager(IConfiguration configuration, ILogger<MinioBinaryObjectManager>? logger = null)
         {
             _logger = logger;
-            var endpoint = configuration["Minio:Endpoint"] ?? "localhost:9000";
-            var accessKey = configuration["Minio:AccessKey"] ?? "minioadmin";
-            var secretKey = configuration["Minio:SecretKey"] ?? "minioadmin";
-            var useSsl = configuration["Minio:UseSSL"] == "true";
-            _bucketName = configuration["Minio:BucketName"] ?? "binaryobjects";
+
+            var endpoint = configuration["Minio:Endpoint"]
+                           ?? Environment.GetEnvironmentVariable("MINIO_ENDPOINT")
+                           ?? "localhost:9000";
+            var accessKey = configuration["Minio:AccessKey"]
+                           ?? Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY")
+                           ?? "minioadmin";
+            var secretKey = configuration["Minio:SecretKey"]
+                           ?? Environment.GetEnvironmentVariable("MINIO_SECRET_KEY")
+                           ?? "minioadmin";
+            var useSsl = string.Equals(
+                configuration["Minio:UseSSL"] ?? Environment.GetEnvironmentVariable("MINIO_USE_SSL"),
+                "true",
+                StringComparison.OrdinalIgnoreCase);
+
+            _bucketName = configuration["Minio:BucketName"]
+                          ?? Environment.GetEnvironmentVariable("MINIO_BUCKET")
+                          ?? "binaryobjects";
 
             var config = new AmazonS3Config
             {

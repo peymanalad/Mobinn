@@ -4,6 +4,7 @@ using Abp.Collections.Extensions;
 using Abp.Dependency;
 using Castle.Facilities.Logging;
 using Abp.Castle.Logging.Log4Net;
+using DotNetEnv;
 
 namespace Chamran.Deed.Migrator
 {
@@ -13,6 +14,7 @@ namespace Chamran.Deed.Migrator
 
         public static void Main(string[] args)
         {
+            Env.TraversePath().Load();
             ParseArgs(args);
 
             bool.TryParse(Environment.GetEnvironmentVariable("ASPNETCORE_Docker_Enabled"), out bool isDockerEnabled);
