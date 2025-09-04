@@ -50,6 +50,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using static System.Net.Mime.MediaTypeNames;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Chamran.Deed.Info
 {
@@ -79,6 +80,7 @@ namespace Chamran.Deed.Info
         private readonly IWebHostEnvironment _hostingEnvironment;
 
         private readonly IRepository<UserRole, long> _userRoleRepository;
+        private readonly IDistributedCache _cache;
         //private readonly IRepository<PostCategory> _postCategoryRepository;
         //private readonly IDbContextProvider<DeedDbContext> _dbContextProvider;
 
@@ -93,7 +95,7 @@ namespace Chamran.Deed.Info
             IRepository<PostLike, int> postLikeRepository, IRepository<Seen, int> seenRepository, IRepository<AllowedUserPostGroup, int> allowedUserPostGroupRepository,
             IRepository<User, long> userRepository, IDbContextProvider<DeedDbContext> dbContextProvider, ISmsSender smsSender,
             IRepository<PostEditHistory> postEditHistoryRespoRepository, IRepository<UserRole, long> userRoleRepository, IRepository<GroupMember> groupMemberRepository
-            , IWebHostEnvironment hostingEnvironment)
+            , IWebHostEnvironment hostingEnvironment, IDistributedCache cache)
         {
             _postRepository = postRepository;
             _commentRepository = commentRepository;
@@ -117,7 +119,8 @@ namespace Chamran.Deed.Info
             //_dbContextProvider= dbContextProvider;
             _userRoleRepository = userRoleRepository;
             _groupMemberRepository = groupMemberRepository;
-            _hostingEnvironment = hostingEnvironment;
+            _hostingEnvironment = hostingEnvironment; 
+            _cache = cache;
         }
 
         public async Task<PagedResultDto<GetPostForViewDto>> GetAll(GetAllPostsInput input)
@@ -586,6 +589,7 @@ namespace Chamran.Deed.Info
 
             await _unitOfWorkManager.Current.SaveChangesAsync();
             await unitOfWork.CompleteAsync();
+            await InvalidatePostsCache(post.PostGroupId);
         }
 
         //private async Task BuildPreviewFromFirstMediaIdAsync(Post post)
@@ -1473,13 +1477,15 @@ namespace Chamran.Deed.Info
                 await PublishNewPostNotifications(post/*,input.OrganizationId*/);
 
             await _unitOfWorkManager.Current.SaveChangesAsync();
-
+            await InvalidatePostsCache(post.PostGroupId);
         }
 
         [AbpAuthorize(AppPermissions.Pages_Posts_Delete)]
         public async Task Delete(EntityDto input)
         {
+            var post = await _postRepository.FirstOrDefaultAsync(input.Id);
             await _postRepository.DeleteAsync(input.Id);
+            await InvalidatePostsCache(post?.PostGroupId);
         }
 
         public async Task<FileDto> GetPostsToExcel(GetAllPostsForExcelInput input)
@@ -1879,6 +1885,21 @@ namespace Chamran.Deed.Info
 
         public async Task<PagedResultDto<GetPostsForViewDto>> GetPostsByGroupIdForView(GetPostsByGroupIdInput input)
         {
+            var versionKey = $"PostsByGroupVersion:{input.PostGroupId}";
+            var version = await _cache.GetStringAsync(versionKey);
+            if (string.IsNullOrEmpty(version))
+            {
+                version = Guid.NewGuid().ToString();
+                await _cache.SetStringAsync(versionKey, version);
+            }
+
+            var cacheKey = $"PostsByGroup:{input.OrganizationId}:{input.PostGroupId}:{input.PostSubGroupId}:{input.Sorting}:{input.SkipCount}:{input.MaxResultCount}:{version}";
+            var cached = await _cache.GetStringAsync(cacheKey);
+            if (!string.IsNullOrEmpty(cached))
+            {
+                return JsonConvert.DeserializeObject<PagedResultDto<GetPostsForViewDto>>(cached);
+            }
+
             try
             {
                 var query = _postRepository.GetAll()
@@ -2002,7 +2023,12 @@ namespace Chamran.Deed.Info
                     });
                 }
 
-                return new PagedResultDto<GetPostsForViewDto>(totalCount, result);
+                var pagedResult = new PagedResultDto<GetPostsForViewDto>(totalCount, result);
+                await _cache.SetStringAsync(
+                    cacheKey,
+                    JsonConvert.SerializeObject(pagedResult),
+                    new DistributedCacheEntryOptions { SlidingExpiration = TimeSpan.FromMinutes(5) });
+                return pagedResult;
             }
             catch (Exception ex)
             {
@@ -2041,6 +2067,15 @@ namespace Chamran.Deed.Info
             }
             return null;
         }
+
+        private async Task InvalidatePostsCache(int? postGroupId)
+        {
+            if (postGroupId.HasValue)
+            {
+                await _cache.RemoveAsync($"PostsByGroupVersion:{postGroupId.Value}");
+            }
+        }
+
 
         private bool IsPdfToken(string token)
         {
