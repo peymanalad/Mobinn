@@ -165,9 +165,11 @@ namespace Chamran.Deed.Info
                         bool isVideo = ext is ".mp4" or ".mov";
 
                         if (isImage)
-                            latestMedia = $"/thumbnails/{latestPost.Id}.jpg";
+                            latestMedia = latestPost.PostFileThumb;
+                        //latestMedia = $"/thumbnails/{latestPost.Id}.jpg";
                         else if (isVideo)
-                            latestMedia = $"/previews/{latestPost.Id}.gif";
+                            latestMedia = latestPost.PostVideoPreview;
+                        //latestMedia = $"/previews/{latestPost.Id}.gif";
                     }
 
                     results.Add(new GetPostSubGroupForViewDto

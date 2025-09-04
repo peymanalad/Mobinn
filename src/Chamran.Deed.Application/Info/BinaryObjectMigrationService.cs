@@ -11,16 +11,19 @@ namespace Chamran.Deed.Storage
     public class BinaryObjectMigrationService : DeedAppServiceBase, ITransientDependency
     {
         private readonly IRepository<BinaryObject, Guid> _binaryObjectRepository;
-        private readonly DbBinaryObjectManager _dbBinaryObjectManager;
+        //private readonly DbBinaryObjectManager _dbBinaryObjectManager;
+        private readonly IBinaryObjectManager _binaryObjectManager;
         private readonly ILogger<BinaryObjectMigrationService> _logger;
 
         public BinaryObjectMigrationService(
             IRepository<BinaryObject, Guid> binaryObjectRepository,
-            DbBinaryObjectManager dbBinaryObjectManager,
+                        //DbBinaryObjectManager dbBinaryObjectManager,
+                        IBinaryObjectManager binaryObjectManager,
             ILogger<BinaryObjectMigrationService> logger)
         {
             _binaryObjectRepository = binaryObjectRepository ?? throw new ArgumentNullException(nameof(binaryObjectRepository));
-            _dbBinaryObjectManager = dbBinaryObjectManager ?? throw new ArgumentNullException(nameof(dbBinaryObjectManager));
+            //_dbBinaryObjectManager = dbBinaryObjectManager ?? throw new ArgumentNullException(nameof(dbBinaryObjectManager));
+            _binaryObjectManager = binaryObjectManager ?? throw new ArgumentNullException(nameof(binaryObjectManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -48,7 +51,8 @@ namespace Chamran.Deed.Storage
                         {
                             try
                             {
-                                await _dbBinaryObjectManager.SaveAsync(binaryObject);
+                                //await _dbBinaryObjectManager.SaveAsync(binaryObject);
+                                await _binaryObjectManager.SaveAsync(binaryObject);
                                 await _binaryObjectRepository.DeleteAsync(binaryObject);
                                 _logger.LogInformation($"Successfully migrated binary object with ID: {binaryObject.Id}");
                             }
