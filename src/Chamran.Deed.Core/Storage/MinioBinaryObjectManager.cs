@@ -110,7 +110,11 @@ namespace Chamran.Deed.Storage
             }
 
             using var ms = new MemoryStream(file.Bytes, writable: false);
-            var transfer = new TransferUtility(_s3Client);
+            ms.Position = 0;
+            var transfer = new TransferUtility(_s3Client, new TransferUtilityConfig
+            {
+                MinSizeBeforePartUpload = 5 * 1024 * 1024
+            });
             var request = new TransferUtilityUploadRequest
             {
                 BucketName = _bucketName,
@@ -118,13 +122,9 @@ namespace Chamran.Deed.Storage
                 InputStream = ms,
                 AutoCloseStream = false,
                 AutoResetStreamPosition = false,
-                ContentType = contentType
+                ContentType = contentType,
+                PartSize = 5 * 1024 * 1024 // 5MB multipart chunks
             };
-
-            if (ms.Length > 5 * 1024 * 1024)
-            {
-                request.PartSize = 5 * 1024 * 1024; // 5MB multipart chunks
-            }
 
             await transfer.UploadAsync(request).ConfigureAwait(false);
         }

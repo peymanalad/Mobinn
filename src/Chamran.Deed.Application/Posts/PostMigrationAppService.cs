@@ -88,6 +88,7 @@ namespace Chamran.Deed.Posts
             return binary.Id.ToString();
         }
 
+
         private async Task<string> GenerateVideoPreviewAsync(byte[] videoBytes, string ext, int postId)
         {
             var tempDir = Path.GetTempPath();
