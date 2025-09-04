@@ -9,6 +9,7 @@ using Amazon.S3.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Logging;
+using Amazon.S3.Transfer;
 
 namespace Chamran.Deed.Storage
 {
@@ -108,8 +109,9 @@ namespace Chamran.Deed.Storage
                 contentType = "application/octet-stream";
             }
 
-            using var ms = new MemoryStream(file.Bytes);
-            var request = new PutObjectRequest
+            using var ms = new MemoryStream(file.Bytes, writable: false);
+            var transfer = new TransferUtility(_s3Client);
+            var request = new TransferUtilityUploadRequest
             {
                 BucketName = _bucketName,
                 Key = key,
@@ -119,7 +121,12 @@ namespace Chamran.Deed.Storage
                 ContentType = contentType
             };
 
-            await _s3Client.PutObjectAsync(request).ConfigureAwait(false);
+            if (ms.Length > 5 * 1024 * 1024)
+            {
+                request.PartSize = 5 * 1024 * 1024; // 5MB multipart chunks
+            }
+
+            await transfer.UploadAsync(request).ConfigureAwait(false);
         }
 
         public async Task DeleteAsync(Guid id)
