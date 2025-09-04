@@ -527,97 +527,98 @@ namespace Chamran.Deed.Info
             await _unitOfWorkManager.Current.SaveChangesAsync();
 
             ResetMediaSlotsForCreate(post);
-            var tokens = new[]
-            {
-        input.PostFileToken,
-        input.PostFileToken2,
-        input.PostFileToken3,
-        input.PostFileToken4,
-        input.PostFileToken5,
-        input.PostFileToken6,
-        input.PostFileToken7,
-        input.PostFileToken8,
-        input.PostFileToken9,
-        input.PostFileToken10,
-        input.PdfFileToken
-    };
+    //        var tokens = new[]
+    //        {
+    //    input.PostFileToken,
+    //    input.PostFileToken2,
+    //    input.PostFileToken3,
+    //    input.PostFileToken4,
+    //    input.PostFileToken5,
+    //    input.PostFileToken6,
+    //    input.PostFileToken7,
+    //    input.PostFileToken8,
+    //    input.PostFileToken9,
+    //    input.PostFileToken10,
+    //    input.PdfFileToken
+    //};
 
-            Guid? firstPdfId = null;
-            var media = new List<(Guid id, string ext, byte[] bytes)>();
-            var seen = new HashSet<Guid>();
+    //        Guid? firstPdfId = null;
+    //        var media = new List<(Guid id, string ext, byte[] bytes)>();
+    //        var seen = new HashSet<Guid>();
 
-            foreach (var tok in tokens)
-            {
-                if (string.IsNullOrWhiteSpace(tok)) continue;
+    //        foreach (var tok in tokens)
+    //        {
+    //            if (string.IsNullOrWhiteSpace(tok)) continue;
 
-                var (id, isPdf, ext, bytes) = await GetBinaryObjectFromCacheDetailed(tok, post.Id);
-                if (id == null) continue;
+    //            var (id, isPdf, ext, bytes) = await GetBinaryObjectFromCacheDetailed(tok, post.Id);
+    //            if (id == null) continue;
 
-                if (isPdf)
-                {
-                    if (!firstPdfId.HasValue)
-                        firstPdfId = id.Value;
-                    continue;
-                }
+    //            if (isPdf)
+    //            {
+    //                if (!firstPdfId.HasValue)
+    //                    firstPdfId = id.Value;
+    //                continue;
+    //            }
 
-                if (!seen.Add(id.Value)) continue;
-                media.Add((id.Value, ext, bytes));
-            }
+    //            if (!seen.Add(id.Value)) continue;
+    //            media.Add((id.Value, ext, bytes));
+    //        }
 
-            if (media.Count == 0 && !firstPdfId.HasValue)
-                throw new UserFriendlyException("پست ارسالی هیچش مدیایی ندارد");
+    //        if (media.Count == 0 && !firstPdfId.HasValue)
+    //            throw new UserFriendlyException("پست ارسالی هیچش مدیایی ندارد");
 
-            if (firstPdfId.HasValue)
-                post.PdfFile = firstPdfId.Value;
+    //        if (firstPdfId.HasValue)
+    //            post.PdfFile = firstPdfId.Value;
 
-            if (media.Count > 0) post.PostFile = media[0].id;
-            if (media.Count > 1) post.PostFile2 = media[1].id;
-            if (media.Count > 2) post.PostFile3 = media[2].id;
-            if (media.Count > 3) post.PostFile4 = media[3].id;
-            if (media.Count > 4) post.PostFile5 = media[4].id;
-            if (media.Count > 5) post.PostFile6 = media[5].id;
-            if (media.Count > 6) post.PostFile7 = media[6].id;
-            if (media.Count > 7) post.PostFile8 = media[7].id;
-            if (media.Count > 8) post.PostFile9 = media[8].id;
-            if (media.Count > 9) post.PostFile10 = media[9].id;
+    //        if (media.Count > 0) post.PostFile = media[0].id;
+    //        if (media.Count > 1) post.PostFile2 = media[1].id;
+    //        if (media.Count > 2) post.PostFile3 = media[2].id;
+    //        if (media.Count > 3) post.PostFile4 = media[3].id;
+    //        if (media.Count > 4) post.PostFile5 = media[4].id;
+    //        if (media.Count > 5) post.PostFile6 = media[5].id;
+    //        if (media.Count > 6) post.PostFile7 = media[6].id;
+    //        if (media.Count > 7) post.PostFile8 = media[7].id;
+    //        if (media.Count > 8) post.PostFile9 = media[8].id;
+    //        if (media.Count > 9) post.PostFile10 = media[9].id;
 
-            await BuildPreviewFromFirstMediaIdAsync(post);
+    //        await BuildPreviewFromFirstMediaIdAsync(post);
+            await ProcessAllFilesAsync(post, input, mainRequired: true);
 
             await _unitOfWorkManager.Current.SaveChangesAsync();
             await unitOfWork.CompleteAsync();
         }
 
-        private async Task BuildPreviewFromFirstMediaIdAsync(Post post)
-        {
-            if (!post.PostFile.HasValue)
-                return;
+        //private async Task BuildPreviewFromFirstMediaIdAsync(Post post)
+        //{
+        //    if (!post.PostFile.HasValue)
+        //        return;
 
-            var file = await _binaryObjectManager.GetOrNullAsync(post.PostFile.Value);
-            if (file == null || string.IsNullOrEmpty(file.Description) || file.Bytes == null || file.Bytes.Length == 0)
-                return;
+        //    var file = await _binaryObjectManager.GetOrNullAsync(post.PostFile.Value);
+        //    if (file == null || string.IsNullOrEmpty(file.Description) || file.Bytes == null || file.Bytes.Length == 0)
+        //        return;
 
-            var ext = (Path.GetExtension(file.Description) ?? string.Empty).ToLowerInvariant();
-            //var webRoot = _hostingEnvironment.WebRootPath;
-            //var webRoot = ResolveWebRoot(_hostingEnvironment.WebRootPath);
+        //    var ext = (Path.GetExtension(file.Description) ?? string.Empty).ToLowerInvariant();
+        //    //var webRoot = _hostingEnvironment.WebRootPath;
+        //    //var webRoot = ResolveWebRoot(_hostingEnvironment.WebRootPath);
 
-            if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".webp")
-            {
-                //post.PostFileThumb = await GenerateThumbnailAsync(file.Bytes, post.Id, webRoot);
-                post.PostFileThumb = await GenerateThumbnailAsync(file.Bytes, post.Id);
-            }
-            else if (ext == ".mp4" || ext == ".mov")
-            {
-                //var videosDir = Path.Combine(webRoot, "videos");
-                //Directory.CreateDirectory(videosDir);
+        //    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".webp")
+        //    {
+        //        //post.PostFileThumb = await GenerateThumbnailAsync(file.Bytes, post.Id, webRoot);
+        //        post.PostFileThumb = await GenerateThumbnailAsync(file.Bytes, post.Id);
+        //    }
+        //    else if (ext == ".mp4" || ext == ".mov")
+        //    {
+        //        //var videosDir = Path.Combine(webRoot, "videos");
+        //        //Directory.CreateDirectory(videosDir);
 
-                //var fullPath = Path.Combine(videosDir, $"{post.Id}{ext}");
-                //await File.WriteAllBytesAsync(fullPath, file.Bytes);
+        //        //var fullPath = Path.Combine(videosDir, $"{post.Id}{ext}");
+        //        //await File.WriteAllBytesAsync(fullPath, file.Bytes);
 
-                //post.PostVideoPreview = await GenerateVideoPreviewAsync(fullPath, webRoot, post.Id);
-                post.PostVideoPreview = await GenerateVideoPreviewAsync(file.Bytes, ext, post.Id);
-            }
-            // اگر PDF بود، کاری نکن
-        }
+        //        //post.PostVideoPreview = await GenerateVideoPreviewAsync(fullPath, webRoot, post.Id);
+        //        post.PostVideoPreview = await GenerateVideoPreviewAsync(file.Bytes, ext, post.Id);
+        //    }
+        //    // اگر PDF بود، کاری نکن
+        //}
 
 
         private static void ResetMediaSlotsForCreate(Post post)
@@ -1044,6 +1045,7 @@ namespace Chamran.Deed.Info
             await _binaryObjectManager.SaveAsync(binary);
 
             //return $"/previews/{postId}.gif";
+
             return binary.Id.ToString();
         }
 
@@ -1458,7 +1460,7 @@ namespace Chamran.Deed.Info
             //await ProcessPdfFileAsync(post, input.PdfFileToken);
             //await ProcessAdditionalFilesAsync(post, input);
             //await ProcessAllFilesAsync(post, input, mainRequired: false);
-            await BuildPreviewFromFirstMediaIdAsync(post);
+            //await BuildPreviewFromFirstMediaIdAsync(post);
 
             if (shouldSendSmsNotification)
             {
@@ -1954,8 +1956,10 @@ namespace Chamran.Deed.Info
 
                     //string thumbnailPath = isImage ? $"/thumbnails/{p.Id}.jpg" : null;
                     //string previewPath = isVideo ? $"/previews/{p.Id}.gif" : null;
-                    string thumbnailPath = isImage ? $"/thumbnails/{p.Id}.jpg" : null;
-                    string previewPath = isVideo ? $"/previews/{p.Id}.gif" : null;
+                    //string thumbnailPath = isImage ? $"/thumbnails/{p.Id}.jpg" : null;
+                    //string previewPath = isVideo ? $"/previews/{p.Id}.gif" : null;
+                    string thumbnailPath = isImage ? p.PostFileThumb : null;
+                    string previewPath = isVideo ? p.PostVideoPreview : null;
                     //string videoPath = isVideo ? $"/videos/{p.Id}{mainExt}" : null;
 
                     result.Add(new GetPostsForViewDto
